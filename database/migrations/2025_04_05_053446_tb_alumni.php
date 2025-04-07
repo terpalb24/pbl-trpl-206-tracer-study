@@ -15,7 +15,6 @@ return new class extends Migration
             $table->integer('nim');
             $table->integer('id_user');
             $table->string('name',50);
-            $table->string('password',255);
             $table->integer('nik');
             $table->string('gender',10);
             $table->date('date_of_birth');

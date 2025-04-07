@@ -11,16 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        schema::create('tb_user', function(Blueprint $table){
-            $table->integer('id_user', true);
-            $table->string('username', 50);
-            $table->string('password',255);
-            $table->integer('role');
-            $table->timestamps();
-
-        
+        Schema::table('tb_periode', function (Blueprint $table) {
+            $table->date('end_date')->nullable();
+            //
         });
-        //
     }
 
     /**
@@ -28,7 +22,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        schema::drop('tb_user');
-        //
+        Schema::table('tb_periode', function (Blueprint $table) {
+            $table->dropColumn('end_date'); 
+            //
+        });
     }
 };

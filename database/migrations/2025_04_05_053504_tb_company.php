@@ -15,7 +15,6 @@ return new class extends Migration
             $table->integer('id_company', true);
             $table->integer('id_user');
             $table->string('company_name',50);
-            $table->string('password',255);
             $table->string('company_address',255);
             $table->string('company_email',50);
             $table->string('company_phone_number',15);

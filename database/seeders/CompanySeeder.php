@@ -15,11 +15,10 @@ class CompanySeeder extends Seeder
     {
         $Faker = Faker::create('id_ID');
 
-      for ($i = 0; $i < 10; $i++) {
+      for ($i = 0; $i < 20; $i++) {
         \DB::table('tb_company')->insert([
             'id_user'=>'3',
             'company_name'=>$Faker->company(),
-            'password'=>$Faker->password,
             'company_address'=>$Faker->address(),
             'company_email'=>$Faker->companyEmail(),
             'company_phone_number'=>$Faker->numerify('####-####-####'),
