@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
-class Tb_User  extends Authenticatable
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+class Tb_User  extends Authenticatable implements MustVerifyEmail
 {
     protected $table = 'tb_user';
     protected $fillable = [
@@ -18,6 +18,11 @@ class Tb_User  extends Authenticatable
     ];
     protected $hidden = [
         'password',
+    ];
+
+    protected $casts = [
+        'email_verified_at'=> 'datetime',
+        'is_First_login'=> 'boolean',
     ];
     //
 }

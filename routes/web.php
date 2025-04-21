@@ -5,6 +5,8 @@ use App\Http\Controllers\LoginController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+
 
 
 Route::get('/', function () {
@@ -16,11 +18,13 @@ Route::get('/test', function () {
 Route::get('/halo', function(){
     return view('halo');
 });
+// Menampilkan halaman login
+Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+// Proses login
+Route::post('/login', [LoginController::class, 'login'])->name('login.post');
 
-Route::get('/login', [LoginController::class, 'showLogin'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class , 'logout'])->name('logout');
-
+// Dashboard untuk Admin (role 1)
 Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])
     ->name('dashboard.admin'); 
 

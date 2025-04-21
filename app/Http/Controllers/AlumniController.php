@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class AlumniController extends Controller
@@ -10,5 +11,4 @@ class AlumniController extends Controller
     {
         return view('alumni.dashboard');
     }
-    //
 }

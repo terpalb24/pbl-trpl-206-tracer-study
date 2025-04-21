@@ -21,6 +21,17 @@ class UserSeeder extends Seeder
             'password' => Hash::make('tracer'),
             'role' => 1,
         ]);
+
+        Tb_User::create([
+            'username' => 'alumni',
+            'password' => Hash::make('tracer'),
+            'role' => 2,
+        ]);
+        Tb_User::create([
+            'username' => 'perusahaan',
+            'password' => Hash::make('tracer'),
+            'role' => 3,
+        ]);
        
         //
     }

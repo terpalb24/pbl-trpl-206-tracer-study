@@ -6,7 +6,7 @@
 <body>
     <h1>Selamat datang, perusahaan!</h1>
 
-    <p>Halo halo company{{  }} . Ini adalah dashboard company.</p>
+    <p>Halo halo company . Ini adalah dashboard company.</p>
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf

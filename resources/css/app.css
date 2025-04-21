@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -6,7 +6,39 @@
 @source "../**/*.js";
 @source "../**/*.vue";
 
-@theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+@layer base {
+    :root {
+        --color-primary: #1e376c;
+        --color-primary-dark: #162d5b;
+        --color-secondary: #b5e6f3;
+    }
+}
+@layer components {
+    .btn-primary {
+        @apply w-full py-2 bg-[color:var(--color-primary)] text-white font-semibold rounded-md hover:bg-[color:var(--color-primary-dark)] transition;
+    }
+
+    .btn-secondary {
+        @apply w-full py-2 text-center bg-gray-300 text-black font-semibold rounded-md hover:bg-gray-400 block transition;
+    }
+
+    .input-field {
+        @apply bg-white w-full pl-10 pr-4 py-2 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none;
+    }
+
+    .bg-theme-primary {
+        background-color: var(--color-primary);
+    }
+
+    .bg-theme-secondary {
+        background-color: var(--color-secondary);
+    }
+
+    .text-theme-primary {
+        color: var(--color-primary);
+    }
+
+    .text-theme-secondary {
+        color: var(--color-secondary);
+    }
 }
