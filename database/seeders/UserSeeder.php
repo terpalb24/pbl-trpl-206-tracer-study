@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Tb_User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
@@ -14,15 +16,12 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        $faker = Faker::create('id_ID');
-
-        for ($i=1; $i<=30; $i++){
-            \DB::table('tb_user')->insert([
-                'username'=> $faker->firstName,
-                'password'=> $faker->password,
-                'role'=> '2',
-            ]);
-        }
+        Tb_User::create([
+            'username' => 'admin',
+            'password' => Hash::make('tracer'),
+            'role' => 1,
+        ]);
+       
         //
     }
 }
