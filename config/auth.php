@@ -40,6 +40,15 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'alumni'=>[
+            'driver' => 'session',
+            'provider' => 'alumni',
+        ],
+        'companies'=>[
+            'driver' => 'session',
+            'provider' => 'companies',
+        ],
+
     ],
 
     /*
@@ -60,9 +69,18 @@ return [
     */
 
     'providers' => [
-        'users' => [
+        'user' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\Tb_User::class),
+        
+        ],
+        'alumni'=>[
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\Tb_Alumni::class),
+        ],
+        'companies'=>[
+            'driver' => 'eloquent',
+            'model' => env('AUTH_MODEL', App\Models\Tb_Company::class),
         ],
 
         // 'users' => [

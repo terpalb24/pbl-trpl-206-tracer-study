@@ -9,7 +9,11 @@
         <p class="text-sm sm:text-base text-center text-black mb-6">
             Halo! Silahkan masuk terlebih dahulu menggunakan akun yang telah terdaftar pada aplikasi ^_^
         </p>
-
+        @if(session('error'))
+    <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
+        {{ session('error') }}
+    </div>
+        @endif
         <form method="POST" action="{{ route('login') }}" class="space-y-5">
             @csrf
 

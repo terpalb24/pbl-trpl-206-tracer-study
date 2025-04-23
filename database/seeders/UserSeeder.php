@@ -16,22 +16,15 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
-        Tb_User::create([
-            'username' => 'admin',
-            'password' => Hash::make('tracer'),
-            'role' => 1,
-        ]);
+      
 
         Tb_User::create([
-            'username' => 'alumni',
-            'password' => Hash::make('tracer'),
+            'username' => '4342401035',
+            'password' => Hash::make('4342401035'),
             'role' => 2,
         ]);
-        Tb_User::create([
-            'username' => 'perusahaan',
-            'password' => Hash::make('tracer'),
-            'role' => 3,
-        ]);
+   
+
        
         //
     }

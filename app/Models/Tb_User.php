@@ -8,6 +8,9 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 class Tb_User  extends Authenticatable implements MustVerifyEmail
 {
     protected $table = 'tb_user';
+    protected $primaryKey = 'id_user';
+    public $incrementing = true;
+    protected $keyType = 'int';
     protected $fillable = [
         'username',
         'password',

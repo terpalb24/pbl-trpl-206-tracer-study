@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tb_jobhistory',function (Blueprint $table){
             $table->integer('id_jobhistory', true);
-            $table->integer('nim');
+            $table->string('nim');
             $table->integer('id_company');
             $table->string('position', 50);
             $table->date('start_date');

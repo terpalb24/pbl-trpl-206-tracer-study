@@ -6,7 +6,9 @@
 <body>
     <h1>Selamat datang, Alumni!</h1>
 
-    <p>Halo . Ini adalah dashboard alumni.</p>
+
+
+    <p>Halo alumni ! Ini adalah dashboard alumni.</p>
 
     <form method="POST" action="{{ route('logout') }}">
         @csrf

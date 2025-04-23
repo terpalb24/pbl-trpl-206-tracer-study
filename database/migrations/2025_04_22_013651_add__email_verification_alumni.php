@@ -9,22 +9,22 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-        Schema::table('tb_user', function (Blueprint $table) {
-            $table->timestamp('email_verified_at')->nullable();
-            $table->boolean('is_first_login')->default(true);
+        Schema::table('tb_alumni', function (Blueprint $table) {
+            $table->string('email_verification')->default('unverified')->after('id_user');
         });
+        //
     }
-    
 
     /**
      * Reverse the migrations.
      */
     public function down(): void
     {
-        Schema::table('tb_user', function (Blueprint $table) {
-            //
+        Schema::table('tb_alumni', function (Blueprint $table) {
+            $table->dropColumn('email_verification');
         });
+        //
     }
 };
