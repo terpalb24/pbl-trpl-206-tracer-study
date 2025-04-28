@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 
 class Tb_Alumni extends Authenticatable
 {
-    use HasFactory;
+    use HasFactory,Notifiable;
 
     // Menetapkan nama tabel yang digunakan model
     protected $table = 'tb_alumni';
@@ -38,6 +39,10 @@ class Tb_Alumni extends Authenticatable
         'created_at',
         'updated_at'
     ];
+    public function routeNotificationForMail()
+    {
+        return $this->email; // Mengembalikan alamat email alumni
+    }
 
     // ...
 }

@@ -24,7 +24,6 @@ class Tb_User  extends Authenticatable implements MustVerifyEmail
     ];
 
     protected $casts = [
-        'email_verified_at'=> 'datetime',
         'is_First_login'=> 'boolean',
     ];
     //

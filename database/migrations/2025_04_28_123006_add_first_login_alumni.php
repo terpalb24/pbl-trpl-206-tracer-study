@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tb_alumni', function (Blueprint $table) {
-            $table->string('email_verification')->default('unverified')->after('id_user');
+            // Add the is_First_login column with default value 1
+            $table->boolean('is_First_login')->default(1)->after('status');
         });
+
         //
     }
 
@@ -23,7 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tb_alumni', function (Blueprint $table) {
-            $table->dropColumn('email_verification');
+            // Drop the is_First_login column
+            $table->dropColumn('is_First_login');
         });
         //
     }

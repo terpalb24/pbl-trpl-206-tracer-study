@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use App\Models\Tb_Alumni;
 use App\Models\Tb_User;
 use Illuminate\Support\Facades\Hash;
+use App\Notifications\EmailVerificationNotification;
+use Illuminate\Support\Facades\Notification;
+
+
 
 class AlumniController extends Controller
 {
@@ -22,30 +26,22 @@ class AlumniController extends Controller
 public function verifyEmail(Request $request)
 {
     $request->validate([
-        'email' => 'required|email',
+        'email' => 'required|email', 
     ]);
-    if (!Auth::check()) {
-        return redirect()->route('login')->withErrors(['email' => 'Anda harus login terlebih dahulu.']);
-    }
 
+    // Ambil user yang sedang login
     $user = Auth::user();
+    $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
 
-    // Ambil data alumni terkait user
-    $alumni = Tb_Alumni::where('id_user', $user->id_user)
-        ->where('email', $request->email)
-        ->first();
-  
-    if (!$alumni) {
-        return back()->withErrors(['email' => 'Email tidak ditemukan atau tidak sesuai dengan akun Anda.']);
-    }
+    // Update email alumni
+    $alumni->email = $request->email;
+    $alumni->is_First_login = false; // menanandai bahwa alumni sudah login pertama kali
+    $alumni->save();
 
-       $alumni->email_verification = 'verified';
-        $alumni->save();
-
-        return redirect()->route('alumni.password.form')->with('success', 'Email berhasil diverifikasi, silakan ubah password.');
-    }
-
-
+    // Kirimkan notifikasi verifikasi email
+    Notification::send($alumni, new EmailVerificationNotification($alumni));
+    return redirect()->route('alumni.email.form')->with('success', 'Email Anda telah berhasil diperbarui. Silakan cek inbox Anda untuk merubah password.');
+}
 public function showChangePasswordForm()
 {
     return view('alumni.change_password');

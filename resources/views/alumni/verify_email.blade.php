@@ -5,6 +5,12 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center max-w-6xl w-full">
         <!-- Form Section -->
         <div class="space-y-6">
+            @if (session('success') )
+                <div class="bg-green-500 text-white p-4 rounded-md mb-6">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <p class="text-sm text-gray-700">
                 Silahkan masukkan akun email yang terhubung, agar kami dapat mengirim email untuk mereset kata sandi anda <span class="text-blue-500">^_^</span>
             </p>

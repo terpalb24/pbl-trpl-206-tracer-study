@@ -17,20 +17,20 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4343401035',
+                'nim' => '4343401036',
                 'id_user' => 2,
-                'name' => 'Muhammad Hasan Firdaus ',
+                'name' => 'Andri Putra Desyandra siregar ',
                 'nik' => '234567811',
                 'gender'=>'male',
-                'date_of_birth' => '2004-09-11',
+                'date_of_birth' => '2006-09-11',
                 'phone_number'=>'082173634512',
-                'email'=>'hasanfirdaus@gmail.com',
+                'email'=>'andriputra110906@gmail.com',
                 'status'=>'worked',
                 'study_program'=>'TRPL',
                 'graduation_year'=>'2028',
                 'ipk'=>'4.00',
                 'batch'=>'24',
-                'address'=>'batara raya',
+                'address'=>'simpang raya',
             ]);
     
             

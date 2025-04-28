@@ -28,9 +28,11 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->get('/admin/dashboard'
 Route::middleware(['auth:web', CheckRole::class . ':2'])->get('/alumni/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard.alumni');
 Route::middleware(['auth:web', CheckRole::class . ':3'])->get('/company/dashboard', [CompanyController::class, 'dashboard'])->name('dashboard.company');
 // untuk memverifikasi email
+Route::group(['middleware' => ['auth']], function(){
 Route::get('/alumni/email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
 Route::post('/alumni/email', [AlumniController::class, 'verifyEmail'])->name('alumni.email.verify');
 
 // untuk mengganti password alumni yang emailnya sudah terverifikasi
 Route::get('/alumni/password', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.password.form');
 Route::post('/alumni/password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
+});
