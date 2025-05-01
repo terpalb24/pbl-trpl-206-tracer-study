@@ -31,8 +31,6 @@ Route::middleware(['auth:web', CheckRole::class . ':3'])->get('/company/dashboar
 Route::group(['middleware' => ['auth']], function(){
 Route::get('/alumni/email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
 Route::post('/alumni/email', [AlumniController::class, 'verifyEmail'])->name('alumni.email.verify');
-
-// untuk mengganti password alumni yang emailnya sudah terverifikasi
 Route::get('/alumni/password', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.password.form');
 Route::post('/alumni/password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
 });

@@ -5,31 +5,29 @@ namespace App\Notifications;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;;
+use Illuminate\Notifications\Notification;
+
 class EmailVerificationNotification extends Notification
 {
     use Queueable;
+
     /**
-     * The alumni instance.
+     * The verification token.
      *
-     * @var \App\Models\Tb_Alumni
+     * @var string
      */
-    public $alumni;
+    public $token;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($alumni)
+    public function __construct($token)
     {
-        $this->alumni = $alumni;
+        $this->token = $token;
     }
-        //
-    
 
     /**
      * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
      */
     public function via(object $notifiable): array
     {
@@ -39,23 +37,23 @@ class EmailVerificationNotification extends Notification
     /**
      * Get the mail representation of the notification.
      */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable)
     {
+        $url = url('/alumni/password?token=' . $this->token);
+
         return (new MailMessage)
-        ->line('Hallo ' . $this->alumni->name . ',')
-        ->line('Silakan klik tombol di bawah ini untuk memverifikasi email Anda.')
-        ->action('Verifikasi Email', route('alumni.password.form', ['token' => $this->alumni->email_verification_token]))
-        ->line('Terima kasih telah menggunakan aplikasi tracer study polibatam');
+            ->subject('Verifikasi Email Alumni')
+            ->greeting('Halo!')
+            ->line('Terima kasih telah mennggunakan aplikasi tracer study polibatam .')
+            ->line('Silakan klik tombol di bawah untuk verifikasi dan ubah password Anda.')
+            ->action('Verifikasi Email', $url);
     }
+
     /**
      * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 }

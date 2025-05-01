@@ -37,6 +37,7 @@ class Tb_Alumni extends Authenticatable
         'batch',
         'address',
         'created_at',
+        'is_First_login',
         'updated_at'
     ];
     public function routeNotificationForMail()

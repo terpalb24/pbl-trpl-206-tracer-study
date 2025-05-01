@@ -12,6 +12,7 @@
 
         <form method="POST" action="{{ route('alumni.password.update') }}" class="space-y-5">
             @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
 
             <!-- Password Input -->
             <div>
@@ -20,7 +21,10 @@
                     <span class="absolute left-3 top-2.5 text-gray-400">
                         <i class="fas fa-lock"></i>
                     </span>
-                    <input id="password" name="password" type="password" required class="input-field" placeholder="Masukkan Password Baru">
+                    <input id="password" name="password" type="password" required class="input-field pr-10" placeholder="Masukkan Password Baru">
+                    <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-2.5 text-gray-500 focus:outline-none">
+                        <i class="fas fa-eye" id="toggleIcon-password"></i>
+                    </button>
                 </div>
                 @error('password')
                     <div style="color:red;" class="mt-2">{{ $message }}</div>
@@ -34,7 +38,10 @@
                     <span class="absolute left-3 top-2.5 text-gray-400">
                         <i class="fas fa-lock"></i>
                     </span>
-                    <input id="password_confirmation" name="password_confirmation" type="password" required class="input-field" placeholder="Konfirmasi Password Baru">
+                    <input id="password_confirmation" name="password_confirmation" type="password" required class="input-field pr-10" placeholder="Konfirmasi Password Baru">
+                    <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-2.5 text-gray-500 focus:outline-none">
+                        <i class="fas fa-eye" id="toggleIcon-password_confirmation"></i>
+                    </button>
                 </div>
             </div>
 
@@ -52,4 +59,23 @@
         <img src="{{ asset('assets/images/login.png') }}" alt="Change Password" class="max-w-xs md:max-w-md lg:max-w-lg">
     </div>
 
-</div
+</div>
+
+<!-- Toggle Password untuk lihat password -->
+<script>
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById('toggleIcon-' + fieldId);
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+@endsection

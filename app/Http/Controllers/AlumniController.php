@@ -9,7 +9,7 @@ use App\Models\Tb_User;
 use Illuminate\Support\Facades\Hash;
 use App\Notifications\EmailVerificationNotification;
 use Illuminate\Support\Facades\Notification;
-
+use Illuminate\Support\Facades\Crypt;
 
 
 class AlumniController extends Controller
@@ -23,42 +23,97 @@ class AlumniController extends Controller
     return view('alumni.verify_email');
 }
 
+
 public function verifyEmail(Request $request)
 {
     $request->validate([
         'email' => 'required|email', 
     ]);
 
-    // Ambil user yang sedang login
     $user = Auth::user();
     $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
 
-    // Update email alumni
-    $alumni->email = $request->email;
-    $alumni->is_First_login = false; // menanandai bahwa alumni sudah login pertama kali
-    $alumni->save();
+    if (!$alumni) {
+        return redirect()->back()->with('error', 'Data alumni tidak ditemukan.');
+    }
 
-    // Kirimkan notifikasi verifikasi email
-    Notification::send($alumni, new EmailVerificationNotification($alumni));
-    return redirect()->route('alumni.email.form')->with('success', 'Email Anda telah berhasil diperbarui. Silakan cek inbox Anda untuk merubah password.');
+    // Enkripsi data email dan id_user sebagai token
+    $token = Crypt::encrypt([
+        'email' => $request->email,
+        'id_user' => $user->id_user,
+    ]);
+
+    // Kirim notifikasi verifikasi email (link berisi token)
+    Notification::route('mail', $request->email)
+        ->notify(new EmailVerificationNotification($token));
+
+    return redirect()->route('alumni.email.form')->with('success', 'Silakan cek inbox Anda dan klik link untuk verifikasi serta ubah password.');
 }
-public function showChangePasswordForm()
+
+public function showChangePasswordForm(Request $request)
 {
-    return view('alumni.change_password');
+    try {
+        $data = Crypt::decrypt($request->token);
+    } catch (\Exception $e) {
+        return redirect()->route('alumni.email.form')->with('error', 'Token tidak valid.');
+    }
+
+    return view('alumni.change_password', [
+        'token' => $request->token,
+        'email' => $data['email'],
+        'id_user' => $data['id_user'],
+    ]);
 }
+
 
 public function updatePassword(Request $request)
 {
     $request->validate([
-        'password' => 'required|string|min:6|confirmed',
+        'token' => 'required',
+        'password' => [
+            'required',
+            'string',
+            'min:8',
+            'confirmed',
+            'regex:/[a-z]/',      // huruf kecil
+            'regex:/[A-Z]/',      // huruf besar
+            'regex:/[0-9]/',      // angka
+            'regex:/[@$!%*?&]/'   // karakter spesial
+        ],
+    ], [
+        'password.required' => 'Password wajib diisi.',
+        'password.string' => 'Password harus berupa teks.',
+        'password.min' => 'Password minimal 8 karakter.',
+        'password.confirmed' => 'Konfirmasi password tidak cocok.',
+        'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan simbol.',
     ]);
 
-    $user = Auth::user();
-    $user->password = Hash::make($request->password);
-    $user->save();
+    try {
+        $data = Crypt::decrypt($request->token);
+    } catch (\Exception $e) {
+        return redirect()->route('alumni.email.form')->with('error', 'Token tidak valid atau kadaluarsa.');
+    }
 
-    return redirect()->route('dashboard.alumni')->with('success', 'Password berhasil diubah!');
+    $user = Tb_User::where('id_user', $data['id_user'])->first();
+    $alumni = Tb_Alumni::where('id_user', $data['id_user'])->first();
+
+    if (!$user || !$alumni) {
+        return redirect()->route('alumni.email.form')->with('error', 'Data user tidak ditemukan.');
+    }
+
+    // Update password dan email
+    $user->update([
+        'password' => Hash::make($request->password),
+    ]);
+
+    $alumni->update([
+        'email' => $data['email'],
+        'is_First_login' => false,
+    ]);
+
+    return redirect()->route('login')->with('success', 'Password dan email berhasil diperbarui. Silakan login.');
 }
+
 
 
 }
