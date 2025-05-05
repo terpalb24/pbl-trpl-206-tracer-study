@@ -15,7 +15,8 @@ class StudyProgramSeeder extends Seeder
     {
         Tb_study_program::create([
             'nim' => '4342401031',
-            'study_program' => 'Teknik Informatika',
+            'study_program' => 'Teknik elektro',
+           
         ]);
 
         //

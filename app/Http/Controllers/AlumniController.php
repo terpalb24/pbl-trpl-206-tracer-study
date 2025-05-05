@@ -117,6 +117,45 @@ public function updatePassword(Request $request)
     return redirect()->route('login')->with('success', 'Password dan email berhasil diperbarui. Silakan login.');
 }
 
+public function edit()
+{
+    $nim = session('alumni_nim'); // Ambil nim dari session
+    $alumni = Tb_Alumni::where('nim', $nim)->firstOrFail(); // Ambil data alumni berdasarkan nim
 
-
+    return view('alumni.edit', compact('alumni'));
 }
+
+public function update(Request $request)
+{
+    // Validasi data yang diterima
+    $validated = $request->validate([
+        'phone_number' => 'required',
+        'email' => 'required|email',
+        'batch' => 'required|integer',
+        'graduation_year' => 'required',
+        'ipk' => 'required',
+        'status' => 'required|in:worked,not worked',
+    ]);
+
+    // Ambil nim dari session
+    $nim = session('alumni_nim');
+
+    // Cari alumni berdasarkan nim
+    $alumni = Tb_Alumni::where('nim', $nim)->first(); 
+
+    if (!$alumni) {
+        return back()->with('error', 'Data alumni tidak ditemukan');
+    }
+
+    // Update data alumni
+    $updated = $alumni->update($validated);
+
+    if (!$updated) {
+        return back()->with('error', 'Gagal memperbarui profil');
+    }
+
+    return redirect()->route('alumni.edit')->with('success', 'Profil berhasil diperbarui');
+}
+
+
+};

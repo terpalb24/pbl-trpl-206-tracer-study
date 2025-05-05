@@ -20,8 +20,4 @@ class Tb_study_program extends Model
     ];
 
 
- public function alumni()
-     {
-        return $this->hasMany(Tb_Alumni::class, 'study_program_id', 'id_study');
- }
 }

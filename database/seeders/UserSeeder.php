@@ -23,6 +23,7 @@ class UserSeeder extends Seeder
             'username' => '4342401031',
             'password' => Hash::make('4342401031'),
             'role' => 2,
+
         ]);
 
 

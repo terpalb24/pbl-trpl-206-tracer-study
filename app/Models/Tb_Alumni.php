@@ -46,11 +46,11 @@ class Tb_Alumni extends Authenticatable
     }
     // App\Models\Tb_Alumni.php
 
-public function studyProgram()
-{
-    return $this->hasOne(Tb_study_program::class, 'nim', 'nim');
-}
-
+    public function studyProgram()
+    {
+        return $this->belongsTo(Tb_study_program::class, 'nim'  , 'nim');
+    }
+    
 
     // ...
 }
