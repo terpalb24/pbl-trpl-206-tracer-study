@@ -6,8 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Tb_User;
 use App\Models\Tb_Alumni;
+use App\Models\Tb_Company;
     
-    class LoginController extends Controller
+    class AuthController extends Controller
     {
         public function showLoginForm()
         {
@@ -46,11 +47,21 @@ use App\Models\Tb_Alumni;
                         if ($alumni && $alumni->is_First_login)  {
                             return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
                         }
-        
-                        // Jika sudah terverifikasi, redirect ke dashboard alumni
+                        session([
+                            'alumni' => $alumni,
+                            'study_program' => $alumni->studyProgram,
+                        ]);
                         return redirect()->route('dashboard.alumni');
+                        
                     
                     case 3: // Company
+                        $company = Tb_Company::where('id_user', $user->id_user)->first();
+                        if (!$company) {
+                            // Logout jika data company tidak ditemukan
+                            Auth::logout();
+                            return redirect('/login')->with('error', 'Data company tidak ditemukan. Silakan hubungi administrator.');
+                        }
+                        session(['company' => $company]);
                         return redirect()->route('dashboard.company');
                     
                     default:

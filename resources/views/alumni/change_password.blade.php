@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
 <div class="flex flex-col-reverse lg:flex-row items-center w-full max-w-6xl mx-auto rounded-lg shadow-lg overflow-hidden bg-white">
 
     <!-- Left Side - Change Password Form -->
@@ -29,6 +30,15 @@
                 @error('password')
                     <div style="color:red;" class="mt-2">{{ $message }}</div>
                 @enderror
+                <div class="text-xs text-gray-600 mt-2">
+                    Password harus mengandung:
+                    <ul class="list-inside list-disc">
+                        <li>Setidaknya satu huruf besar</li>
+                        <li>Setidaknya satu huruf kecil</li>
+                        <li>Setidaknya satu angka</li>
+                        <li>Setidaknya satu karakter spesial (@$!%*?&)</li>
+                    </ul>
+                </div>
             </div>
 
             <!-- Password Confirmation Input -->
@@ -60,7 +70,7 @@
     </div>
 
 </div>
-
+</div>
 <!-- Toggle Password untuk lihat password -->
 <script>
     function togglePassword(fieldId) {

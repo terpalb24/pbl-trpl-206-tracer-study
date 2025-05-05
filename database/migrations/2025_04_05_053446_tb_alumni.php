@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('phone_number',15);
             $table->string('email',50);
             $table->string('status',50);
-            $table->string('study_program',255);
             $table->integer('graduation_year');
             $table->float('ipk');
             $table->integer('batch');

@@ -13,11 +13,13 @@ use Illuminate\Support\Facades\Crypt;
 
 
 class AlumniController extends Controller
-{
-    public function dashboard()
+{public function dashboard()
     {
-        return view('alumni.dashboard');
+        $alumniId = session('id_user');
+        $alumni = Tb_Alumni::find($alumniId);
+        return view('alumni.dashboard', compact('alumni'));
     }
+    
     public function showEmailForm()
 {
     return view('alumni.verify_email');
@@ -32,6 +34,7 @@ public function verifyEmail(Request $request)
 
     $user = Auth::user();
     $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
+    
 
     if (!$alumni) {
         return redirect()->back()->with('error', 'Data alumni tidak ditemukan.');

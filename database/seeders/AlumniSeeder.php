@@ -17,16 +17,15 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4343401031',
+                'nim' => '4342401036',
                 'id_user' => 4,
-                'name' => 'ariq akbari ',
+                'name' => 'andri putra',
                 'nik' => '234567221',
                 'gender'=>'male',
                 'date_of_birth' => '2006-09-11',
                 'phone_number'=>'082173634512',
                 'email'=>'ariqakbari@gmail.com',
                 'status'=>'worked',
-                'study_program'=>'TRPL',
                 'graduation_year'=>'2028',
                 'ipk'=>'4.00',
                 'batch'=>'24',

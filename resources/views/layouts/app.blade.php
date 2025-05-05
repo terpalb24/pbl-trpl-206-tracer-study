@@ -10,11 +10,16 @@
 
     {{-- Icon (Optional) --}}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-white min-h-screen flex items-center justify-center px-4 py-10">
 
-    {{-- Tempat isi konten halaman --}}
-    @yield('content')
+    {{-- Alpine.js --}}
+</head>
+<body class="bg-white m-0 p-0 w-full min-h-screen overflow-x-hidden">
+
+
+    {{-- Kontainer fullscreen konten --}}
+    <div class="w-full h-full">
+        @yield('content')
+    </div>
 
 </body>
 </html>

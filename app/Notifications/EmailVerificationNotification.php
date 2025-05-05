@@ -44,7 +44,7 @@ class EmailVerificationNotification extends Notification
         return (new MailMessage)
             ->subject('Verifikasi Email Alumni')
             ->greeting('Halo!')
-            ->line('Terima kasih telah mennggunakan aplikasi tracer study polibatam .')
+            ->line('Terima kasih telah menggunakan aplikasi tracer study polibatam .')
             ->line('Silakan klik tombol di bawah untuk verifikasi dan ubah password Anda.')
             ->action('Verifikasi Email', $url);
     }

@@ -44,6 +44,13 @@ class Tb_Alumni extends Authenticatable
     {
         return $this->email; // Mengembalikan alamat email alumni
     }
+    // App\Models\Tb_Alumni.php
+
+public function studyProgram()
+{
+    return $this->hasOne(Tb_study_program::class, 'nim', 'nim');
+}
+
 
     // ...
 }

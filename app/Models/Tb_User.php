@@ -27,4 +27,12 @@ class Tb_User  extends Authenticatable implements MustVerifyEmail
         'is_First_login'=> 'boolean',
     ];
     //
+    public function alumni()
+    {
+        return $this->hasOne(Tb_Alumni::class, 'id_user', 'id_user');
+    }
+    public function company()
+    {
+        return $this->hasOne(Tb_Company::class, 'id_user', 'id_user');
+    }
 }

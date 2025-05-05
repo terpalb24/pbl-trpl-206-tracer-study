@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
+use App\Models\Tb_Company;
 
 class CompanySeeder extends Seeder
 {
@@ -13,23 +14,20 @@ class CompanySeeder extends Seeder
      */
     public function run(): void
     {
-        $Faker = Faker::create('id_ID');
-
-      for ($i = 0; $i < 20; $i++) {
-        \DB::table('tb_company')->insert([
-            'id_user'=>'3',
-            'company_name'=>$Faker->company(),
-            'company_address'=>$Faker->address(),
-            'company_email'=>$Faker->companyEmail(),
-            'company_phone_number'=>$Faker->numerify('####-####-####'),
-
-
-    
+        
+      Tb_Company::create([
+        'id_user' => 1,
+        'company_name' => 'pt sukamaju',
+        'company_address' => 'jl. raya no 1',
+        'company_email' => 'sukamaju@gmail.com',
+        'company_phone_number' => '08123456789',
+        
+    ]);
 
 
-        ]);
+        
 
       }
         //
     }
-}
+
