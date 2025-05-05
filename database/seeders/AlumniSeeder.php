@@ -17,21 +17,20 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4342401036',
+                'nim' => '4342401037',
                 'id_user' => 4,
-                'name' => 'andri putra',
-                'nik' => '234567221',
-                'gender'=>'male',
-                'date_of_birth' => '2006-09-11',
-                'phone_number'=>'082173634512',
-                'email'=>'ariqakbari@gmail.com',
+                'name' => 'hasna fadhilah',
+                'nik' => '234567333',
+                'gender'=>'female',
+                'date_of_birth' => '2005-10-11',
+                'phone_number'=>'082173634539',
+                'email'=>'hasna@gmail.com',
                 'status'=>'worked',
                 'graduation_year'=>'2028',
                 'ipk'=>'4.00',
                 'batch'=>'24',
-                'address'=>'simpang raya',
+                'address'=>'batuaji',
             ]);
-    
             
         }
         //

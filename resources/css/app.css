@@ -6,13 +6,12 @@
 @source "../**/*.js";
 @source "../**/*.vue";
 
-@layer base {
-    :root {
-        --color-primary: #1e376c;
-        --color-primary-dark: #162d5b;
-        --color-secondary: #b5e6f3;
-    }
+@theme {
+    --color-primary: #1e376c;
+    --color-primary-dark: #162d5b;
+    --color-secondary: #b5e6f3;
 }
+
 @layer components {
     .btn-primary {
         @apply w-full py-2 bg-[color:var(--color-primary)] text-white font-semibold rounded-md hover:bg-[color:var(--color-primary-dark)] transition;

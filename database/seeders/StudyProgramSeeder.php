@@ -14,7 +14,7 @@ class StudyProgramSeeder extends Seeder
     public function run(): void
     {
         Tb_study_program::create([
-            'nim' => '4342401036',
+            'nim' => '4342401037',
             'study_program' => 'Teknolgi rekayasa perangkat lunak',
         ]);
 
