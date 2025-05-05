@@ -100,14 +100,14 @@
         <!-- Profile Info -->
         <div class="bg-white shadow rounded p-4 md:p-6">
             <div class="flex flex-col lg:flex-row gap-6">
-                <img src="https://i.pravatar.cc/150" alt="Foto" class="rounded w-32 h-40 md:w-40 md:h-48 object-cover self-center lg:self-start">
+             
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-sm flex-grow">
                     <div><strong>NIM</strong>: {{ $alumni->nim }}</div>
                     <div><strong>Nama</strong>: {{ $alumni->name }}</div>
                     <div><strong>Kelamin</strong>: {{ $alumni->gender }}</div>
                     <div><strong>Nomor Telepon</strong>: {{ $alumni->phone_number }}</div>
                     <div><strong>Email</strong>: {{ $alumni->email }}</div>
-                    <div><strong>Prodi</strong>: {{ $alumni->studyProgram->study_program}}</div>
+                     <div><strong>Prodi</strong>: {{ $alumni->studyProgram->study_program}}</div>
                     <div><strong>Angkatan</strong>: {{ $alumni->batch }}</div>
                     <div><strong>Tahun Lulus</strong>: {{ $alumni->graduation_year}}</div>
                     <div><strong>IPK</strong>: {{ $alumni->ipk }}</div>

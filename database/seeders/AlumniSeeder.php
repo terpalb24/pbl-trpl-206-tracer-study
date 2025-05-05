@@ -17,10 +17,10 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4342401036',
-                'id_user' => 4,
-                'name' => 'andri putra',
-                'nik' => '234567221',
+                'nim' => '4342401031',
+                'id_user' => 2,
+                'name' => 'ariq akbari ashar',
+                'nik' => '234561121',
                 'gender'=>'male',
                 'date_of_birth' => '2006-09-11',
                 'phone_number'=>'082173634512',
