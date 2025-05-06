@@ -11,10 +11,10 @@ use App\Http\Middleware\CheckRole;
 
 Route::get('/', function () {
     return view('landing');
-});
+})->name('landing');
 Route::get('/about', function () {
     return view('about');
-});
+})->name('about');
 // Menampilkan halaman login
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 // Proses login

@@ -10,7 +10,7 @@
       <!-- Desktop Menu -->
       <nav class="hidden md:flex items-center gap-6">
         <a href="#" class="hover:text-[#F2692A]">Beranda</a>
-        <a href="#" class="hover:text-[#F2692A]">Tentang</a>
+        <a href="{{route('about')}}" class="hover:text-[#F2692A]">Tentang</a>
         <a href="#" class="hover:text-[#F2692A]">Kontak</a>
         <a href="#" class="hover:text-[#F2692A]">Statistik</a>
         <div class="relative group">

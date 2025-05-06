@@ -9,7 +9,7 @@
 
       <!-- Desktop Menu -->
       <nav class="hidden md:flex items-center gap-6">
-        <a href="#" class="hover:text-[#F2692A]">Beranda</a>
+        <a href="{{route('landing')}}" class="hover:text-[#F2692A]">Beranda</a>
         <a href="#" class="hover:text-[#F2692A]">Tentang</a>
         <a href="#" class="hover:text-[#F2692A]">Kontak</a>
         <a href="#" class="hover:text-[#F2692A]">Statistik</a>
@@ -20,7 +20,7 @@
             <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Laporan Tracer Study Polibatam 2023</a></li>
           </ul>
         </div>
-        <a href="#" class="flex items-center gap-2 hover:text-[#F2692A]"><i class="fa-solid fa-user"></i> Login</a>
+        <a href="{{route('login')}}" class="flex items-center gap-2 hover:text-[#F2692A]"><i class="fa-solid fa-user"></i> Login</a>
       </nav>
 
       <!-- Hamburger (Mobile) -->
