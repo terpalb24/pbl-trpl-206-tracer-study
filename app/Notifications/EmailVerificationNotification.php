@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class EmailVerificationNotification extends Notification
+class EmailVerificationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -39,16 +39,16 @@ class EmailVerificationNotification extends Notification
      */
     public function toMail($notifiable)
     {
-        $url = url('/alumni/password?token=' . $this->token);
+        $url = route('alumni.password.form', ['token' => $this->token]);
 
         return (new MailMessage)
             ->subject('Verifikasi Email Alumni')
             ->greeting('Halo!')
-            ->line('Terima kasih telah menggunakan aplikasi tracer study polibatam .')
+            ->line('Terima kasih telah menggunakan aplikasi tracer study polibatam.')
             ->line('Silakan klik tombol di bawah untuk verifikasi dan ubah password Anda.')
             ->action('Verifikasi Email', $url);
     }
-
+    
     /**
      * Get the array representation of the notification.
      */

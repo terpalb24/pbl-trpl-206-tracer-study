@@ -5,9 +5,16 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center max-w-6xl w-full">
         <!-- Form Section -->
         <div class="space-y-6">
-            @if (session('success') )
+            @if (session('success'))
                 <div class="bg-green-500 text-white p-4 rounded-md mb-6">
                     {{ session('success') }}
+                </div>
+            @endif
+
+            <!-- Error Message if Token is Not Found -->
+            @if (session('error'))
+                <div class="bg-red-500 text-white p-4 rounded-md mb-6">
+                    {{ session('error') }}
                 </div>
             @endif
 

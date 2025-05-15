@@ -42,11 +42,13 @@ use App\Models\Tb_Company;
                             Auth::logout();
                             return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
                         }
+                   
         
                         // Cek apakah alumni sudah memverifikasi email
                         if ($alumni && $alumni->is_First_login)  {
                             return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
                         }
+                     
 
                         session(['alumni_nim' => $alumni->nim]);
 

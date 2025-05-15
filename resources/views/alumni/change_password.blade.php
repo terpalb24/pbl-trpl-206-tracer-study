@@ -14,6 +14,8 @@
         <form method="POST" action="{{ route('alumni.password.update') }}" class="space-y-5">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
+            <input type="hidden" name="email" value="{{ $email }}">
+            <input type="hidden" name="id_user" value="{{ $id_user }}">
 
             <!-- Password Input -->
             <div>

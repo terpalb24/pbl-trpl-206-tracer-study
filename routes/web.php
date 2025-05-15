@@ -5,37 +5,33 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Middleware\CheckRole;
 
+Route::get('/', fn () => view('landing'))->name('landing');
+Route::get('/about', fn () => view('about'))->name('about');
 
-Route::get('/', function () {
-    return view('landing');
-})->name('landing');
-Route::get('/about', function () {
-    return view('about');
-})->name('about');
-// Menampilkan halaman login
+// Login & Logout
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-// Proses login
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-//logout
 Route::post('/logout', [AuthController::class , 'logout'])->name('logout');
-// untuk ke dashboard admin, alumni, dan company
+
+// Dashboard masing-masing role
 Route::middleware(['auth:web', CheckRole::class . ':1'])->get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('dashboard.admin');
 Route::middleware(['auth:web', CheckRole::class . ':2'])->get('/alumni/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard.alumni');
 Route::middleware(['auth:web', CheckRole::class . ':3'])->get('/company/dashboard', [CompanyController::class, 'dashboard'])->name('dashboard.company');
 
-// untuk memverifikasi email
-Route::group(['middleware' => ['auth']], function(){
-Route::get('/alumni/email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
-Route::post('/alumni/email', [AlumniController::class, 'verifyEmail'])->name('alumni.email.verify');
-Route::get('/alumni/password', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.password.form');
-Route::post('/alumni/password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
+// Verifikasi email (harus login)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/alumni/email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
+    Route::post('/alumni/email', [AlumniController::class, 'verifyEmail'])->name('alumni.email.verify');
 });
-// untuk alumni mengedit profil alumni
+
+// Ganti password (akses langsung dari email, jadi tidak pakai auth)
+Route::get('/alumni/password/{token}', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.password.form');
+Route::post('/alumni/password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
+
+// Profil alumni (harus login dan role alumni)
 Route::middleware(['auth:web', CheckRole::class . ':2'])->group(function () {
     Route::get('/alumni/profil', [AlumniController::class, 'edit'])->name('alumni.edit');
     Route::put('/alumni/profil', [AlumniController::class, 'update'])->name('alumni.update');
-
 });
