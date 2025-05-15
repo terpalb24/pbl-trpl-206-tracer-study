@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
 @import "tailwindcss";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -11,6 +12,7 @@
     --color-primary: #1e376c;
     --color-primary-dark: #162d5b;
     --color-secondary: #b5e6f3;
+    --font-poppins: "Poppins", sans-serif;
 }
 
 @layer components {
@@ -41,4 +43,29 @@
     .text-theme-secondary {
         color: var(--color-secondary);
     }
+}
+
+/* Sidebar styles */
+.sidebar-menu {
+    width: 16rem;
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+    .sidebar-menu {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100vh;
+        z-index: 50;
+    }
+
+    .sidebar-menu.hidden {
+        left: -16rem;
+    }
+}
+
+/* Gradient backgrounds */
+.bg-gradient-welcome {
+    background: linear-gradient(to right, #f9fafb, #73c6ec, #ffedd5);
 }

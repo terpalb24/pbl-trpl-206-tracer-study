@@ -20,8 +20,8 @@ class UserSeeder extends Seeder
 
         Tb_User::create([
             'id_user' => 2,
-            'username' => '4342401031',
-            'password' => Hash::make('4342401031'),
+            'username' => '4342401039',
+            'password' => Hash::make('4342401039'),
             'role' => 2,
 
         ]);
