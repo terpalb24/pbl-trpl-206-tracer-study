@@ -13,6 +13,7 @@
 
     {{-- Icon (Optional) --}}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
     {{-- Font Google Outfit --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,7 +23,7 @@
 
     {{-- Alpine.js --}}
 </head>
-<body class="bg-white m-0 p-0 w-full min-h-screen overflow-x-hidden">
+<body class="font-outfit bg-white m-0 p-0 w-full min-h-screen overflow-x-hidden">
 
 
     {{-- Kontainer fullscreen konten --}}

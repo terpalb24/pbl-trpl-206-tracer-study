@@ -118,7 +118,8 @@
                         </div>
                         <div>
                             <h3 class="text-sm text-gray-500 mb-1">Prodi</h3>
-                            <p class="font-semibold">{{ $alumni->studyProgram->study_program }}</p>
+                            <p class="font-semibold">{{ $alumni->studyProgram->study_program ?? '-' }}
+                            </p>
                         </div>
                         <div>
                             <h3 class="text-sm text-gray-500 mb-1">Angkatan</h3>

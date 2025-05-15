@@ -165,6 +165,7 @@ public function update(Request $request)
         'graduation_year' => 'required',
         'ipk' => 'required',
         'status' => 'required|in:worked,not worked',
+        'id_study' => 'required|exists:tb_study_program,id_study',
     ]);
 
     // Ambil nim dari session

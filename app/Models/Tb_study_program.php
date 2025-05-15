@@ -16,8 +16,9 @@ class Tb_study_program extends Model
 
     protected $fillable = [
         'study_program', 
-        'nim',
+        'id_study',
     ];
 
+    
 
 }

@@ -120,19 +120,31 @@
 
                 <!-- Prodi -->
                 <div>
-                    <label for="study_program_id" class="block font-semibold mb-1">Prodi</label>
-                    <select name="study_program_id" class="w-full border px-3 py-2 rounded @error('study_program_id') border-red-500 @enderror">
-                        <option value="">-- Pilih Prodi --</option>
-                        @foreach(App\Models\Tb_study_program::all() as $program)
-                            <option value="{{ $program->id }}" {{ old('study_program_id', $alumni->study_program_id) == $program->id ? 'selected' : '' }}>
-                                {{ $program->study_program }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('study_program_id')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
+                  <label for="id_study" class="block font-semibold mb-1">Prodi</label>
+
+                <!-- Select asli, disembunyikan -->
+           <select name="id_study" id="id_study" class="hidden">
+             <option value="">-- Pilih Prodi --</option>
+              @foreach(App\Models\Tb_study_program::all() as $program)
+              <option value="{{ $program->id_study }}"
+                {{ old('id_study', $alumni->id_study) == $program->id_study ? 'selected' : '' }}>
+                {{ $program->study_program }}
+             </option>
+              @endforeach
+        </select>
+
+    <!-- Input combobox -->
+    <div class="relative">
+        <input type="text" id="prodi-combobox" class="w-full border px-3 py-2 rounded @error('id_study') border-red-500 @enderror"
+               placeholder="Ketik untuk cari Prodi" autocomplete="off" />
+        <div id="prodi-list" 
+             class="absolute z-50 w-full max-h-48 overflow-auto border border-gray-300 bg-white rounded mt-1 hidden"></div>
+    </div>
+
+    @error('id_study')
+        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+    @enderror
+</div>
 
                 <!-- Angkatan -->
                 <div>
@@ -233,5 +245,61 @@
         document.body.appendChild(form);
         form.submit();
     });
+    document.addEventListener('DOMContentLoaded', function () {
+    const select = document.getElementById('id_study');
+    const input = document.getElementById('prodi-combobox');
+    const list = document.getElementById('prodi-list');
+
+    // Fungsi buat render list filter berdasarkan input
+    function renderList(filter = '') {
+        const filterLower = filter.toLowerCase();
+        const options = Array.from(select.options).filter(opt =>
+            opt.value !== '' && opt.text.toLowerCase().includes(filterLower)
+        );
+
+        if (options.length === 0) {
+            list.innerHTML = '<p class="p-2 text-gray-500">Tidak ada Prodi ditemukan</p>';
+        } else {
+            list.innerHTML = options.map(opt =>
+                `<div class="p-2 cursor-pointer hover:bg-blue-500 hover:text-white" data-value="${opt.value}">${opt.text}</div>`
+            ).join('');
+        }
+        list.classList.remove('hidden');
+    }
+
+    // Set nilai input awal sesuai select yang terpilih
+    const selectedOption = select.options[select.selectedIndex];
+    if (selectedOption && selectedOption.value !== '') {
+        input.value = selectedOption.text;
+    }
+
+    // Ketika input fokus, render semua option
+    input.addEventListener('focus', () => {
+        renderList(input.value);
+    });
+
+    // Ketika ketik di input, filter list
+    input.addEventListener('input', () => {
+        renderList(input.value);
+    });
+
+    // Klik di item dropdown pilih value
+    list.addEventListener('click', (e) => {
+        if (e.target && e.target.dataset.value) {
+            const val = e.target.dataset.value;
+            const label = e.target.textContent;
+            select.value = val;       // Update select hidden
+            input.value = label;      // Update input
+            list.classList.add('hidden');
+        }
+    });
+
+    // Klik di luar combobox / list -> sembunyikan dropdown
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !list.contains(e.target)) {
+            list.classList.add('hidden');
+        }
+    });
+});
 </script>
 @endsection

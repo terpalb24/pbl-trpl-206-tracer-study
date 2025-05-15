@@ -13,10 +13,95 @@ class StudyProgramSeeder extends Seeder
      */
     public function run(): void
     {
+        //mesin
         Tb_study_program::create([
-            'nim' => '4342401039',
-            'study_program' => 'Teknologi Rekayasa Perangkat Lunak',
+            'id_study' => '9',
+            'study_program' => 'Diploma 3 Teknik Mesin',
            
+        ]);
+        Tb_study_program::create([
+            'id_study' => '10',
+            'study_program' => 'Diploma 3 Teknik Perawatan Pesawat Udara',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '11',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Konstruksi Perkapalan',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '12',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Pengelasan dan Fabrikasi',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '13',
+            'study_program' => 'Program Profesi Insinyur (PSPPI)',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '14',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Metalurgi',
+
+        ]);
+        //elektro
+        Tb_study_program::create([
+            'id_study' => '15',
+            'study_program' => 'Diploma 3 Teknik Elektronika Manufaktur',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '16',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Elektronika',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '17',
+            'study_program' => 'Diploma 3 Teknik Instrumentasi',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '18',
+            'study_program' => 'Sarjana Terapan teknik mekatronika',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '19',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Pembangkit Energi',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '20',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa robotika',
+
+        ]);
+        //manajemen bisnis
+
+        Tb_study_program::create([
+            'id_study' => '21',
+            'study_program' => 'Diploma 3 Akuntansi',
+
+        ]);
+
+        Tb_study_program::create([
+            'id_study' => '22',
+            'study_program' => 'Sarjana Terapan Akuntansi Manajerial',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '23',
+            'study_program' => 'Sarjana Terapan Administrasi Bisnis Terapan',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '24',
+            'study_program' => 'Sarjana Terapan Logistik Perdagangan Internasional',
+
+        ]);
+        Tb_study_program::create([
+            'id_study' => '25',
+            'study_program' => 'Program Studi D2 Jalur Cepat Distribusi Barang',
+
         ]);
 
         //

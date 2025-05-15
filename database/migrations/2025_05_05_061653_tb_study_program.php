@@ -13,10 +13,9 @@ return new class extends Migration
     {
         Schema::create('tb_study_program', function (Blueprint $table) {
             $table->id('id_study');
-            $table->string('nim');
             $table->string('study_program', 255);
             $table->timestamps();
-            $table->foreign('nim')->references('nim')->on('tb_alumni')->onDelete('cascade');
+        
         });
         //
     }

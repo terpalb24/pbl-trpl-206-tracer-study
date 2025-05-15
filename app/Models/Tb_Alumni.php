@@ -23,6 +23,7 @@ class Tb_Alumni extends Authenticatable
     // Kolom-kolom yang bisa diisi massal
     protected $fillable = [
         'nim',
+        'id_study',
         'id_user',
         'name',
         'nik',
@@ -48,8 +49,9 @@ class Tb_Alumni extends Authenticatable
 
     public function studyProgram()
     {
-        return $this->belongsTo(Tb_study_program::class, 'nim'  , 'nim');
+        return $this->belongsTo(Tb_study_program::class, 'id_study', 'id_study');
     }
+    
     
 
     // ...

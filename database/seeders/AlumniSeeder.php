@@ -30,6 +30,7 @@ class AlumniSeeder extends Seeder
                 'ipk'=>'4.00',
                 'batch'=>'24',
                 'address'=>'legenda',
+                'study_program'=>'1',
             ]);
     
             
