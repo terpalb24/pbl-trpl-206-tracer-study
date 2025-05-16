@@ -1,5 +1,5 @@
 @extends('layouts.app')
-
+@section('content')
 <!-- Navbar -->
   <header class="fixed z-999 left-0 right-0 items-center bg-[#0c2a5b] text-white p-4">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
@@ -172,4 +172,5 @@
       menu.classList.toggle('hidden');
     });
   </script>
+  @endsection
   

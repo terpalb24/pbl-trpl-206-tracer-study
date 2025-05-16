@@ -15,7 +15,7 @@
         </div>
         
         <div class="flex flex-col p-4">
-            @include('alumni.navbar')
+            @include('company.navbar')
         </div>
     </aside>
 
@@ -44,8 +44,8 @@
                         class="w-10 h-10 rounded-full object-cover border-2 border-white" />
                         
                     <div class="text-left">
-                        <p class="font-semibold leading-none">{{ $alumni->name }}</p>
-                        <p class="text-sm text-gray-300 leading-none mt-1">Alumni</p>
+                        <p class="font-semibold leading-none">{{ $company->company_name }}</p>
+                        <p class="text-sm text-gray-300 leading-none mt-1">company</p>
                     </div>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
@@ -77,124 +77,59 @@
         @endif
 
         <!-- Form Edit Profil -->
-        <form action="{{ route('alumni.update') }}" method="POST" class="bg-white rounded-2xl shadow-md mt-8 mx-4 md:mx-10 lg:mx-16 xl:mx-24 p-6 md:p-10 lg:p-12 xl:p-16">
+        <form action="{{ route('company.update') }}" method="POST" class="bg-white rounded-2xl shadow-md mt-8 mx-4 md:mx-10 lg:mx-16 xl:mx-24 p-6 md:p-10 lg:p-12 xl:p-16">
             @csrf
             @method('PUT')
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4 text-sm ">
 
-                <!-- NIM -->
-                <div>
-                    <label class="block font-semibold mb-1">NIM</label>
-                    <input type="text" value="{{ session('alumni_nim') }}" disabled class="w-full bg-gray-100 border px-3 py-2 rounded">
-                </div>
 
-                <!-- Kelamin -->
-                <div>
-                    <label class="block font-semibold mb-1">Kelamin</label>
-                    <input type="text" value="{{ $alumni->gender }}" disabled class="w-full bg-gray-100 border px-3 py-2 rounded">
-                </div>
-                
-                <!-- Nama -->
-                <div>
-                    <label class="block font-semibold mb-1">Nama</label>
-                    <input type="text" value="{{ $alumni->name }}" disabled class="w-full bg-gray-100 border px-3 py-2 rounded">
-                </div>
-
-                <!-- Nomor Telepon -->
-                <div>
-                    <label for="phone_number" class="block font-semibold mb-1">Nomor Telepon</label>
-                    <input type="text" name="phone_number" value="{{ old('phone_number', $alumni->phone_number) }}"
-                        class="w-full border px-3 py-2 rounded @error('phone_number') border-red-500 @enderror">
-                    @error('phone_number')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block font-semibold mb-1">Email</label>
-                    <input type="email" name="email" value="{{ old('email', $alumni->email) }}"
-                        class="w-full border px-3 py-2 rounded @error('email') border-red-500 @enderror">
-                    @error('email')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <!-- Prodi -->
-                <div>
-                  <label for="id_study" class="block font-semibold mb-1">Prodi</label>
-
-                <!-- Select asli, disembunyikan -->
-           <select name="id_study" id="id_study" class="hidden">
-             <option value="">-- Pilih Prodi --</option>
-              @foreach(App\Models\Tb_study_program::all() as $program)
-              <option value="{{ $program->id_study }}"
-                {{ old('id_study', $alumni->id_study) == $program->id_study ? 'selected' : '' }}>
-                {{ $program->study_program }}
-             </option>
-              @endforeach
-        </select>
-
-    <!-- Input combobox -->
-    <div class="relative">
-        <input type="text" id="prodi-combobox" class="w-full border px-3 py-2 rounded @error('id_study') border-red-500 @enderror"
-               placeholder="Ketik untuk mencari Prodi" autocomplete="off" />
-        <div id="prodi-list" 
-             class="absolute z-50 w-full max-h-48 overflow-auto border border-gray-300 bg-white rounded mt-1 hidden"></div>
-    </div>
-
-    @error('id_study')
-        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+            <!-- company_name -->
+<div>
+    <label class="block font-semibold mb-1">Company Name</label>
+    <input type="text" name="company_name" value="{{ old('company_name', $company->company_name) }}"
+        class="w-full border px-3 py-2 rounded @error('company_name') border-red-500 @enderror">
+    @error('company_name')
+        <p class="text-red-500 text-xs">{{ $message }}</p>
     @enderror
 </div>
 
-                <!-- Angkatan -->
-                <div>
-                    <label for="batch" class="block font-semibold mb-1">Angkatan</label>
-                    <input type="number" name="batch" value="{{ old('batch', $alumni->batch) }}"
-                        class="w-full border px-3 py-2 rounded @error('batch') border-red-500 @enderror">
-                    @error('batch')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
+<!-- company_address -->
+<div>
+    <label class="block font-semibold mb-1">Company Address</label>
+    <input type="text" name="company_address" value="{{ old('company_address', $company->company_address) }}"
+        class="w-full border px-3 py-2 rounded @error('company_address') border-red-500 @enderror">
+    @error('company_address')
+        <p class="text-red-500 text-xs">{{ $message }}</p>
+    @enderror
+</div>
 
-                <!-- Tahun Lulus -->
-                <div>
-                    <label for="graduation_year" class="block font-semibold mb-1">Tahun Lulus</label>
-                    <input type="number" name="graduation_year" value="{{ old('graduation_year', $alumni->graduation_year) }}"
-                        class="w-full border px-3 py-2 rounded @error('graduation_year') border-red-500 @enderror">
-                    @error('graduation_year')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
+<!-- company_email-->
+<div>
+    <label for="company_email" class="block font-semibold mb-1">Company Email</label>
+    <input type="email" name="company_email" value="{{ old('company_email', $company->company_email) }}"
+        class="w-full border px-3 py-2 rounded @error('company_email') border-red-500 @enderror">
+    @error('company_email')
+        <p class="text-red-500 text-xs">{{ $message }}</p>
+    @enderror
+</div>
 
-                <!-- IPK -->
-                <div>
-                    <label for="ipk" class="block font-semibold mb-1">IPK</label>
-                    <input type="text" name="ipk" value="{{ old('ipk', $alumni->ipk) }}" placeholder="e.g. 4.00"
-                        class="w-full border px-3 py-2 rounded @error('ipk') border-red-500 @enderror">
-                    @error('ipk')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
+<!-- company_phone_number -->
+<div>
+    <label for="company_phone_number" class="block font-semibold mb-1">Company Phone Number</label>
+    <input type="text" name="company_phone_number" value="{{ old('company_phone_number', $company->company_phone_number) }}"
+        class="w-full border px-3 py-2 rounded @error('company_phone_number') border-red-500 @enderror">
+    @error('company_phone_number')
+        <p class="text-red-500 text-xs">{{ $message }}</p>
+    @enderror
+</div>
 
-                <!-- Status Pekerjaan -->
-                <div>
-                    <label for="employment_status" class="block font-semibold mb-1">Status Pekerjaan</label>
-                    <input type="text" name="status" value="{{ old('employment_status', $alumni->status) }}"
-                        class="w-full border px-3 py-2 rounded @error('employment_status') border-red-500 @enderror"
-                        placeholder="Masukkan status pekerjaan (worked atau not worked)">
-                    @error('employment_status')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
 
             </div>
 
             <!-- Tombol Aksi -->
             <div class="mt-6 flex justify-end gap-4">
-                <a href="{{ route('dashboard.alumni') }}"
+                <a href="{{ route('dashboard.company') }}"
                     class="bg-gray-400 text-white px-6 py-2 rounded hover:bg-gray-500 transition">
                     Batal
                 </a>

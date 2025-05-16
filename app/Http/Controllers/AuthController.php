@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\Tb_User;
 use App\Models\Tb_Alumni;
 use App\Models\Tb_Company;
+use Illuminate\Support\Facades\Hash;
     
     class AuthController extends Controller
     {
@@ -66,7 +67,9 @@ use App\Models\Tb_Company;
                             Auth::logout();
                             return redirect('/login')->with('error', 'Data company tidak ditemukan. Silakan hubungi administrator.');
                         }
-                        session(['company' => $company]);
+                        session(['id_company' => $company->id_company]);
+
+
                         return redirect()->route('dashboard.company');
                     
                     default:
@@ -89,5 +92,64 @@ use App\Models\Tb_Company;
     
             return redirect('/login');
         }
+        public function ChangePasswordForm(){
+            return view('change-password');
+        }
+
+        public function updatePasswordAll(Request $request)
+        {
+            $request->validate([
+                'current_password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                ],
+                'password' => [
+                    'required',
+                    'string',
+                    'min:8',
+                    'confirmed',
+                    'regex:/[a-z]/',      // huruf kecil
+                    'regex:/[A-Z]/',      // huruf besar
+                    'regex:/[0-9]/',      // angka
+                    'regex:/[@$!%*?&]/'   // karakter spesial
+                ],
+            ], [
+                'password.required' => 'Password wajib diisi.',
+                'password.string' => 'Password harus berupa teks.',
+                'password.min' => 'Password minimal 8 karakter.',
+                'password.confirmed' => 'Konfirmasi password tidak cocok.',
+                'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan simbol.',
+            ]);
+        
+            $user = Auth::user();
+        
+            // Verifikasi password lama
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'Password lama tidak cocok.']);
+            }
+        
+            // Periksa apakah password baru sama dengan password lama
+            if ($request->current_password === $request->password) {
+                return back()->withErrors(['password' => 'Password baru tidak boleh sama dengan password lama.']);
+            }
+        
+            // Update password
+            $user->password = Hash::make($request->password);
+            $user->save();
+        
+            // Arahkan pengguna ke dashboard sesuai peran tanpa private function
+            if ($user->role == '1') {
+                return redirect()->route('dashboard.admin');
+            } elseif ($user->role == '2') {
+                return redirect()->route('dashboard.alumni');
+            } elseif ($user->role == '3') {
+                return redirect()->route('dashboard.company');
+            } else {
+                return redirect()->route('/login')->with('error', 'Role tidak dikenali.');
+            }
+        }
+        
+
     }
     

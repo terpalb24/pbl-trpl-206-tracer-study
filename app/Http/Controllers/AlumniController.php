@@ -14,7 +14,8 @@ use Illuminate\Support\Carbon;
 
 
 class AlumniController extends Controller
-{public function dashboard()
+{
+    public function dashboard()
     {
         $alumniId = session('id_user');
         $alumni = Tb_Alumni::find($alumniId);

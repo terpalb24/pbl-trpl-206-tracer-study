@@ -46,7 +46,7 @@
                 <!-- Buttons -->
                 <div class="space-y-3">
                     <button type="submit" class="btn-primary">Masuk</button>
-                    <a href="#" class="btn-secondary">Batal</a>
+                    <a href="/" class="btn-secondary">Batal</a>
                 </div>
             </form>
         </div>

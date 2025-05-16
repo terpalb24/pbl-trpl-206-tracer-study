@@ -35,3 +35,16 @@ Route::middleware(['auth:web', CheckRole::class . ':2'])->group(function () {
     Route::get('/alumni/profil', [AlumniController::class, 'edit'])->name('alumni.edit');
     Route::put('/alumni/profil', [AlumniController::class, 'update'])->name('alumni.update');
 });
+
+//change password all user
+Route::middleware('auth')->group(function (){
+    Route::get('/change-password', [AuthController::class, 'ChangePasswordForm'])->name('password.change');
+    Route::post('/change-password', [AuthController::class, 'updatePasswordAll'])->name('password.update');
+});
+
+//profil perusahaan (harus login)
+Route::middleware(['auth:web', CheckRole::class . ':3'])->group(function () {
+    Route::get('/company/profil', [CompanyController::class, 'edit'])->name('company.edit');
+    Route::put('/company/profil', [CompanyController::class, 'update'])->name('company.update');
+});
+
