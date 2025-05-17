@@ -8,6 +8,6 @@
                 <i class="fas fa-history w-5 text-center"></i> <span>Riwayat</span>
             </a>
             <a href="{{ route('alumni.edit') }}" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition ">
-                <i class="fas fa-user w-5 text-center"></i> <span>Profil</span>
+                <i class="fas fa-user w-5 text-center"></i> <span>Edit Profil</span>
             </a>
         </nav>
