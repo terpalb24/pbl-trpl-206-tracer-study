@@ -30,7 +30,7 @@
         <div class="bg-white shadow-sm p-4 flex justify-between items-center">
             <div class="flex items-center">
                 <button id="toggle-sidebar" class="mr-4 lg:hidden">
-                    <i class="fas fa-bars text-xl text-black-800"></i>
+                    <i class="fas fa-bars text-xl text-black-800" ></i>
                 </button>
                 <h1 class="text-2xl font-bold text-blue-800">Edit Profil</h1>
             </div>
@@ -85,14 +85,16 @@
 
 
             <!-- company_name -->
-<div>
+ <div>
     <label class="block font-semibold mb-1">Company Name</label>
     <input type="text" name="company_name" value="{{ old('company_name', $company->company_name) }}"
-        class="w-full border px-3 py-2 rounded @error('company_name') border-red-500 @enderror">
+        class="w-full border px-3 py-2 rounded bg-gray-100 cursor-not-allowed @error('company_name') border-red-500 @enderror"
+        readonly>
     @error('company_name')
         <p class="text-red-500 text-xs">{{ $message }}</p>
     @enderror
 </div>
+
 
 <!-- company_address -->
 <div>

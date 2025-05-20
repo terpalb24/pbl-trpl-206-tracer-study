@@ -110,6 +110,7 @@
                         <p class="text-red-500 text-xs">{{ $message }}</p>
                     @enderror
                 </div>
+                
 
                 <!-- Email -->
                 <div>
@@ -181,14 +182,17 @@
 
                 <!-- Status Pekerjaan -->
                 <div>
-                    <label for="employment_status" class="block font-semibold mb-1">Status Pekerjaan</label>
-                    <input type="text" name="status" value="{{ old('employment_status', $alumni->status) }}"
-                        class="w-full border px-3 py-2 rounded @error('employment_status') border-red-500 @enderror"
-                        placeholder="Masukkan status pekerjaan (worked atau not worked)">
-                    @error('employment_status')
-                        <p class="text-red-500 text-xs">{{ $message }}</p>
-                    @enderror
-                </div>
+                   <label for="status" class="block font-semibold mb-1">Status Pekerjaan</label>
+            <select name="status" id="status"
+                     class="w-full border px-3 py-2 rounded @error('status') border-red-500 @enderror">
+                   <option value="worked" {{ old('status', $alumni->status) == 'worked' ? 'selected' : '' }}>Worked</option>
+                   <option value="not worked" {{ old('status', $alumni->status) == 'not worked' ? 'selected' : '' }}>Not Worked</option>
+             </select>
+    @error('status')
+        <p class="text-red-500 text-xs">{{ $message }}</p>
+    @enderror
+</div>
+
 
             </div>
 

@@ -42,9 +42,40 @@ Route::middleware('auth')->group(function (){
     Route::post('/change-password', [AuthController::class, 'updatePasswordAll'])->name('password.update');
 });
 
-//profil perusahaan (harus login)
+//profil perusahaan (harus login dan role perusahaan)
 Route::middleware(['auth:web', CheckRole::class . ':3'])->group(function () {
     Route::get('/company/profil', [CompanyController::class, 'edit'])->name('company.edit');
     Route::put('/company/profil', [CompanyController::class, 'update'])->name('company.update');
 });
+
+// Admin routes untuk manage alumni
+Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
+    Route::get('/admin/alumni', [AdminController::class, 'alumniIndex'])->name('admin.alumni.index');
+    Route::get('admin/alumni/create', [AdminController::class, 'alumniCreate'])->name('admin.alumni.create');
+    Route::post('admin/alumni/store', [AdminController::class, 'alumniStore'])->name('admin.alumni.store');    
+    Route::get('admin/alumni/edit/{nim}', [AdminController::class, 'alumniEdit'])->name('admin.alumni.edit');
+    Route::put('admin/alumni/{nim}', [AdminController::class, 'alumniUpdate'])->name('admin.alumni.update');
+    Route::delete('admin/alumni/{nim}', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy');
+    Route::post('/admin/alumni/import', [AdminController::class, 'import'])->name('admin.alumni.import');
+    Route::get('/admin/alumni/export', [AdminController::class, 'export'])->name('alumni.export');
+
+
+});
+//routes admin untuk manage perusahaan
+Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
+    Route::get('/admin/company', [AdminController::class, 'companyIndex'])->name('admin.company.index');
+    Route::get('admin/company/create', [AdminController::class, 'companyCreate'])->name('admin.company.create');
+    Route::post('admin/company/store', [AdminController::class, 'companyStore'])->name('admin.company.store');    
+    Route::get('admin/company/edit/{id_company}', [AdminController::class, 'companyEdit'])->name('admin.company.edit');
+    Route::put('admin/company/{id_company}', [AdminController::class, 'companyUpdate'])->name('admin.company.update');
+    Route::delete('admin/company/{id_company}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
+    Route::post('/admin/company/import', [AdminController::class, 'companyImport'])->name('admin.company.import');
+    Route::get('/admin/company/export', [AdminController::class, 'companyExport'])->name('company.export');
+
+
+});
+
+
+
+
 

@@ -84,7 +84,7 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-xl font-bold text-gray-800">Profil Perusahaan</h2>
-                    <a href=" " class="bg-blue-900 text-white px-4 py-2 rounded-md flex items-center space-x-2">
+                    <a href="{{ route('company.edit') }}" class="bg-blue-900 text-white px-4 py-2 rounded-md flex items-center space-x-2">
                         <span>Edit Profil</span>
                         <i class="fas fa-edit"></i>
                     </a>

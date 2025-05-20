@@ -164,7 +164,7 @@ public function update(Request $request)
         'email' => 'required|email',
         'batch' => 'required|integer',
         'graduation_year' => 'required',
-        'ipk' => 'required',
+        'ipk' => 'required|numeric|min:0|max:4',
         'status' => 'required|in:worked,not worked',
         'id_study' => 'required|exists:tb_study_program,id_study',
     ]);
