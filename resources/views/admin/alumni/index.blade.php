@@ -17,7 +17,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 
@@ -75,9 +75,16 @@
                     </a>
                 </div>
             </form>
+            @if(session('error'))
+    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+        {{ session('error') }}
+    </div>
+@endif
+
             @error('file')
                 <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
             @enderror
+            
         </div>
 
         <!-- Content Section -->
@@ -135,7 +142,7 @@
                                            title="Edit">
                                            <i class="bi bi-pencil-square mr-1"></i>Edit
                                         </a>
-                                        <form action="{{ route('admin.alumni.destroy', $item->nim) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alumni ini?')">
+                                        <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alumni ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 

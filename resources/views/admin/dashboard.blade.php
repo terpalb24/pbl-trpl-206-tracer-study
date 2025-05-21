@@ -17,7 +17,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 
@@ -77,7 +77,7 @@
                         <i class="fas fa-user-graduate text-blue-950 text-2xl"></i>
                     </div>
                     <div>
-                    <div class="text-2xl font-bold">2.500</div>
+                    <div class="text-2xl font-bold">{{ number_format($companyCount) }}</div>
                     <div class="text-2xl">Alumni</div>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                         <i class="fas fa-building text-sky-400 text-2xl"></i>
                     </div>
                     <div>
-                    <div class="text-2xl font-bold">80</div>
+                    <div class="text-2xl font-bold">{{ number_format($alumniCount) }}</div>
                     <div class="text-2xl">Perusahaan</div>
                 </div>
                 </div>

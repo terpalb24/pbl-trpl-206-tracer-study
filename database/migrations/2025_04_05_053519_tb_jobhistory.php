@@ -20,8 +20,8 @@ return new class extends Migration
             $table->date('end_date');
             $table->float('salary');
             $table->timestamps();
-            $table->foreign('nim')->references('nim')->on('tb_alumni');
-            $table->foreign('id_company')->references('id_company')->on('tb_company');
+            $table->foreign('nim')->references('nim')->on('tb_alumni')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('id_company')->references('id_company')->on('tb_company')->onDelete('cascade')->onUpdate('cascade');
 
         });
         //

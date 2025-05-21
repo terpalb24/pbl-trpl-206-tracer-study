@@ -14,10 +14,25 @@ use App\Models\Tb_Company;
 
 class AdminController extends Controller
 {
-    Public function dashboard()
-    {
-        return view('admin.dashboard');
-    }
+    public function dashboard()
+{
+    $result = DB::select("
+        SELECT 
+            (SELECT COUNT(*) FROM tb_alumni) AS alumni_count,
+            (SELECT COUNT(*) FROM tb_company) AS company_count
+    ");
+
+    // $result adalah array objek, ambil elemen pertama
+    $data = $result[0];
+
+    $alumniCount = $data->alumni_count;
+    $companyCount = $data->company_count;
+
+    // Misal data kuisioner tetap statis dulu
+    $questionnaireCount = 2300;
+
+    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'questionnaireCount'));
+}
     // Tampilkan semua alumni
 // Tampilkan semua alumni
 public function alumniIndex(Request $request)
@@ -50,7 +65,7 @@ public function alumniStore(Request $request)
         'nim' => 'required|unique:tb_alumni,nim',
         'nik' => 'required|unique:tb_alumni,nik|numeric',
         'name' => 'required|string|max:50',
-        'gender' => 'required|in:male,female',
+        'gender' => 'required|in:pria,wanita',
         'email' => 'required|email|unique:tb_alumni,email',
         'phone_number' => 'required|string|max:15',
         'id_study' => 'required|exists:tb_study_program,id_study',
@@ -110,7 +125,7 @@ public function alumniUpdate(Request $request, $nim)
     $request->validate([
         'nik' => 'required',
         'name' => 'required|string|max:50',
-        'gender' => 'required|in:male,female',
+        'gender' => 'required|in:pria,wanita',
         'email' => 'required',
         'phone_number' => 'required|string|max:15',
         'id_study' => 'required|exists:tb_study_program,id_study',
@@ -144,9 +159,9 @@ public function alumniUpdate(Request $request, $nim)
 }
 
 // Hapus alumni
-public function alumniDestroy($nim)
+public function alumniDestroy($id_user)
 {
-    Tb_alumni::where('nim', $nim)->delete();
+    Tb_User::where('id_user',$id_user)->delete();
     return redirect()->route('admin.alumni.index')->with('success', 'Data alumni dihapus.');
 }
 
@@ -180,16 +195,23 @@ public function import(Request $request)
             $date_of_birth = $row[4];
             $email = $row[5];
             $phone_number = $row[6];
-            // abaikan kolom status dari excel, pakai default 'not worked'
             $ipk = $row[7];
             $address = $row[8];
             $batch = $row[9];
             $graduation_year = $row[10];
-            $programStudyName = $row[11]; // nama program studi dari excel
+            $programStudyName = $row[11]; // nama program studi dari Excel
 
-            // Cari id_study dari nama program studi
-            $studyProgram = Tb_study_program::where('study_program', $programStudyName)->first();
-            $id_study = $studyProgram ? $studyProgram->id_study : null;
+            // Cari id_study berdasarkan nama program studi yang mirip
+            $studyProgram = Tb_study_program::whereRaw(
+                'LOWER(study_program) LIKE ?', 
+                ['%' . strtolower($programStudyName) . '%']
+            )->first();
+
+            if (!$studyProgram) {
+                throw new \Exception("Program Studi '$programStudyName' tidak ditemukan pada baris ke-" . ($i + 1));
+            }
+
+            $id_study = $studyProgram->id_study;
 
             // Cek apakah user sudah ada berdasarkan username (nim)
             $user = Tb_User::where('username', $nim)->first();
@@ -211,7 +233,7 @@ public function import(Request $request)
                     'date_of_birth' => $date_of_birth,
                     'email' => $email,
                     'phone_number' => $phone_number,
-                    'status' => 'not worked', // status default
+                    'status' => 'tidak bekerja', // status default
                     'ipk' => $ipk,
                     'address' => $address,
                     'batch' => $batch,
@@ -224,7 +246,7 @@ public function import(Request $request)
 
         DB::commit();
     } catch (\Exception $e) {
-        DB::rollback();
+        DB::rollBack();
         return redirect()->back()->with('error', 'Import gagal: ' . $e->getMessage());
     }
 
@@ -347,7 +369,7 @@ public function companyUpdate(Request $request, $id_company)
     ]);
 
     // Update juga email di tb_user jika perlu
-    $user = Tb_user::where('id_company', $company->id_company)->first();
+    $user = Tb_Company::where('id_company', $company->id_company)->first();
     if ($user) {
         $user->update([
             'username' => $request->company_email,
@@ -359,9 +381,9 @@ public function companyUpdate(Request $request, $id_company)
     return redirect()->route('admin.company.index')->with('success', 'Data company berhasil diperbarui.');
 }
 
-public function companyDestroy($id_company)
+public function companyDestroy($id_user)
 {
-    Tb_Company::where('id_company', $id_company)->delete();
+    Tb_User::where('id_user', $id_user)->delete();
     return redirect()->route('admin.company.index')->with('success', 'Data perusahaan dihapus.');
 }
  public function companyImport(Request $request)

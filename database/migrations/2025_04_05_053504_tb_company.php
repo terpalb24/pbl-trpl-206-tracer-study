@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('company_email',50);
             $table->string('company_phone_number',15);
             $table->timestamps();
-            $table->foreign('id_user')->references('id_user')->on('tb_user');
+            $table->foreign('id_user')->references('id_user')->on('tb_user')->onDelete('cascade')->onUpdate('cascade');
         });
         //
     }

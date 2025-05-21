@@ -13,6 +13,46 @@ class StudyProgramSeeder extends Seeder
      */
     public function run(): void
     {
+        Tb_study_program::create([
+            'id_study' => '1',
+            'study_program' => 'Diploma 3 Teknik Informatika',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '2',
+            'study_program' => 'Diploma 3 Teknologi Geomatika',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '3',
+            'study_program' => 'Sarjana Terapan Animasi',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '4',
+            'study_program' => 'Sarjana Terapan Teknologi Rekayasa Multimedia',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '5',
+            'study_program' => 'Sarjana Terapan Rekayasa Keamanan Siber',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '6',
+            'study_program' => 'Sarjana Terapan Rekayasa Perangkat Lunak',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '7',
+            'study_program' => 'Sarjana Terapan Teknologi Permainan',
+           
+        ]);
+        Tb_study_program::create([
+            'id_study' => '8',
+            'study_program' => 'Magister Terapan (S2) Rekayasa / Teknik Komputer',
+           
+        ]);
         //mesin
         Tb_study_program::create([
             'id_study' => '9',

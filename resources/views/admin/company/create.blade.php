@@ -17,7 +17,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 

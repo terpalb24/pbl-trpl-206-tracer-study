@@ -17,7 +17,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 
@@ -107,8 +107,8 @@
             <label for="gender" class="block font-semibold mb-1">Jenis Kelamin</label>
             <select name="gender" id="gender" class="w-full border rounded px-3 py-2">
                 <option value="">-- Pilih Jenis Kelamin --</option>
-                <option value="male" {{ old('gender') == 'male' ? 'selected' : '' }}>male</option>
-                <option value="female" {{ old('gender') == 'female' ? 'selected' : '' }}>female</option>
+                <option value="pria" {{ old('gender') == 'pria' ? 'selected' : '' }}>pria</option>
+                <option value="wanita" {{ old('gender') == 'wanita' ? 'selected' : '' }}>wanita</option>
             </select>
             @error('gender')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror
         </div>
@@ -160,8 +160,8 @@
     <label for="status" class="block font-semibold mb-1">Status</label>
     <select name="status" id="status" class="w-full border rounded px-3 py-2">
         <option value="">-- Pilih Status --</option>
-        <option value="Worked" {{ old('status') == 'Worked' ? 'selected' : '' }}>Worked</option>
-        <option value="Not Worked" {{ old('status') == 'Not Worked' ? 'selected' : '' }}>Not Worked</option>
+        <option value="bekerja" {{ old('status') == 'bekerja' ? 'selected' : '' }}>bekerja</option>
+        <option value="tidak bekerja" {{ old('status') == 'tidak bekerja' ? 'selected' : '' }}>tidak bekerja</option>
         <option value="Melanjutkan Studi" {{ old('status') == 'Melanjutkan Studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
     </select>
     @error('status')<p class="text-red-600 text-sm mt-1">{{ $message }}</p>@enderror

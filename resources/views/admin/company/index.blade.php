@@ -17,7 +17,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 
@@ -136,7 +136,7 @@
                                            title="Edit">
                                            <i class="bi bi-pencil-square mr-1"></i>Edit
                                         </a>
-                                        <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')">
+                                        <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

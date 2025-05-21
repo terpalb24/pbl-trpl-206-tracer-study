@@ -13,7 +13,7 @@
             </button>
         </div>
         <div class="flex flex-col p-4">
-            @include('admin.navbar')
+            @include('admin.sidebar')
         </div>
     </aside>
 
@@ -170,16 +170,16 @@
                         >
                             <option value="">-- Pilih Jenis Kelamin --</option>
                             <option
-                                value="male"
-                                {{ old('gender', $alumni->gender) == 'male' ? 'selected' : '' }}
+                                value="pria"
+                                {{ old('gender', $alumni->gender) == 'pria' ? 'selected' : '' }}
                             >
-                                male
+                                pria
                             </option>
                             <option
-                                value="female"
-                                {{ old('gender', $alumni->gender) == 'female' ? 'selected' : '' }}
+                                value="wanita"
+                                {{ old('gender', $alumni->gender) == 'wanita' ? 'selected' : '' }}
                             >
-                                female
+                                wanita
                             </option>
                         </select>
                         @error('gender')
@@ -234,11 +234,11 @@
                             class="w-full border rounded px-3 py-2"
                         >
                             <option value="">-- Pilih Status --</option>
-                            <option value="worked" {{ old('status', $alumni->status) == 'worked' ? 'selected' : '' }}>
-                                Worked
+                            <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>
+                                berkeja
                             </option>
-                            <option value="not worked" {{ old('status', $alumni->status) == 'not worked' ? 'selected' : '' }}>
-                                Not Worked
+                            <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>
+                                tidak bekerja
                             </option>
                             <option value="Melanjutkan studi" {{ old('status', $alumni->status) == 'Melanjutkan studi' ? 'selected' : '' }}>
                                 Lanjut Studi

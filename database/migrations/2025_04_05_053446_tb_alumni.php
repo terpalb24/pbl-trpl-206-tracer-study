@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('nim');
             $table->integer('id_user');
             $table->string('name',50);
-            $table->integer('nik');
+            $table->string('nik');
             $table->string('gender',10);
             $table->date('date_of_birth');
             $table->string('phone_number',15);
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->integer('batch');
             $table->string('address',255);
             $table->timestamps();
-            $table->foreign('id_user')->references('id_user')->on('tb_user');
+            $table->foreign('id_user')->references('id_user')->on('tb_user')->onDelete('cascade')->onUpdate('cascade');
             $table->primary('nim');
         });
         //
