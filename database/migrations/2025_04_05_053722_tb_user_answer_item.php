@@ -15,14 +15,25 @@ return new class extends Migration
             $table->integer("id_user_answer_item", true);
             $table->integer("id_user_answer");
             $table->integer("id_question");
-            $table->integer("id_question_option");
-            $table->string("answer",255, null);
+            $table->integer("id_questions_options")->nullable(); // Make nullable
+
+            $table->string("answer", 255)->nullable(); // Make nullable
+            $table->string("other_answer", 255)->nullable(); // Make nullable
             $table->timestamps();
-            $table->foreign("id_user_answer")->references("id_user_answer")->on("tb_user_answers");
-            $table->foreign("id_question")->references("id_question")->on("tb_questions");
-            $table->foreign("id_question_option")->references("id_question_option")->on("tb_questions_options");
-        //
-    });
+            
+            // Foreign keys
+            $table->foreign("id_user_answer")->references("id_user_answer")->on("tb_user_answers")
+                 ->onDelete('cascade')
+                 ->onUpdate('cascade');
+            
+            $table->foreign("id_questions_options")->references("id_questions_options")->on("tb_questions_options")
+                 ->onDelete('set null') // Safe deletion
+                 ->onUpdate('cascade');
+            
+            $table->foreign("id_question")->references("id_question")->on("tb_questions")
+                 ->onDelete('cascade')
+                 ->onUpdate('cascade');
+        });
     }
 
     /**
@@ -31,6 +42,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::drop('tb_user_answer_item');
-        //
     }
 };

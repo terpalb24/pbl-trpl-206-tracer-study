@@ -17,7 +17,7 @@
         </div>
 
         <div class="flex flex-col p-4">
-            @include('alumni.navbar')
+            @include('alumni.sidebar')
         </div>
     </aside>
 
@@ -72,7 +72,7 @@
                         <p class="text-2xl font-normal text-black mb-6">
                             Silahkan isi kuisioner Tracer Study untuk membantu pengembangan Polibatam!!
                         </p>
-                        <a href="#" class="bg-blue-900 text-white px-6 py-2 rounded-md flex items-center space-x-2 w-fit">
+                        <a href="{" class="bg-blue-900 text-white px-6 py-2 rounded-md flex items-center space-x-2 w-fit">
                             <span>Isi Kuisioner</span>
                             <i class="fas fa-file-alt"></i>
                         </a>

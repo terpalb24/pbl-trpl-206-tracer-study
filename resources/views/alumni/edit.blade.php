@@ -15,7 +15,7 @@
         </div>
         
         <div class="flex flex-col p-4">
-            @include('alumni.navbar')
+            @include('alumni.sidebar')
         </div>
     </aside>
 

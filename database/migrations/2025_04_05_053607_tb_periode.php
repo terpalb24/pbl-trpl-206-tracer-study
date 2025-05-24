@@ -13,12 +13,10 @@ return new class extends Migration
     {
         Schema::create("tb_periode", function (Blueprint $table) {
             $table->integer("id_periode",true);
-            $table->integer("id_user_answer");
             $table->string('periode_name', 50);
             $table->date('start_date');
             $table->string('status', 50);
             $table->timestamps();
-            $table->foreign('id_user_answer')->references('id_user_answer')->on('tb_user_answers');
         //
     });
     }

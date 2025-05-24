@@ -15,7 +15,7 @@
         </div>
         
         <div class="flex flex-col p-4">
-            @include('company.navbar')
+            @include('company.sidebar')
         </div>
     </aside>
 

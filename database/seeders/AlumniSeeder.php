@@ -17,11 +17,11 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4342401039',
-                'id_user' => 2,
-                'name' => 'Sheila Rifqi',
-                'nik' => '234567221',
-                'gender'=>'female',
+                'nim' => '4342401044',
+                'id_user' => 1,
+                'name' => 'bima',
+                'nik' => '4342401044',
+                'gender'=>'male',
                 'date_of_birth' => '2005-09-02',
                 'phone_number'=>'082173634512',
                 'email'=>'sheila@gmail.com',
@@ -30,7 +30,7 @@ class AlumniSeeder extends Seeder
                 'ipk'=>'4.00',
                 'batch'=>'24',
                 'address'=>'legenda',
-                'study_program'=>'1',
+                'id_study'=>'1',
             ]);
     
             

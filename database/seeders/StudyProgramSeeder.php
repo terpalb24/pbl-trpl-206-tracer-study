@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use App\models\Tb_study_program;
+use App\Models\Tb_study_program;
 
 class StudyProgramSeeder extends Seeder
 {

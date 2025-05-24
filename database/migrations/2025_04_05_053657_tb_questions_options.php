@@ -12,12 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create("tb_questions_options", function (Blueprint $table) {
-            $table->integer("id_question_option",true);
+            $table->integer("id_questions_options",true);
             $table->integer("id_question");
             $table->string("option",255);
             $table->integer("order");
+            $table->string("is_other_option",50);
             $table->timestamps();
-            $table->foreign("id_question")->references("id_question")->on("tb_questions");
+            $table->foreign("id_question")->references("id_question")->on("tb_questions")
+                ->onDelete("cascade")
+                ->onUpdate("cascade");
 
         //
     });

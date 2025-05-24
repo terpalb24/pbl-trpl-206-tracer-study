@@ -72,3 +72,35 @@ body {
 .bg-gradient-welcome {
     background: linear-gradient(to right, #f9fafb, #73c6ec, #ffedd5);
 }
+
+/* Custom styles for rating and scale questions */
+.rating-radio:checked + label span {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scale-radio:checked + label span {
+    transform: scale(1.2);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.rating-radio + label:hover span,
+.scale-radio + label:hover span {
+    transform: scale(1.02);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Animation transitions */
+.rating-radio + label span,
+.scale-radio + label span {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Scale question visual enhancements */
+.scale-radio + label {
+    transition: all 0.3s ease;
+}
+
+.scale-radio:checked + label {
+    transform: translateY(-2px);
+}

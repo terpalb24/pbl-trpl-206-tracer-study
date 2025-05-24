@@ -1,19 +1,38 @@
- <a href="{{ route('dashboard.admin') }}" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-home w-5 text-center"></i> <span>Beranda</span>
+<ul class="space-y-2">
+    <li>
+        <a href="{{ route('dashboard.admin') }}" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800 {{ request()->routeIs('dashboard.admin') ? 'bg-blue-800' : '' }}">
+            <i class="fas fa-tachometer-alt w-6 text-center"></i>
+            <span class="ml-3">Dashboard</span>
         </a>
-        <a href="{{ route('admin.alumni.index') }}" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-user-graduate w-5 text-center"></i> <span>Alumni</span>
+    </li>
+    <li>
+        <a href="{{ route('admin.alumni.index') }}" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800 {{ request()->routeIs('admin.alumni.*') ? 'bg-blue-800' : '' }}">
+            <i class="fas fa-user-graduate w-6 text-center"></i>
+            <span class="ml-3">Alumni</span>
         </a>
-        <a href="{{ route('admin.company.index') }}" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-building w-5 text-center"></i> <span>Perusahaan</span>
+    </li>
+    <li>
+        <a href="{{ route('admin.company.index') }}" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800 {{ request()->routeIs('admin.company.*') ? 'bg-blue-800' : '' }}">
+            <i class="fas fa-building w-6 text-center"></i>
+            <span class="ml-3">Perusahaan</span>
         </a>
-        <a href="#" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-file-alt w-5 text-center"></i> <span>Kuisioner</span>
+    </li>
+    <li>
+        <a href="{{ route('admin.questionnaire.index') }}" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800 {{ request()->routeIs('admin.questionnaire.*') ? 'bg-blue-800' : '' }}">
+            <i class="fas fa-clipboard-list w-6 text-center"></i>
+            <span class="ml-3">Kuisioner</span>
         </a>
-        <a href="#" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-chart-pie w-5 text-center"></i> <span>Statistik</span>
+    </li>
+    <li>
+        <a href="#" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800">
+            <i class="fas fa-chart-bar w-6 text-center"></i>
+            <span class="ml-3">Laporan</span>
         </a>
-        <a href="#" class="flex items-center gap-3 px-2 py-2 rounded hover:bg-blue-800 transition">
-            <i class="fas fa-file w-5 text-center"></i> <span>Laporan</span>
+    </li>
+    <li>
+        <a href="#" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800">
+            <i class="fas fa-cog w-6 text-center"></i>
+            <span class="ml-3">Pengaturan</span>
         </a>
-        </nav>
+    </li>
+</ul>

@@ -18,7 +18,9 @@ return new class extends Migration
             $table->string("type",50);
             $table->integer('order');
             $table->timestamps();
-            $table->foreign('id_category')->references('id_category')->on('tb_category');
+            $table->foreign('id_category')->references('id_category')->on('tb_category')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
         //
     });
 }

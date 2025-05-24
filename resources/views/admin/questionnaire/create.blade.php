@@ -1,12 +1,6 @@
 @extends('layouts.app')
 
-@php
-    $admin = auth()->user()->admin;
-@endphp
-
 @section('content')
-<meta name="csrf-token" content="{{ csrf_token() }}">
-
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar-menu w-64 bg-blue-950 text-white flex flex-col transition-all duration-300" id="sidebar">
@@ -29,7 +23,7 @@
                 <button id="toggle-sidebar" class="mr-4 lg:hidden">
                     <i class="fas fa-bars text-xl text-black-800"></i>
                 </button>
-                <h1 class="text-2xl font-bold text-blue-800">Beranda</h1>
+                <h1 class="text-2xl font-bold text-blue-800">Tambah Periode Kuisioner</h1>
             </div>
 
             <!-- Profile Dropdown -->
@@ -37,7 +31,7 @@
                 <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
                     <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
                     <div class="text-left">
-                        <p class="font-semibold leading-none">Administrator</p>
+                        <p class="font-semibold leading-none">{{ auth()->user()->name ?? 'Administrator' }}</p>
                         <p class="text-sm text-gray-300 leading-none mt-1">Admin</p>
                     </div>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -56,55 +50,52 @@
             </div>
         </div>
 
-        <!-- Welcome Section -->
-        <div class="p-4 mt-6">
-            <div class="bg-gradient-to-r from-white via-sky-300 to-orange-300 rounded-lg shadow-md mb-6 overflow-hidden">
-                <div class="flex flex-col md:flex-row">
-                    <div class="p-4 md:w-2/3 pl-12 mt-6">
-                        <h2 class="text-4xl font-bold text-black leading-tight mb-2">Halo!</h2>
-                        <p class="text-3xl font-semibold text-black leading-tight">Administrator</p>
+        <!-- Content Section -->
+        <div class="p-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <form action="{{ route('admin.questionnaire.store') }}" method="POST">
+                    @csrf
+                    <div class="mb-4">
+                        <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
+                        <input type="date" name="start_date" id="start_date" value="{{ old('start_date') }}" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        @error('start_date')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
-                    <div class="md:w-1/3 flex items-center justify-center p-4">
-                        <img src="{{ asset('assets/images/adminprofile.png') }}" alt="Admin Profile" class="h-40 w-40 object-cover">
-                    </div>
-                </div>
-            </div>
 
-            <!-- Statistik Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                <div class="flex items-center p-4 bg-blue-950 text-white rounded-2xl shadow gap-4">
-                    <div class="bg-white p-3 rounded-2xl shadow">
-                        <i class="fas fa-user-graduate text-blue-950 text-2xl"></i>
+                    <div class="mb-4">
+                        <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Selesai</label>
+                        <input type="date" name="end_date" id="end_date" value="{{ old('end_date') }}" required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+                        @error('end_date')
+                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                        @enderror
                     </div>
-                    <div>
-                    <div class="text-2xl font-bold">{{ number_format($alumniCount) }}</div>
-                    <div class="text-2xl">Alumni</div>
-                    </div>
-                </div>
-                <div class="flex items-center p-4 bg-sky-400 text-white rounded-2xl shadow gap-4">
-                    <div class="bg-white p-3 rounded-2xl shadow">
-                        <i class="fas fa-building text-sky-400 text-2xl"></i>
-                    </div>
-                    <div>
-                    <div class="text-2xl font-bold">{{ number_format($companyCount) }}</div>
-                    <div class="text-2xl">Perusahaan</div>
-                </div>
-                </div>
-                <div class="flex items-center p-4 bg-orange-500 text-white rounded-2xl shadow gap-4">
-                    <div class="bg-white p-3 rounded-2xl shadow">
-                        <i class="fas fa-check-circle text-orange-500 text-2xl"></i>
+
+                    <div class="mb-4">
+                        <div class="bg-blue-50 p-4 rounded-md">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Status akan otomatis ditentukan berdasarkan tanggal:
+                            </p>
+                            <ul class="mt-2 text-sm text-blue-700 list-disc list-inside">
+                                <li>Inactive: Jika tanggal saat ini sebelum tanggal mulai</li>
+                                <li>Active: Jika tanggal saat ini di antara tanggal mulai dan selesai</li>
+                                <li>Expired: Jika tanggal saat ini setelah tanggal selesai</li>
+                            </ul>
                         </div>
-                        <div>
-                        <div class="text-2xl font-bold">2.300</div>
-                        <div class="text-2xl">Mengisi Kuisioner</div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Statistik Chart -->
-            <div class="bg-blue-100 p-6 rounded-2xl shadow">
-                <div class="font-bold mb-4">Statistik</div>
-                <canvas id="statistikChart" height="100"></canvas>
+                    <div class="flex justify-end space-x-2">
+                        <a href="{{ route('admin.questionnaire.index') }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                            Batal
+                        </a>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                            Simpan
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </main>
@@ -121,6 +112,15 @@
 
     document.getElementById('profile-toggle').addEventListener('click', () => {
         document.getElementById('profile-dropdown').classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('profile-dropdown');
+        const toggle = document.getElementById('profile-toggle');
+        
+        if (!dropdown.contains(event.target) && !toggle.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
     });
 
     document.getElementById('logout-btn').addEventListener('click', function (event) {

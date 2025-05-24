@@ -16,9 +16,11 @@ return new class extends Migration
             $table->integer("id_periode");
             $table->string("category_name",50);
             $table->integer("order");
-            $table->string('type',50);
+            $table->string('for_type',50)->default('both'); 
             $table->timestamps();
-            $table->foreign('id_periode')->references('id_periode')->on('tb_periode');
+            $table->foreign('id_periode')->references('id_periode')->on('tb_periode')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
         //
     });
 }

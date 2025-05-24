@@ -66,7 +66,7 @@
                     class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
                     <i class="bi bi-upload"></i> Import Excel
                 </button>
-                <a href="{{ route('company.export') }}"
+                <a href="{{ route('admin.company.export') }}"
                     class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
                     <i class="bi bi-download"></i> Export Excel
                 </a>
