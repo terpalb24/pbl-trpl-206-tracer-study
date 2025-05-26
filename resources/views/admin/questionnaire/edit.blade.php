@@ -26,7 +26,7 @@
                 </button>
                 <div>
                     <h1 class="text-2xl font-bold text-blue-800">Edit Periode Kuesioner</h1>
-                    <p class="text-sm text-gray-600">Perbarui tanggal periode kuesioner</p>
+                    <p class="text-sm text-gray-600">Perbarui tanggal periode dan target alumni kuesioner</p>
                 </div>
             </div>
 
@@ -97,7 +97,7 @@
                         <i class="fas fa-calendar-edit mr-2 text-blue-600"></i>
                         Edit Periode Kuesioner
                     </h2>
-                    <p class="text-sm text-gray-600 mt-1">Perbarui tanggal mulai dan selesai periode kuesioner</p>
+                    <p class="text-sm text-gray-600 mt-1">Perbarui tanggal mulai, selesai, dan target alumni periode kuesioner</p>
                 </div>
 
                 <form action="{{ route('admin.questionnaire.update', $periode->id_periode) }}" method="POST" class="p-6">
@@ -110,7 +110,7 @@
                             <i class="fas fa-info-circle mr-2"></i>
                             Informasi Periode Saat Ini
                         </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="bg-white p-3 rounded-md border border-blue-100">
                                 <div class="flex items-center mb-2">
                                     <i class="fas fa-play text-green-600 mr-2"></i>
@@ -127,6 +127,13 @@
                                 <p class="text-lg font-bold text-gray-900">{{ $periode->end_date->format('d M Y') }}</p>
                                 <p class="text-xs text-gray-500">{{ $periode->end_date->format('l') }}</p>
                             </div>
+                            <div class="bg-white p-3 rounded-md border border-blue-100">
+                                <div class="flex items-center mb-2">
+                                    <i class="fas fa-users text-blue-600 mr-2"></i>
+                                    <span class="text-sm font-medium text-gray-600">Target Alumni</span>
+                                </div>
+                                <p class="text-sm font-medium text-gray-900">{{ $periode->getTargetDescription() }}</p>
+                            </div>
                         </div>
                         <div class="mt-4 text-center">
                             <span class="px-3 py-1 rounded-full text-sm font-medium
@@ -138,7 +145,7 @@
                         </div>
                     </div>
 
-                    <!-- Form Fields -->
+                    <!-- Tanggal Periode -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                         <div>
                             <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
@@ -175,20 +182,188 @@
                         </div>
                     </div>
 
+                    <!-- Target Alumni Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-4">
+                            <i class="fas fa-users mr-2"></i>Target Alumni
+                        </label>
+                        
+                        <!-- Target Type Selection -->
+                        <div class="space-y-4 mb-6">
+                            <!-- All Alumni -->
+                            <label class="flex items-start p-4 bg-blue-50 rounded-lg border-2 cursor-pointer transition-all hover:bg-blue-100" id="target-all">
+                                <input type="radio" 
+                                       name="target_type" 
+                                       value="all"
+                                       class="mt-1 mr-3 text-blue-600 focus:ring-blue-500"
+                                       {{ old('target_type', $periode->target_type ?? 'all') === 'all' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-sm font-medium text-blue-800">Semua Alumni</span>
+                                    <p class="text-xs text-blue-600 mt-1">Questionnaire dapat diakses oleh semua alumni terdaftar</p>
+                                </div>
+                            </label>
+
+                            <!-- Years Ago -->
+                            <label class="flex items-start p-4 bg-green-50 rounded-lg border-2 cursor-pointer transition-all hover:bg-green-100" id="target-years-ago">
+                                <input type="radio" 
+                                       name="target_type" 
+                                       value="years_ago"
+                                       class="mt-1 mr-3 text-green-600 focus:ring-green-500"
+                                       {{ old('target_type', $periode->target_type) === 'years_ago' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-sm font-medium text-green-800">Alumni N Tahun Lalu</span>
+                                    <p class="text-xs text-green-600 mt-1">Target alumni berdasarkan berapa tahun lalu mereka lulus (relatif dengan tahun sekarang: {{ now()->year }})</p>
+                                </div>
+                            </label>
+
+                            <!-- Specific Years -->
+                            <label class="flex items-start p-4 bg-purple-50 rounded-lg border-2 cursor-pointer transition-all hover:bg-purple-100" id="target-specific">
+                                <input type="radio" 
+                                       name="target_type" 
+                                       value="specific_years"
+                                       class="mt-1 mr-3 text-purple-600 focus:ring-purple-500"
+                                       {{ old('target_type', $periode->target_type) === 'specific_years' ? 'checked' : '' }}>
+                                <div>
+                                    <span class="text-sm font-medium text-purple-800">Tahun Kelulusan Spesifik</span>
+                                    <p class="text-xs text-purple-600 mt-1">Target alumni berdasarkan tahun kelulusan yang spesifik</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Years Ago Options -->
+                        <div id="years-ago-section" class="hidden border border-green-200 rounded-lg p-4 bg-green-50">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-sm font-medium text-green-800">
+                                    Pilih Alumni yang Lulus Berapa Tahun Lalu
+                                </label>
+                                <div class="text-xs space-x-2">
+                                    <button type="button" 
+                                            id="select-all-years-ago" 
+                                            class="text-green-600 hover:text-green-800 font-medium">
+                                        Pilih Semua
+                                    </button>
+                                    <span class="text-green-400">|</span>
+                                    <button type="button" 
+                                            id="deselect-all-years-ago" 
+                                            class="text-green-600 hover:text-green-800 font-medium">
+                                        Hapus Semua
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            @if($yearsAgoOptions->isNotEmpty())
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                                    @foreach($yearsAgoOptions as $option)
+                                        <label class="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" 
+                                                       name="years_ago_list[]" 
+                                                       value="{{ $option['years_ago'] }}"
+                                                       class="rounded border-gray-300 text-green-600 shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 years-ago-checkbox"
+                                                       {{ in_array($option['years_ago'], old('years_ago_list', $periode->years_ago_list ?? [])) ? 'checked' : '' }}>
+                                                <div class="ml-2">
+                                                    <span class="text-sm font-medium text-gray-700">{{ $option['years_ago'] }} tahun lalu</span>
+                                                    <p class="text-xs text-gray-500">({{ $option['year'] }})</p>
+                                                </div>
+                                            </div>
+                                            <span class="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                                                {{ $option['count'] }} alumni
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-8">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Belum ada data alumni dari tahun-tahun sebelumnya.
+                                    </p>
+                                </div>
+                            @endif
+                            
+                            @error('years_ago_list')
+                                <p class="mt-2 text-sm text-red-600">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Specific Years Options -->
+                        <div id="specific-years-section" class="hidden border border-purple-200 rounded-lg p-4 bg-purple-50">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-sm font-medium text-purple-800">
+                                    Pilih Tahun Kelulusan Spesifik
+                                </label>
+                                <div class="text-xs space-x-2">
+                                    <button type="button" 
+                                            id="select-all-specific-years" 
+                                            class="text-purple-600 hover:text-purple-800 font-medium">
+                                        Pilih Semua
+                                    </button>
+                                    <span class="text-purple-400">|</span>
+                                    <button type="button" 
+                                            id="deselect-all-specific-years" 
+                                            class="text-purple-600 hover:text-purple-800 font-medium">
+                                        Hapus Semua
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            @if(!empty($graduationYears))
+                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                                    @foreach($graduationYears as $year)
+                                        <label class="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-purple-50 transition-colors">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" 
+                                                       name="target_graduation_years[]" 
+                                                       value="{{ $year }}"
+                                                       class="rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 specific-year-checkbox"
+                                                       {{ in_array($year, old('target_graduation_years', $periode->target_graduation_years ?? [])) ? 'checked' : '' }}>
+                                                <span class="ml-2 text-sm font-medium text-gray-700">{{ $year }}</span>
+                                            </div>
+                                            <span class="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded">
+                                                {{ $graduationYearsWithCount[$year] ?? 0 }} alumni
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="text-center py-8">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 text-2xl mb-2"></i>
+                                    <p class="text-sm text-gray-500">
+                                        Belum ada data alumni dengan tahun kelulusan.
+                                    </p>
+                                </div>
+                            @endif
+                            
+                            @error('target_graduation_years')
+                                <p class="mt-2 text-sm text-red-600">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>{{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
+                        <!-- Preview Target Alumni -->
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                            <h4 class="text-sm font-medium text-gray-800 mb-2">
+                                <i class="fas fa-eye mr-2"></i>Preview Target Alumni:
+                            </h4>
+                            <p id="target-preview" class="text-sm text-gray-700 font-medium">{{ $periode->getTargetDescription() }}</p>
+                            <p id="alumni-count" class="text-xs text-gray-600 mt-1"></p>
+                        </div>
+                    </div>
+
                     <!-- Status Info -->
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                         <div class="flex items-start">
                             <i class="fas fa-lightbulb text-yellow-600 mr-3 mt-1"></i>
                             <div>
-                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">Informasi Status</h4>
-                                <p class="text-sm text-yellow-700">
-                                    Status periode akan otomatis diperbarui berdasarkan tanggal yang baru setelah disimpan:
-                                </p>
-                                <ul class="text-sm text-yellow-700 mt-2 space-y-1">
-                                    <li><i class="fas fa-circle text-yellow-500 mr-2" style="font-size: 6px;"></i><strong>Inactive:</strong> Jika tanggal mulai belum tiba</li>
-                                    <li><i class="fas fa-circle text-green-500 mr-2" style="font-size: 6px;"></i><strong>Active:</strong> Jika berada dalam rentang tanggal</li>
-                                    <li><i class="fas fa-circle text-red-500 mr-2" style="font-size: 6px;"></i><strong>Expired:</strong> Jika tanggal selesai sudah terlewat</li>
-                                </ul>
+                                <h4 class="text-sm font-semibold text-yellow-800 mb-1">Informasi Perubahan</h4>
+                                <div class="text-sm text-yellow-700 space-y-1">
+                                    <p>• Status periode akan otomatis diperbarui berdasarkan tanggal yang baru setelah disimpan</p>
+                                    <p>• Perubahan target alumni akan mempengaruhi siapa saja yang dapat mengakses questionnaire</p>
+                                    <p>• Alumni yang sudah mengisi questionnaire tetap dapat mengakses meskipun target berubah</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -228,6 +403,148 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const targetTypeRadios = document.querySelectorAll('input[name="target_type"]');
+    const yearsAgoSection = document.getElementById('years-ago-section');
+    const specificYearsSection = document.getElementById('specific-years-section');
+    const targetPreview = document.getElementById('target-preview');
+    const alumniCount = document.getElementById('alumni-count');
+    
+    // Data alumni
+    const alumniData = @json($graduationYearsWithCount);
+    const yearsAgoData = @json($yearsAgoOptions);
+    const totalAlumni = Object.values(alumniData).reduce((sum, count) => sum + count, 0);
+    const currentYear = {{ now()->year }};
+
+    // Handle target type changes
+    targetTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Hide all sections first
+            yearsAgoSection.classList.add('hidden');
+            specificYearsSection.classList.add('hidden');
+            
+            // Show relevant section
+            if (this.value === 'years_ago') {
+                yearsAgoSection.classList.remove('hidden');
+            } else if (this.value === 'specific_years') {
+                specificYearsSection.classList.remove('hidden');
+            } else {
+                // Reset all selections when switching to 'all'
+                document.querySelectorAll('.years-ago-checkbox, .specific-year-checkbox').forEach(cb => {
+                    cb.checked = false;
+                });
+            }
+            
+            // Update preview
+            updatePreview();
+            
+            // Update border colors
+            updateBorderColors(this.value);
+        });
+    });
+
+    // Update border colors based on selection
+    function updateBorderColors(selectedType) {
+        document.getElementById('target-all').classList.remove('border-blue-500');
+        document.getElementById('target-years-ago').classList.remove('border-green-500');
+        document.getElementById('target-specific').classList.remove('border-purple-500');
+        
+        if (selectedType === 'all') {
+            document.getElementById('target-all').classList.add('border-blue-500');
+        } else if (selectedType === 'years_ago') {
+            document.getElementById('target-years-ago').classList.add('border-green-500');
+        } else if (selectedType === 'specific_years') {
+            document.getElementById('target-specific').classList.add('border-purple-500');
+        }
+    }
+
+    // Handle checkbox changes
+    document.querySelectorAll('.years-ago-checkbox, .specific-year-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePreview);
+    });
+
+    // Select/Deselect all buttons for years ago
+    document.getElementById('select-all-years-ago')?.addEventListener('click', function() {
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => cb.checked = true);
+        updatePreview();
+    });
+
+    document.getElementById('deselect-all-years-ago')?.addEventListener('click', function() {
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => cb.checked = false);
+        updatePreview();
+    });
+
+    // Select/Deselect all buttons for specific years
+    document.getElementById('select-all-specific-years')?.addEventListener('click', function() {
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => cb.checked = true);
+        updatePreview();
+    });
+
+    document.getElementById('deselect-all-specific-years')?.addEventListener('click', function() {
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => cb.checked = false);
+        updatePreview();
+    });
+
+    function updatePreview() {
+        const selectedTargetType = document.querySelector('input[name="target_type"]:checked')?.value;
+        
+        if (selectedTargetType === 'all') {
+            targetPreview.textContent = 'Semua Alumni';
+            alumniCount.textContent = `Total: ${totalAlumni} alumni terdaftar`;
+            
+        } else if (selectedTargetType === 'years_ago') {
+            const selectedYearsAgo = Array.from(document.querySelectorAll('.years-ago-checkbox:checked'))
+                .map(cb => parseInt(cb.value))
+                .sort((a, b) => a - b);
+
+            if (selectedYearsAgo.length === 0) {
+                targetPreview.textContent = 'Belum ada periode yang dipilih';
+                alumniCount.textContent = 'Pilih minimal satu periode tahun lalu';
+            } else {
+                const descriptions = selectedYearsAgo.map(yearsAgo => {
+                    const year = currentYear - yearsAgo;
+                    return `${yearsAgo} tahun lalu (${year})`;
+                });
+
+                const totalSelectedAlumni = selectedYearsAgo.reduce((sum, yearsAgo) => {
+                    const year = (currentYear - yearsAgo).toString();
+                    return sum + (alumniData[year] || 0);
+                }, 0);
+
+                targetPreview.textContent = `Alumni Lulusan: ${descriptions.join(', ')}`;
+                alumniCount.textContent = `Total: ${totalSelectedAlumni} alumni dari ${selectedYearsAgo.length} periode`;
+            }
+            
+        } else if (selectedTargetType === 'specific_years') {
+            const selectedYears = Array.from(document.querySelectorAll('.specific-year-checkbox:checked'))
+                .map(cb => cb.value)
+                .sort((a, b) => b - a);
+
+            if (selectedYears.length === 0) {
+                targetPreview.textContent = 'Belum ada tahun yang dipilih';
+                alumniCount.textContent = 'Pilih minimal satu tahun kelulusan';
+            } else {
+                const totalSelectedAlumni = selectedYears.reduce((sum, year) => {
+                    return sum + (alumniData[year] || 0);
+                }, 0);
+
+                targetPreview.textContent = `Alumni Lulusan Tahun: ${selectedYears.join(', ')}`;
+                alumniCount.textContent = `Total: ${totalSelectedAlumni} alumni dari ${selectedYears.length} tahun kelulusan`;
+            }
+        }
+    }
+
+    // Initialize on page load
+    const initialTargetType = document.querySelector('input[name="target_type"]:checked')?.value || 'all';
+    
+    if (initialTargetType === 'years_ago') {
+        yearsAgoSection.classList.remove('hidden');
+    } else if (initialTargetType === 'specific_years') {
+        specificYearsSection.classList.remove('hidden');
+    }
+    
+    updateBorderColors(initialTargetType);
+    updatePreview();
+
     // Sidebar functionality
     document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
         document.getElementById('sidebar').classList.toggle('hidden');
@@ -299,11 +616,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Reset form function
 function resetForm() {
-    const form = document.querySelector('form');
     if (confirm('Apakah Anda yakin ingin mereset form ke nilai awal?')) {
-        // Reset to original values
+        // Reset dates to original values
         document.getElementById('start_date').value = '{{ $periode->start_date->format('Y-m-d') }}';
         document.getElementById('end_date').value = '{{ $periode->end_date->format('Y-m-d') }}';
+        
+        // Reset target type to original value
+        const originalTargetType = '{{ old('target_type', $periode->target_type ?? 'all') }}';
+        document.querySelector(`input[name="target_type"][value="${originalTargetType}"]`).checked = true;
+        
+        // Reset checkboxes based on original data
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => {
+            const originalYearsAgo = @json(old('years_ago_list', $periode->years_ago_list ?? []));
+            cb.checked = originalYearsAgo.includes(parseInt(cb.value));
+        });
+        
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => {
+            const originalYears = @json(old('target_graduation_years', $periode->target_graduation_years ?? []));
+            cb.checked = originalYears.includes(cb.value);
+        });
+        
+        // Trigger change event to update UI
+        document.querySelector('input[name="target_type"]:checked').dispatchEvent(new Event('change'));
     }
 }
 </script>

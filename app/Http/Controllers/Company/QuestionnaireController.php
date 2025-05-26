@@ -107,9 +107,27 @@ class QuestionnaireController extends Controller
         
         // Get questions for the current category
         $questions = Tb_Questions::where('id_category', $currentCategory->id_category)
+            ->visible() // Only get visible questions
             ->with('options')
             ->orderBy('order')
             ->get();
+    
+        // ✅ PERBAIKAN: Tambahkan conditional questions data
+        $conditionalQuestions = [];
+        foreach ($questions as $question) {
+            if (!empty($question->depends_on) && !empty($question->depends_value)) {
+                $conditionalQuestions[] = [
+                    'id' => $question->id_question,
+                    'depends_on' => $question->depends_on,
+                    'depends_value' => $question->depends_value,
+                    'type' => $question->type
+                ];
+            }
+        }
+        
+        // ✅ PERBAIKAN: Hitung progress yang benar
+        $totalCategories = $allCategories->count();
+        $progressPercentage = $totalCategories > 0 ? round((($currentCategoryIndex + 1) / $totalCategories) * 100) : 0;
     
         // Get previously saved answers if any
         $prevAnswers = [];
@@ -143,7 +161,7 @@ class QuestionnaireController extends Controller
                     // Parse location JSON data
                     $locationData = json_decode($item->answer, true);
                     if ($locationData && is_array($locationData)) {
-                        $prevLocationAnswers[$item->id_question] = $locationData;
+                        $prevLocationAnswers[$item->id_question] = json_encode($locationData);
                         // Also set the display value for the form
                         $prevAnswers[$item->id_question] = $locationData['display'] ?? '';
                     } else {
@@ -173,7 +191,8 @@ class QuestionnaireController extends Controller
                 }
             }
         }
-    
+        
+        // ✅ PERBAIKAN: Pass semua data yang diperlukan ke view
         return view('company.questionnaire.fill', compact(
             'periode',
             'currentCategory',
@@ -186,7 +205,10 @@ class QuestionnaireController extends Controller
             'prevOtherAnswers',
             'prevMultipleAnswers',
             'prevMultipleOtherAnswers',
-            'prevLocationAnswers'
+            'prevLocationAnswers',
+            'conditionalQuestions',  // ✅ TAMBAHKAN INI
+            'totalCategories',       // ✅ TAMBAHKAN INI
+            'progressPercentage'     // ✅ TAMBAHKAN INI
         ));
     }
     
@@ -303,7 +325,7 @@ class QuestionnaireController extends Controller
                             Log::info('Processing other option for radio', [
                                 'question_id' => $question->id_question,
                                 'option_id' => $selectedOption,
-                                'option_text' => $option->option,
+                                'option' => $option->option,
                                 'other_answer_raw' => $otherAnswer,
                                 'other_answer_trimmed' => trim($otherAnswer ?? ''),
                                 'is_other_option' => $option->is_other_option,
@@ -342,7 +364,7 @@ class QuestionnaireController extends Controller
                             Log::info('Processing other option for multiple', [
                                 'question_id' => $question->id_question,
                                 'option_id' => $optionId,
-                                'option_text' => $option->option,
+                                'option' => $option->option,
                                 'other_answer_raw' => $otherAnswer,
                                 'other_answer_trimmed' => trim($otherAnswer ?? ''),
                                 'is_other_option' => $option->is_other_option
@@ -530,8 +552,18 @@ class QuestionnaireController extends Controller
             ->with(['user.company', 'periode'])
             ->firstOrFail();
         
-        // Get company data
-        $company = auth()->user()->company;
+        // Get company data - use relationship as fallback
+        $company = auth()->user()->company ?? session('company');
+        
+        // If still no company data, create a basic object to prevent errors
+        if (!$company) {
+            $company = (object) [
+                'name' => auth()->user()->username ?? 'Unknown Company',
+                'field' => null,
+                'city' => null,
+                'address' => null
+            ];
+        }
         
         // Get categories for this period - PERBAIKAN: Hanya ambil kategori untuk company
         $categories = Tb_Category::where('id_periode', $id_periode)
@@ -547,6 +579,7 @@ class QuestionnaireController extends Controller
         
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
+                ->visible()
                 ->with('options')
                 ->orderBy('order')
                 ->get();
@@ -565,11 +598,18 @@ class QuestionnaireController extends Controller
                 $multipleAnswers = [];
                 $multipleOtherAnswers = [];
                 $multipleOtherOptions = [];
+                $hasAnswer = false; // Add this flag
                 
                 if ($answerItems->isNotEmpty()) {
+                    $hasAnswer = true; // Set to true if there are answer items
+                    
                     if ($question->type == 'text' || $question->type == 'date') {
                         // For text and date questions
                         $answer = $answerItems->first()->answer;
+                        // Check if answer is actually empty
+                        if (empty(trim($answer))) {
+                            $hasAnswer = false;
+                        }
                         
                     } elseif ($question->type == 'location') {
                         // For location questions - handle JSON parsing
@@ -586,6 +626,10 @@ class QuestionnaireController extends Controller
                                 $answer = $locationAnswer;
                             }
                         }
+                        // Check if answer is actually empty
+                        if (empty(trim($answer))) {
+                            $hasAnswer = false;
+                        }
                         
                     } elseif ($question->type == 'rating' || $question->type == 'scale') {
                         // For rating and scale questions
@@ -594,7 +638,11 @@ class QuestionnaireController extends Controller
                             $selectedOption = Tb_Question_Options::find($firstItem->id_questions_options);
                             if ($selectedOption) {
                                 $answer = $selectedOption->option;
+                            } else {
+                                $hasAnswer = false;
                             }
+                        } else {
+                            $hasAnswer = false;
                         }
                         
                     } elseif ($question->type == 'option') {
@@ -610,15 +658,21 @@ class QuestionnaireController extends Controller
                                     $otherAnswer = $firstItem->other_answer;
                                     $otherOption = $selectedOption;
                                 }
+                            } else {
+                                $hasAnswer = false;
                             }
+                        } else {
+                            $hasAnswer = false;
                         }
                         
                     } elseif ($question->type == 'multiple') {
                         // For multiple choice questions
+                        $hasValidAnswers = false;
                         foreach ($answerItems as $item) {
                             if ($item->id_questions_options) {
                                 $selectedOption = Tb_Question_Options::find($item->id_questions_options);
                                 if ($selectedOption) {
+                                    $hasValidAnswers = true;
                                     $displayText = $selectedOption->option;
                                     
                                     // Handle other answers for multiple choice
@@ -644,12 +698,17 @@ class QuestionnaireController extends Controller
                                 }
                             }
                         }
+                        $hasAnswer = $hasValidAnswers;
                     }
+                } else {
+                    // No answer items found
+                    $hasAnswer = false;
                 }
                 
                 $questionArray[] = [
                     'question' => $question,
                     'answer' => $answer,
+                    'hasAnswer' => $hasAnswer, // Add this key
                     'otherAnswer' => $otherAnswer ?? null,
                     'otherOption' => $otherOption ?? null,
                     'multipleAnswers' => $multipleAnswers,

@@ -137,7 +137,10 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::get('/admin/questionnaire/{id_periode}/edit', [QuestionnaireController::class, 'edit'])->name('admin.questionnaire.edit');
     Route::put('/admin/questionnaire/{id_periode}', [QuestionnaireController::class, 'update'])->name('admin.questionnaire.update');
     Route::delete('/admin/questionnaire/{id_periode}', [QuestionnaireController::class, 'destroy'])->name('admin.questionnaire.destroy');
-    
+    Route::patch('/admin/questionnaire/{id_periode}/question/{id_question}/toggle-status', 
+        [QuestionnaireController::class, 'toggleQuestionStatus'])
+        ->name('admin.questionnaire.question.toggle-status');
+
     // Category Management
     Route::get('/admin/questionnaire/{id_periode}/category/create', [QuestionnaireController::class, 'createCategory'])->name('admin.questionnaire.category.create');
     Route::post('/admin/questionnaire/{id_periode}/category', [QuestionnaireController::class, 'storeCategory'])->name('admin.questionnaire.category.store');
@@ -152,15 +155,19 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::put('/admin/questionnaire/{id_periode}/category/{id_category}/question/{id_question}', [QuestionnaireController::class, 'updateQuestion'])->name('admin.questionnaire.question.update');
     Route::delete('/admin/questionnaire/{id_periode}/question/{id_question}', [QuestionnaireController::class, 'destroyQuestion'])->name('admin.questionnaire.question.destroy');
     
-    // Questionnaire Response Management
-    Route::get('/admin/questionnaire/{id_periode}/responses', [QuestionnaireController::class, 'responses'])->name('admin.questionnaire.responses');
-    Route::get('/admin/questionnaire/{id_periode}/response/{id_user_answer}', [QuestionnaireController::class, 'responseDetail'])->name('admin.questionnaire.response-detail');
-    Route::get('/admin/questionnaire/{id_periode}/export', [QuestionnaireController::class, 'export'])->name('admin.questionnaire.export');
-    Route::post('/admin/questionnaire/import', [QuestionnaireImportController::class, 'import'])->name('admin.questionnaire.import.form');
-    
-    // Additional API routes for admin
+    // Question Options
     Route::get('/admin/questionnaire/question/{id}/options', [QuestionnaireController::class, 'getQuestionOptions'])->name('admin.questionnaire.question.options');
+    
+    // Responses
+    Route::get('/admin/questionnaire/{id_periode}/responses', [QuestionnaireController::class, 'responses'])->name('admin.questionnaire.responses');
+    Route::get('/admin/questionnaire/{id_periode}/responses/{id_user_answer}', [QuestionnaireController::class, 'responseDetail'])->name('admin.questionnaire.response-detail');
+    
+    // Export
+    Route::get('/admin/questionnaire/{id_periode}/export', [QuestionnaireController::class, 'export'])->name('admin.questionnaire.export');
+    // Import
+    Route::get('/admin/questionnaire/import', [QuestionnaireImportController::class, 'showImportForm'])->name('admin.questionnaire.import.form');
+    
+    // Location API
     Route::get('/admin/questionnaire/provinces', [QuestionnaireController::class, 'getProvinces'])->name('admin.questionnaire.provinces');
     Route::get('/admin/questionnaire/cities/{provinceId}', [QuestionnaireController::class, 'getCities'])->name('admin.questionnaire.cities');
-    Route::get('/admin/questionnaire/location-test', [QuestionnaireController::class, 'locationTest'])->name('admin.questionnaire.location-test');
 });

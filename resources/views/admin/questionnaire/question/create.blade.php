@@ -94,12 +94,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label for="text_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
-                                <input type="text" id="text_before" name="text_before_input" value="{{ old('text_before_input') }}" 
+                                <input type="text" id="text_before" name="before_text" value="{{ old('before_text') }}" 
                                        placeholder="Contoh: Saya bekerja di" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                             <div>
                                 <label for="text_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
-                                <input type="text" id="text_after" name="text_after_input" value="{{ old('text_after_input') }}" 
+                                <input type="text" id="text_after" name="after_text" value="{{ old('after_text') }}" 
                                        placeholder="Contoh: sebagai posisi" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -235,7 +235,7 @@
                         </div>
                     </div>
 
-                    <!-- Options section (existing) -->
+                    <!-- Options section untuk option/multiple types -->
                     <div id="options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'option' || old('question_type') == 'multiple' ? '' : 'hidden' }}">
                         <div class="flex justify-between items-center mb-3">
                             <h4 class="text-lg font-medium">Pilihan Jawaban</h4>
@@ -247,14 +247,19 @@
                         <div id="options-container">
                             @if(old('options'))
                                 @foreach(old('options') as $index => $option)
-                                <div class="flex items-center mb-2 flex-wrap">
+                                <div class="option-item flex items-center mb-2 flex-wrap" data-index="{{ $index }}">
                                     <input type="text" name="options[]" value="{{ $option }}" class="flex-grow px-3 py-2 border rounded-md mr-2" placeholder="Tuliskan pilihan..." required>
+                                    
+                                    <!-- ✅ PERBAIKAN: Hidden fields untuk option mapping -->
+                                    <input type="hidden" name="option_indexes[]" value="{{ $index }}">
+                                    
                                     <div class="flex items-center mr-2">
                                         <input type="checkbox" name="other_options[]" value="{{ $index }}" 
                                                {{ in_array($index, old('other_options', [])) ? 'checked' : '' }}
-                                               onchange="toggleOtherConfig(this)" class="mr-1">
-                                        <label class="text-sm">Lainnya</label>
+                                               onchange="toggleOtherConfig(this, {{ $index }})" class="mr-1" id="other_checkbox_{{ $index }}">
+                                        <label for="other_checkbox_{{ $index }}" class="text-sm">Lainnya</label>
                                     </div>
+                                    
                                     @if($loop->first)
                                     <span class="text-gray-400 text-sm mr-2">(Minimal 1)</span>
                                     @else
@@ -263,25 +268,101 @@
                                     </button>
                                     @endif
                                     
-                                    <div class="other-text-config {{ in_array($index, old('other_options', [])) ? '' : 'hidden' }} w-full mt-2 bg-gray-50 p-3 rounded border border-gray-200" id="other_config_{{ $index }}">
-                                        <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder untuk input "Lainnya":</label>
-                                        <input type="text" name="other_placeholders[]" value="{{ old('other_placeholders.' . $index) }}" placeholder="Contoh: Sebutkan lainnya..." class="w-full px-2 py-1 border rounded text-sm">
+                                    <!-- ✅ PERBAIKAN: Before/After Text Configuration sesuai dengan edit -->
+                                    <div class="other-text-config {{ in_array($index, old('other_options', [])) ? '' : 'hidden' }} w-full mt-2 bg-gray-50 p-4 rounded border border-gray-200" id="other_config_{{ $index }}">
+                                        <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                            <i class="fas fa-edit mr-2 text-blue-600"></i>
+                                            Konfigurasi Input "Lainnya"
+                                        </h5>
+                                        
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input:</label>
+                                                <!-- ✅ PERBAIKAN: Menggunakan array biasa seperti di edit -->
+                                                <input type="text" name="other_before_text[]" value="{{ old('other_before_text.' . $index) }}" 
+                                                       placeholder="Contoh: yaitu" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                                       oninput="updateOtherPreview({{ $index }})">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input:</label>
+                                                <!-- ✅ PERBAIKAN: Menggunakan array biasa seperti di edit -->
+                                                <input type="text" name="other_after_text[]" value="{{ old('other_after_text.' . $index) }}" 
+                                                       placeholder="Contoh: per bulan" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                                       oninput="updateOtherPreview({{ $index }})">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Preview -->
+                                        <div class="bg-white border border-gray-300 rounded-md p-3">
+                                            <label class="block text-xs font-medium text-gray-600 mb-2">Preview:</label>
+                                            <div class="flex items-center flex-wrap" id="other_preview_{{ $index }}">
+                                                <span class="other-before-text mr-2 text-gray-700 font-medium"></span>
+                                                <input type="text" class="px-2 py-1 border border-gray-300 rounded text-sm min-w-32" 
+                                                       placeholder="Input pengguna..." disabled>
+                                                <span class="other-after-text ml-2 text-gray-700 font-medium"></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-3 bg-blue-50 p-2 rounded text-xs text-blue-700">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            <strong>Contoh:</strong> "Lainnya, yaitu [input] per bulan"
+                                        </div>
                                     </div>
                                 </div>
                                 @endforeach
                             @else
                             <!-- Default first option -->
-                            <div class="flex items-center mb-2 flex-wrap">
+                            <div class="option-item flex items-center mb-2 flex-wrap" data-index="0">
                                 <input type="text" name="options[]" class="flex-grow px-3 py-2 border rounded-md mr-2" placeholder="Tuliskan pilihan..." required>
+                                
+                                <!-- ✅ PERBAIKAN: Hidden field untuk option mapping -->
+                                <input type="hidden" name="option_indexes[]" value="0">
+                                
                                 <div class="flex items-center mr-2">
-                                    <input type="checkbox" name="other_options[]" value="0" onchange="toggleOtherConfig(this)" class="mr-1">
-                                    <label class="text-sm">Lainnya</label>
+                                    <input type="checkbox" name="other_options[]" value="0" onchange="toggleOtherConfig(this, 0)" class="mr-1" id="other_checkbox_0">
+                                    <label for="other_checkbox_0" class="text-sm">Lainnya</label>
                                 </div>
                                 <span class="text-gray-400 text-sm mr-2">(Minimal 1)</span>
                                 
-                                <div class="other-text-config hidden w-full mt-2 bg-gray-50 p-3 rounded border border-gray-200" id="other_config_0">
-                                    <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder untuk input "Lainnya":</label>
-                                    <input type="text" name="other_placeholders[]" placeholder="Contoh: Sebutkan lainnya..." class="w-full px-2 py-1 border rounded text-sm">
+                                <!-- ✅ PERBAIKAN: Before/After Text untuk Default Option -->
+                                <div class="other-text-config hidden w-full mt-2 bg-gray-50 p-4 rounded border border-gray-200" id="other_config_0">
+                                    <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                        <i class="fas fa-edit mr-2 text-blue-600"></i>
+                                        Konfigurasi Input "Lainnya"
+                                    </h5>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input:</label>
+                                            <!-- ✅ PERBAIKAN: Menggunakan associative array -->
+                                            <input type="text" name="other_before_text[0]" placeholder="Contoh: yaitu" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                                   oninput="updateOtherPreview(0)">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input:</label>
+                                            <!-- ✅ PERBAIKAN: Menggunakan associative array -->
+                                            <input type="text" name="other_after_text[0]" placeholder="Contoh: per bulan" 
+                                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                                   oninput="updateOtherPreview(0)">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Preview -->
+                                    <div class="bg-white border border-gray-300 rounded-md p-3">
+                                        <label class="block text-xs font-medium text-gray-600 mb-2">Preview:</label>
+                                        <div class="flex items-center flex-wrap" id="other_preview_0">
+                                            <span class="other-before-text mr-2 text-gray-700 font-medium"></span>
+                                            <input type="text" class="px-2 py-1 border border-gray-300 rounded text-sm min-w-32" 
+                                                   placeholder="Input pengguna..." disabled>
+                                            <span class="other-after-text ml-2 text-gray-700 font-medium"></span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-3 bg-blue-50 p-2 rounded text-xs text-blue-700">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        <strong>Contoh:</strong> "Lainnya, yaitu [input] per bulan"
+                                    </div>
                                 </div>
                             </div>
                             @endif
@@ -299,26 +380,43 @@
                         </div>
                         
                         <div id="conditional-options" class="{{ old('has_dependency') ? '' : 'hidden' }} border p-4 rounded-md bg-gray-50">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label for="depends_on" class="block text-sm font-medium text-gray-700 mb-2">Bergantung pada pertanyaan:</label>
-                                    <select id="depends_on" name="depends_on" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                        <option value="">-- Pilih Pertanyaan --</option>
-                                        @foreach($availableQuestions as $availableQuestion)
-                                            <option value="{{ $availableQuestion->id_question }}" {{ old('depends_on') == $availableQuestion->id_question ? 'selected' : '' }}>
-                                                {{ $availableQuestion->question }}
+                            <div class="mb-3">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">
+                                    Bergantung pada pertanyaan:
+                                </label> 
+                                <select name="depends_on" id="depends_on_select" class="w-full px-3 py-2 border rounded-md @error('depends_on') border-red-500 @enderror">
+                                    <option value="">-- Pilih Pertanyaan --</option>
+                                    @foreach($availableQuestions as $q)
+                                        @if(in_array($q->type, ['option', 'multiple', 'rating', 'scale']))
+                                            <option value="{{ $q->id_question }}" 
+                                                    {{ old('depends_on') == $q->id_question ? 'selected' : '' }}>
+                                                {{ Str::limit($q->question, 50) }} ({{ ucfirst($q->type) }})
                                             </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div>
-                                    <label for="depends_value" class="block text-sm font-medium text-gray-700 mb-2">Jika jawabannya:</label>
-                                    <select id="depends_value" name="depends_value" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                        <option value="">-- Pilih Jawaban --</option>
-                                        
-                                    </select>
-                                </div>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                @error('depends_on')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                                <p class="text-xs text-gray-500 mt-1">Pertanyaan dengan tipe 'option', 'multiple', 'rating', atau 'scale' dapat dijadikan dependensi</p>
                             </div>
+
+                            <div class="mb-3">
+                                <label class="block text-gray-700 text-sm font-bold mb-2">
+                                    Pilih jawaban yang memicu pertanyaan ini:
+                                </label>
+                                <select name="depends_value" id="depends_value_select" class="w-full px-3 py-2 border rounded-md @error('depends_value') border-red-500 @enderror">
+                                    <option value="">-- Pilih Jawaban --</option>
+                                </select>
+                                @error('depends_value')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
+                            </div>
+                            
+                            <!-- ✅ PERBAIKAN: Tambahkan Hidden fields untuk ensure dependency values are submitted -->
+                            <input type="hidden" id="hidden_depends_on" name="hidden_depends_on" value="{{ old('depends_on') }}">
+                            <input type="hidden" id="hidden_depends_value" name="hidden_depends_value" value="{{ old('depends_value') }}">
+                            
                             <p class="text-xs text-gray-500 mt-2">Pertanyaan ini hanya akan muncul jika kondisi di atas terpenuhi.</p>
                         </div>
                     </div>
@@ -339,6 +437,40 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <script>
+// ✅ PERBAIKAN: Enhanced function untuk update preview other text
+window.updateOtherPreview = function(index) {
+    const beforeInput = document.querySelector(`input[name="other_before_text[${index}]"]`);
+    const afterInput = document.querySelector(`input[name="other_after_text[${index}]"]`);
+    const previewContainer = document.getElementById(`other_preview_${index}`);
+    
+    if (beforeInput && afterInput && previewContainer) {
+        const beforeSpan = previewContainer.querySelector('.other-before-text');
+        const afterSpan = previewContainer.querySelector('.other-after-text');
+        
+        if (beforeSpan && afterSpan) {
+            beforeSpan.textContent = beforeInput.value || '';
+            afterSpan.textContent = afterInput.value || '';
+        }
+    }
+};
+
+// ✅ PERBAIKAN: Enhanced toggle function
+window.toggleOtherConfig = function(checkbox, index) {
+    const configDiv = document.getElementById(`other_config_${index}`);
+    if (configDiv) {
+        configDiv.classList.toggle('hidden', !checkbox.checked);
+        
+        // ✅ PERBAIKAN: Clear before/after text when hiding
+        if (!checkbox.checked) {
+            const beforeInput = configDiv.querySelector(`input[name="other_before_text[${index}]"]`);
+            const afterInput = configDiv.querySelector(`input[name="other_after_text[${index}]"]`);
+            if (beforeInput) beforeInput.value = '';
+            if (afterInput) afterInput.value = '';
+            updateOtherPreview(index);
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Setup basic toggle functionality
     document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
@@ -463,24 +595,62 @@ document.addEventListener('DOMContentLoaded', function() {
     const optionsContainer = document.getElementById('options-container');
     
     if (addOptionBtn && optionsContainer) {
-        let optionIndex = document.querySelectorAll('input[name="options[]"]:not([type="hidden"])').length;
+        let optionIndex = document.querySelectorAll('.option-item').length;
         
         addOptionBtn.addEventListener('click', function() {
             const optionDiv = document.createElement('div');
-            optionDiv.className = 'flex items-center mb-2 flex-wrap';
+            optionDiv.className = 'option-item flex items-center mb-2 flex-wrap';
+            optionDiv.setAttribute('data-index', optionIndex);
             optionDiv.innerHTML = `
                 <input type="text" name="options[]" class="flex-grow px-3 py-2 border rounded-md mr-2" placeholder="Tuliskan pilihan..." required>
+                
+                <!-- ✅ PERBAIKAN: Hidden field untuk option mapping -->
+                <input type="hidden" name="option_indexes[]" value="${optionIndex}">
+                
                 <div class="flex items-center mr-2">
-                    <input type="checkbox" name="other_options[]" value="${optionIndex}" onchange="toggleOtherConfig(this)" class="mr-1">
-                    <label class="text-sm">Lainnya</label>
+                    <input type="checkbox" name="other_options[]" value="${optionIndex}" onchange="toggleOtherConfig(this, ${optionIndex})" class="mr-1" id="other_checkbox_${optionIndex}">
+                    <label for="other_checkbox_${optionIndex}" class="text-sm">Lainnya</label>
                 </div>
                 <button type="button" class="remove-option text-red-500 hover:text-red-700">
                     <i class="fas fa-trash"></i>
                 </button>
                 
-                <div class="other-text-config hidden w-full mt-2 bg-gray-50 p-3 rounded border border-gray-200" id="other_config_${optionIndex}">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Placeholder untuk input "Lainnya":</label>
-                    <input type="text" name="other_placeholders[]" placeholder="Contoh: Sebutkan lainnya..." class="w-full px-2 py-1 border rounded text-sm">
+                <div class="other-text-config hidden w-full mt-2 bg-gray-50 p-4 rounded border border-gray-200" id="other_config_${optionIndex}">
+                    <h5 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <i class="fas fa-edit mr-2 text-blue-600"></i>
+                        Konfigurasi Input "Lainnya"
+                    </h5>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input:</label>
+                            <input type="text" name="other_before_text[${optionIndex}]" placeholder="Contoh: yaitu" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                   oninput="updateOtherPreview(${optionIndex})">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input:</label>
+                            <input type="text" name="other_after_text[${optionIndex}]" placeholder="Contoh: per bulan" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                   oninput="updateOtherPreview(${optionIndex})">
+                        </div>
+                    </div>
+                    
+                    <!-- Preview -->
+                    <div class="bg-white border border-gray-300 rounded-md p-3">
+                        <label class="block text-xs font-medium text-gray-600 mb-2">Preview:</label>
+                        <div class="flex items-center flex-wrap" id="other_preview_${optionIndex}">
+                            <span class="other-before-text mr-2 text-gray-700 font-medium"></span>
+                            <input type="text" class="px-2 py-1 border border-gray-300 rounded text-sm min-w-32" 
+                                   placeholder="Input pengguna..." disabled>
+                            <span class="other-after-text ml-2 text-gray-700 font-medium"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 bg-blue-50 p-2 rounded text-xs text-blue-700">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        <strong>Contoh:</strong> "Lainnya, yaitu [input] per bulan"
+                    </div>
                 </div>
             `;
             
@@ -488,19 +658,58 @@ document.addEventListener('DOMContentLoaded', function() {
             optionIndex++;
         });
         
-        // Remove option functionality
+        // ✅ PERBAIKAN: Enhanced Remove option functionality
         optionsContainer.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-option') || e.target.closest('.remove-option')) {
-                const optionDiv = e.target.closest('.flex');
-                const visibleOptions = optionsContainer.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
-                if (visibleOptions.length > 1) {
-                    optionDiv.remove();
-                } else {
-                    alert('Minimal harus ada satu pilihan jawaban!');
+                const optionItem = e.target.closest('.option-item');
+                if (optionItem && document.querySelectorAll('.option-item').length > 1) {
+                    optionItem.remove();
+                    
+                    // Re-index remaining options
+                    document.querySelectorAll('.option-item').forEach((item, newIndex) => {
+                        item.setAttribute('data-index', newIndex);
+                        // Update all inputs within this option
+                        const inputs = item.querySelectorAll('input, label');
+                        inputs.forEach(input => {
+                            if (input.name === 'option_indexes[]') {
+                                input.value = newIndex;
+                            } else if (input.name === 'other_options[]') {
+                                input.value = newIndex;
+                                input.setAttribute('onchange', `toggleOtherConfig(this, ${newIndex})`);
+                                input.id = `other_checkbox_${newIndex}`;
+                            } else if (input.name && input.name.startsWith('other_before_text[')) {
+                                input.name = `other_before_text[${newIndex}]`;
+                                input.setAttribute('oninput', `updateOtherPreview(${newIndex})`);
+                            } else if (input.name && input.name.startsWith('other_after_text[')) {
+                                input.name = `other_after_text[${newIndex}]`;
+                                input.setAttribute('oninput', `updateOtherPreview(${newIndex})`);
+                            } else if (input.tagName === 'LABEL' && input.getAttribute('for')) {
+                                input.setAttribute('for', `other_checkbox_${newIndex}`);
+                            }
+                        });
+                        
+                        // Update config div id
+                        const configDiv = item.querySelector('.other-text-config');
+                        if (configDiv) {
+                            configDiv.id = `other_config_${newIndex}`;
+                        }
+                        
+                        // Update preview div id
+                        const previewDiv = item.querySelector('[id^="other_preview_"]');
+                        if (previewDiv) {
+                            previewDiv.id = `other_preview_${newIndex}`;
+                        }
+                    });
                 }
             }
         });
     }
+    
+    // ✅ PERBAIKAN: Initialize previews for existing options
+    document.querySelectorAll('[id^="other_config_"]').forEach(config => {
+        const index = config.id.replace('other_config_', '');
+        updateOtherPreview(index);
+    });
     
     // Toggle conditional options
     const hasDepCheckbox = document.getElementById('has_dependency');
@@ -559,9 +768,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 dependsValueSelect.appendChild(optionEl);
             });
+            
+            console.log(`Populated ${questionOptionsMap[questionId].length} options for question ${questionId}`);
+        } else {
+            // If no options available, show message
+            const noOptionEl = document.createElement('option');
+            noOptionEl.value = '';
+            noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
+            noOptionEl.disabled = true;
+            dependsValueSelect.appendChild(noOptionEl);
+            
+            console.log(`No options available for question ${questionId}`);
+        }
+        
+        // Update hidden field
+        const hiddenDependsValue = document.getElementById('hidden_depends_value');
+        if (hiddenDependsValue && selectedValue) {
+            hiddenDependsValue.value = selectedValue;
         }
     }
-
+    
     // On page load, if there's old input, populate options
     if (selectedDependsOn && dependsOnSelect && dependsValueSelect) {
         populateDependsValueOptions(selectedDependsOn, selectedDependsValue);
@@ -587,14 +813,161 @@ window.toggleOtherConfig = function(checkbox) {
     if (configDiv) {
         configDiv.classList.toggle('hidden', !checkbox.checked);
         
-        // Clear placeholder when hiding
+        // ✅ PERBAIKAN: Clear before/after text when hiding
         if (!checkbox.checked) {
-            const placeholderInput = configDiv.querySelector('input[name="other_placeholders[]"]');
-            if (placeholderInput) {
-                placeholderInput.value = '';
-            }
+            const beforeInput = configDiv.querySelector(`input[name="other_before_text[${index}]"]`);
+            const afterInput = configDiv.querySelector(`input[name="other_after_text[${index}]"]`);
+            if (beforeInput) beforeInput.value = '';
+            if (afterInput) afterInput.value = '';
+            updateOtherPreview(index);
         }
     }
 };
+
+// ✅ PERBAIKAN: Enhanced dependency handling
+const toggleConditional = document.getElementById('has_dependency');
+const conditionalOptions = document.getElementById('conditional-options');
+const dependsOnSelect = document.getElementById('depends_on_select');
+const dependsValueSelect = document.getElementById('depends_value_select');
+
+if (toggleConditional && conditionalOptions) {
+    toggleConditional.addEventListener('change', function() {
+        conditionalOptions.classList.toggle('hidden', !this.checked);
+        
+        console.log('Dependency checkbox changed:', this.checked);
+        
+        // Reset dependency selects when unchecked
+        if (!this.checked) {
+            if (dependsOnSelect) dependsOnSelect.value = '';
+            if (dependsValueSelect) {
+                dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+            }
+            
+            // Clear hidden fields
+            const hiddenDependsOn = document.getElementById('hidden_depends_on');
+            const hiddenDependsValue = document.getElementById('hidden_depends_value');
+            if (hiddenDependsOn) hiddenDependsOn.value = '';
+            if (hiddenDependsValue) hiddenDependsValue.value = '';
+        }
+    });
+}
+
+// ✅ PERBAIKAN: Question options mapping for dependencies
+const questionOptionsMap = {};
+@foreach($availableQuestions as $q)
+    @if(in_array($q->type, ['option', 'multiple', 'rating', 'scale']) && $q->options->count() > 0)
+        questionOptionsMap[{{ $q->id_question }}] = [
+            @foreach($q->options as $option)
+                {
+                    id: {{ $option->id_questions_options }},
+                    text: "{{ addslashes($option->option) }}"
+                },
+            @endforeach
+        ];
+    @endif
+@endforeach
+
+// ✅ PERBAIKAN: Populate depends value options
+function populateDependsValueOptions(questionId, selectedValue = null) {
+    if (!dependsValueSelect) return;
+    
+    dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+    
+    if (questionOptionsMap[questionId] && questionOptionsMap[questionId].length > 0) {
+        questionOptionsMap[questionId].forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt.id;
+            optionEl.textContent = opt.text;
+            if (selectedValue && selectedValue == opt.id) {
+                optionEl.selected = true;
+            }
+            dependsValueSelect.appendChild(optionEl);
+        });
+        
+        console.log(`Populated ${questionOptionsMap[questionId].length} options for question ${questionId}`);
+    } else {
+        // If no options available, show message
+        const noOptionEl = document.createElement('option');
+        noOptionEl.value = '';
+        noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
+        noOptionEl.disabled = true;
+        dependsValueSelect.appendChild(noOptionEl);
+        
+        console.log(`No options available for question ${questionId}`);
+    }
+}
+
+// ✅ PERBAIKAN: On depends_on change
+if (dependsOnSelect && dependsValueSelect) {
+    dependsOnSelect.addEventListener('change', function() {
+        console.log('Depends on changed to:', this.value);
+        populateDependsValueOptions(this.value, null);
+        
+        // Update hidden field
+        const hiddenDependsOn = document.getElementById('hidden_depends_on');
+        if (hiddenDependsOn) {
+            hiddenDependsOn.value = this.value;
+        }
+    });
+}
+
+// ✅ PERBAIKAN: On depends_value change
+if (dependsValueSelect) {
+    dependsValueSelect.addEventListener('change', function() {
+        console.log('Depends value changed to:', this.value);
+        
+        // Update hidden field
+        const hiddenDependsValue = document.getElementById('hidden_depends_value');
+        if (hiddenDependsValue) {
+            hiddenDependsValue.value = this.value;
+        }
+    });
+}
+
+// ✅ PERBAIKAN: Form submission validation
+const form = document.querySelector('form');
+if (form) {
+    form.addEventListener('submit', function(e) {
+        // Handle dependency fields before submission
+        const toggleConditional = document.getElementById('has_dependency');
+        const dependsOnSelect = document.getElementById('depends_on_select');
+        const dependsValueSelect = document.getElementById('depends_value_select');
+        const hiddenDependsOn = document.getElementById('hidden_depends_on');
+        const hiddenDependsValue = document.getElementById('hidden_depends_value');
+        
+        if (toggleConditional && toggleConditional.checked) {
+            // Dependency is enabled, validate the selections
+            if (!dependsOnSelect.value) {
+                e.preventDefault();
+                alert('Pilih pertanyaan yang menjadi dependensi!');
+                return false;
+            }
+            
+            if (!dependsValueSelect.value) {
+                e.preventDefault();
+                alert('Pilih jawaban yang memicu pertanyaan ini!');
+                return false;
+            }
+            
+            // Copy values to hidden fields for submission
+            hiddenDependsOn.value = dependsOnSelect.value;
+            hiddenDependsValue.value = dependsValueSelect.value;
+            
+            console.log('Dependency enabled:', {
+                depends_on: dependsOnSelect.value,
+                depends_value: dependsValueSelect.value
+            });
+        } else {
+            // Dependency is disabled, clear the hidden fields
+            hiddenDependsOn.value = '';
+            hiddenDependsValue.value = '';
+            
+            console.log('Dependency disabled, clearing values');
+        }
+        
+        console.log('Form validation passed, submitting...');
+        return true;
+    });
+}
 </script>
 @endsection

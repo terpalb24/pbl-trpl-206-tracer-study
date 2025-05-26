@@ -65,9 +65,27 @@
             @endif
             
             @if(session('error'))
-                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md flex items-center">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    {{ session('error') }}
+                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <div class="flex-1">
+                            <p class="font-medium">{{ session('error') }}</p>
+                            
+                            @if(session('validation_errors'))
+                                <div class="mt-3">
+                                    <p class="text-sm font-medium mb-2">Pertanyaan yang belum dijawab:</p>
+                                    <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
+                                        @foreach(session('validation_errors') as $error)
+                                            <li class="flex items-start">
+                                                <i class="fas fa-circle text-xs mr-2 mt-1.5"></i>
+                                                <span>{{ $error }}</span>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @endif
 
@@ -90,18 +108,18 @@
                         <p class="text-sm text-blue-700">{{ $currentCategory->category_name }}</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-bold text-blue-900">{{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ $allCategories->count() }}</div>
+                        <div class="text-2xl font-bold text-blue-900">{{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ isset($totalCategories) ? $totalCategories : 1 }}</div>
                         <div class="text-sm text-blue-700">Kategori</div>
                     </div>
                 </div>
                 
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-sm font-medium text-blue-900">Progress Keseluruhan</span>
-                    <span class="text-sm font-medium text-blue-900">{{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%</span>
+                    <span class="text-sm font-medium text-blue-900">{{ isset($currentCategoryIndex, $totalCategories) ? round((($currentCategoryIndex + 1) / $totalCategories) * 100) : 0 }}%</span>
                 </div>
                 <div class="w-full bg-blue-200 rounded-full h-3">
                     <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300" 
-                         style="width: {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%"></div>
+                         style="width: {{ isset($currentCategoryIndex, $totalCategories) ? round((($currentCategoryIndex + 1) / $totalCategories) * 100) : 0 }}%"></div>
                 </div>
             </div>
 
@@ -162,6 +180,9 @@
                                                             <p class="text-xs text-yellow-700 flex items-center">
                                                                 <i class="fas fa-link mr-1"></i> 
                                                                 <span class="font-medium">Pertanyaan bersyarat</span>
+                                                                <span class="ml-2 text-yellow-600">
+                                                                    (Muncul jika pertanyaan sebelumnya dijawab dengan nilai tertentu)
+                                                                </span>
                                                             </p>
                                                         </div>
                                                     @endif
@@ -171,6 +192,9 @@
                                         <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full ml-3">
                                             <i class="fas fa-{{ $question->type == 'text' ? 'keyboard' : ($question->type == 'option' ? 'dot-circle' : ($question->type == 'multiple' ? 'check-square' : ($question->type == 'location' ? 'map-marker-alt' : ($question->type == 'rating' ? 'star' : ($question->type == 'scale' ? 'chart-line' : 'calendar-alt'))))) }} mr-1"></i>
                                             {{ ucfirst($question->type) }}
+                                            @if($question->depends_on)
+                                                <i class="fas fa-link ml-1 text-yellow-600" title="Pertanyaan Bersyarat"></i>
+                                            @endif
                                         </span>
                                     </div>
 
@@ -243,12 +267,14 @@
                                                        value="{{ isset($prevLocationAnswers[$question->id_question]) ? json_encode($prevLocationAnswers[$question->id_question]) : '' }}">
                                                 
                                                 <div id="selected-location-{{ $question->id_question }}" 
-                                                     class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md hidden">
+                                                     class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md {{ isset($prevLocationAnswers[$question->id_question]) && !empty($prevLocationAnswers[$question->id_question]['display']) ? '' : 'hidden' }}">
                                                     <div class="flex items-center">
                                                         <i class="fas fa-map-pin text-green-600 mr-2"></i>
                                                         <div>
                                                             <p class="text-sm text-green-600 font-medium">Lokasi terpilih:</p>
-                                                            <p id="location-text-{{ $question->id_question }}" class="font-semibold text-gray-800"></p>
+                                                            <p id="location-text-{{ $question->id_question }}" class="font-semibold text-gray-800">
+                                                                {{ $prevLocationAnswers[$question->id_question]['display'] ?? '' }}
+                                                            </p>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -297,7 +323,9 @@
                                                     @endforeach
                                                 </div>
                                             </div>
-                                        
+                                            <!-- TAMBAHKAN VALIDATION MESSAGE -->
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
+
                                         @elseif($question->type == 'multiple')
                                             <!-- Multiple choice question -->
                                             <div class="bg-white border border-gray-300 rounded-lg p-4">
@@ -340,6 +368,8 @@
                                                     @endforeach
                                                 </div>
                                             </div>
+                                            <!-- TAMBAHKAN VALIDATION MESSAGE -->
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
 
                                         @elseif($question->type == 'rating')
                                             <!-- Rating question -->
@@ -368,6 +398,8 @@
                                                     @endforeach
                                                 </div>
                                             </div>
+                                            <!-- TAMBAHKAN VALIDATION MESSAGE -->
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
 
                                         @elseif($question->type == 'scale')
                                             <!-- Scale question -->
@@ -405,6 +437,8 @@
                                                     @endfor
                                                 </div>
                                             </div>
+                                            <!-- TAMBAHKAN VALIDATION MESSAGE -->
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
                                         @endif
                                     </div>
                                 </div>
@@ -416,11 +450,12 @@
                             <div class="flex justify-between items-center">
                                 <div>
                                     @if($prevCategory)
-                                        <a href="{{ route('alumni.questionnaire.fill', [$periode->id_periode, $prevCategory->id_category]) }}" 
-                                           class="inline-flex items-center px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200">
+                                        <!-- ✅ PERBAIKI LINK SEBELUMNYA -->
+                                        <button type="button" id="prev-category-btn"
+                                               class="inline-flex items-center px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200">
                                             <i class="fas fa-arrow-left mr-2"></i> 
                                             Sebelumnya
-                                        </a>
+                                        </button>
                                     @endif
                                 </div>
 
@@ -457,7 +492,7 @@
     </main>
 </div>
 
-<!-- Confirmation Modal -->
+<!-- Enhanced Confirmation Modal -->
 <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
         <div class="text-center">
@@ -465,497 +500,1323 @@
                 <i class="fas fa-check text-green-600 text-xl"></i>
             </div>
             <h3 class="text-xl font-bold mb-2">Konfirmasi Penyelesaian</h3>
-            <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menyelesaikan kuesioner ini? Setelah diselesaikan, Anda tidak dapat mengubah jawaban lagi.</p>
+            <p class="text-gray-600 mb-4">
+                Semua pertanyaan telah dijawab. Apakah Anda yakin ingin menyelesaikan kuesioner ini?
+            </p>
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                    <p class="text-sm text-yellow-800">
+                        <strong>Perhatian:</strong> Setelah diselesaikan, Anda tidak dapat mengubah jawaban lagi.
+                    </p>
+                </div>
+            </div>
             <div class="flex justify-center space-x-3">
                 <button id="modal-cancel" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium rounded-md transition-colors duration-200">
                     Batal
                 </button>
                 <button id="modal-confirm" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md transition-colors duration-200">
-                    Ya, Selesai
+                    <i class="fas fa-check mr-2"></i>Ya, Selesai
                 </button>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Validation Alert Placeholder -->
+<div id="validation-alert-container"></div>
+
+<style>
+.question-container.border-red-300 {
+    border-color: #fca5a5 !important;
+    background-color: #fef2f2 !important;
+}
+
+.validation-message {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.validation-message.hidden {
+    display: none;
+}
+
+/* Animation for validation alerts */
+#validation-alert {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Pulsing effect for required questions */
+.question-container.border-red-300 {
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing alumni questionnaire functionality');
     
+    // ✅ PERBAIKAN: Pass data dari backend ke JavaScript dengan benar
+    window.questionnaireData = {
+        prevAnswers: @json($prevAnswers ?? []),
+        prevMultipleAnswers: @json($prevMultipleAnswers ?? []),
+        prevLocationAnswers: @json($prevLocationAnswers ?? []),
+        prevOtherAnswers: @json($prevOtherAnswers ?? []),
+        prevMultipleOtherAnswers: @json($prevMultipleOtherAnswers ?? []),
+        conditionalQuestions: @json($conditionalQuestions ?? []),
+        currentCategoryIndex: {{ $currentCategoryIndex ?? 0 }},
+        totalCategories: {{ $totalCategories ?? 0 }},
+        progressPercentage: {{ $progressPercentage ?? 0 }}
+    };
+    
+    console.log('✅ Questionnaire data loaded:', window.questionnaireData);
+    
+    // ✅ PERBAIKAN: Load saved answers dengan benar setelah DOM ready
+    function loadSavedAnswers() {
+        console.log('=== LOADING SAVED ANSWERS ===');
+        
+        // Load regular answers
+        Object.entries(window.questionnaireData.prevAnswers).forEach(([questionId, answer]) => {
+            const input = document.querySelector(`input[name="answers[${questionId}]"][value="${answer}"]`) ||
+                         document.querySelector(`input[name="answers[${questionId}]"]`) ||
+                         document.querySelector(`select[name="answers[${questionId}]"]`) ||
+                         document.querySelector(`textarea[name="answers[${questionId}]"]`);
+            
+            if (input) {
+                if (input.type === 'radio' || input.type === 'checkbox') {
+                    input.checked = true;
+                } else {
+                    input.value = answer;
+                }
+                console.log(`✅ Loaded answer for question ${questionId}:`, answer);
+            }
+        });
+        
+        // Load multiple choice answers
+        Object.entries(window.questionnaireData.prevMultipleAnswers).forEach(([questionId, answers]) => {
+            answers.forEach(answer => {
+                const checkbox = document.querySelector(`input[name="multiple[${questionId}][]"][value="${answer}"]`);
+                if (checkbox) {
+                    checkbox.checked = true;
+                    console.log(`✅ Loaded multiple choice for question ${questionId}:`, answer);
+                }
+            });
+        });
+        
+        // Load other answers
+        Object.entries(window.questionnaireData.prevOtherAnswers).forEach(([questionId, otherAnswer]) => {
+            const otherInput = document.querySelector(`input[name="other_answers[${questionId}]"]`) ||
+                              document.querySelector(`input[name="other_answer[${questionId}]"]`) ||
+                              document.querySelector(`textarea[name="other_answers[${questionId}]"]`);
+            
+            if (otherInput) {
+                otherInput.value = otherAnswer;
+                // Show other input container if hidden
+                const otherContainer = otherInput.closest('.other-input-container');
+                if (otherContainer) {
+                    otherContainer.style.display = 'block';
+                }
+                console.log(`✅ Loaded other answer for question ${questionId}:`, otherAnswer);
+            }
+        });
+        
+        // Load multiple other answers
+        Object.entries(window.questionnaireData.prevMultipleOtherAnswers).forEach(([questionId, optionAnswers]) => {
+            Object.entries(optionAnswers).forEach(([optionId, otherAnswer]) => {
+                const otherInput = document.querySelector(`input[name="multiple_other_answers[${questionId}][${optionId}]"]`) ||
+                                  document.querySelector(`textarea[name="multiple_other_answers[${questionId}][${optionId}]"]`);
+                
+                if (otherInput) {
+                    otherInput.value = otherAnswer;
+                    // Show other input container if hidden
+                    const otherContainer = otherInput.closest('.other-input-container');
+                    if (otherContainer) {
+                        otherContainer.style.display = 'block';
+                    }
+                    console.log(`✅ Loaded multiple other answer for question ${questionId}, option ${optionId}:`, otherAnswer);
+                }
+            });
+        });
+        
+        // Load location answers
+        Object.entries(window.questionnaireData.prevLocationAnswers).forEach(([questionId, locationData]) => {
+            console.log(`Loading location data for question ${questionId}:`, locationData);
+            
+            // Set province and city if available
+            if (locationData.province_id) {
+                const provinceSelect = document.getElementById(`province-${questionId}`);
+                if (provinceSelect) {
+                    provinceSelect.value = locationData.province_id;
+                    // Trigger change to load cities
+                    provinceSelect.dispatchEvent(new Event('change'));
+                    
+                    // Set city after a delay to allow cities to load
+                    setTimeout(() => {
+                        if (locationData.city_id) {
+                            const citySelect = document.getElementById(`city-${questionId}`);
+                            if (citySelect) {
+                                citySelect.value = locationData.city_id;
+                                citySelect.dispatchEvent(new Event('change'));
+                            }
+                        }
+                    }, 1000);
+                }
+            }
+            
+            // Update display if available
+            if (locationData.display) {
+                const locationDisplay = document.getElementById(`location-text-${questionId}`);
+                if (locationDisplay) {
+                    locationDisplay.textContent = locationData.display;
+                }
+                
+                const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+                if (selectedLocationDiv) {
+                    selectedLocationDiv.style.display = 'block';
+                }
+            }
+        });
+    }
+    
     // GLOBAL FORM ELEMENTS
     const form = document.getElementById('questionnaireForm');
     const formAction = document.getElementById('form-action');
-    
-    // BUTTON HANDLERS
-    document.getElementById('save-draft-btn')?.addEventListener('click', function() {
-        formAction.value = 'save_draft';
-        form.submit();
-    });
-    
-    document.getElementById('next-category-btn')?.addEventListener('click', function() {
-        formAction.value = 'next_category';
-        form.submit();
-    });
-    
-    document.getElementById('submit-final-btn')?.addEventListener('click', function() {
-        formAction.value = 'submit_final';
-        document.getElementById('confirmation-modal').classList.remove('hidden');
-    });
-    
-    // CONFIRMATION MODAL
-    document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        document.getElementById('confirmation-modal').classList.add('hidden');
-    });
-    
-    document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        formAction.value = 'submit_final';
-        form.submit();
-    });
-    
-    // LOCATION QUESTION HANDLERS
-    initializeLocationQuestions();
-    
-    // HANDLE "OTHER" OPTION FIELDS FOR RADIO BUTTONS
-    document.querySelectorAll('.option-radio').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const questionId = this.getAttribute('data-question-id');
-            const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
-            
-            console.log('Radio changed:', {
-                questionId: questionId,
-                selectedValue: this.value,
-                isOther: isOther
-            });
-            
-            // Hide all other fields for this question
-            document.querySelectorAll(`input[name="other_answers[${questionId}]"]`).forEach(input => {
-                const parentDiv = input.closest('.bg-blue-50');
-                if (parentDiv) {
-                    parentDiv.classList.add('hidden');
-                }
-            });
-            
-            // Show this other field if applicable
-            if (isOther) {
-                const otherField = document.getElementById(`other_field_${questionId}_${this.value}`);
-                if (otherField) {
-                    otherField.classList.remove('hidden');
-                    // Focus on the input field
-                    const input = otherField.querySelector('input[type="text"]');
-                    if (input) {
-                        setTimeout(() => input.focus(), 100);
-                    }
-                }
-            }
-            
-            // Handle conditional questions
-            handleDependentQuestions(questionId, this.value);
-        });
-    });
-    
-    // HANDLE "OTHER" OPTION FIELDS FOR CHECKBOXES
-    document.querySelectorAll('.multiple-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const questionId = this.getAttribute('data-question-id');
-            const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
-            
-            console.log('Checkbox changed:', {
-                questionId: questionId,
-                selectedValue: this.value,
-                isOther: isOther,
-                checked: this.checked
-            });
-            
-            // Toggle this other field based on checkbox state
-            if (isOther) {
-                const otherField = document.getElementById(`multiple_other_field_${questionId}_${this.value}`);
-                if (otherField) {
-                    if (this.checked) {
-                        otherField.classList.remove('hidden');
-                        // Focus on the input field
-                        const input = otherField.querySelector('input[type="text"]');
-                        if (input) {
-                            setTimeout(() => input.focus(), 100);
-                        }
-                    } else {
-                        otherField.classList.add('hidden');
-                        // Clear the input value when hidden
-                        const input = otherField.querySelector('input[type="text"]');
-                        if (input) {
-                            input.value = '';
-                        }
-                    }
-                }
-            }
-            
-            // Handle conditional questions - determine the combined value of all checked options
-            const allChecked = Array.from(document.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`))
-                .map(input => input.value);
-            
-            // If any checkbox is checked/unchecked, check if it affects conditional questions
-            allChecked.forEach(value => {
-                handleDependentQuestions(questionId, value);
-            });
-        });
-    });
-    
-    // HANDLE RATING QUESTIONS
-    document.querySelectorAll('.rating-radio').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const questionId = this.getAttribute('data-question-id');
-            const selectedValue = this.value;
-            
-            console.log('Rating changed:', {
-                questionId: questionId,
-                selectedValue: selectedValue
-            });
-            
-            // Handle conditional questions
-            handleDependentQuestions(questionId, selectedValue);
-            
-            // Add visual feedback
-            const container = this.closest('.grid');
-            if (container) {
-                container.querySelectorAll('label span').forEach(span => {
-                    span.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
-                    span.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-300');
-                });
-                
-                const selectedSpan = this.nextElementSibling.querySelector('span');
-                if (selectedSpan) {
-                    selectedSpan.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
-                    selectedSpan.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
-                }
-            }
-        });
-    });
-    
-    // HANDLE SCALE QUESTIONS
-    document.querySelectorAll('.scale-radio').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const questionId = this.getAttribute('data-question-id');
-            const selectedValue = this.value;
-            
-            console.log('Scale changed:', {
-                questionId: questionId,
-                selectedValue: selectedValue
-            });
-            
-            // Handle conditional questions
-            handleDependentQuestions(questionId, selectedValue);
-            
-            // Add visual feedback
-            const container = this.closest('.flex');
-            if (container) {
-                container.querySelectorAll('label span').forEach(span => {
-                    span.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
-                    span.classList.add('bg-white', 'border-gray-300');
-                });
-                
-                const selectedSpan = this.nextElementSibling.querySelector('span');
-                if (selectedSpan) {
-                    selectedSpan.classList.remove('bg-white', 'border-gray-300');
-                    selectedSpan.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
-                }
-            }
-        });
-    });
-    
-    // Initialize pre-selected rating and scale options
-    document.querySelectorAll('.rating-radio:checked, .scale-radio:checked').forEach(radio => {
-        const questionId = radio.getAttribute('data-question-id');
-        const selectedValue = radio.value;
-        
-        // Process conditional questions for pre-selected rating/scale
-        handleDependentQuestions(questionId, selectedValue);
-        
-        // Add visual feedback for pre-selected options
-        if (radio.classList.contains('rating-radio')) {
-            const selectedSpan = radio.nextElementSibling.querySelector('span');
-            if (selectedSpan) {
-                selectedSpan.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
-                selectedSpan.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
-            }
-        } else if (radio.classList.contains('scale-radio')) {
-            const selectedSpan = radio.nextElementSibling.querySelector('span');
-            if (selectedSpan) {
-                selectedSpan.classList.remove('bg-white', 'border-gray-300');
-                selectedSpan.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
-            }
-        }
-    });
-    
-    // Function to handle conditional questions
-    function handleDependentQuestions(parentId, selectedValue) {
-        console.log(`Checking dependencies for question ${parentId} with value "${selectedValue}"`);
-        
-        // Find all questions that depend on this one
-        document.querySelectorAll('.conditional-question').forEach(question => {
-            const dependsOn = question.getAttribute('data-depends-on');
-            const dependsValue = question.getAttribute('data-depends-value');
-            
-            if (dependsOn === parentId) {
-                if (selectedValue == dependsValue) {
-                    question.style.display = 'block';
-                    console.log(`Showing question ${question.id} because ${selectedValue} == ${dependsValue}`);
-                } else {
-                    question.style.display = 'none';
-                    console.log(`Hiding question ${question.id} because ${selectedValue} != ${dependsValue}`);
-                }
-            }
-        });
-    }
-    
-    // Initialize conditional questions for pre-selected options
-    document.querySelectorAll('.option-radio:checked').forEach(radio => {
-        const questionId = radio.getAttribute('data-question-id');
-        const selectedValue = radio.value;
-        
-        // Process conditional questions for this pre-selected option
-        handleDependentQuestions(questionId, selectedValue);
-        
-        // Also handle "other" field if this is an "other" option
-        if (parseInt(radio.getAttribute('data-is-other')) === 1) {
-            const otherField = document.getElementById(`other_field_${questionId}_${selectedValue}`);
-            if (otherField) {
-                otherField.classList.remove('hidden');
-            }
-        }
-    });
-    
-    // Initialize pre-selected checkboxes
-    document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
-        const isOther = parseInt(checkbox.getAttribute('data-is-other'));
-        
-        // Handle "other" fields for pre-selected checkboxes
-        if (isOther === 1) {
-            const otherField = document.getElementById(`multiple_other_field_${checkbox.getAttribute('data-question-id')}_${checkbox.value}`);
-            if (otherField) {
-                otherField.classList.remove('hidden');
-            }
-        }
-        
-        // Also handle conditional questions for pre-selected checkboxes
-        const questionId = checkbox.getAttribute('data-question-id');
-        handleDependentQuestions(questionId, checkbox.value);
-    });
-    
-    // Initialize location questions functionality
+
+    // LOCATION FUNCTIONS - SIMPLIFIED VERSION
     function initializeLocationQuestions() {
-        console.log('Initializing location questions...');
+        console.log('=== INITIALIZING LOCATION QUESTIONS ===');
         
-        // Load provinces for all location questions
-        document.querySelectorAll('.province-select').forEach(select => {
-            console.log('Loading provinces for select:', select.id);
-            loadProvinces(select);
+        // Find all province selects
+        const provinceSelects = document.querySelectorAll('.province-select');
+        console.log('Found province selects:', provinceSelects.length);
+        
+        if (provinceSelects.length === 0) {
+            console.log('No location questions found');
+            return;
+        }
+        
+        provinceSelects.forEach((provinceSelect, index) => {
+            const questionId = provinceSelect.id.replace('province-', '');
+            console.log(`Setting up location question ${index + 1}: ${questionId}`);
+            
+            loadProvincesFromAPI(questionId);
+            setupLocationEventListeners(questionId);
         });
-        
-        // Handle province changes
-        document.querySelectorAll('.province-select').forEach(select => {
-            select.addEventListener('change', function() {
-                const questionId = this.getAttribute('data-question-id');
-                const citySelect = document.getElementById(`city-${questionId}`);
-                
-                console.log('Province changed:', this.value, 'for question:', questionId);
-                
-                if (this.value) {
-                    loadCities(questionId, this.value);
-                    citySelect.disabled = false;
-                } else {
-                    citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-                    citySelect.disabled = true;
-                    updateLocationDisplay(questionId);
-                }
-            });
-        });
-        
-        // Handle city changes
-        document.querySelectorAll('.city-select').forEach(select => {
-            select.addEventListener('change', function() {
-                const questionId = this.getAttribute('data-question-id');
-                console.log('City changed:', this.value, 'for question:', questionId);
-                updateLocationDisplay(questionId);
-            });
-        });
-        
-        // Initialize with pre-selected values after a delay
-        setTimeout(() => {
-            initializePreSelectedLocations();
-        }, 1000);
     }
     
-    function loadProvinces(selectElement) {
-        console.log('Fetching provinces...');
-        fetch('/alumni/questionnaire/provinces')
+    function loadProvincesFromAPI(questionId) {
+        console.log('Loading provinces from API for question:', questionId);
+        
+        const provinceSelect = document.getElementById(`province-${questionId}`);
+        if (!provinceSelect) {
+            console.error('Province select not found for question:', questionId);
+            return;
+        }
+        
+        // Show loading
+        provinceSelect.innerHTML = '<option value="">-- Memuat provinsi... --</option>';
+        
+        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
             .then(response => {
-                console.log('Response status:', response.status);
+                console.log('Province API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 return response.json();
             })
-            .then(data => {
-                console.log('Provinces data:', data);
-                if (data.success) {
-                    selectElement.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
-                    data.data.forEach(province => {
+            .then(provinces => {
+                console.log('Provinces received:', provinces.length);
+                
+                if (!provinces || !Array.isArray(provinces)) {
+                    throw new Error('Invalid provinces data');
+                }
+                
+                // Clear and populate provinces
+                provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                
+                provinces.forEach(province => {
+                    if (province && province.id && province.name) {
                         const option = document.createElement('option');
                         option.value = province.id;
                         option.textContent = province.name;
                         option.setAttribute('data-name', province.name);
-                        selectElement.appendChild(option);
-                    });
-                    console.log('Provinces loaded successfully');
-                } else {
-                    console.error('Failed to load provinces:', data.message);
-                }
+                        provinceSelect.appendChild(option);
+                    }
+                });
+                
+                console.log(`Successfully loaded ${provinces.length} provinces for question ${questionId}`);
+                
+                // Load saved data after provinces are populated
+                setTimeout(() => {
+                    loadSavedLocationData(questionId);
+                }, 200);
             })
             .catch(error => {
                 console.error('Error loading provinces:', error);
+                
+                // Fallback to manual data
+                console.log('Using fallback province data');
+                loadFallbackProvinces(provinceSelect, questionId);
             });
     }
     
-    function loadCities(questionId, provinceId) {
+    function loadFallbackProvinces(provinceSelect, questionId) {
+        const fallbackProvinces = [
+            { id: '11', name: 'Aceh' },
+            { id: '12', name: 'Sumatera Utara' },
+            { id: '13', name: 'Sumatera Barat' },
+            { id: '14', name: 'Riau' },
+            { id: '15', name: 'Jambi' },
+            { id: '16', name: 'Sumatera Selatan' },
+            { id: '17', name: 'Bengkulu' },
+            { id: '18', name: 'Lampung' },
+            { id: '19', name: 'Kepulauan Bangka Belitung' },
+            { id: '21', name: 'Kepulauan Riau' },
+            { id: '31', name: 'DKI Jakarta' },
+            { id: '32', name: 'Jawa Barat' },
+            { id: '33', name: 'Jawa Tengah' },
+            { id: '34', name: 'DI Yogyakarta' },
+            { id: '35', name: 'Jawa Timur' },
+            { id: '36', name: 'Banten' },
+            { id: '51', name: 'Bali' },
+            { id: '52', name: 'Nusa Tenggara Barat' },
+            { id: '53', name: 'Nusa Tenggara Timur' },
+            { id: '61', name: 'Kalimantan Barat' },
+            { id: '62', name: 'Kalimantan Tengah' },
+            { id: '63', name: 'Kalimantan Selatan' },
+            { id: '64', name: 'Kalimantan Timur' },
+            { id: '65', name: 'Kalimantan Utara' },
+            { id: '71', name: 'Sulawesi Utara' },
+            { id: '72', name: 'Sulawesi Tengah' },
+            { id: '73', name: 'Sulawesi Selatan' },
+            { id: '74', name: 'Sulawesi Tenggara' },
+            { id: '75', name: 'Gorontalo' },
+            { id: '76', name: 'Sulawesi Barat' },
+            { id: '81', name: 'Maluku' },
+            { id: '82', name: 'Maluku Utara' },
+            { id: '91', name: 'Papua Barat' },
+            { id: '94', name: 'Papua' }
+        ];
+        
+        provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+        
+        fallbackProvinces.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province.id;
+            option.textContent = province.name;
+            option.setAttribute('data-name', province.name);
+            provinceSelect.appendChild(option);
+        });
+        
+        console.log(`Loaded ${fallbackProvinces.length} fallback provinces for question ${questionId}`);
+        
+        // Load saved data
+        setTimeout(() => {
+            loadSavedLocationData(questionId);
+        }, 200);
+    }
+    
+    function setupLocationEventListeners(questionId) {
+        console.log('Setting up event listeners for question:', questionId);
+        
+        const provinceSelect = document.getElementById(`province-${questionId}`);
         const citySelect = document.getElementById(`city-${questionId}`);
-        citySelect.innerHTML = '<option value="">Loading...</option>';
+        
+        if (!provinceSelect || !citySelect) {
+            console.error('Province or city select not found for question:', questionId);
+            return;
+        }
+        
+        // Province change event
+        provinceSelect.addEventListener('change', function() {
+            console.log('Province changed:', this.value, 'for question:', questionId);
+            handleProvinceChange(questionId, this.value);
+        });
+        
+        // City change event
+        citySelect.addEventListener('change', function() {
+            console.log('City changed:', this.value, 'for question:', questionId);
+            updateLocationDisplay(questionId);
+        });
+        
+        console.log('Event listeners set up successfully for question:', questionId);
+    }
+    
+    function handleProvinceChange(questionId, provinceId) {
+        console.log(`Province changed for question ${questionId}: ${provinceId}`);
+        
+        const citySelect = document.getElementById(`city-${questionId}`);
+        if (!citySelect) {
+            console.error('City select not found for question:', questionId);
+            return;
+        }
+        
+        // Reset city select
+        citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
         citySelect.disabled = true;
         
-        console.log('Fetching cities for province:', provinceId);
-        fetch(`/alumni/questionnaire/cities/${provinceId}`)
+        // Clear location display and hidden input
+        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+        const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
+        
+        if (selectedLocationDiv) {
+            selectedLocationDiv.classList.add('hidden');
+        }
+        if (locationCombinedInput) {
+            locationCombinedInput.value = '';
+        }
+        
+        if (!provinceId) {
+            console.log('No province selected, city select disabled');
+            return;
+        }
+        
+        // Show loading
+        citySelect.innerHTML = '<option value="">-- Memuat kota/kabupaten... --</option>';
+        
+        const apiUrl = `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`;
+        console.log('Fetching cities from:', apiUrl);
+        
+        fetch(apiUrl)
             .then(response => {
-                console.log('Cities response status:', response.status);
+                console.log('City API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 return response.json();
             })
-            .then(data => {
-                console.log('Cities data:', data);
-                if (data.success) {
+            .then(cities => {
+                console.log('Cities received:', cities.length);
+                
+                if (!cities || !Array.isArray(cities)) {
+                    throw new Error('Invalid cities data received');
+                }
+                
+                if (cities.length === 0) {
+                    console.warn('No cities found for province:', provinceId);
+                    citySelect.innerHTML = '<option value="">-- Tidak ada kota/kabupaten --</option>';
+                    return;
+                }
+                
+                // Populate city options
+                citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
+                
+                cities.forEach(city => {
+                    if (city && city.id && city.name) {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        option.setAttribute('data-name', city.name);
+                        citySelect.appendChild(option);
+                    }
+                });
+                
+                citySelect.disabled = false;
+                console.log(`Successfully loaded ${cities.length} cities for province ${provinceId}`);
+            })
+            .catch(error => {
+                console.error('Error loading cities:', error);
+                
+                // Use fallback cities
+                const fallbackCities = getFallbackCities(provinceId);
+                if (fallbackCities && fallbackCities.length > 0) {
+                    console.log('Using fallback cities for province:', provinceId);
                     citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-                    data.data.forEach(city => {
+                    
+                    fallbackCities.forEach(city => {
                         const option = document.createElement('option');
                         option.value = city.id;
                         option.textContent = city.name;
                         option.setAttribute('data-name', city.name);
                         citySelect.appendChild(option);
                     });
+                    
                     citySelect.disabled = false;
-                    console.log('Cities loaded successfully');
                 } else {
-                    console.error('Failed to load cities:', data.message);
-                    citySelect.innerHTML = '<option value="">Gagal memuat data</option>';
+                    citySelect.innerHTML = '<option value="">-- Error memuat kota/kabupaten --</option>';
+                    citySelect.disabled = true;
                 }
-            })
-            .catch(error => {
-                console.error('Error loading cities:', error);
-                citySelect.innerHTML = '<option value="">Error loading data</option>';
             });
     }
     
+    function getFallbackCities(provinceId) {
+        const fallbackData = {
+            '11': [
+                { id: '1101', name: 'Kabupaten Simeulue' },
+                { id: '1102', name: 'Kabupaten Aceh Singkil' },
+                { id: '1171', name: 'Kota Banda Aceh' },
+                { id: '1172', name: 'Kota Sabang' }
+            ],
+            '31': [
+                { id: '3101', name: 'Kabupaten Kepulauan Seribu' },
+                { id: '3171', name: 'Kota Jakarta Selatan' },
+                { id: '3172', name: 'Kota Jakarta Timur' },
+                { id: '3173', name: 'Kota Jakarta Pusat' },
+                { id: '3174', name: 'Kota Jakarta Barat' },
+                { id: '3175', name: 'Kota Jakarta Utara' }
+            ],
+            '34': [
+                { id: '3401', name: 'Kabupaten Kulon Progo' },
+                { id: '3402', name: 'Kabupaten Bantul' },
+                { id: '3403', name: 'Kabupaten Gunung Kidul' },
+                { id: '3404', name: 'Kabupaten Sleman' },
+                { id: '3471', name: 'Kota Yogyakarta' }
+            ]
+        };
+        
+        return fallbackData[provinceId] || null;
+    }
+    
     function updateLocationDisplay(questionId) {
+        console.log('Updating location display for question:', questionId);
+        
         const provinceSelect = document.getElementById(`province-${questionId}`);
         const citySelect = document.getElementById(`city-${questionId}`);
-        const selectedLocation = document.getElementById(`selected-location-${questionId}`);
-        const locationText = document.getElementById(`location-text-${questionId}`);
+        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+        const locationTextSpan = document.getElementById(`location-text-${questionId}`);
+        const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
+        
+        if (!provinceSelect || !citySelect || !selectedLocationDiv || !locationTextSpan || !locationCombinedInput) {
+            console.error('Location elements not found for question:', questionId);
+            return;
+        }
+        
+        const provinceId = provinceSelect.value;
+        const cityId = citySelect.value;
+        
+        if (!provinceId || !cityId) {
+            selectedLocationDiv.classList.add('hidden');
+            locationCombinedInput.value = '';
+            return;
+        }
+        
+        // Get selected text values
+        const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
+        const cityName = citySelect.options[citySelect.selectedIndex].text;
+        
+        const displayText = `${cityName}, ${provinceName}`;
+        
+        // Create location data object
+        const locationData = {
+            province_id: provinceId,
+            province_name: provinceName,
+            city_id: cityId,
+            city_name: cityName,
+            display: displayText
+        };
+        
+        // Update display
+        locationTextSpan.textContent = displayText;
+        selectedLocationDiv.classList.remove('hidden');
+        
+        // Update hidden input
+        locationCombinedInput.value = JSON.stringify(locationData);
+        
+        console.log('Location updated:', locationData);
+    }
+    
+    function loadSavedLocationData(questionId) {
+        console.log('Loading saved location data for question:', questionId);
+        
         const combinedInput = document.getElementById(`location-combined-${questionId}`);
         
-        const provinceName = provinceSelect.options[provinceSelect.selectedIndex]?.getAttribute('data-name');
-        const cityName = citySelect.options[citySelect.selectedIndex]?.getAttribute('data-name');
+        if (!combinedInput || !combinedInput.value) {
+            console.log('No saved location data found for question:', questionId);
+            return;
+        }
         
-        console.log('Updating location display:', { provinceName, cityName });
-        
-        if (provinceName && cityName && provinceName !== '-- Pilih Provinsi --' && cityName !== '-- Pilih Kota/Kabupaten --') {
-            const locationString = `${cityName}, ${provinceName}`;
-            locationText.textContent = locationString;
-            selectedLocation.classList.remove('hidden');
+        try {
+            const savedLocation = JSON.parse(combinedInput.value);
+            console.log('Found saved location data:', savedLocation);
             
-            // Store combined location data
-            const locationData = {
-                province_id: provinceSelect.value,
-                province_name: provinceName,
-                city_id: citySelect.value,
-                city_name: cityName,
-                display: locationString
-            };
-            combinedInput.value = JSON.stringify(locationData);
+            const provinceSelect = document.getElementById(`province-${questionId}`);
+            const citySelect = document.getElementById(`city-${questionId}`);
             
-            console.log('Location data stored:', locationData);
-        } else {
-            selectedLocation.classList.add('hidden');
-            combinedInput.value = '';
+            if (!provinceSelect || !citySelect) {
+                console.error('Province or city select not found for loading saved data');
+                return;
+            }
+            
+            // Set province
+            if (savedLocation.province_id) {
+                provinceSelect.value = savedLocation.province_id;
+                
+                // Load cities for this province
+                handleProvinceChange(questionId, savedLocation.province_id);
+                
+                // Set city after a delay to ensure cities are loaded
+                setTimeout(() => {
+                    if (savedLocation.city_id) {
+                        citySelect.value = savedLocation.city_id;
+                        updateLocationDisplay(questionId);
+                    }
+                }, 500);
+            }
+            
+            // Show saved display immediately if available
+            if (savedLocation.display) {
+                const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+                const locationTextSpan = document.getElementById(`location-text-${questionId}`);
+                
+                if (selectedLocationDiv && locationTextSpan) {
+                    locationTextSpan.textContent = savedLocation.display;
+                    selectedLocationDiv.classList.remove('hidden');
+                }
+            }
+            
+        } catch (error) {
+            console.error('Error parsing saved location data:', error);
         }
     }
-    
-    function initializePreSelectedLocations() {
-        console.log('Initializing pre-selected locations...');
+
+    // CONDITIONAL QUESTIONS FUNCTION
+    function initializeConditionalQuestions() {
+        console.log('Initializing conditional questions...');
         
-        // Process pre-selected location data from PHP
-        @if(isset($prevLocationAnswers) && is_array($prevLocationAnswers))
-            @foreach($prevLocationAnswers as $questionId => $locationData)
-                console.log('Processing pre-selected location for question {{ $questionId }}:', @json($locationData));
+        // Handle radio button changes for single choice questions
+        document.querySelectorAll('.option-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id');
+                const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
                 
-                const provinceSelect{{ $questionId }} = document.getElementById('province-{{ $questionId }}');
-                const citySelect{{ $questionId }} = document.getElementById('city-{{ $questionId }}');
+                console.log('Radio button changed:', {
+                    questionId: questionId,
+                    optionValue: this.value,
+                    isOther: isOther,
+                    radioElement: this
+                });
                 
-                if (provinceSelect{{ $questionId }} && citySelect{{ $questionId }}) {
-                    const locationData = @json($locationData);
+                // Hide all other fields for this question first
+                document.querySelectorAll(`[id^="other_field_${questionId}_"]`).forEach(field => {
+                    field.classList.add('hidden');
+                    const input = field.querySelector('input[type="text"]');
+                    if (input) {
+                        input.value = '';
+                        // Remove required attribute when hiding
+                        input.removeAttribute('required');
+                        // ✅ PERBAIKAN: JANGAN hapus name attribute, cukup disable
+                        input.disabled = true;
+                        
+                        console.log('Hidden other field:', {
+                            fieldId: field.id,
+                            inputName: input.name,
+                            disabled: input.disabled
+                        });
+                    }
+                });
+                
+                // Show this other field if applicable
+                if (isOther) {
+                    const otherField = document.getElementById(`other_field_${questionId}_${this.value}`);
+                    console.log('Looking for other field:', `other_field_${questionId}_${this.value}`, otherField);
                     
-                    // Set province if it exists
-                    if (locationData.province_id) {
-                        console.log('Setting province to:', locationData.province_id);
-                        provinceSelect{{ $questionId }}.value = locationData.province_id;
-                        
-                        // Load cities for this province
-                        loadCities({{ $questionId }}, locationData.province_id);
-                        
-                        // Set city after a delay to allow cities to load
-                        setTimeout(() => {
-                            if (locationData.city_id) {
-                                console.log('Setting city to:', locationData.city_id);
-                                citySelect{{ $questionId }}.value = locationData.city_id;
-                                citySelect{{ $questionId }}.disabled = false;
-                                updateLocationDisplay({{ $questionId }});
-                            }
-                        }, 2000);
+                    if (otherField) {
+                        otherField.classList.remove('hidden');
+                        const otherInput = otherField.querySelector('input[type="text"]');
+                        if (otherInput) {
+                            // ✅ PERBAIKAN CRITICAL: Pastikan name attribute SELALU konsisten
+                            const correctName = `other_answers[${questionId}]`; // Gunakan plural untuk konsistensi
+                            otherInput.setAttribute('name', correctName);
+                            otherInput.setAttribute('required', 'required');
+                            otherInput.disabled = false; // Enable input
+                            
+                            console.log('Other input configured:', {
+                                questionId: questionId,
+                                optionValue: this.value,
+                                inputName: otherInput.getAttribute('name'),
+                                correctName: correctName,
+                                inputId: otherInput.id,
+                                hasName: otherInput.hasAttribute('name'),
+                                nameValue: otherInput.name,
+                                disabled: otherInput.disabled,
+                                required: otherInput.required
+                            });
+                            
+                            // Focus on the input
+                            setTimeout(() => otherInput.focus(), 100);
+                        }
+                    } else {
+                        console.error('Other field not found for:', `other_field_${questionId}_${this.value}`);
                     }
                 }
-            @endforeach
-        @endif
+                
+                // Handle conditional questions
+                handleDependentQuestions(questionId, this.value);
+            });
+        });
+
+        // Handle checkbox changes for multiple choice questions
+        document.querySelectorAll('.multiple-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id');
+                const optionId = this.value;
+                const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
+                
+                console.log('Multiple checkbox changed:', {
+                    questionId: questionId,
+                    optionId: optionId,
+                    isOther: isOther,
+                    checked: this.checked
+                });
+                
+                if (isOther) {
+                    const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
+                    console.log('Looking for multiple other field:', `multiple_other_field_${questionId}_${optionId}`, otherField);
+                    
+                    if (otherField) {
+                        const otherInput = otherField.querySelector('input[type="text"]');
+                        
+                        if (this.checked) {
+                            // Show and enable the other field
+                            otherField.classList.remove('hidden');
+                            if (otherInput) {
+                                // ✅ PERBAIKAN CRITICAL: Pastikan name attribute konsisten untuk multiple choice
+                                const correctName = `multiple_other_answers[${questionId}][${optionId}]`;
+                                otherInput.setAttribute('name', correctName);
+                                otherInput.setAttribute('required', 'required');
+                                otherInput.disabled = false;
+                                
+                                console.log('Multiple other input enabled:', {
+                                    questionId: questionId,
+                                    optionId: optionId,
+                                    inputName: otherInput.getAttribute('name'),
+                                    correctName: correctName,
+                                    disabled: otherInput.disabled,
+                                    required: otherInput.required
+                                });
+                                
+                                // Focus on the input
+                                setTimeout(() => otherInput.focus(), 100);
+                            }
+                        } else {
+                            // Hide and disable the other field
+                            otherField.classList.add('hidden');
+                            if (otherInput) {
+                                otherInput.value = '';
+                                otherInput.removeAttribute('required');
+                                otherInput.disabled = true;
+                                
+                                console.log('Multiple other input disabled:', {
+                                    questionId: questionId,
+                                    optionId: optionId,
+                                    inputName: otherInput.name,
+                                    disabled: otherInput.disabled
+                                });
+                            }
+                        }
+                    } else {
+                        console.error('Multiple other field not found for:', `multiple_other_field_${questionId}_${optionId}`);
+                    }
+                }
+                
+                // Handle dependencies for multiple choice
+                const checkedValues = [];
+                document.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`).forEach(cb => {
+                    checkedValues.push(cb.value);
+                });
+                
+                checkedValues.forEach(value => {
+                    handleDependentQuestions(questionId, value);
+                });
+            });
+        });
+        
+        // Tambahkan event listeners untuk rating dan scale questions
+
+        // Handle rating changes
+        document.querySelectorAll('.rating-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id');
+                const selectedValue = this.value;
+                
+                console.log('Rating changed:', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
+                
+                // Handle conditional questions
+                handleDependentQuestions(questionId, selectedValue);
+            });
+        });
+
+        // Handle scale changes
+        document.querySelectorAll('.scale-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id');
+                const selectedValue = this.value;
+                
+                console.log('Scale changed:', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
+                
+                // Handle conditional questions
+                handleDependentQuestions(questionId, selectedValue);
+            });
+        });
+        
+        // Initialize dependencies on page load
+        initializeDependenciesOnLoad();
     }
-});
 
-// Profile dropdown handlers
-document.getElementById('toggle-sidebar').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.toggle('hidden');
-});
+    function initializeDependenciesOnLoad() {
+        console.log('=== INITIALIZING DEPENDENCIES ON LOAD ===');
+        
+        // ✅ TAMBAHKAN DELAY UNTUK MEMASTIKAN DOM READY
+        setTimeout(() => {
+            // First, check all existing answers and trigger conditional questions
+            document.querySelectorAll('.option-radio:checked, .rating-radio:checked, .scale-radio:checked').forEach(radio => {
+                const questionId = radio.getAttribute('data-question-id');
+                const selectedValue = radio.value;
+                
+                console.log('Found checked radio on load:', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
+                
+                handleDependentQuestions(questionId, selectedValue);
+            });
+            
+            // Also check for multiple choice questions (if any affect dependencies)
+            document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
+                const questionId = checkbox.getAttribute('data-question-id');
+                const selectedValue = checkbox.value;
+                
+                console.log('Found checked checkbox on load:', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
+                
+                handleDependentQuestions(questionId, selectedValue);
+            });
+            
+            // ✅ SHOW CONDITIONAL QUESTIONS THAT SHOULD BE VISIBLE BASED ON EXISTING ANSWERS
+            const conditionalQuestions = document.querySelectorAll('.conditional-question');
+            console.log('Found conditional questions:', conditionalQuestions.length);
+            
+            conditionalQuestions.forEach(question => {
+                const dependsOn = question.getAttribute('data-depends-on');
+                const dependsValue = question.getAttribute('data-depends-value');
+                const questionId = question.id.replace('question-', '');
+                
+                console.log('Checking conditional question:', {
+                    questionId: questionId,
+                    dependsOn: dependsOn,
+                    dependsValue: dependsValue
+                });
+                
+                // ✅ PERBAIKI CARA MENGECEK PARENT QUESTION
+                // Check if parent question has the required answer
+                const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
+                let parentValue = null;
+                
+                parentRadios.forEach(radio => {
+                    if (radio.checked) {
+                        parentValue = radio.value;
+                    }
+                });
+                
+                console.log('Parent question state:', {
+                    parentQuestionId: dependsOn,
+                    parentValue: parentValue,
+                    requiredValue: dependsValue,
+                    shouldShow: parentValue == dependsValue
+                });
+                
+                if (parentValue == dependsValue) {
+                    question.style.display = 'block';
+                    
+                    // Enable all inputs
+                    const inputs = question.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        input.disabled = false;
+                    });
+                    
+                    console.log(`✅ Showed conditional question ${questionId} on load`);
+                } else {
+                    question.style.display = 'none';
+                    
+                    // Disable all inputs
+                    const inputs = question.querySelectorAll('input, select, textarea');
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                    });
+                    
+                    console.log(`❌ Hidden conditional question ${questionId} on load`);
+                }
+            });
+        }, 500); // Delay 500ms untuk memastikan semua sudah ter-load
+    }
 
-document.getElementById('close-sidebar').addEventListener('click', function() {
-    document.getElementById('sidebar').classList.add('hidden');
-});
+    // ✅ PERBAIKI FUNCTION handleDependentQuestions
+    function handleDependentQuestions(parentQuestionId, selectedValue) {
+        console.log(`=== HANDLING DEPENDENT QUESTIONS ===`);
+        console.log(`Parent Question ID: ${parentQuestionId}, Selected Value: ${selectedValue}`);
+        
+        const dependentQuestions = document.querySelectorAll(`.conditional-question[data-depends-on="${parentQuestionId}"]`);
+        
+        console.log(`Found ${dependentQuestions.length} dependent questions for parent ${parentQuestionId}`);
+        
+        dependentQuestions.forEach((dependentQuestion, index) => {
+            const dependsValue = dependentQuestion.getAttribute('data-depends-value');
+            const questionId = dependentQuestion.id.replace('question-', '');
+            
+            console.log(`Processing dependent question ${index + 1}:`, {
+                questionId: questionId,
+                dependsValue: dependsValue,
+                selectedValue: selectedValue,
+                shouldShow: dependsValue == selectedValue
+            });
+            
+            if (dependsValue == selectedValue) {
+                // ✅ SHOW THE QUESTION
+                dependentQuestion.style.display = 'block';
+                
+                // Enable all inputs
+                const inputs = dependentQuestion.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = false;
+                });
+                
+                console.log(`✅ Showed dependent question ${questionId}`);
+            } else {
+                // ✅ HIDE THE QUESTION
+                dependentQuestion.style.display = 'none';
+                
+                // Disable all inputs and clear their values
+                const inputs = dependentQuestion.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    input.disabled = true;
+                    
+                    // Clear values when hiding
+                    if (input.type === 'radio' || input.type === 'checkbox') {
+                        input.checked = false;
+                    } else {
+                        input.value = '';
+                    }
+                    
+                    // Hide any other fields related to this input
+                    if (input.type === 'radio' && input.getAttribute('data-is-other') === '1') {
+                        const otherField = document.getElementById(`other_field_${questionId}_${input.value}`);
+                        if (otherField) {
+                            otherField.classList.add('hidden');
+                            const otherInput = otherField.querySelector('input[type="text"]');
+                            if (otherInput) {
+                                otherInput.value = '';
+                            }
+                        }
+                    }
+                    
+                    if (input.type === 'checkbox' && input.getAttribute('data-is-other') === '1') {
+                        const otherField = document.getElementById(`multiple_other_field_${questionId}_${input.value}`);
+                        if (otherField) {
+                            otherField.classList.add('hidden');
+                            const otherInput = otherField.querySelector('input[type="text"]');
+                            if (otherInput) {
+                                otherInput.value = '';
+                            }
+                        }
+                    }
+                });
+                
+                console.log(`❌ Hidden dependent question ${questionId}`);
+            }
+        });
+    }
 
-document.getElementById('profile-toggle').addEventListener('click', function() {
-    document.getElementById('profile-dropdown').classList.toggle('hidden');
-});
+    // ✅ TAMBAHKAN FUNCTION DEBUG UNTUK TROUBLESHOOTING
+    function debugConditionalQuestions() {
+        console.log('=== DEBUG CONDITIONAL QUESTIONS ===');
+        
+        const allQuestions = document.querySelectorAll('.question-container');
+        console.log(`Total questions: ${allQuestions.length}`);
+        
+        const conditionalQuestions = document.querySelectorAll('.conditional-question');
+        console.log(`Conditional questions: ${conditionalQuestions.length}`);
+        
+        conditionalQuestions.forEach((question, index) => {
+            const questionId = question.id.replace('question-', '');
+            const dependsOn = question.getAttribute('data-depends-on');
+            const dependsValue = question.getAttribute('data-depends-value');
+            const isVisible = question.style.display !== 'none';
+            
+            // Check parent question status
+            const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
+            let parentValue = null;
+            
+            parentRadios.forEach(radio => {
+                if (radio.checked) {
+                    parentValue = radio.value;
+                }
+            });
+            
+            console.log(`Conditional Question ${index + 1}:`, {
+                questionId: questionId,
+                dependsOn: dependsOn,
+                dependsValue: dependsValue,
+                parentValue: parentValue,
+                isVisible: isVisible,
+                shouldBeVisible: parentValue == dependsValue
+            });
+        });
+        
+        // Check all checked radios
+        const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
+        console.log('Currently checked radios:');
+        checkedRadios.forEach(radio => {
+            console.log({
+                questionId: radio.getAttribute('data-question-id'),
+                value: radio.value,
+                name: radio.name
+            });
+        });
+    }
 
-document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('profile-dropdown');
-    const toggle = document.getElementById('profile-toggle');
+    // INITIALIZE ALL FUNCTIONALITY
+    console.log('Initializing all questionnaire functionality...');
+    initializeLocationQuestions();
+    initializeConditionalQuestions();
     
-    if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
-        dropdown.classList.add('hidden');
+    // ✅ LOAD SAVED ANSWERS AFTER INITIALIZATION
+    setTimeout(() => {
+        console.log('Loading saved answers...');
+        loadSavedAnswers();
+        debugConditionalQuestions();
+    }, 1500); // Increased delay to ensure all data is loaded
+    
+    console.log('Alumni questionnaire initialization complete!');
+
+    // FORM SUBMISSION HANDLERS
+    document.getElementById('save-draft-btn')?.addEventListener('click', function() {
+        console.log('Saving draft...');
+        const actionInput = document.querySelector('input[name="action"]');
+        if (actionInput) {
+            actionInput.value = 'save_draft';
+        }
+        form.submit();
+    });
+
+    document.getElementById('prev-category-btn')?.addEventListener('click', function() {
+        console.log('Going to previous category...');
+        const actionInput = document.querySelector('input[name="action"]');
+        if (actionInput) {
+            actionInput.value = 'prev_category';
+        }
+        form.submit();
+    });
+
+    document.getElementById('next-category-btn')?.addEventListener('click', function() {
+        console.log('Attempting to go to next category...');
+        if (validateCurrentCategory()) {
+            const actionInput = document.querySelector('input[name="action"]');
+            if (actionInput) {
+                actionInput.value = 'next_category';
+            }
+            form.submit();
+        }
+    });
+
+    document.getElementById('submit-final-btn')?.addEventListener('click', function() {
+        console.log('Attempting final submission...');
+        if (validateCurrentCategory()) {
+            // Show confirmation modal
+            document.getElementById('confirmation-modal').classList.remove('hidden');
+        }
+    });
+
+    // ✅ TAMBAHKAN FUNCTION VALIDASI LENGKAP
+    function validateCurrentCategory() {
+        console.log('=== VALIDATING CURRENT CATEGORY ===');
+        
+        const validationErrors = [];
+        let hasErrors = false;
+        
+        // Clear previous validation styles
+        document.querySelectorAll('.question-container').forEach(container => {
+            container.classList.remove('border-red-300');
+            const validationMsg = container.querySelector('.validation-message');
+            if (validationMsg) {
+                validationMsg.classList.add('hidden');
+                validationMsg.textContent = '';
+            }
+        });
+        
+        // ✅ HANYA VALIDASI PERTANYAAN YANG VISIBLE DAN TIDAK DISABLED
+        const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
+        
+        visibleQuestions.forEach((questionContainer, index) => {
+            const questionId = questionContainer.id.replace('question-', '');
+            const questionTitle = questionContainer.querySelector('h5').textContent.trim();
+            
+            // ✅ CEK APAKAH PERTANYAAN CONDITIONAL DAN TIDAK VISIBLE
+            const isConditional = questionContainer.classList.contains('conditional-question');
+            const isCurrentlyVisible = questionContainer.style.display !== 'none';
+            
+            console.log(`Validating question ${index + 1}: ${questionId}`, {
+                isConditional,
+                isCurrentlyVisible,
+                displayStyle: questionContainer.style.display
+            });
+            
+            // ✅ SKIP VALIDASI JIKA PERTANYAAN CONDITIONAL DAN TIDAK VISIBLE
+            if (isConditional && !isCurrentlyVisible) {
+                console.log(`Skipping validation for conditional question ${questionId} - not visible`);
+                return;
+            }
+            
+            // ✅ CEK APAKAH ADA INPUT YANG DISABLED (CONDITIONAL YANG TIDAK AKTIF)
+            const allInputs = questionContainer.querySelectorAll('input, select, textarea');
+            const hasDisabledInputs = Array.from(allInputs).some(input => input.disabled);
+            
+            if (hasDisabledInputs) {
+                console.log(`Skipping validation for question ${questionId} - has disabled inputs`);
+                return;
+            }
+            
+            // Check if question is required (assume all visible questions are required)
+            const isRequired = true;
+            
+            if (!isRequired) {
+                console.log(`Question ${questionId} is not required, skipping validation`);
+                return;
+            }
+            
+            let isAnswered = false;
+            let errorMessage = '';
+            
+            // Check different question types
+            const textInput = questionContainer.querySelector('input[type="text"]:not([name*="other"]):not([name*="multiple_other"]):not(:disabled)');
+            const dateInput = questionContainer.querySelector('input[type="date"]:not(:disabled)');
+            const radioInputs = questionContainer.querySelectorAll('input[type="radio"]:not(:disabled)');
+            const checkboxInputs = questionContainer.querySelectorAll('input[type="checkbox"]:not(:disabled)');
+            const locationInput = questionContainer.querySelector('input[name^="location_combined"]:not(:disabled)');
+            
+            if (textInput && !dateInput && !locationInput) {
+                // Text question
+                isAnswered = textInput.value.trim() !== '';
+                errorMessage = 'Pertanyaan ini harus dijawab';
+                
+            } else if (dateInput) {
+                // Date question
+                isAnswered = dateInput.value !== '';
+                errorMessage = 'Tanggal harus dipilih';
+                
+            } else if (radioInputs.length > 0) {
+                // Radio/option/rating/scale question
+                isAnswered = Array.from(radioInputs).some(radio => radio.checked);
+                errorMessage = 'Pilihan harus dipilih';
+                
+                // Check if "other" option is selected and requires text input
+                const checkedRadio = Array.from(radioInputs).find(radio => radio.checked);
+                if (checkedRadio && checkedRadio.getAttribute('data-is-other') === '1') {
+                    const otherField = questionContainer.querySelector(`#other_field_${questionId}_${checkedRadio.value}`);
+                    if (otherField && !otherField.classList.contains('hidden')) {
+                        const otherInput = otherField.querySelector('input[type="text"]:not(:disabled)');
+                        if (!otherInput || otherInput.value.trim() === '') {
+                            isAnswered = false;
+                            errorMessage = 'Jawaban "Lainnya" harus diisi';
+                        }
+                    }
+                }
+                
+            } else if (checkboxInputs.length > 0) {
+                // Multiple choice question
+                const checkedBoxes = Array.from(checkboxInputs).filter(cb => cb.checked);
+                isAnswered = checkedBoxes.length > 0;
+                errorMessage = 'Minimal satu pilihan harus dipilih';
+                
+                // ✅ TAMBAHAN: Validasi "other" fields untuk multiple choice
+                if (isAnswered) {
+                    let allOtherFieldsValid = true;
+                    
+                    checkedBoxes.forEach(checkbox => {
+                        const isOtherOption = parseInt(checkbox.getAttribute('data-is-other')) === 1;
+                        if (isOtherOption) {
+                            const optionId = checkbox.value;
+                            const otherField = questionContainer.querySelector(`#multiple_other_field_${questionId}_${optionId}`);
+                            
+                            if (otherField && !otherField.classList.contains('hidden')) {
+                                const otherInput = otherField.querySelector('input[type="text"]');
+                                if (otherInput && otherInput.value.trim() === '') {
+                                    allOtherFieldsValid = false;
+                                    errorMessage = 'Isian "Lainnya" harus diisi';
+                                }
+                            }
+                        }
+                    });
+                    
+                    isAnswered = allOtherFieldsValid;
+                }
+                
+            } else if (locationInput) {
+                // Location question
+                isAnswered = locationInput.value.trim() !== '';
+                errorMessage = 'Lokasi harus dipilih';
+            }
+            
+            console.log(`Question ${questionId} validation result:`, {
+                isRequired,
+                isAnswered,
+                errorMessage,
+                isConditional,
+                isCurrentlyVisible
+            });
+            
+            if (isRequired && !isAnswered) {
+                hasErrors = true;
+                validationErrors.push(`${index + 1}. ${questionTitle}`);
+                
+                // Add visual indication
+                questionContainer.classList.add('border-red-300');
+                
+                // Show error message
+                const validationMsg = questionContainer.querySelector('.validation-message');
+                if (validationMsg) {
+                    validationMsg.textContent = errorMessage;
+                    validationMsg.classList.remove('hidden');
+                }
+            }
+        });
+        
+        if (hasErrors) {
+            console.log('Validation failed:', validationErrors);
+            
+            // Scroll to first error
+            const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
+            if (firstErrorQuestion) {
+                firstErrorQuestion.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }
+            
+            // Show validation alert
+            showValidationAlert(validationErrors);
+            
+            return false;
+        }
+        
+        console.log('Validation passed!');
+        return true;
     }
-});
 
-document.getElementById('logout-btn').addEventListener('click', function(event) {
-    event.preventDefault();
+    // ✅ TAMBAHKAN FUNCTION ALERT VALIDASI
+    function showValidationAlert(errors) {
+        // Remove existing alert if any
+        const existingAlert = document.getElementById('validation-alert');
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+        
+        const alertHtml = `
+            <div id="validation-alert" class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 max-w-md">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-red-500 mr-3 mt-1"></i>
+                    <div class="flex-1">
+                        <h4 class="font-bold mb-2">Pertanyaan Belum Dijawab</h4>
+                        <p class="text-sm mb-2">Silakan jawab pertanyaan berikut sebelum melanjutkan:</p>
+                        <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
+                            ${errors.map(error => `<li class="flex items-start"><i class="fas fa-circle text-xs mr-2 mt-1.5"></i><span>${error}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto remove after 10 seconds
+        setTimeout(() => {
+            const alert = document.getElementById('validation-alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 10000);
+    }
 
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '{{ route("logout") }}';
+    // ✅ TAMBAHKAN MODAL HANDLERS
+    document.getElementById('modal-cancel')?.addEventListener('click', function() {
+        document.getElementById('confirmation-modal').classList.add('hidden');
+    });
 
-    const csrfTokenInput = document.createElement('input');
-    csrfTokenInput.type = 'hidden';
-    csrfTokenInput.name = '_token';
-    csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    document.getElementById('modal-confirm')?.addEventListener('click', function() {
+        const actionInput = document.querySelector('input[name="action"]');
+        if (actionInput) {
+            actionInput.value = 'submit_final';
+        }
+        form.submit();
+    });
 
-    form.appendChild(csrfTokenInput);
-    document.body.appendChild(form);
-    form.submit();
+    // ✅ TAMBAHKAN PROFILE DROPDOWN FUNCTIONALITY
+    document.getElementById('profile-toggle')?.addEventListener('click', function() {
+        document.getElementById('profile-dropdown').classList.toggle('hidden');
+    });
+
+    // ✅ TAMBAHKAN LOGOUT FUNCTIONALITY
+    document.getElementById('logout-btn')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        if (confirm('Apakah Anda yakin ingin logout?')) {
+            // Create logout form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("logout") }}';
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            
+            form.appendChild(csrfToken);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+
+    // ✅ TAMBAHKAN SIDEBAR FUNCTIONALITY
+    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.toggle('hidden');
+    });
+
+    document.getElementById('close-sidebar')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.add('hidden');
+    });
+
+    // ✅ CLOSE DROPDOWN WHEN CLICKING OUTSIDE
+    document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('profile-dropdown');
+        const toggle = document.getElementById('profile-toggle');
+        
+        if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
 });
 </script>
 @endsection

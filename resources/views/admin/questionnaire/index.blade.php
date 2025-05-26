@@ -104,6 +104,7 @@ $admin = auth()->user()->admin;
                     <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                         <tr>
                             <th class="px-4 py-3">No</th>
+                            <th class="px-4 py-3">Target Alumni</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Tanggal Mulai</th>
                             <th class="px-4 py-3">Tanggal Selesai</th>
@@ -116,50 +117,61 @@ $admin = auth()->user()->admin;
                             <tr class="border-t hover:bg-gray-50">
                                 <td class="px-4 py-3">{{ ($periodes->currentPage() - 1) * $periodes->perPage() + $index + 1 }}</td>
                                 <td class="px-4 py-3">
+                                    <div class="text-sm text-gray-900 font-medium">{{ $periode->getTargetDescription() }}</div>
+                                    @if($periode->target_type === 'years_ago' && !empty($periode->years_ago_list))
+                                        <div class="text-xs text-blue-600 mt-1 flex items-center">
+                                            <i class="fas fa-clock mr-1"></i>Relatif dengan tahun sekarang ({{ now()->year }})
+                                        </div>
+                                    @elseif($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years))
+                                        <div class="text-xs text-purple-600 mt-1 flex items-center">
+                                            <i class="fas fa-calendar mr-1"></i>Tahun kelulusan spesifik
+                                        </div>
+                                    @elseif($periode->target_type === 'all')
+                                        <div class="text-xs text-green-600 mt-1 flex items-center">
+                                            <i class="fas fa-users mr-1"></i>Semua alumni dapat mengakses
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
                                     <span class="px-2 py-1 rounded-full text-xs 
                                         {{ $periode->status == 'active' ? 'bg-green-100 text-green-800' : 
                                           ($periode->status == 'inactive' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                        {{ ucfirst($periode->status) }}
+                                    {{ ucfirst($periode->status) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">{{ $periode->start_date->format('d M Y') }}</td>
                                 <td class="px-4 py-3">{{ $periode->end_date->format('d M Y') }}</td>
-                                <td class="px-4 py-3">{{ $periode->categories->count() }}</td>
-                                <td class="px-4 py-3 flex space-x-2">
-                                    <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
-                                       class="px-3 py-1 rounded-md bg-green-500 hover:bg-green-600 text-white text-xs flex items-center justify-center"
-                                       title="Lihat">
-                                       <i class="fas fa-eye mr-1"></i>Lihat
-                                    </a>
-                                    <a href="{{ route('admin.questionnaire.edit', $periode->id_periode) }}" 
-                                       class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs flex items-center justify-center"
-                                       title="Edit">
-                                       <i class="fas fa-edit mr-1"></i>Edit
-                                    </a>
-                                    <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" 
-                                       class="px-3 py-1 rounded-md bg-purple-500 hover:bg-purple-600 text-white text-xs flex items-center justify-center"
-                                       title="Responses">
-                                       <i class="fas fa-chart-bar mr-1"></i>Responses
-                                    </a>
-                                    <a href="{{ route('admin.questionnaire.export', $periode->id_periode) }}" 
-                                       class="px-3 py-1 rounded-md bg-yellow-500 hover:bg-yellow-600 text-white text-xs flex items-center justify-center"
-                                       title="Export">
-                                       <i class="fas fa-download mr-1"></i>Export
-                                    </a>
-                                    <form action="{{ route('admin.questionnaire.destroy', $periode->id_periode) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus periode kuisioner ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                            class="px-3 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs flex items-center justify-center" 
-                                            title="Hapus">
-                                            <i class="fas fa-trash mr-1"></i>Hapus
-                                        </button>
-                                    </form>
+                                <td class="px-4 py-3 text-center">
+                                    <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
+                                        {{ $periode->categories->count() }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex space-x-2">
+                                        <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
+                                           class="text-blue-600 hover:text-blue-900 font-medium text-sm">
+                                            <i class="fas fa-eye mr-1"></i>Detail
+                                        </a>
+                                        <a href="{{ route('admin.questionnaire.edit', $periode->id_periode) }}" 
+                                           class="text-indigo-600 hover:text-indigo-900 font-medium text-sm">
+                                            <i class="fas fa-edit mr-1"></i>Edit
+                                        </a>
+                                        <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" 
+                                           class="text-green-600 hover:text-green-900 font-medium text-sm">
+                                            <i class="fas fa-chart-bar mr-1"></i>Respons
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-4 text-center text-gray-400">Tidak ada data kuisioner.</td>
+                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
+                                        <p class="text-lg font-medium mb-1">Belum ada periode kuesioner</p>
+                                        <p class="text-sm">Klik tombol "Tambah Periode" untuk membuat kuesioner baru</p>
+                                    </div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

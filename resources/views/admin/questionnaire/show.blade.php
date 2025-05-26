@@ -182,8 +182,9 @@
                                 <!-- Questions in this category -->
                                 @if($category->questions->count() > 0)
                                     <div class="space-y-3">
-                                        @foreach($category->questions as $question)
-                                            <div class="bg-gray-50 p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                        @foreach($category->questions->sortBy('order') as $question)
+                                            <div class="bg-gray-50 p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
+                                                        {{ ($question->status ?? 'visible') === 'hidden' ? 'border-red-300 bg-red-50 opacity-75' : 'border-gray-200' }}">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
                                                         <div class="flex items-start mb-2">
@@ -191,10 +192,20 @@
                                                                 {{ $question->order ?? '?' }}
                                                             </span>
                                                             <div class="flex-1">
-                                                                <h4 class="font-semibold text-gray-900 mb-1">{{ $question->question }}</h4>
+                                                                <div class="flex items-center mb-1">
+                                                                    <h4 class="font-semibold text-gray-900 {{ ($question->status ?? 'visible') === 'hidden' ? 'line-through text-gray-500' : '' }}">
+                                                                        {{ $question->question }}
+                                                                    </h4>
+                                                                    <!-- Status Badge -->
+                                                                    <span class="ml-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                                                                {{ ($question->status ?? 'visible') === 'hidden' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                                        <i class="fas {{ ($question->status ?? 'visible') === 'hidden' ? 'fa-eye-slash' : 'fa-eye' }} mr-1"></i>
+                                                                        {{ ($question->status ?? 'visible') === 'hidden' ? 'Tersembunyi' : 'Terlihat' }}
+                                                                    </span>
+                                                                </div>
                                                                 <div class="flex items-center space-x-4 text-sm text-gray-600">
                                                                     <span class="inline-flex items-center">
-                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : 'fa-map-marker-alt'))) }} mr-1"></i>
+                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : ($question->type == 'rating' ? 'fa-star' : ($question->type == 'scale' ? 'fa-chart-line' : 'fa-map-marker-alt'))))) }} mr-1"></i>
                                                                         {{ ucfirst($question->type) }}
                                                                     </span>
                                                                     @if($question->options->count() > 0)
@@ -217,8 +228,25 @@
                                                             </div>
                                                         @endif
                                                         
+                                                        <!-- Display text configuration for text/scale types -->
+                                                        @if($question->type == 'text' && ($question->before_text || $question->after_text))
+                                                            <div class="ml-9 mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                                                                <strong>Preview:</strong> 
+                                                                <span class="text-blue-600">{{ $question->before_text }}</span>
+                                                                <em class="text-gray-500">[input field]</em>
+                                                                <span class="text-blue-600">{{ $question->after_text }}</span>
+                                                            </div>
+                                                        @elseif($question->type == 'scale' && ($question->before_text || $question->after_text))
+                                                            <div class="ml-9 mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                                                                <strong>Skala:</strong> 
+                                                                <span class="text-blue-600">{{ $question->before_text ?: 'Sangat Kurang' }}</span> (1) 
+                                                                - (5) 
+                                                                <span class="text-blue-600">{{ $question->after_text ?: 'Sangat Baik' }}</span>
+                                                            </div>
+                                                        @endif
+                                                        
                                                         <!-- Display options if present -->
-                                                        @if(($question->type == 'option' || $question->type == 'multiple') && $question->options->count() > 0)
+                                                        @if(($question->type == 'option' || $question->type == 'multiple' || $question->type == 'rating') && $question->options->count() > 0)
                                                             <div class="ml-9 mt-3">
                                                                 <details class="text-sm">
                                                                     <summary class="cursor-pointer text-gray-600 hover:text-gray-800">
@@ -226,21 +254,47 @@
                                                                         Lihat opsi jawaban ({{ $question->options->count() }})
                                                                     </summary>
                                                                     <div class="mt-2 bg-white p-3 rounded border">
-                                                                        <ul class="space-y-1">
-                                                                            @foreach($question->options->sortBy('order') as $option)
-                                                                                <li class="flex items-center text-sm">
-                                                                                    <span class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-600 text-xs rounded-full mr-2">
-                                                                                        {{ $option->order }}
-                                                                                    </span>
-                                                                                    <span class="{{ $option->is_other_option ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                                                                        @if($question->type == 'rating')
+                                                                            <div class="flex flex-wrap gap-2">
+                                                                                @foreach($question->options->sortBy('order') as $option)
+                                                                                    <span class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium
+                                                                                                {{ $option->option == 'Kurang' ? 'bg-red-100 text-red-800' : 
+                                                                                                   ($option->option == 'Cukup' ? 'bg-yellow-100 text-yellow-800' : 
+                                                                                                   ($option->option == 'Baik' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800')) }}">
+                                                                                        <i class="fas fa-star mr-1"></i>
                                                                                         {{ $option->option }}
-                                                                                        @if($option->is_other_option) 
-                                                                                            <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">Other</span> 
-                                                                                        @endif
                                                                                     </span>
-                                                                                </li>
-                                                                            @endforeach
-                                                                        </ul>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @elseif($question->type == 'scale')
+                                                                            <div class="flex items-center justify-between">
+                                                                                <span class="text-sm text-gray-600">{{ $question->before_text ?: 'Sangat Kurang' }}</span>
+                                                                                <div class="flex gap-2">
+                                                                                    @for($i = 1; $i <= 5; $i++)
+                                                                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-gray-300 text-sm font-bold">
+                                                                                            {{ $i }}
+                                                                                        </span>
+                                                                                    @endfor
+                                                                                </div>
+                                                                                <span class="text-sm text-gray-600">{{ $question->after_text ?: 'Sangat Baik' }}</span>
+                                                                            </div>
+                                                                        @else
+                                                                            <ul class="space-y-1">
+                                                                                @foreach($question->options->sortBy('order') as $option)
+                                                                                    <li class="flex items-center text-sm">
+                                                                                        <span class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-600 text-xs rounded-full mr-2">
+                                                                                            {{ $option->order }}
+                                                                                        </span>
+                                                                                        <span class="{{ $option->is_other_option ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                                                                                            {{ $option->option }}
+                                                                                            @if($option->is_other_option) 
+                                                                                                <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">Other</span> 
+                                                                                            @endif
+                                                                                        </span>
+                                                                                    </li>
+                                                                                @endforeach
+                                                                            </ul>
+                                                                        @endif
                                                                     </div>
                                                                 </details>
                                                             </div>
@@ -248,18 +302,40 @@
                                                     </div>
                                                     
                                                     <!-- Action buttons -->
-                                                    <div class="flex space-x-2 ml-4">
+                                                    <div class="flex items-center space-x-2 ml-4">
+                                                        <!-- Toggle Status Button -->
+                                                        <form method="POST" action="{{ route('admin.questionnaire.question.toggle-status', [$periode->id_periode, $question->id_question]) }}" 
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin {{ ($question->status ?? 'visible') === 'visible' ? 'menyembunyikan' : 'menampilkan' }} pertanyaan ini?');" 
+                                                              class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" 
+                                                                    class="px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center
+                                                                           {{ ($question->status ?? 'visible') === 'hidden' 
+                                                                               ? 'bg-green-100 text-green-700 hover:bg-green-200 hover:shadow-md' 
+                                                                               : 'bg-red-100 text-red-700 hover:bg-red-200 hover:shadow-md' }}"
+                                                                    title="{{ ($question->status ?? 'visible') === 'hidden' ? 'Tampilkan pertanyaan' : 'Sembunyikan pertanyaan' }}">
+                                                                <i class="fas {{ ($question->status ?? 'visible') === 'hidden' ? 'fa-eye' : 'fa-eye-slash' }} mr-1"></i>
+                                                                {{ ($question->status ?? 'visible') === 'hidden' ? 'Tampilkan' : 'Sembunyikan' }}
+                                                            </button>
+                                                        </form>
+
+                                                        <!-- Edit Button -->
                                                         <a href="{{ route('admin.questionnaire.question.edit', [$periode->id_periode, $category->id_category, $question->id_question]) }}" 
-                                                           class="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600 transition">
+                                                           class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-md text-sm hover:bg-yellow-200 transition-all duration-200 hover:shadow-md"
+                                                           title="Edit pertanyaan">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        
+
+                                                        <!-- Delete Button -->
                                                         <form method="POST" action="{{ route('admin.questionnaire.question.destroy', [$periode->id_periode, $question->id_question]) }}" 
-                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pertanyaan ini?');"
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pertanyaan ini? Tindakan ini tidak dapat dibatalkan.');" 
                                                               class="inline">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition">
+                                                            <button type="submit" 
+                                                                    class="px-3 py-2 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-all duration-200 hover:shadow-md"
+                                                                    title="Hapus pertanyaan">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </form>
@@ -359,8 +435,9 @@
                                 <!-- Questions in this category (same structure as alumni) -->
                                 @if($category->questions->count() > 0)
                                     <div class="space-y-3">
-                                        @foreach($category->questions as $question)
-                                            <div class="bg-gray-50 p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                                        @foreach($category->questions->sortBy('order') as $question)
+                                            <div class="bg-gray-50 p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
+                                                        {{ ($question->status ?? 'visible') === 'hidden' ? 'border-red-300 bg-red-50 opacity-75' : 'border-gray-200' }}">
                                                 <div class="flex justify-between items-start">
                                                     <div class="flex-1">
                                                         <div class="flex items-start mb-2">
@@ -368,10 +445,20 @@
                                                                 {{ $question->order ?? '?' }}
                                                             </span>
                                                             <div class="flex-1">
-                                                                <h4 class="font-semibold text-gray-900 mb-1">{{ $question->question }}</h4>
+                                                                <div class="flex items-center mb-1">
+                                                                    <h4 class="font-semibold text-gray-900 {{ ($question->status ?? 'visible') === 'hidden' ? 'line-through text-gray-500' : '' }}">
+                                                                        {{ $question->question }}
+                                                                    </h4>
+                                                                    <!-- Status Badge -->
+                                                                    <span class="ml-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                                                                                {{ ($question->status ?? 'visible') === 'hidden' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800' }}">
+                                                                        <i class="fas {{ ($question->status ?? 'visible') === 'hidden' ? 'fa-eye-slash' : 'fa-eye' }} mr-1"></i>
+                                                                        {{ ($question->status ?? 'visible') === 'hidden' ? 'Tersembunyi' : 'Terlihat' }}
+                                                                    </span>
+                                                                </div>
                                                                 <div class="flex items-center space-x-4 text-sm text-gray-600">
                                                                     <span class="inline-flex items-center">
-                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : 'fa-map-marker-alt'))) }} mr-1"></i>
+                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : ($question->type == 'rating' ? 'fa-star' : ($question->type == 'scale' ? 'fa-chart-line' : 'fa-map-marker-alt'))))) }} mr-1"></i>
                                                                         {{ ucfirst($question->type) }}
                                                                     </span>
                                                                     @if($question->options->count() > 0)
@@ -394,8 +481,25 @@
                                                             </div>
                                                         @endif
                                                         
+                                                        <!-- Display text configuration for text/scale types -->
+                                                        @if($question->type == 'text' && ($question->before_text || $question->after_text))
+                                                            <div class="ml-9 mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                                                                <strong>Preview:</strong> 
+                                                                <span class="text-blue-600">{{ $question->before_text }}</span>
+                                                                <em class="text-gray-500">[input field]</em>
+                                                                <span class="text-blue-600">{{ $question->after_text }}</span>
+                                                            </div>
+                                                        @elseif($question->type == 'scale' && ($question->before_text || $question->after_text))
+                                                            <div class="ml-9 mt-2 text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                                                                <strong>Skala:</strong> 
+                                                                <span class="text-blue-600">{{ $question->before_text ?: 'Sangat Kurang' }}</span> (1) 
+                                                                - (5) 
+                                                                <span class="text-blue-600">{{ $question->after_text ?: 'Sangat Baik' }}</span>
+                                                            </div>
+                                                        @endif
+                                                        
                                                         <!-- Display options if present -->
-                                                        @if(($question->type == 'option' || $question->type == 'multiple') && $question->options->count() > 0)
+                                                        @if(($question->type == 'option' || $question->type == 'multiple' || $question->type == 'rating') && $question->options->count() > 0)
                                                             <div class="ml-9 mt-3">
                                                                 <details class="text-sm">
                                                                     <summary class="cursor-pointer text-gray-600 hover:text-gray-800">
@@ -403,21 +507,47 @@
                                                                         Lihat opsi jawaban ({{ $question->options->count() }})
                                                                     </summary>
                                                                     <div class="mt-2 bg-white p-3 rounded border">
-                                                                        <ul class="space-y-1">
-                                                                            @foreach($question->options->sortBy('order') as $option)
-                                                                                <li class="flex items-center text-sm">
-                                                                                    <span class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-600 text-xs rounded-full mr-2">
-                                                                                        {{ $option->order }}
-                                                                                    </span>
-                                                                                    <span class="{{ $option->is_other_option ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                                                                        @if($question->type == 'rating')
+                                                                            <div class="flex flex-wrap gap-2">
+                                                                                @foreach($question->options->sortBy('order') as $option)
+                                                                                    <span class="inline-flex items-center px-3 py-1 rounded-md text-sm font-medium
+                                                                                                {{ $option->option == 'Kurang' ? 'bg-red-100 text-red-800' : 
+                                                                                                   ($option->option == 'Cukup' ? 'bg-yellow-100 text-yellow-800' : 
+                                                                                                   ($option->option == 'Baik' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800')) }}">
+                                                                                        <i class="fas fa-star mr-1"></i>
                                                                                         {{ $option->option }}
-                                                                                        @if($option->is_other_option) 
-                                                                                            <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">Other</span> 
-                                                                                        @endif
                                                                                     </span>
-                                                                                </li>
-                                                                            @endforeach
-                                                                        </ul>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @elseif($question->type == 'scale')
+                                                                            <div class="flex items-center justify-between">
+                                                                                <span class="text-sm text-gray-600">{{ $question->before_text ?: 'Sangat Kurang' }}</span>
+                                                                                <div class="flex gap-2">
+                                                                                    @for($i = 1; $i <= 5; $i++)
+                                                                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full border-2 border-gray-300 text-sm font-bold">
+                                                                                            {{ $i }}
+                                                                                        </span>
+                                                                                    @endfor
+                                                                                </div>
+                                                                                <span class="text-sm text-gray-600">{{ $question->after_text ?: 'Sangat Baik' }}</span>
+                                                                            </div>
+                                                                        @else
+                                                                            <ul class="space-y-1">
+                                                                                @foreach($question->options->sortBy('order') as $option)
+                                                                                    <li class="flex items-center text-sm">
+                                                                                        <span class="inline-flex items-center justify-center w-5 h-5 bg-gray-100 text-gray-600 text-xs rounded-full mr-2">
+                                                                                            {{ $option->order }}
+                                                                                        </span>
+                                                                                        <span class="{{ $option->is_other_option ? 'text-blue-600 font-medium' : 'text-gray-700' }}">
+                                                                                            {{ $option->option }}
+                                                                                            @if($option->is_other_option) 
+                                                                                                <span class="text-xs bg-blue-100 text-blue-700 px-1 rounded ml-1">Other</span> 
+                                                                                            @endif
+                                                                                        </span>
+                                                                                    </li>
+                                                                                @endforeach
+                                                                            </ul>
+                                                                        @endif
                                                                     </div>
                                                                 </details>
                                                             </div>
@@ -425,18 +555,40 @@
                                                     </div>
                                                     
                                                     <!-- Action buttons -->
-                                                    <div class="flex space-x-2 ml-4">
+                                                    <div class="flex items-center space-x-2 ml-4">
+                                                        <!-- Toggle Status Button -->
+                                                        <form method="POST" action="{{ route('admin.questionnaire.question.toggle-status', [$periode->id_periode, $question->id_question]) }}" 
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin {{ ($question->status ?? 'visible') === 'visible' ? 'menyembunyikan' : 'menampilkan' }} pertanyaan ini?');" 
+                                                              class="inline">
+                                                            @csrf
+                                                            @method('PATCH')
+                                                            <button type="submit" 
+                                                                    class="px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 flex items-center
+                                                                           {{ ($question->status ?? 'visible') === 'hidden' 
+                                                                               ? 'bg-green-100 text-green-700 hover:bg-green-200 hover:shadow-md' 
+                                                                               : 'bg-red-100 text-red-700 hover:bg-red-200 hover:shadow-md' }}"
+                                                                    title="{{ ($question->status ?? 'visible') === 'hidden' ? 'Tampilkan pertanyaan' : 'Sembunyikan pertanyaan' }}">
+                                                                <i class="fas {{ ($question->status ?? 'visible') === 'hidden' ? 'fa-eye' : 'fa-eye-slash' }} mr-1"></i>
+                                                                {{ ($question->status ?? 'visible') === 'hidden' ? 'Tampilkan' : 'Sembunyikan' }}
+                                                            </button>
+                                                        </form>
+
+                                                        <!-- Edit Button -->
                                                         <a href="{{ route('admin.questionnaire.question.edit', [$periode->id_periode, $category->id_category, $question->id_question]) }}" 
-                                                           class="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600 transition">
+                                                           class="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-md text-sm hover:bg-yellow-200 transition-all duration-200 hover:shadow-md"
+                                                           title="Edit pertanyaan">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        
+
+                                                        <!-- Delete Button -->
                                                         <form method="POST" action="{{ route('admin.questionnaire.question.destroy', [$periode->id_periode, $question->id_question]) }}" 
-                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pertanyaan ini?');"
+                                                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus pertanyaan ini? Tindakan ini tidak dapat dibatalkan.');" 
                                                               class="inline">
                                                             @csrf
                                                             @method('DELETE')
-                                                            <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition">
+                                                            <button type="submit" 
+                                                                    class="px-3 py-2 bg-red-100 text-red-700 rounded-md text-sm hover:bg-red-200 transition-all duration-200 hover:shadow-md"
+                                                                    title="Hapus pertanyaan">
                                                                 <i class="fas fa-trash"></i>
                                                             </button>
                                                         </form>

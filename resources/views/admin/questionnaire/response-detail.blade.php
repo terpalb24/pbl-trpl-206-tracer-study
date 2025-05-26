@@ -368,9 +368,6 @@
                                                                             <i class="fas fa-link mr-1"></i> 
                                                                             <span class="font-medium">Pertanyaan bersyarat:</span>
                                                                         </p>
-                                                                        <p class="text-xs text-blue-600 mt-1">
-                                                                            Muncul karena jawaban "{{ $dependencyInfo['required_option'] }}" pada pertanyaan: "{{ $dependencyInfo['parent_question'] }}"
-                                                                        </p>
                                                                     </div>
                                                                 @endif
                                                             </div>
@@ -392,37 +389,117 @@
                                                                     <i class="fas fa-check-square mr-2"></i>
                                                                     Jawaban terpilih ({{ count($qData['multipleAnswers']) }} pilihan):
                                                                 </p>
-                                                                <div class="space-y-2">
+                                                                <div class="space-y-3">
                                                                     @foreach($qData['multipleAnswers'] as $answerIndex => $answer)
-                                                                        <div class="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                                                                            <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
+                                                                        @php
+                                                                            // ✅ PERBAIKAN: Find the option that matches this answer
+                                                                            $relatedOption = null;
+                                                                            $otherAnswerForThisOption = null;
+                                                                            
+                                                                            // Find the option by answer text
+                                                                            foreach($qData['question']->options as $option) {
+                                                                                if ($option->option === $answer) {
+                                                                                    $relatedOption = $option;
+                                                                                    break;
+                                                                                }
+                                                                            }
+                                                                            
+                                                                            // ✅ PERBAIKAN: Get other answer for this specific option
+                                                                            if ($relatedOption && isset($qData['multipleOtherAnswers'][$relatedOption->id_questions_options])) {
+                                                                                $otherAnswerForThisOption = $qData['multipleOtherAnswers'][$relatedOption->id_questions_options];
+                                                                            }
+                                                                        @endphp
+                                                                        
+                                                                        <div class="flex items-start bg-green-50 p-4 rounded-lg border border-green-100 hover:bg-green-100 transition-colors duration-200">
+                                                                            <div class="flex-shrink-0 mr-3">
+                                                                                <i class="fas fa-check-circle text-green-600 text-lg"></i>
+                                                                            </div>
                                                                             <div class="flex-1">
-                                                                                <span class="text-gray-900 font-medium">{{ $answer }}</span>
-                                                                                @if(isset($qData['multipleOtherAnswers'][$answerIndex]) && !empty($qData['multipleOtherAnswers'][$answerIndex]))
-                                                                                    <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                                                                                        <span class="text-blue-700 font-medium">Detail tambahan:</span>
-                                                                                        @if(isset($qData['multipleOtherOptions'][$answerIndex]) && $qData['multipleOtherOptions'][$answerIndex]->other_before_text)
-                                                                                            {{ $qData['multipleOtherOptions'][$answerIndex]->other_before_text }}
-                                                                                        @endif
-                                                                                        <span class="italic font-medium">{{ $qData['multipleOtherAnswers'][$answerIndex] }}</span>
-                                                                                        @if(isset($qData['multipleOtherOptions'][$answerIndex]) && $qData['multipleOtherOptions'][$answerIndex]->other_after_text)
-                                                                                            {{ $qData['multipleOtherOptions'][$answerIndex]->other_after_text }}
-                                                                                        @endif
+                                                                                <div class="font-medium text-gray-900 mb-1">{{ $answer }}</div>
+                                                                                
+                                                                                @if($otherAnswerForThisOption)
+                                                                                    <!-- ✅ PERBAIKAN: Display other answer dengan formatting yang benar -->
+                                                                                    <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                                        <div class="flex items-start">
+                                                                                            <i class="fas fa-edit text-blue-600 mr-2 mt-0.5 text-sm"></i>
+                                                                                            <div class="flex-1">
+                                                                                                <p class="text-blue-700 font-medium text-sm mb-1">Detail tambahan:</p>
+                                                                                                <div class="bg-white border border-blue-300 rounded-md p-2">
+                                                                                                    @if($relatedOption && $relatedOption->other_before_text)
+                                                                                                        <span class="text-gray-700 text-sm">{{ $relatedOption->other_before_text }}</span>
+                                                                                                    @endif
+                                                                                                    <span class="font-semibold text-blue-900 bg-blue-100 px-2 py-1 rounded text-sm">{{ $otherAnswerForThisOption }}</span>
+                                                                                                    @if($relatedOption && $relatedOption->other_after_text)
+                                                                                                        <span class="text-gray-700 text-sm">{{ $relatedOption->other_after_text }}</span>
+                                                                                                    @endif
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                @endif
+                                                                                
+                                                                                @if($relatedOption && $relatedOption->is_other_option)
+                                                                                    <div class="mt-2">
+                                                                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                                                                            <i class="fas fa-tag mr-1"></i>
+                                                                                            Pilihan Lainnya
+                                                                                        </span>
                                                                                     </div>
                                                                                 @endif
                                                                             </div>
                                                                         </div>
                                                                     @endforeach
                                                                 </div>
+                                                                
+                                                                <!-- Summary untuk multiple choice -->
+                                                                <div class="mt-4 pt-3 border-t border-green-200">
+                                                                    <div class="flex items-center justify-between text-sm">
+                                                                        <span class="text-green-700">
+                                                                            <i class="fas fa-list-ul mr-1"></i>
+                                                                            Total pilihan: <strong>{{ count($qData['multipleAnswers']) }}</strong>
+                                                                        </span>
+                                                                        @if(count($qData['multipleOtherAnswers']) > 0)
+                                                                            <span class="text-blue-700">
+                                                                                <i class="fas fa-comment-dots mr-1"></i>
+                                                                                Detail tambahan: <strong>{{ count($qData['multipleOtherAnswers']) }}</strong>
+                                                                            </span>
+                                                                        @endif
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         @else
                                                             <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-                                                                <p class="text-yellow-700 flex items-center">
-                                                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                                    Tidak ada pilihan yang dipilih
-                                                                </p>
+                                                                <div class="flex items-center">
+                                                                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                                                    <p class="text-yellow-700 font-medium">Tidak ada pilihan yang dipilih</p>
+                                                                </div>
                                                             </div>
                                                         @endif
+                                                        
+                                                    @elseif($qData['question']->type == 'option' && !empty($qData['answer']))
+                                                        <!-- ✅ PERBAIKAN: Single Option dengan Other Answer -->
+                                                        <div class="bg-white border border-green-200 rounded-md p-4">
+                                                            <div class="flex items-start bg-green-50 p-4 rounded-lg border border-green-100">
+                                                                <i class="fas fa-dot-circle text-green-600 mr-3 mt-1"></i>
+                                                                <div class="flex-1">
+                                                                    <p class="font-medium text-gray-900 mb-1">{{ $qData['answer'] }}</p>
+                                                                        
+                                                                    @if(!empty($qData['otherAnswer']))
+                                                                        <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                            <div class="flex items-start">
+                                                                                <i class="fas fa-edit text-blue-600 mr-2 mt-0.5 text-sm"></i>
+                                                                                <div class="flex-1">
+                                                                                    <p class="text-blue-700 font-medium text-sm mb-1">Detail tambahan:</p>
+                                                                                    <div class="bg-white border border-blue-300 rounded-md p-2">
+                                                                                        <span class="font-semibold text-blue-900">{{ $qData['otherAnswer'] }}</span>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     @elseif($qData['question']->type == 'location' && !empty($qData['answer']))
                                                         <!-- Location Answer -->
                                                         <div class="bg-white border border-green-200 rounded-md p-4">

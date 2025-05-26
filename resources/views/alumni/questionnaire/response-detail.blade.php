@@ -111,22 +111,18 @@
                     foreach($questionsWithAnswers as $categoryData) {
                         foreach($categoryData['questions'] as $qData) {
                             $shouldShow = true;
+                            
                             if ($qData['question']->depends_on) {
                                 $parentAnswered = false;
                                 foreach($questionsWithAnswers as $catData) {
                                     foreach($catData['questions'] as $parentQData) {
                                         if ($parentQData['question']->id_question == $qData['question']->depends_on) {
-                                            if (!empty($parentQData['answers'])) {
-                                                foreach($parentQData['answers'] as $answer) {
-                                                    if ($answer['type'] == 'option' && 
-                                                        isset($answer['option_id']) && 
-                                                        $answer['option_id'] == $qData['question']->depends_value) {
-                                                        $parentAnswered = true;
-                                                        break 2;
-                                                    }
+                                            if (isset($parentQData['answer']) && $parentQData['answer']) {
+                                                if ($parentQData['answer'] == $qData['question']->depends_value) {
+                                                    $parentAnswered = true;
                                                 }
+                                                break 2;
                                             }
-                                            break;
                                         }
                                     }
                                 }
@@ -135,7 +131,7 @@
                             
                             if ($shouldShow) {
                                 $totalQuestions++;
-                                if (!empty($qData['answers']) || (isset($qData['multipleAnswers']) && count($qData['multipleAnswers']) > 0)) {
+                                if ($qData['hasAnswer']) {
                                     $answeredQuestions++;
                                 }
                             } else {
@@ -143,6 +139,7 @@
                             }
                         }
                     }
+                    
                     $progressPercentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
                 @endphp
                 
@@ -251,17 +248,35 @@
                                 <!-- Category Header -->
                                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-6 border border-blue-200">
                                     <div class="flex justify-between items-center">
-                                        <h4 class="text-lg font-bold text-blue-900 flex items-center">
-                                            <i class="fas fa-folder-open mr-2"></i>
-                                            {{ $categoryData['category']->category_name }}
-                                        </h4>
                                         <div class="flex items-center space-x-2">
                                             <span class="text-xs font-medium px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">
                                                 <i class="fas fa-graduation-cap mr-1"></i>
-                                                Alumni
+                                                {{ $categoryData['category']->category_name }}
                                             </span>
+                                            @php
+                                                $visibleQuestions = collect($categoryData['questions'])->filter(function($qData) use ($questionsWithAnswers) {
+                                                    $shouldShow = true;
+                                                    if ($qData['question']->depends_on) {
+                                                        $parentAnswered = false;
+                                                        foreach($questionsWithAnswers as $catData) {
+                                                            foreach($catData['questions'] as $parentQData) {
+                                                                if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                                                    if (isset($parentQData['answer']) && $parentQData['answer']) {
+                                                                        if ($parentQData['answer'] == $qData['question']->depends_value) {
+                                                                            $parentAnswered = true;
+                                                                        }
+                                                                        break 2;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        $shouldShow = $parentAnswered;
+                                                    }
+                                                    return $shouldShow;
+                                                });
+                                            @endphp
                                             <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
-                                                {{ count($categoryData['questions']) }} pertanyaan
+                                                {{ $visibleQuestions->count() }} pertanyaan
                                             </span>
                                         </div>
                                     </div>
@@ -273,24 +288,17 @@
                                     @foreach($categoryData['questions'] as $qData)
                                         @php
                                             $shouldShow = true;
-                                            $dependencyInfo = null;
-                                            
                                             if ($qData['question']->depends_on) {
                                                 $parentAnswered = false;
                                                 foreach($questionsWithAnswers as $catData) {
                                                     foreach($catData['questions'] as $parentQData) {
                                                         if ($parentQData['question']->id_question == $qData['question']->depends_on) {
-                                                            if (!empty($parentQData['answers'])) {
-                                                                foreach($parentQData['answers'] as $answer) {
-                                                                    if ($answer['type'] == 'option' && 
-                                                                        isset($answer['option_id']) && 
-                                                                        $answer['option_id'] == $qData['question']->depends_value) {
-                                                                        $parentAnswered = true;
-                                                                        break 2;
-                                                                    }
+                                                            if (isset($parentQData['answer']) && $parentQData['answer']) {
+                                                                if ($parentQData['answer'] == $qData['question']->depends_value) {
+                                                                    $parentAnswered = true;
                                                                 }
+                                                                break 2;
                                                             }
-                                                            break;
                                                         }
                                                     }
                                                 }
@@ -307,10 +315,11 @@
                                                             <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full mr-3 mt-1">{{ $questionNumber }}</span>
                                                             <div class="flex-1">
                                                                 <p class="font-semibold text-gray-900 leading-relaxed">{{ $qData['question']->question }}</p>
+                                                                
                                                                 @if($qData['question']->depends_on)
-                                                                    <div class="mt-2 bg-blue-50 border border-blue-200 rounded-md p-2">
-                                                                        <p class="text-xs text-blue-700 flex items-center">
-                                                                            <i class="fas fa-link mr-1"></i> 
+                                                                    <div class="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3">
+                                                                        <p class="text-xs text-blue-700 flex items-start">
+                                                                            <i class="fas fa-link mr-2 mt-0.5"></i> 
                                                                             <span class="font-medium">Pertanyaan bersyarat</span>
                                                                         </p>
                                                                     </div>
@@ -326,237 +335,259 @@
                                                 
                                                 <!-- Answer Section -->
                                                 <div class="border-t border-gray-300 pt-4">
-                                                    @if(!empty($qData['answers']))
-                                                        @foreach($qData['answers'] as $answer)
-                                                            @if($answer['type'] == 'location')
-                                                                <!-- Location Answer -->
-                                                                <div class="bg-white border border-green-200 rounded-md p-4">
-                                                                    <div class="flex items-start">
-                                                                        <i class="fas fa-map-marker-alt text-red-600 mr-3 mt-1"></i>
-                                                                        <div class="flex-1">
-                                                                            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
-                                                                                <div class="flex items-start">
-                                                                                    <i class="fas fa-map-pin text-green-600 mr-2 mt-1 text-sm"></i>
-                                                                                    <div class="flex-1">
-                                                                                        <p class="font-semibold text-green-800 text-lg leading-relaxed">{{ $answer['value'] }}</p>
-                                                                                        @if(isset($answer['province']) && isset($answer['city']))
-                                                                                            <div class="mt-3 space-y-2">
-                                                                                                @if($answer['city'])
-                                                                                                    <div class="flex items-center text-sm text-green-700">
-                                                                                                        <i class="fas fa-building text-green-500 mr-2 text-xs"></i>
-                                                                                                        <span class="font-medium mr-2">Kota/Kabupaten:</span>
-                                                                                                        <span>{{ $answer['city'] }}</span>
-                                                                                                    </div>
-                                                                                                @endif
-                                                                                                @if($answer['province'])
-                                                                                                    <div class="flex items-center text-sm text-green-700">
-                                                                                                        <i class="fas fa-map text-green-500 mr-2 text-xs"></i>
-                                                                                                        <span class="font-medium mr-2">Provinsi:</span>
-                                                                                                        <span>{{ $answer['province'] }}</span>
-                                                                                                    </div>
-                                                                                                @endif
-                                                                                            </div>
-                                                                                        @endif
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            
-                                                            @elseif($answer['type'] == 'rating')
-                                                                <!-- Rating Answer Display -->
-                                                                <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                                                                    <div class="flex items-center">
-                                                                        <i class="fas fa-star text-purple-600 mr-3 text-lg"></i>
-                                                                        <div class="flex-1">
-                                                                            <span class="font-semibold text-purple-800 text-lg">{{ $answer['value'] }}</span>
-                                                                            <div class="mt-2">
-                                                                                @php
-                                                                                    $ratingLevel = strtolower($answer['value']);
-                                                                                    $ratingColor = 'gray';
-                                                                                    $ratingIcon = 'fa-star';
-                                                                                    
-                                                                                    if (strpos($ratingLevel, 'kurang') !== false) {
-                                                                                        $ratingColor = 'red';
-                                                                                        $ratingIcon = 'fa-star';
-                                                                                    } elseif (strpos($ratingLevel, 'cukup') !== false) {
-                                                                                        $ratingColor = 'yellow';
-                                                                                        $ratingIcon = 'fa-star-half-alt';
-                                                                                    } elseif (strpos($ratingLevel, 'baik sekali') !== false || strpos($ratingLevel, 'sangat baik') !== false) {
-                                                                                        $ratingColor = 'green';
-                                                                                        $ratingIcon = 'fa-star';
-                                                                                    } elseif (strpos($ratingLevel, 'baik') !== false) {
-                                                                                        $ratingColor = 'blue';
-                                                                                        $ratingIcon = 'fa-star';
-                                                                                    }
-                                                                                @endphp
-                                                                                
-                                                                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                                                                    bg-{{ $ratingColor }}-100 text-{{ $ratingColor }}-800">
-                                                                                    <i class="fas {{ $ratingIcon }} mr-2"></i>
-                                                                                    Tingkat: {{ $answer['value'] }}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                            @elseif($answer['type'] == 'scale')
-                                                                <!-- Scale Answer Display -->
-                                                                <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                                                                    <div class="flex items-center justify-between">
-                                                                        <div class="flex items-center">
-                                                                            <i class="fas fa-chart-line text-blue-600 mr-3 text-lg"></i>
-                                                                            <div>
-                                                                                <span class="text-sm text-blue-600 font-medium">Skor yang dipilih:</span>
-                                                                                <div class="flex items-center mt-1">
-                                                                                    @php
-                                                                                        $scaleValue = (int) $answer['value'];
-                                                                                        $scaleColor = 'gray';
-                                                                                        
-                                                                                        if ($scaleValue == 1) {
-                                                                                            $scaleColor = 'red';
-                                                                                        } elseif ($scaleValue == 2) {
-                                                                                            $scaleColor = 'orange';
-                                                                                        } elseif ($scaleValue == 3) {
-                                                                                            $scaleColor = 'yellow';
-                                                                                        } elseif ($scaleValue == 4) {
-                                                                                            $scaleColor = 'blue';
-                                                                                        } elseif ($scaleValue == 5) {
-                                                                                            $scaleColor = 'green';
-                                                                                        }
-                                                                                    @endphp
-                                                                                    
-                                                                                    <span class="text-3xl font-bold text-{{ $scaleColor }}-600 mr-3">{{ $answer['value'] }}</span>
-                                                                                    <span class="text-sm text-gray-600">dari 5</span>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        
-                                                                        <!-- Visual scale representation -->
-                                                                        <div class="flex items-center space-x-1">
-                                                                            @for($i = 1; $i <= 5; $i++)
-                                                                                <div class="w-3 h-3 rounded-full {{ $i <= $scaleValue ? 'bg-'.$scaleColor.'-500' : 'bg-gray-300' }}"></div>
-                                                                            @endfor
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                    <!-- Scale labels if available -->
-                                                                    @if($qData['question']->before_text || $qData['question']->after_text)
-                                                                        <div class="mt-3 pt-3 border-t border-blue-100">
-                                                                            <div class="flex justify-between text-xs text-blue-600">
-                                                                                <span class="font-medium">{{ $qData['question']->before_text ?: 'Rendah' }}</span>
-                                                                                <span class="font-medium">{{ $qData['question']->after_text ?: 'Tinggi' }}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    @endif
-                                                                </div>
-
-                                                            @elseif($answer['type'] == 'option')
-                                                                <!-- Option Answer -->
-                                                                <div class="bg-white border border-green-200 rounded-md p-4">
-                                                                    <div class="flex items-start">
-                                                                        <i class="fas fa-check-circle text-green-600 mr-3 mt-1"></i>
-                                                                        <div class="flex-1">
-                                                                            <div class="bg-green-50 rounded-lg p-3">
-                                                                                <div class="flex items-start text-green-800">
-                                                                                    <i class="fas fa-check-circle mr-2 mt-0.5"></i>
-                                                                                    <span class="font-medium">{{ $answer['base_option_text'] ?? $answer['value'] }}</span>
-                                                                                </div>
+                                                    @if($qData['hasAnswer'])
+                                                        @if($qData['question']->type === 'multiple')
+                                                            <!-- Multiple Choice Answers -->
+                                                            <div class="bg-white border border-green-200 rounded-md p-4">
+                                                                <h6 class="font-medium text-green-800 mb-2 flex items-center">
+                                                                    <i class="fas fa-check-square mr-2"></i>
+                                                                    Pilihan yang Dipilih:
+                                                                </h6>
+                                                                <ul class="space-y-3">
+                                                                    @foreach($qData['multipleAnswers'] as $optionId)
+                                                                        @php
+                                                                            $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
+                                                                        @endphp
+                                                                        <li class="text-green-700">
+                                                                            <div class="flex items-center">
+                                                                                <i class="fas fa-check text-green-600 mr-2"></i>
+                                                                                <span class="font-medium">{{ $option ? $option->option : $optionId }}</span>
                                                                             </div>
                                                                             
-                                                                            @if(isset($answer['is_other']) && $answer['is_other'] && !empty($answer['other_text']))
-                                                                                <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
-                                                                                    <div class="flex items-center text-blue-700">
-                                                                                        <i class="fas fa-edit mr-2 text-sm"></i>
-                                                                                        <div class="text-sm">
-                                                                                            <span class="font-medium text-blue-600">Input pengguna:</span>
-                                                                                            @if(!empty($answer['other_before_text']))
-                                                                                                <span class="text-blue-600">{{ $answer['other_before_text'] }}</span>
-                                                                                            @endif
-                                                                                            <strong class="text-blue-800 bg-white px-2 py-1 rounded border mx-1">{{ $answer['other_text'] }}</strong>
-                                                                                            @if(!empty($answer['other_after_text']))
-                                                                                                <span class="text-blue-600">{{ $answer['other_after_text'] }}</span>
-                                                                                            @endif
+                                                                            <!-- ✅ PERBAIKAN: Handle other answer untuk multiple choice -->
+                                                                            @if($option && $option->is_other_option && isset($qData['multipleOtherAnswers'][$optionId]))
+                                                                                <div class="ml-6 mt-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                                    <div class="flex items-start">
+                                                                                        <i class="fas fa-edit text-blue-600 mr-2 mt-0.5"></i>
+                                                                                        <div class="flex-1">
+                                                                                            <p class="text-sm font-semibold text-blue-800 mb-1">Jawaban Lainnya:</p>
+                                                                                            <div class="text-blue-700">
+                                                                                                @if($option->other_before_text)
+                                                                                                    <span class="text-blue-600 mr-1">{{ $option->other_before_text }}:</span>
+                                                                                                @endif
+                                                                                                <strong class="text-blue-800 bg-white px-2 py-1 rounded border border-blue-300">
+                                                                                                    {{ $qData['multipleOtherAnswers'][$optionId] }}
+                                                                                                </strong>
+                                                                                                @if($option->other_after_text)
+                                                                                                    <span class="text-blue-600 ml-1">{{ $option->other_after_text }}</span>
+                                                                                                @endif
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
                                                                                 </div>
                                                                             @endif
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-
-                                                            @else
-                                                                <!-- Text/Date Answer -->
-                                                                <div class="bg-white border border-green-200 rounded-md p-4">
-                                                                    <div class="flex items-start">
-                                                                        <i class="fas fa-{{ $answer['type'] == 'date' ? 'calendar-alt' : 'quote-left' }} text-green-600 mr-3 mt-1"></i>
-                                                                        <div class="flex-1">
-                                                                            @if($answer['type'] == 'text')
-                                                                                <div class="bg-gray-50 rounded-lg p-3">
-                                                                                    @if($qData['question']->before_text || $qData['question']->after_text)
-                                                                                        <div class="flex items-center flex-wrap">
-                                                                                            @if($qData['question']->before_text)
-                                                                                                <span class="mr-2 text-gray-600">{{ $qData['question']->before_text }}</span>
-                                                                                            @endif
-                                                                                            <span class="font-medium text-gray-800 bg-white px-2 py-1 rounded border">{{ $answer['value'] }}</span>
-                                                                                            @if($qData['question']->after_text)
-                                                                                                <span class="ml-2 text-gray-600">{{ $qData['question']->after_text }}</span>
-                                                                                            @endif
-                                                                                        </div>
-                                                                                    @else
-                                                                                        <span class="text-gray-800 font-medium">{{ $answer['value'] }}</span>
-                                                                                    @endif
-                                                                                </div>
-                                                                            @else
-                                                                                <div class="bg-blue-50 rounded-lg p-3">
-                                                                                    <div class="flex items-center text-blue-800">
-                                                                                        <i class="fas fa-calendar-alt mr-2"></i>
-                                                                                        <span class="font-medium">{{ \Carbon\Carbon::parse($answer['value'])->format('d M Y') }}</span>
-                                                                                    </div>
-                                                                                </div>
-                                                                            @endif
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            @endif
-                                                        @endforeach
-                                                    @elseif($qData['question']->type == 'multiple' && isset($qData['multipleAnswers']) && count($qData['multipleAnswers']) > 0)
-                                                        <!-- Multiple Choice Answers -->
-                                                        <div class="bg-white border border-green-200 rounded-md p-4">
-                                                            <p class="text-sm text-green-700 font-semibold mb-3 flex items-center">
-                                                                <i class="fas fa-check-square mr-2"></i>
-                                                                Jawaban terpilih ({{ count($qData['multipleAnswers']) }} pilihan):
-                                                            </p>
-                                                            <div class="space-y-2">
-                                                                @foreach($qData['multipleAnswers'] as $answerIndex => $answer)
+                                                                        </li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        @else
+                                                            <!-- Single Answer -->
+                                                            <div class="bg-white border border-green-200 rounded-md p-4">
+                                                                <h6 class="font-medium text-green-800 mb-3 flex items-center">
+                                                                    <i class="fas fa-{{ $qData['question']->type == 'text' ? 'keyboard' : ($qData['question']->type == 'option' ? 'dot-circle' : ($qData['question']->type == 'location' ? 'map-marker-alt' : ($qData['question']->type == 'rating' ? 'star' : ($qData['question']->type == 'scale' ? 'chart-line' : 'calendar-alt')))) }} mr-2"></i>
+                                                                    Jawaban:
+                                                                </h6>
+                                                                
+                                                                @if($qData['question']->type === 'option' || $qData['question']->type === 'rating')
                                                                     @php
-                                                                        $basePart = $answer;
-                                                                        $otherPart = null;
-                                                                        
-                                                                        if (strpos($answer, ': ') !== false) {
-                                                                            $parts = explode(': ', $answer, 2);
-                                                                            $basePart = $parts[0];
-                                                                            $otherPart = $parts[1] ?? null;
-                                                                        }
+                                                                        $option = $qData['question']->options->where('id_questions_options', $qData['answer'])->first();
                                                                     @endphp
                                                                     
-                                                                    <div class="flex items-start bg-green-50 p-3 rounded-md border border-green-100">
-                                                                        <i class="fas fa-check text-green-600 mr-2 mt-1"></i>
-                                                                        <div class="flex-1">
-                                                                            <span class="text-gray-900 font-medium">{{ $basePart }}</span>
-                                                                            @if($otherPart)
-                                                                                <div class="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                                                                                    <span class="text-blue-700 font-medium">Detail tambahan:</span>
-                                                                                    <span class="italic font-medium">{{ $otherPart }}</span>
+                                                                    <div class="text-green-700">
+                                                                        <div class="mb-2">
+                                                                            <span class="text-lg font-semibold">{{ $option ? $option->option : $qData['answer'] }}</span>
+                                                                        </div>
+                                                                        
+                                                                        <!-- ✅ PERBAIKAN: Handle other answer untuk single choice -->
+                                                                        @if($option && $option->is_other_option && $qData['otherAnswer'])
+                                                                            <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                                                <div class="flex items-start">
+                                                                                    <i class="fas fa-edit text-blue-600 mr-2 mt-0.5"></i>
+                                                                                    <div class="flex-1">
+                                                                                        <h6 class="font-semibold text-blue-800 mb-2">Jawaban Lainnya:</h6>
+                                                                                        <div class="text-blue-700">
+                                                                                            @if($option->other_before_text)
+                                                                                                <span class="text-blue-600 mr-1">{{ $option->other_before_text }}:</span>
+                                                                                            @endif
+                                                                                            <strong class="text-blue-900 bg-white px-3 py-2 rounded border border-blue-300 inline-block">
+                                                                                                {{ $qData['otherAnswer'] }}
+                                                                                            </strong>
+                                                                                            @if($option->other_after_text)
+                                                                                                <span class="text-blue-600 ml-1">{{ $option->other_after_text }}</span>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
-                                                                            @endif
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                
+                                                                @elseif($qData['question']->type === 'location')
+                                                                    <!-- ✅ PERBAIKAN: Enhanced Location Answer Display -->
+                                                                    <div class="text-green-700">
+                                                                        @php
+                                                                            // Debug location data
+                                                                            $originalAnswer = $qData['answer'];
+                                                                            $locationDisplay = null;
+                                                                            $cityName = null;
+                                                                            $provinceName = null;
+                                                                            
+                                                                            // Try multiple parsing methods
+                                                                            if (!empty($originalAnswer)) {
+                                                                                // Method 1: Try JSON decode
+                                                                                try {
+                                                                                    $locationData = json_decode($originalAnswer, true);
+                                                                                    
+                                                                                    if ($locationData && is_array($locationData)) {
+                                                                                        // JSON format detected
+                                                                                        if (isset($locationData['display'])) {
+                                                                                            $locationDisplay = $locationData['display'];
+                                                                                        } elseif (isset($locationData['city_name']) && isset($locationData['province_name'])) {
+                                                                                            $cityName = $locationData['city_name'];
+                                                                                            $provinceName = $locationData['province_name'];
+                                                                                            $locationDisplay = $cityName . ', ' . $provinceName;
+                                                                                        } elseif (isset($locationData['city']) && isset($locationData['province'])) {
+                                                                                            $cityName = $locationData['city'];
+                                                                                            $provinceName = $locationData['province'];
+                                                                                            $locationDisplay = $cityName . ', ' . $provinceName;
+                                                                                        } else {
+                                                                                            // Unknown JSON structure, show as formatted
+                                                                                            $locationDisplay = 'Data lokasi: ' . json_encode($locationData);
+                                                                                        }
+                                                                                    } else {
+                                                                                        // Not JSON or invalid JSON, treat as string
+                                                                                        $locationDisplay = $originalAnswer;
+                                                                                        
+                                                                                        // Try to parse as "City, Province" format
+                                                                                        if (strpos($originalAnswer, ',') !== false) {
+                                                                                            $parts = array_map('trim', explode(',', $originalAnswer));
+                                                                                            if (count($parts) >= 2) {
+                                                                                                $cityName = $parts[0];
+                                                                                                $provinceName = $parts[1];
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                } catch (\Exception $e) {
+                                                                                    // JSON parsing failed, treat as string
+                                                                                    $locationDisplay = $originalAnswer;
+                                                                                    
+                                                                                    // Try to parse as "City, Province" format
+                                                                                    if (strpos($originalAnswer, ',') !== false) {
+                                                                                        $parts = array_map('trim', explode(',', $originalAnswer));
+                                                                                        if (count($parts) >= 2) {
+                                                                                            $cityName = $parts[0];
+                                                                                            $provinceName = $parts[1];
+                                                                                        }
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                            
+                                                                            // Final fallback
+                                                                            if (empty($locationDisplay) || $locationDisplay === 'null') {
+                                                                                $locationDisplay = 'Lokasi tidak tersedia';
+                                                                            }
+                                                                        @endphp
+                                                                        
+                                                                        <!-- Display location with enhanced styling -->
+                                                                        <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+                                                                            <div class="flex items-start">
+                                                                                <i class="fas fa-map-marker-alt text-red-600 mr-3 mt-1 text-lg"></i>
+                                                                                <div class="flex-1">
+                                                                                    <!-- Main location display -->
+                                                                                    <div class="mb-3">
+                                                                                        <h6 class="text-sm font-semibold text-green-800 mb-2">Lokasi:</h6>
+                                                                                        <div class="bg-white rounded-md p-3 border border-green-300">
+                                                                                            <span class="text-lg font-semibold text-green-900">{{ $locationDisplay }}</span>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    
+                                                                                    <!-- Detailed breakdown if available -->
+                                                                                    @if($cityName && $provinceName)
+                                                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                                                                                            <div class="bg-blue-50 rounded-md p-3 border border-blue-200">
+                                                                                                <div class="flex items-center">
+                                                                                                    <i class="fas fa-city text-blue-600 mr-2"></i>
+                                                                                                    <div>
+                                                                                                        <p class="text-xs text-blue-600 font-medium">Kota/Kabupaten</p>
+                                                                                                        <p class="font-semibold text-blue-800">{{ $cityName }}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                            <div class="bg-purple-50 rounded-md p-3 border border-purple-200">
+                                                                                                <div class="flex items-center">
+                                                                                                    <i class="fas fa-map text-purple-600 mr-2"></i>
+                                                                                                    <div>
+                                                                                                        <p class="text-xs text-purple-600 font-medium">Provinsi</p>
+                                                                                                        <p class="font-semibold text-purple-800">{{ $provinceName }}</p>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    @endif
+                                                                                    
+                                                                                    <!-- Debug info (only show if needed) -->
+                                                                                    @if(config('app.debug') && auth()->user()->role === 'admin')
+                                                                                        <div class="mt-3 bg-gray-100 rounded-md p-2 text-xs">
+                                                                                            <strong>Debug Info:</strong><br>
+                                                                                            Original: {{ $originalAnswer }}<br>
+                                                                                            Processed: {{ $locationDisplay }}
+                                                                                        </div>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                @endforeach
+                                                                    
+                                                                @elseif($qData['question']->type === 'scale')
+                                                                    <!-- Scale Answer -->
+                                                                    <div class="text-green-700">
+                                                                        <div class="flex items-center space-x-4">
+                                                                            <span class="text-3xl font-bold text-blue-600">{{ $qData['answer'] }}</span>
+                                                                            <div class="flex-1">
+                                                                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                                                                    <div class="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full" 
+                                                                                         style="width: {{ ($qData['answer'] / 5) * 100 }}%"></div>
+                                                                                </div>
+                                                                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                                                                    <span>1</span>
+                                                                                    <span>5</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                @elseif($qData['question']->type === 'date')
+                                                                    <!-- Date Answer -->
+                                                                    <div class="text-green-700">
+                                                                        <div class="flex items-center space-x-2">
+                                                                            <i class="fas fa-calendar-alt text-green-600"></i>
+                                                                            <span class="font-medium">{{ \Carbon\Carbon::parse($qData['answer'])->format('d M Y') }}</span>
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                @else
+                                                                    <!-- Text Answer -->
+                                                                    <div class="text-green-700">
+                                                                        <div class="bg-gray-50 border border-gray-200 rounded-md p-3">
+                                                                            <p class="whitespace-pre-wrap font-medium">{{ $qData['answer'] }}</p>
+                                                                        </div>
+                                                                        
+                                                                        <!-- Handle other answer untuk text questions jika ada -->
+                                                                        @if($qData['otherAnswer'])
+                                                                            <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                                <div class="flex items-start">
+                                                                                    <i class="fas fa-plus-circle text-blue-600 mr-2 mt-0.5"></i>
+                                                                                    <div class="flex-1">
+                                                                                        <h6 class="font-semibold text-blue-800 mb-1">Informasi Tambahan:</h6>
+                                                                                        <p class="text-blue-700 whitespace-pre-wrap">{{ $qData['otherAnswer'] }}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
+                                                                    </div>
+                                                                @endif
                                                             </div>
-                                                        </div>
+                                                        @endif
                                                     @else
                                                         <!-- No Answer -->
                                                         <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">

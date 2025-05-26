@@ -17,22 +17,35 @@ class Tb_Questions extends Model
         'id_category',
         'question',
         'type',
+        'order',
         'before_text',
         'after_text',
-        'order',
         'depends_on',
-        'depends_value'
+        'depends_value',
+        'status'
     ];
 
-    // Update the mutator methods to be more robust
-    public function setBeforeTextAttribute($value)
+    protected $attributes = [
+        'status' => 'visible' // Ubah default
+    ];
+
+    // Scope untuk mengambil hanya pertanyaan yang visible
+    public function scopeVisible($query)
     {
-        $this->attributes['before_text'] = is_null($value) || $value === '' ? null : $value;
+        return $query->where('status', 'visible');
     }
 
-    public function setAfterTextAttribute($value)
+    // Scope untuk mengambil hanya pertanyaan yang active
+    // Update scope active untuk backward compatibility
+    public function scopeActive($query)
     {
-        $this->attributes['after_text'] = is_null($value) || $value === '' ? null : $value;
+        return $query->where('status', 'visible');
+    }
+
+    // Scope untuk mengambil semua pertanyaan termasuk yang hidden (untuk admin)
+    public function scopeWithHidden($query)
+    {
+        return $query; // Return semua
     }
 
     public function category()
@@ -43,5 +56,15 @@ class Tb_Questions extends Model
     public function options()
     {
         return $this->hasMany(Tb_Question_Options::class, 'id_question', 'id_question');
+    }
+
+    public function dependsOnQuestion()
+    {
+        return $this->belongsTo(Tb_Questions::class, 'depends_on', 'id_question');
+    }
+
+    public function dependentQuestions()
+    {
+        return $this->hasMany(Tb_Questions::class, 'depends_on', 'id_question');
     }
 }

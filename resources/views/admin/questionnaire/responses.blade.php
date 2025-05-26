@@ -130,31 +130,52 @@
                                 @foreach($userAnswers as $index => $userAnswer)
                                     <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
                                         <td class="px-4 py-3">{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</td>
-                                        <td class="px-4 py-3">{{ $userAnswer->name }}</td>
+                                        
+                                        <!-- Perbaiki: Gunakan display_name dan tambahkan info tambahan -->
                                         <td class="px-4 py-3">
-                                            @if($userAnswer->user_type == 'alumni')
+                                            <div>
+                                                <p class="font-medium">{{ $userAnswer->display_name }}</p>
+                                                @if($userAnswer->nim)
+                                                    <p class="text-xs text-gray-500">NIM: {{ $userAnswer->nim }}</p>
+                                                @endif
+                                                <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
+                                            </div>
+                                        </td>
+                                        
+                                        <!-- Perbaiki: Gunakan user_type_text yang sudah diset di controller -->
+                                        <td class="px-4 py-3">
+                                            @if($userAnswer->user_type_text == 'Alumni')
                                                 <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
-                                                    Alumni
+                                                    <i class="fas fa-graduation-cap mr-1"></i>Alumni
                                                 </span>
-                                            @elseif($userAnswer->user_type == 'company')
+                                            @elseif($userAnswer->user_type_text == 'Perusahaan')
                                                 <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                                    Perusahaan
+                                                    <i class="fas fa-building mr-1"></i>Perusahaan
                                                 </span>
                                             @else
                                                 <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                                                    User
+                                                    <i class="fas fa-user mr-1"></i>User
                                                 </span>
                                             @endif
                                         </td>
+                                        
                                         <td class="px-4 py-3">
                                             <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                                {{ ucfirst($userAnswer->status) }}
+                                                <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
+                                                {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum Selesai' }}
                                             </span>
                                         </td>
-                                        <td class="px-4 py-3">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y H:i') }}</td>
+                                        
+                                        <td class="px-4 py-3">
+                                            <div>
+                                                <p>{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y') }}</p>
+                                                <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('H:i') }}</p>
+                                            </div>
+                                        </td>
+                                        
                                         <td class="px-4 py-3">
                                             <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
-                                            class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm inline-flex items-center">
+                                               class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm inline-flex items-center transition-colors duration-200">
                                                 <i class="fas fa-eye mr-1"></i> Lihat Detail
                                             </a>
                                         </td>
@@ -164,8 +185,9 @@
                                 <tr>
                                     <td colspan="6" class="px-4 py-8 text-center text-gray-500">
                                         <div class="flex flex-col items-center">
-                                            <i class="fas fa-inbox text-4xl mb-3"></i>
-                                            <p>Belum ada responden yang mengisi kuesioner ini.</p>
+                                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                            <p class="text-lg font-medium mb-2">Belum ada responden</p>
+                                            <p class="text-sm">Belum ada yang mengisi kuesioner untuk periode ini.</p>
                                         </div>
                                     </td>
                                 </tr>
