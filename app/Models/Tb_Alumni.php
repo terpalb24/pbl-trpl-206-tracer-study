@@ -51,6 +51,12 @@ class Tb_Alumni extends Authenticatable
     {
         return $this->belongsTo(Tb_study_program::class, 'id_study', 'id_study');
     }
+
+    public function jobHistories()
+    {
+        return $this->hasMany(JobHistory::class, 'nim', 'nim');
+    }
+
     
     
 

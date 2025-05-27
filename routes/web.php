@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\Alumni\JobHistoryController; // Tambahkan ini di atas
 use App\Http\Controllers\Admin\QuestionnaireController;
 use App\Http\Controllers\Admin\QuestionnaireImportController;
 use App\Http\Controllers\Alumni\QuestionnaireController as AlumniQuestionnaireController;
@@ -67,6 +68,14 @@ Route::middleware(['auth:web', CheckRole::class . ':2'])->group(function () {
     Route::get('/alumni/profil', [AlumniController::class, 'edit'])->name('alumni.edit');
     Route::put('/alumni/profil', [AlumniController::class, 'update'])->name('alumni.update');
     
+    // JobHistory routes 
+    Route::get('/alumni/jobhistory', [JobHistoryController::class, 'index'])->name('alumni.job-history.index');
+    Route::get('/alumni/jobhistory/create', [JobHistoryController::class, 'create'])->name('alumni.job-history.create');
+    Route::post('/alumni/jobhistory', [JobHistoryController::class, 'store'])->name('alumni.job-history.store');
+    Route::get('/alumni/jobhistory/{jobHistory}/edit', [JobHistoryController::class, 'edit'])->name('alumni.job-history.edit');
+    Route::put('/alumni/jobhistory/{jobHistory}', [JobHistoryController::class, 'update'])->name('alumni.job-history.update');
+    Route::delete('/alumni/jobhistory/{jobHistory}', [JobHistoryController::class, 'destroy'])->name('alumni.job-history.destroy');
+
     // Questionnaire routes
     Route::get('/alumni/questionnaire', [AlumniQuestionnaireController::class, 'index'])->name('alumni.questionnaire.index');
     Route::get('/alumni/questionnaire/fill/{id_periode}/{category?}', [AlumniQuestionnaireController::class, 'fill'])->name('alumni.questionnaire.fill');

@@ -26,4 +26,21 @@ class Tb_Company extends Authenticatable
         'created_at',
         'updated_at'
     ];
+
+    public function jobHistories()
+    {
+        return $this->hasMany(JobHistory::class, 'id_company', 'id_company');
+    }
+
+    public function alumni()
+    {
+        return $this->hasManyThrough(
+            Alumni::class,
+            JobHistory::class,
+            'id_company', // Foreign key on JobHistory
+            'nim',        // Foreign key on Alumni
+            'id_company', // Local key on Company
+            'nim'         // Local key on JobHistory
+        );
+    }
 }
