@@ -116,16 +116,12 @@
                             <div>
                                 <label for="before_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Sebelum Input:</label>
                                 <input type="text" name="before_text" id="before_text" value="{{ old('before_text', $question->before_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: Masukkan">
-                                @error('before_text')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                           
                             </div>
                             <div>
                                 <label for="after_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Setelah Input:</label>
                                 <input type="text" name="after_text" id="after_text" value="{{ old('after_text', $question->after_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: tahun">
-                                @error('after_text')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                            
                             </div>
                         </div>
                         
@@ -206,16 +202,14 @@
                                 <label for="scale_min_label" class="block text-sm font-medium text-gray-700 mb-2">Label untuk nilai terendah (1):</label>
                                 <input type="text" id="scale_min_label" name="before_text" value="{{ old('before_text', $question->before_text ?: 'Sangat Kurang') }}" 
                                        placeholder="Contoh: Sangat Kurang" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                                @error('before_text')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                                @enderror
+                              
                             </div>
                             <div>
                                 <label for="scale_max_label" class="block text-sm font-medium text-gray-700 mb-2">Label untuk nilai tertinggi (5):</label>
                                 <input type="text" id="scale_max_label" name="after_text" value="{{ old('after_text', $question->after_text ?: 'Sangat Baik') }}" 
                                        placeholder="Contoh: Sangat Baik" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                                 @error('after_text')
-                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            
                                 @enderror
                             </div>
                         </div>
@@ -344,12 +338,7 @@
                             @endif
                         </div>
                         
-                        @error('options')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
-                        @error('options.*')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                        @enderror
+                      
                     </div>
                     @endif
 
