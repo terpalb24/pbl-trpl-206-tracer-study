@@ -17,7 +17,9 @@ return new class extends Migration
             $table->string('status',50);
             $table->integer("id_periode");
             $table->timestamps();
-            $table->foreign('id_user')->references('id_user')->on('tb_user');
+            $table->foreign('id_user')->references('id_user')->on('tb_user')
+            ->onDelete('cascade')
+            ->onUpdate('cascade'); 
             $table->foreign('id_periode')->references('id_periode')->on('tb_periode')
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
