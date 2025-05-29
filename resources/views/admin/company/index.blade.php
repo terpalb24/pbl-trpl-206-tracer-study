@@ -56,8 +56,7 @@
             </div>
         </div>
 
-        <!-- Import & Export Excel Form -->
-        <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6">
+        <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6 mt-4 mx-6">
             <form action="{{ route('admin.company.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row md:items-center gap-4">
                 @csrf
                 <input type="file" name="file" accept=".xlsx,.xls" required
@@ -72,9 +71,8 @@
                 </a>
             </form>
             @if(session('error'))
-    <div class="text-red-500">{{ session('error') }}</div>
-@endif
-
+                <div class="text-red-500">{{ session('error') }}</div>
+            @endif
         </div>
 
         <!-- Data Table Section -->

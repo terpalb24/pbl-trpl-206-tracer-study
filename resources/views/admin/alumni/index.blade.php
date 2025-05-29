@@ -57,34 +57,27 @@
         </div>
 
         <!-- Import & Export Excel Form -->
-        <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6">
+        <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6 mt-4 mx-6">
             <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row md:items-center gap-4">
                 @csrf
-                <div class="flex flex-col md:flex-row md:items-center gap-4 w-full">
-                    <input type="file" name="file" accept=".xlsx,.xls" required
-                        class="border border-gray-300 rounded-md px-4 py-2 w-full md:w-1/2 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500">
-                    <button type="submit"
-                        class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
-                        <i class="bi bi-upload"></i>
-                        Import Excel
-                    </button>
-                    <a href="{{ route('admin.alumni.export') }}"
-                        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
-                        <i class="bi bi-download"></i>
-                        Export Excel
-                    </a>
-                </div>
+                <input type="file" name="file" accept=".xlsx,.xls" required
+                    class="border border-gray-300 rounded-md px-4 py-2 w-full md:w-1/2 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500">
+                <button type="submit"
+                    class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
+                    <i class="bi bi-upload"></i> Import Excel
+                </button>
+                <a href="{{ route('admin.alumni.export') }}"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
+                    <i class="bi bi-download"></i> Export Excel
+                </a>
             </form>
             @if(session('error'))
-    <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-        {{ session('error') }}
-    </div>
-@endif
+                <div class="text-red-500 mt-4">{{ session('error') }}</div>
+            @endif
 
             @error('file')
                 <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
             @enderror
-            
         </div>
 
         <!-- Content Section -->
@@ -103,11 +96,24 @@
             @endif
 
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="p-4 flex justify-between items-center border-b">
-                    <form method="GET" action="{{ route('admin.alumni.index') }}" class="flex items-center space-x-2 w-full max-w-md">
-                        <button class="text-gray-500" title="Filter">
-                            <i class="bi bi-filter"></i>
-                        </button>
+                <div class="p-4 flex flex-col md:flex-row md:items-center gap-4 border-b">
+                    <form method="GET" action="{{ route('admin.alumni.index') }}" class="flex flex-col md:flex-row md:items-center gap-4 w-full">
+                        <select name="graduation_year" class="border border-gray-300 rounded px-3 py-2 w-full md:w-44">
+                            <option value="">-- Semua Tahun Lulus --</option>
+                            @foreach($tahunLulus as $tahun)
+                                <option value="{{ $tahun }}" {{ request('graduation_year') == $tahun ? 'selected' : '' }}>
+                                    {{ $tahun }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <select name="id_study" class="border border-gray-300 rounded px-3 py-2 w-full md:w-56">
+                            <option value="">-- Semua Program Studi --</option>
+                            @foreach($prodi as $p)
+                                <option value="{{ $p->id_study }}" {{ request('id_study') == $p->id_study ? 'selected' : '' }}>
+                                    {{ $p->study_program }}
+                                </option>
+                            @endforeach
+                        </select>
                         <div class="relative w-full">
                             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama Alumni"
                                 class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
@@ -115,6 +121,9 @@
                                 <i class="bi bi-search"></i>
                             </div>
                         </div>
+                        <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold">
+                            Cari
+                        </button>
                     </form>
                 </div>
 
@@ -155,7 +164,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-4 text-gray-400">Tidak ada data alumni.</td>
+                                    <td colspan="5" class="px-4 py-4 text-gray-400 text-center">tidak ada alumni</td>
                                 </tr>
                             @endforelse
                         </tbody>

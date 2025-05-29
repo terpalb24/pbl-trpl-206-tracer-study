@@ -39,17 +39,32 @@ public function alumniIndex(Request $request)
 {
     $query = Tb_alumni::with('studyProgram');
 
-    if ($request->has('search')) {
+    // Filter tahun lulus
+    if ($request->filled('graduation_year')) {
+        $query->where('graduation_year', $request->graduation_year);
+    }
+
+    // Filter program studi
+    if ($request->filled('id_study')) {
+        $query->where('id_study', $request->id_study);
+    }
+
+    // Search nama/nim
+    if ($request->filled('search')) {
         $search = $request->input('search');
         $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")
               ->orWhere('nim', 'LIKE', "%{$search}%");
-        });  // <- Pastikan ada kurung tutup untuk fungsi callback ini
+        });
     }
 
     $alumni = $query->orderBy('name')->paginate(10)->withQueryString();
 
-    return view('admin.alumni.index', compact('alumni'));
+    // Data untuk filter
+    $prodi = \App\Models\Tb_study_program::all();
+    $tahunLulus = Tb_alumni::select('graduation_year')->distinct()->orderBy('graduation_year', 'desc')->pluck('graduation_year');
+
+    return view('admin.alumni.index', compact('alumni', 'prodi', 'tahunLulus'));
 }
 
 // Form tambah alumni
