@@ -47,22 +47,29 @@ class JobHistoryController extends Controller
             ->with('success', 'Riwayat kerja berhasil ditambahkan');
     }
 
-    public function edit(JobHistory $jobHistory)
+    public function edit($id)
     {
-        return view('alumni.job-history.edit', compact('jobHistory'));
+        $jobHistory = JobHistory::findOrFail($id);
+        $companies = \App\Models\Tb_Company::all(); // Ambil semua perusahaan
+
+        return view('alumni.job-history.edit', compact('jobHistory', 'companies'));
     }
 
     public function update(Request $request, JobHistory $jobHistory)
     {
-
         $request->validate([
-            'company_name' => 'required|string|max:255',
+            'id_company' => 'required|exists:tb_company,id_company',
             'position' => 'required|string|max:255',
             'salary' => 'required|numeric',
             'duration' => 'required|string|max:255',
         ]);
 
-        $jobHistory->update($request->only(['company_name', 'position', 'salary', 'duration']));
+        $jobHistory->update([
+            'id_company' => $request->id_company,
+            'position' => $request->position,
+            'salary' => $request->salary,
+            'duration' => $request->duration,
+        ]);
 
         return redirect()->route('alumni.job-history.index')
             ->with('success', 'Riwayat kerja berhasil diperbarui');

@@ -1,151 +1,180 @@
 @extends('layouts.app')
+@php
+    $alumni = auth()->user()->alumni;
+@endphp
+
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-    <!-- Sidebar (same as index) -->
-    <div class="fixed inset-y-0 left-0 w-64 bg-blue-900">
-        <div class="flex items-center px-6 py-4">
+<div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar-menu w-64 bg-blue-950 text-white flex flex-col transition-all duration-300" id="sidebar">
+        <div class="flex flex-col items-center justify-between p-4 ">
+            <img src="{{ asset('assets/images/Group 3.png') }}" alt="Tracer Study Polibatam Logo" class="w-36 mt-2 object-contain">
+            <button id="close-sidebar" class="text-white text-xl lg:hidden focus:outline-none absolute top-4 right-4">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="flex flex-col p-4">
+            @include('alumni.sidebar')
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-grow overflow-y-auto" id="main-content">
+        <!-- Header -->
+        <div class="bg-white shadow-sm p-4 flex justify-between items-center">
             <div class="flex items-center">
-                <div class="w-3 h-3 bg-orange-500 rounded-full mr-2"></div>
-                <div class="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
-                <div class="text-white">
-                    <div class="font-semibold">Tracer Study</div>
-                    <div class="text-sm">Polibatam</div>
+                <button id="toggle-sidebar" class="mr-4 lg:hidden">
+                    <i class="fas fa-bars text-xl text-black-800"></i>
+                </button>
+                <h1 class="text-2xl font-bold text-blue-800">Riwayat Kerja</h1>
+            </div>
+            <!-- Profile Dropdown Button -->
+            <div class="relative">
+                <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
+                    <img src="{{ asset('assets/images/profilepicture.jpg') }}"
+                        alt="Foto Profil"
+                        class="w-10 h-10 rounded-full object-cover border-2 border-white" />
+                    <div class="text-left">
+                        <p class="font-semibold leading-none">{{ $alumni->name }}</p>
+                        <p class="text-sm text-gray-300 leading-none mt-1">Alumni</p>
+                    </div>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                <!-- Dropdown Menu -->
+                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
+                        <i class="fas fa-key mr-2"></i>Ganti Password
+                    </a>
+                    <a href="" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
                 </div>
             </div>
         </div>
-        
-        <nav class="mt-8">
-            <a href="#" class="flex items-center px-6 py-3 text-white hover:bg-blue-800">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-9 9a1 1 0 001.414 1.414L2 12.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-4.586l.293.293a1 1 0 001.414-1.414l-9-9z"></path>
-                </svg>
-                Beranda
-            </a>
-            <a href="#" class="flex items-center px-6 py-3 text-white hover:bg-blue-800">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
-                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 2a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"></path>
-                </svg>
-                Kuisioner
-            </a>
-            <a href="#" class="flex items-center px-6 py-3 text-white bg-blue-800 border-r-4 border-white">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
-                </svg>
-                Riwayat
-            </a>
-            <a href="#" class="flex items-center px-6 py-3 text-white hover:bg-blue-800">
-                <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                </svg>
-                Profil
-            </a>
-        </nav>
-    </div>
-
-    <!-- Main Content -->
-    <div class="ml-64">
-        <!-- Header -->
-        <header class="bg-white shadow-sm border-b">
-            <div class="flex items-center justify-between px-6 py-4">
-                <div class="flex items-center">
-                    <button class="mr-4">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                        </svg>
-                    </button>
-                    <h1 class="text-xl font-semibold text-gray-800">Edit Riwayat Kerja</h1>
-                </div>
-                
-                <div class="flex items-center">
-                    <div class="relative">
-                        <button class="flex items-center px-4 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800">
-                            <img src="https://ui-avatars.com/api/?name=Andri&background=3b82f6&color=fff" alt="Avatar" class="w-8 h-8 rounded-full mr-2">
-                            <div class="text-left">
-                                <div class="font-medium">Andri</div>
-                                <div class="text-sm opacity-75">Alumni</div>
-                            </div>
-                            <svg class="w-4 h-4 ml-2" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </header>
 
         <!-- Content -->
-        <main class="p-6">
-            <div class="bg-white rounded-lg shadow-sm border p-6">
-                <form action="{{ route('alumni.job-history.update', $jobHistory) }}" method="POST">
+        <div class="p-6">
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-8xl mx-auto">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Edit Riwayat Kerja</h2>
+                <form action="{{ route('alumni.job-history.update', $jobHistory->id_jobhistory) }}" method="POST">
                     @csrf
                     @method('PUT')
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label for="company_name" class="block text-sm font-medium text-gray-700 mb-2">Nama Perusahaan</label>
-                            <input type="text" 
-                                   id="company_name" 
-                                   name="company_name" 
-                                   placeholder="e.g PT Budak Korporat"
-                                   value="{{ old('company_name', $jobHistory->company_name) }}"
-                                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('company_name') border-red-500 @enderror">
-                            @error('company_name')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            <label for="id_company" class="block text-gray-700 font-medium mb-2">Nama Perusahaan</label>
+                            <select name="id_company" id="id_company" class="select2 w-full" required>
+                                <option value="">Pilih atau ketik nama perusahaan...</option>
+                                @foreach($companies as $company)
+                                    <option value="{{ $company->id_company }}"
+                                        {{ old('id_company', $jobHistory->id_company) == $company->id_company ? 'selected' : '' }}>
+                                        {{ $company->company_name }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
-
                         <div>
-                            <label for="position" class="block text-sm font-medium text-gray-700 mb-2">Posisi</label>
-                            <input type="text" 
-                                   id="position" 
-                                   name="position" 
-                                   placeholder="e.g Fullstack Developer"
-                                   value="{{ old('position', $jobHistory->position) }}"
-                                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('position') border-red-500 @enderror">
-                            @error('position')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            <label for="position" class="block text-gray-700 font-medium mb-2">Posisi</label>
+                            <input type="text" name="position" id="position"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                required placeholder="e.g. Software Engineer"
+                                value="{{ old('position', $jobHistory->position) }}">
                         </div>
-
                         <div>
-                            <label for="salary" class="block text-sm font-medium text-gray-700 mb-2">Gaji</label>
-                            <input type="number" 
-                                   id="salary" 
-                                   name="salary" 
-                                   placeholder="e.g 100.000.000"
-                                   value="{{ old('salary', $jobHistory->salary) }}"
-                                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('salary') border-red-500 @enderror">
-                            @error('salary')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            <label for="salary" class="block text-gray-700 font-medium mb-2">Gaji</label>
+                            <input type="text" name="salary" id="salary"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                required placeholder="e.g. 5.000.000"
+                                value="{{ old('salary', number_format($jobHistory->salary, 0, ',', '.')) }}">
                         </div>
-
                         <div>
-                            <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Durasi</label>
-                            <input type="text" 
-                                   id="duration" 
-                                   name="duration" 
-                                   placeholder="e.g 10 Tahun"
-                                   value="{{ old('duration', $jobHistory->duration) }}"
-                                   class="w-full px-4 py-3 bg-gray-100 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('duration') border-red-500 @enderror">
-                            @error('duration')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                            @enderror
+                            <label for="duration" class="block text-gray-700 font-medium mb-2">Durasi</label>
+                            <input type="text" name="duration" id="duration"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                required placeholder="e.g. 2 tahun"
+                                value="{{ old('duration', $jobHistory->duration) }}">
                         </div>
                     </div>
-
-                    <div class="flex justify-end space-x-4 mt-8">
-                        <a href="{{ route('alumni.job-history.index') }}" class="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
-                            Batal
-                        </a>
-                        <button type="submit" class="px-6 py-2 bg-blue-900 text-white rounded-lg hover:bg-blue-800 transition-colors">
-                            Update
-                        </button>
+                    <div class="flex justify-end mt-8">
+                        <a href="{{ route('alumni.job-history.index') }}" class="mr-4 px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400">Batal</a>
+                        <button type="submit" class="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">Update</button>
                     </div>
                 </form>
             </div>
-        </main>
-    </div>
+        </div>
+    </main>
 </div>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function() {
+    $('#id_company').select2({
+        placeholder: 'Cari atau tambah perusahaan...',
+        allowClear: true
+    });
+});
+
+// Format gaji ribuan
+document.addEventListener('DOMContentLoaded', function () {
+    const salaryInput = document.getElementById('salary');
+    salaryInput.addEventListener('input', function (e) {
+        let value = this.value.replace(/\D/g, '');
+        if (value) {
+            this.value = parseInt(value, 10).toLocaleString('id-ID');
+        } else {
+            this.value = '';
+        }
+    });
+
+    // Saat submit, hilangkan format ribuan agar value yang dikirim hanya angka
+    salaryInput.form.addEventListener('submit', function () {
+        salaryInput.value = salaryInput.value.replace(/\D/g, '');
+    });
+});
+
+// Toggle sidebar visibility
+document.getElementById('toggle-sidebar').addEventListener('click', function () {
+    document.getElementById('sidebar').classList.toggle('hidden');
+});
+
+document.getElementById('close-sidebar').addEventListener('click', function () {
+    document.getElementById('sidebar').classList.add('hidden');
+});
+
+// Toggle profile dropdown
+document.getElementById('profile-toggle').addEventListener('click', function () {
+    document.getElementById('profile-dropdown').classList.toggle('hidden');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function (event) {
+    const dropdown = document.getElementById('profile-dropdown');
+    const toggle = document.getElementById('profile-toggle');
+    if (!dropdown.contains(event.target) && !toggle.contains(event.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+// Logout functionality
+document.getElementById('logout-btn').addEventListener('click', function (event) {
+    event.preventDefault();
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ route("logout") }}';
+
+    const csrfTokenInput = document.createElement('input');
+    csrfTokenInput.type = 'hidden';
+    csrfTokenInput.name = '_token';
+    csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    form.appendChild(csrfTokenInput);
+    document.body.appendChild(form);
+    form.submit();
+});
+</script>
 @endsection
