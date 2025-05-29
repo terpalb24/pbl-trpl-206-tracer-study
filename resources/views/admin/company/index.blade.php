@@ -29,7 +29,7 @@
                 <button id="toggle-sidebar" class="mr-4 lg:hidden">
                     <i class="fas fa-bars text-xl text-black-800"></i>
                 </button>
-                <h1 class="text-2xl font-bold text-blue-800">Perusahaan</h1>
+                <h1 class="text-2xl font-bold text-blue-800">Pengguna Alumni </h1>
             </div>
 
             <!-- Profile Dropdown -->
@@ -78,9 +78,9 @@
         <!-- Data Table Section -->
         <div class="p-6">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-semibold text-gray-700">Daftar Perusahaan</h2>
+                <h2 class="text-xl font-semibold text-gray-700">Daftar Pengguna Alumni</h2>
                 <a href="{{ route('admin.company.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
-                    + Tambah Perusahaan
+                    + Tambah Pengguna Alumni
                 </a>
             </div>
 

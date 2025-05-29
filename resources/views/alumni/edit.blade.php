@@ -173,7 +173,7 @@
                 <!-- IPK -->
                 <div>
                     <label for="ipk" class="block font-semibold mb-1">IPK</label>
-                    <input type="text" name="ipk" value="{{ old('ipk', $alumni->ipk) }}" placeholder="e.g. 4.00"
+                    <input type="text" name="ipk" value="{{ old('ipk', $alumni->ipk) }}" placeholder="e.g. 4.00" disabled class="w-full bg-gray-100 border px-3 py-2 rounded
                         class="w-full border px-3 py-2 rounded @error('ipk') border-red-500 @enderror">
                     @error('ipk')
                         <p class="text-red-500 text-xs">{{ $message }}</p>
@@ -185,8 +185,12 @@
                    <label for="status" class="block font-semibold mb-1">Status Pekerjaan</label>
             <select name="status" id="status"
                      class="w-full border px-3 py-2 rounded @error('status') border-red-500 @enderror">
-                   <option value="worked" {{ old('status', $alumni->status) == 'worked' ? 'selected' : '' }}>Worked</option>
-                   <option value="not worked" {{ old('status', $alumni->status) == 'not worked' ? 'selected' : '' }}>Not Worked</option>
+                  <option value="">-- Pilih Status --</option>
+        <option value="Bekerja" {{ old('status') == 'Bekerja' ? 'selected' : '' }}>Bekerja</option>
+        <option value="Tidak Bekerja" {{ old('status') == 'Tidak Bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
+        <option value="Melanjutkan Studi" {{ old('status') == 'Melanjutkan Studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
+        <option value="Berwiraswasta" {{ old('status') == 'Berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
+        <option value="Sedang Mencari Kerja"{{ old('status')=='Sedang Mencari Kerja'?'selected':'' }}>Sedang Mencari Kerja</option>
              </select>
     @error('status')
         <p class="text-red-500 text-xs">{{ $message }}</p>

@@ -61,7 +61,7 @@ public function alumniIndex(Request $request)
     $alumni = $query->orderBy('name')->paginate(10)->withQueryString();
 
     // Data untuk filter
-    $prodi = \App\Models\Tb_study_program::all();
+    $prodi = Tb_study_program::all();
     $tahunLulus = Tb_alumni::select('graduation_year')->distinct()->orderBy('graduation_year', 'desc')->pluck('graduation_year');
 
     return view('admin.alumni.index', compact('alumni', 'prodi', 'tahunLulus'));
@@ -456,7 +456,7 @@ public function companyDestroy($id_user)
         }
 
         DB::commit();
-        return redirect()->back()->with('success', 'Data perusahaan dan akun user berhasil diimport!');
+        return redirect()->back()->with('success', 'Data perusahaan berhasil diimport!');
     } catch (\Exception $e) {
         DB::rollback();
         return redirect()->back()->with('error', 'Import gagal: ' . $e->getMessage());
