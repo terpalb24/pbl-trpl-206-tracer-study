@@ -180,3 +180,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::get('/admin/questionnaire/provinces', [QuestionnaireController::class, 'getProvinces'])->name('admin.questionnaire.provinces');
     Route::get('/admin/questionnaire/cities/{provinceId}', [QuestionnaireController::class, 'getCities'])->name('admin.questionnaire.cities');
 });
+Route::get('/logout', function () {
+    Auth::logout();
+    return redirect('/');
+})->name('logout');
