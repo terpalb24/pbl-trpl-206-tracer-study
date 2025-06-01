@@ -35,4 +35,5 @@ class Tb_User  extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasOne(Tb_Company::class, 'id_user', 'id_user');
     }
+    
 }

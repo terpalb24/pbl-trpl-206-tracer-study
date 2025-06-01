@@ -35,4 +35,22 @@
 
     @stack('scripts') <!-- Placeholder script tambahan dari child view -->
 </body>
+<script>
+    document.getElementById('logout-btn')?.addEventListener('click', function (event) {
+        event.preventDefault();
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("logout") }}';
+
+        const csrf = document.createElement('input');
+        csrf.type = 'hidden';
+        csrf.name = '_token';
+        csrf.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        form.appendChild(csrf);
+        document.body.appendChild(form);
+        form.submit();
+    });
+</script>
+
 </html>
