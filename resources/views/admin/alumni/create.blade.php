@@ -8,46 +8,15 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <x-layout-admin>
-    <x-slot name="sidebar">
-        <div class="flex flex-col p-4">
-            @include('admin.sidebar')
-        </div>
+      <x-slot name="sidebar">
+        <x-admin.sidebar />
     </x-slot>
 
     <x-slot name="header">
-        <!-- Header -->
-        <div class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <button id="toggle-sidebar" class="mr-4 lg:hidden">
-                    <i class="fas fa-bars text-xl text-black-800"></i>
-                </button>
-                <h1 class="text-2xl font-bold text-blue-800">Tambah Data Alumni</h1>
-            </div>
-
-            <!-- Profile Dropdown -->
-            <div class="relative">
-                <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
-                    <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
-                    <div class="text-left">
-                        <p class="font-semibold leading-none">Administrator</p>
-                        <p class="text-sm text-gray-300 leading-none mt-1">Admin</p>
-                    </div>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
-
-                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                        <i class="fas fa-key mr-2"></i>Ganti Password
-                    </a>
-                    <a href="#" id="logout-btn"data-logout-url="{{ route('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
-                </div>
-            </div>
-        </div>
+         <x-admin.header>Alumni</x-admin.header>
+        <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
+           
 
     <form action="{{ route('admin.alumni.store') }}" method="POST" class="bg-white rounded-xl shadow-md p-6 md:p-10 m-6">
         @csrf
