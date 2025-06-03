@@ -17,19 +17,19 @@ class AlumniSeeder extends Seeder
     {
         
             Tb_Alumni::create([
-                'nim' => '4342401044',
+                'nim' => '4342401058',
                 'id_user' => 1,
-                'name' => 'bima',
-                'nik' => '4342401044',
-                'gender'=>'male',
-                'date_of_birth' => '2005-09-02',
-                'phone_number'=>'082173634512',
-                'email'=>'sheila@gmail.com',
+                'name' => 'dinny',
+                'nik' => '4342401058',
+                'gender'=>'female',
+                'date_of_birth' => '2005-06-02',
+                'phone_number'=>'082376741905',
+                'email'=>'dinnymardin22@gmail.com',
                 'status'=>'worked',
                 'graduation_year'=>'2028',
                 'ipk'=>'4.00',
                 'batch'=>'24',
-                'address'=>'legenda',
+                'address'=>'batu aji',
                 'id_study'=>'1',
             ]);
     

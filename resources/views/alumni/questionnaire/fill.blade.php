@@ -3,48 +3,14 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-       {{-- Sidebar Komponen --}}
+    {{-- Sidebar Komponen --}}
     <x-alumni.sidebar class="lg:block hidden" />
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
         <!-- Header -->
-        <div class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <button id="toggle-sidebar" class="mr-4 text-gray-600 lg:hidden">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-                <div>
-                    <h1 class="text-2xl font-bold text-blue-800">Kuesioner Alumni</h1>
-                    <p class="text-sm text-gray-600">Periode: {{ \Carbon\Carbon::parse($periode->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($periode->end_date)->format('d M Y') }}</p>
-                </div>
-            </div>
-
-            <!-- Profile Dropdown -->
-            <div class="relative">
-                <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
-                    <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
-                    <div class="text-left">
-                        <p class="font-semibold leading-none">{{ auth()->user()->alumni->name ?? auth()->user()->name }}</p>
-                        <p class="text-sm text-gray-300 leading-none mt-1">Alumni</p>
-                    </div>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </div>
-
-                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                        <i class="fas fa-key mr-2"></i>Ganti Password
-                    </a>
-                    <div class="border-t border-gray-100"></div>
-                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-red-100 text-red-600">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
-                </div>
-            </div>
-        </div>
-
+    <x-alumni.header title="Kuesioner" />
+           
         <!-- Content Section -->
         <div class="p-6">
             @if(session('success'))
@@ -1715,98 +1681,122 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ TAMBAHKAN FUNCTION ALERT VALIDASI
     function showValidationAlert(errors) {
-        // Remove existing alert if any
+        // Remove existing alert
         const existingAlert = document.getElementById('validation-alert');
         if (existingAlert) {
             existingAlert.remove();
         }
-        
+
         const alertHtml = `
-            <div id="validation-alert" class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-lg z-50 max-w-md">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-triangle text-red-500 mr-3 mt-1"></i>
-                    <div class="flex-1">
-                        <h4 class="font-bold mb-2">Pertanyaan Belum Dijawab</h4>
-                        <p class="text-sm mb-2">Silakan jawab pertanyaan berikut sebelum melanjutkan:</p>
-                        <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
-                            ${errors.map(error => `<li class="flex items-start"><i class="fas fa-circle text-xs mr-2 mt-1.5"></i><span>${error}</span></li>`).join('')}
-                        </ul>
+            <div id="validation-alert" 
+                 role="alert"
+                 aria-live="polite"
+                 class="fixed top-6 right-6 w-96 bg-white border-l-4 border-red-500 rounded-lg shadow-xl transform transition-all duration-300 ease-out translate-x-full">
+                <div class="p-5">
+                    <div class="flex items-start space-x-4">
+                        <!-- Icon -->
+                        <div class="flex-shrink-0">
+                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            </div>
+                        </div>
+
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <div class="mb-3">
+                                <h4 class="text-lg font-semibold text-gray-900 leading-tight">
+                                    Pertanyaan Belum Dijawab
+                                </h4>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    Silakan jawab pertanyaan berikut:
+                                </p>
+                            </div>
+
+                            <!-- Scrollable Error List -->
+                            <div class="max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                                <ul class="space-y-2">
+                                    ${errors.map(error => `
+                                        <li class="flex items-start text-sm text-gray-700">
+                                            <i class="fas fa-circle text-[0.35rem] text-red-400 mt-1.5 mr-2"></i>
+                                            <span class="flex-1">${error}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Close Button -->
+                        <button onclick="dismissValidationAlert(this)" 
+                                class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+                                aria-label="Tutup pesan">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2">
-                        <i class="fas fa-times"></i>
-                    </button>
                 </div>
             </div>
         `;
-        
+
+        // Insert alert
         document.body.insertAdjacentHTML('beforeend', alertHtml);
-        
-        // Auto remove after 10 seconds
-        setTimeout(() => {
+
+        // Trigger animation
+        requestAnimationFrame(() => {
             const alert = document.getElementById('validation-alert');
-            if (alert) {
-                alert.remove();
-            }
-        }, 10000);
+            alert.classList.remove('translate-x-full');
+            alert.classList.add('translate-x-0');
+        });
+
+        // Auto dismiss
+        setTimeout(() => {
+            dismissValidationAlert(document.querySelector('#validation-alert button'));
+        }, 8000);
     }
 
-    // ✅ TAMBAHKAN MODAL HANDLERS
-    document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        document.getElementById('confirmation-modal').classList.add('hidden');
-    });
-
-    document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'submit_final';
-        }
-        form.submit();
-    });
-
-    // ✅ TAMBAHKAN PROFILE DROPDOWN FUNCTIONALITY
-    document.getElementById('profile-toggle')?.addEventListener('click', function() {
-        document.getElementById('profile-dropdown').classList.toggle('hidden');
-    });
-
-    // ✅ TAMBAHKAN LOGOUT FUNCTIONALITY
-    document.getElementById('logout-btn')?.addEventListener('click', function(e) {
-        e.preventDefault();
+    function dismissValidationAlert(button) {
+        const alert = button.closest('#validation-alert');
         
-        if (confirm('Apakah Anda yakin ingin logout?')) {
-            // Create logout form
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("logout") }}';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            
-            form.appendChild(csrfToken);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    });
-
-    // ✅ TAMBAHKAN SIDEBAR FUNCTIONALITY
-    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('hidden');
-    });
-
-    document.getElementById('close-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.add('hidden');
-    });
-
-    // ✅ CLOSE DROPDOWN WHEN CLICKING OUTSIDE
-    document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('profile-dropdown');
-        const toggle = document.getElementById('profile-toggle');
+        // Animate out
+        alert.classList.add('translate-x-full', 'opacity-0');
         
-        if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
-            dropdown.classList.add('hidden');
+        // Remove after animation
+        setTimeout(() => alert.remove(), 300);
+    }
+
+    // Add required styles
+    const styleSheet = document.createElement('style');
+    styleSheet.textContent = `
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
         }
-    });
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 2px;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    `;
+    document.head.appendChild(styleSheet);
 });
 </script>
+<!-- script JS  -->
+<script src="{{ asset('./js/alumni.js') }}"></script>
 @endsection

@@ -15,11 +15,7 @@
         <!-- Header dengan judul -->
         <x-alumni.header title="Riwayat Kerja" />
 
-        <!-- Tambahkan profile dropdown di kanan atas -->
-        <div class="absolute top-4 right-4 z-50">
    
-
-        </div>
 
         <!-- Content -->
         <div class="p-6 mt-12">
@@ -38,22 +34,6 @@
     </main>
 </div>
 
-<script>
-    // Toggle sidebar visibility
-    document.getElementById('toggle-sidebar').addEventListener('click', function () {
-        document.getElementById('sidebar').classList.toggle('hidden');
-    });
-
-    document.getElementById('close-sidebar').addEventListener('click', function () {
-        document.getElementById('sidebar').classList.add('hidden');
-    });
-
-    // Fungsi modal detail
-    function showDetail(id) {
-        document.getElementById('modal-detail-' + id).classList.remove('hidden');
-    }
-    function closeDetail(id) {
-        document.getElementById('modal-detail-' + id).classList.add('hidden');
-    }
-</script>
+   <!-- script JS  -->
+           <script src="{{ asset('js/alumni.js') }}"></script>
 @endsection
