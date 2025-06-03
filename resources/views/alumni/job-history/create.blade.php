@@ -5,9 +5,8 @@
 
 @section('content')
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-     {{-- Sidebar Komponen --}}
+    {{-- Sidebar Komponen --}}
     <x-alumni.sidebar class="lg:block hidden" />
-
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
@@ -51,11 +50,18 @@
                                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
                                 required placeholder="e.g. 5.000.000">
                         </div>
+                       
                         <div>
-                            <label for="duration" class="block text-gray-700 font-medium mb-2">Durasi</label>
-                            <input type="text" name="duration" id="duration"
+                            <label for="start_date" class="block text-gray-700 font-medium mb-2">Tanggal Mulai</label>
+                            <input type="date" name="start_date" id="start_date"
                                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
-                                required placeholder="e.g. 2 tahun">
+                                required>
+                        </div>
+                        <div>
+                            <label for="end_date" class="block text-gray-700 font-medium mb-2">Tanggal Selesai</label>
+                            <input type="date" name="end_date" id="end_date"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                required>
                         </div>
                     </div>
                     <div class="flex justify-end mt-8">
@@ -71,6 +77,7 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
- <!-- script JS  -->
-           <script src="{{ asset('js/alumni.js') }}"></script>
+
+<!-- script JS  -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection
