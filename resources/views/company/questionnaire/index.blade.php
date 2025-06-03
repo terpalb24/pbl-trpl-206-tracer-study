@@ -8,8 +8,8 @@
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-            {{-- Header --}}
-        @include('components.company.header', ['title' => 'Kuesioner employee'])
+    {{-- Header --}}
+    @include('components.company.header', ['title' => 'Kuesioner employee'])
 
 
         <!-- Content Section -->
