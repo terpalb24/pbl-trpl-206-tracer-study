@@ -18,8 +18,12 @@ class Tb_jobhistory extends Model
     ];
 
     protected $casts = [
-        'salary' => 'decimal:2',
-    ];
+    'salary' => 'decimal:2',
+    'start_date' => 'date',
+    'end_date' => 'date',
+];
+
+ 
 
     public function alumni()
     {

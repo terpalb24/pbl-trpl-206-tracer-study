@@ -6,15 +6,15 @@
     $alumni = auth()->user()->alumni ?? auth()->user(); // fallback jika tidak ada relasi alumni
 @endphp
 <meta name="csrf-token" content="{{ csrf_token() }}">
+
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-     {{-- Sidebar Komponen --}}
+    {{-- Sidebar Komponen --}}
     <x-alumni.sidebar class="lg:block hidden" />
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-           <!-- Header dengan judul -->
+        <!-- Header dengan judul -->
         <x-alumni.header title="Riwayat Kerja" />
-        </div>
 
         <!-- Content -->
         <div class="p-6">
@@ -50,12 +50,18 @@
                                 required placeholder="e.g. 5.000.000"
                                 value="{{ old('salary', number_format($jobHistory->salary, 0, ',', '.')) }}">
                         </div>
+                    
                         <div>
-                            <label for="duration" class="block text-gray-700 font-medium mb-2">Durasi</label>
-                            <input type="text" name="duration" id="duration"
+                            <label for="start_date" class="block text-gray-700 font-medium mb-2">Tanggal Mulai</label>
+                            <input type="date" name="start_date" id="start_date"
                                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
-                                required placeholder="e.g. 2 tahun"
-                                value="{{ old('duration', $jobHistory->duration) }}">
+                                required value="{{ old('start_date', $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->format('Y-m-d') : '') }}">
+                        </div>
+                        <div>
+                            <label for="end_date" class="block text-gray-700 font-medium mb-2">Tanggal Selesai</label>
+                            <input type="date" name="end_date" id="end_date"
+                                class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+                                required value="{{ old('end_date', $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('Y-m-d') : '') }}">
                         </div>
                     </div>
                     <div class="flex justify-end mt-8">
@@ -68,6 +74,6 @@
     </main>
 </div>
 
- <!-- script JS  -->
-           <script src="{{ asset('js/alumni.js') }}"></script>
+<!-- script JS -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection
