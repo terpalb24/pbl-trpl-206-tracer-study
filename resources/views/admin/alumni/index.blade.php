@@ -10,17 +10,18 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <x-layout-admin>
-     <x-slot name="sidebar">
+    <!-- Sidebar -->
+    <x-slot name="sidebar">
         <x-admin.sidebar />
     </x-slot>
 
-      {{-- Header --}}
+    <!-- Header -->
     <x-slot name="header">
         <x-admin.header>Alumni</x-admin.header>
-        <x-admin.profile-dropdown></x-admin.profile-dropdown>        
+        <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
 
-    <!-- Slot Utama -->
+    <!-- Import & Export Excel Section -->
     <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6 mt-4 mx-6">
         <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row md:items-center gap-4">
             @csrf
@@ -44,6 +45,7 @@
     </div>
 
     <div class="p-6">
+        <!-- Judul & Tombol Tambah Alumni -->
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-xl font-semibold text-gray-700">Daftar Alumni</h2>
             <a href="{{ route('admin.alumni.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
@@ -51,6 +53,7 @@
             </a>
         </div>
 
+        <!-- Notifikasi Sukses -->
         @if(session('success'))
             <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
                 {{ session('success') }}
@@ -58,8 +61,10 @@
         @endif
 
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Filter & Search Section -->
             <div class="p-4 flex flex-col md:flex-row md:items-center gap-4 border-b">
                 <form method="GET" action="{{ route('admin.alumni.index') }}" class="flex flex-col md:flex-row md:items-center gap-4 w-full">
+                    <!-- Filter Tahun Lulus -->
                     <select name="graduation_year" class="border border-gray-300 rounded px-3 py-2 w-full md:w-44">
                         <option value="">-- Semua Tahun Lulus --</option>
                         @foreach($tahunLulus as $tahun)
@@ -68,6 +73,7 @@
                             </option>
                         @endforeach
                     </select>
+                    <!-- Filter Program Studi -->
                     <select name="id_study" class="border border-gray-300 rounded px-3 py-2 w-full md:w-56">
                         <option value="">-- Semua Program Studi --</option>
                         @foreach($prodi as $p)
@@ -76,19 +82,22 @@
                             </option>
                         @endforeach
                     </select>
+                    <!-- Search Nama/NIM/Prodi -->
                     <div class="relative w-full">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama Alumni"
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama, NIM, atau Prodi"
                             class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                             <i class="bi bi-search"></i>
                         </div>
                     </div>
+                    <!-- Tombol Cari -->
                     <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold">
                         Cari
                     </button>
                 </form>
             </div>
 
+            <!-- Tabel Alumni -->
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-center">
                     <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -108,11 +117,13 @@
                                 <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
                                 <td class="px-4 py-3">{{ $item->name }}</td>
                                 <td class="px-4 py-3 flex justify-center space-x-2">
+                                    <!-- Tombol Edit -->
                                     <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
                                         class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm flex items-center justify-center"
                                         title="Edit">
                                         <i class="bi bi-pencil-square mr-1"></i>Edit
                                     </a>
+                                    <!-- Tombol Hapus -->
                                     <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alumni ini?')">
                                         @csrf
                                         @method('DELETE')
@@ -133,6 +144,7 @@
                 </table>
             </div>
 
+            <!-- Pagination -->
             <div class="p-4 border-t text-sm text-gray-500">
                 {{ $alumni->withQueryString()->links() }}
             </div>
@@ -140,6 +152,6 @@
     </div>
 
     <!-- script JS  -->
-           <script src="{{ asset('js/script.js') }}"></script>
+    <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>
 @endsection

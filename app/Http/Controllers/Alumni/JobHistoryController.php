@@ -31,7 +31,7 @@ public function store(Request $request)
     $request->validate([
         'id_company' => 'required|exists:tb_company,id_company',
         'position' => 'required|string|max:255',
-        'salary' => 'required|numeric',
+        'salary' => 'required|string',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
     ]);
@@ -83,7 +83,7 @@ public function update(Request $request, JobHistory $jobHistory)
     $request->validate([
         'id_company' => 'required|exists:tb_company,id_company',
         'position' => 'required|string|max:255',
-        'salary' => 'required|numeric',
+        'salary' => 'required|string',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
     ]);

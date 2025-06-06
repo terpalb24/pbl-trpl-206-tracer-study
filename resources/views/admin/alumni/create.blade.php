@@ -103,8 +103,8 @@
                 <label for="status" class="block font-semibold mb-1">Status</label>
                 <select name="status" id="status" class="w-full border rounded px-3 py-2">
                     <option value="">-- Pilih Status --</option>
-                    <option value="Bekerja" {{ old('status') == 'Bekerja' ? 'selected' : '' }}>bekerja</option>
-                    <option value="Tidak Bekerja" {{ old('status') == 'Tidak Bekerja' ? 'selected' : '' }}>tidak bekerja</option>
+                    <option value="Bekerja" {{ old('status') == 'Bekerja' ? 'selected' : '' }}>Bekerja</option>
+                    <option value="Tidak Bekerja" {{ old('status') == 'Tidak Bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
                     <option value="Melanjutkan Studi" {{ old('status') == 'Melanjutkan Studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
                     <option value="Berwiraswasta" {{ old('status') == 'Berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
                     <option value="Sedang Mencari Kerja" {{ old('status') == 'Sedang Mencari Kerja' ? 'selected' : '' }}>Sedang Mencari Kerja</option>

@@ -18,7 +18,7 @@ class Tb_jobhistory extends Model
     ];
 
     protected $casts = [
-    'salary' => 'decimal:2',
+    'salary' => 'string',
     'start_date' => 'date',
     'end_date' => 'date',
 ];

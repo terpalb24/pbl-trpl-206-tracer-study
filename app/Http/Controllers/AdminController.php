@@ -49,12 +49,15 @@ public function alumniIndex(Request $request)
         $query->where('id_study', $request->id_study);
     }
 
-    // Search nama/nim
+    // Search nama/nim/prodi
     if ($request->filled('search')) {
         $search = $request->input('search');
         $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")
-              ->orWhere('nim', 'LIKE', "%{$search}%");
+              ->orWhere('nim', 'LIKE', "%{$search}%")
+              ->orWhereHas('studyProgram', function ($q2) use ($search) {
+                  $q2->where('study_program', 'LIKE', "%{$search}%");
+              });
         });
     }
 
