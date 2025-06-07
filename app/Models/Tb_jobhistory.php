@@ -14,7 +14,7 @@ class Tb_jobhistory extends Model
     protected $primaryKey = 'id_jobhistory';
 
     protected $fillable = [
-        'nim', 'id_company', 'position', 'salary', 'duration'
+        'nim', 'id_company', 'position', 'salary', 'duration', 'start_date', 'end_date', 'user_id'
     ];
 
     protected $casts = [

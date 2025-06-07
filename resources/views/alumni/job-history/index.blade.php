@@ -27,8 +27,11 @@
                         {{ session('success') }}
                     </div>
                 @endif
+        
+       
 
                 <x-alumni.job-history-table :jobHistories="$jobHistories" />
+                
             </div>
         </div>
     </main>

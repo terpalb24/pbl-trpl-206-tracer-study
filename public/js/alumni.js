@@ -96,3 +96,13 @@ $(document).ready(function() {
             salaryInput.value = salaryInput.value.replace(/\D/g, '');
         });
     });
+    // Show and hide detail modal
+    function showDetail(id) {
+        document.getElementById('modal-detail-' + id).classList.remove('hidden');
+    }
+
+    function closeDetail(id) {
+        document.getElementById('modal-detail-' + id).classList.add('hidden');
+    }
+
+    

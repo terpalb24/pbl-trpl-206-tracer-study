@@ -74,6 +74,21 @@
 </div>
 </div>
 
-   <!-- script JS  -->
-           <script src="{{ asset('js/alumni.js') }}"></script>
+ <script>
+    function togglePassword(fieldId) {
+        const input = document.getElementById(fieldId);
+        const icon = document.getElementById(`toggleIcon-${fieldId}`);
+
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+</script>
+
 @endsection

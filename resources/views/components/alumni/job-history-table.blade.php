@@ -53,7 +53,7 @@
                                 <h2 class="text-2xl font-semibold mb-4 text-blue-800">Detail Riwayat Kerja</h2>
                                 <div class="mb-4"><strong>Nama Perusahaan:</strong> {{ $jobHistory->company->company_name ?? '-' }}</div>
                                 <div class="mb-4"><strong>Posisi:</strong> {{ $jobHistory->position }}</div>
-                                <div class="mb-4"><strong>Gaji:</strong> Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
+                                <div class="mb-4"><strong>Gaji:</strong> Rp {{ $jobHistory->salary }}</div>
                                 <div class="mb-4"><strong>Durasi:</strong> {{ $jobHistory->duration }}</div>
                             </div>
                         </div>
@@ -63,6 +63,12 @@
             </tbody>
         </table>
     </div>
+     <div class="flex justify-end mb-4 mt-4 ">
+        <a href="{{ route('alumni.job-history.create') }}"
+           class="bg-blue-900 hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded transition duration-300">
+        + Tambah Riwayat Kerja
+        </a>
+        </div>
 @else
     <x-alumni.job-history-empty />
 @endif

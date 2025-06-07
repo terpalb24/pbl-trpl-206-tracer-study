@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('nim');
             $table->integer('id_company');
             $table->string('position', 50);
-            $table->date('start_date')->nullable();
+            $table->date('start_date');
             $table->date('end_date')->nullable();
-            $table->float('salary');
+            $table->string('salary');
             $table->timestamps();
             $table->foreign('nim')->references('nim')->on('tb_alumni')->onDelete('cascade')->onUpdate('cascade');
             $table->foreign('id_company')->references('id_company')->on('tb_company')->onDelete('cascade')->onUpdate('cascade');
