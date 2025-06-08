@@ -160,6 +160,31 @@ $admin = auth()->user()->admin;
                                            class="text-green-600 hover:text-green-900 font-medium text-sm">
                                             <i class="fas fa-chart-bar mr-1"></i>Respons
                                         </a>
+                                        
+                                        @php
+                                            // Check if periode can be deleted (no responses and not active)
+                                            $hasResponses = \App\Models\Tb_User_Answers::where('id_periode', $periode->id_periode)->exists();
+                                            $canDelete = !$hasResponses && $periode->status !== 'active';
+                                        @endphp
+                                        
+                                        @if($canDelete)
+                                            <form action="{{ route('admin.questionnaire.destroy', $periode->id_periode) }}" 
+                                                  method="POST" 
+                                                  class="inline-block"
+                                                  onsubmit="return confirmDelete('{{ $periode->periode_name }}')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                        class="text-red-600 hover:text-red-900 font-medium text-sm">
+                                                    <i class="fas fa-trash mr-1"></i>Hapus
+                                                </button>
+                                            </form>
+                                        @else
+                                            <span class="text-gray-400 font-medium text-sm cursor-not-allowed" 
+                                                  title="{{ $hasResponses ? 'Periode ini sudah memiliki respons dan tidak dapat dihapus' : 'Periode aktif tidak dapat dihapus' }}">
+                                                <i class="fas fa-trash mr-1"></i>Hapus
+                                            </span>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>
@@ -224,5 +249,10 @@ document.getElementById('logout-btn').addEventListener('click', function (event)
     document.body.appendChild(form);
     form.submit();
 });
+
+// Function for delete confirmation
+function confirmDelete(periodeName) {
+    return confirm(`Apakah Anda yakin ingin menghapus periode "${periodeName}"?\n\nPeringatan: Semua data terkait (kategori, pertanyaan, dan opsi) akan dihapus secara permanen dan tidak dapat dipulihkan.`);
+}
 </script>
 @endsection

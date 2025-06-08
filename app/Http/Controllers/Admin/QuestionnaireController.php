@@ -256,14 +256,77 @@ class QuestionnaireController extends Controller
     public function destroy($id_periode)
     {
         try {
+            DB::beginTransaction();
+            
             $periode = Tb_Periode::findOrFail($id_periode);
+            
+            // Check if periode has any user responses
+            $hasResponses = Tb_User_Answers::where('id_periode', $id_periode)->exists();
+            
+            if ($hasResponses) {
+                return redirect()->route('admin.questionnaire.index')
+                    ->with('error', 'Tidak dapat menghapus periode yang sudah memiliki respons dari pengguna.');
+            }
+            
+            // Check if periode is currently active
+            if ($periode->status === 'active') {
+                return redirect()->route('admin.questionnaire.index')
+                    ->with('error', 'Tidak dapat menghapus periode yang sedang aktif.');
+            }
+            
+            // Delete all related data
+            // 1. Delete answer items first (if any exist)
+            $userAnswers = Tb_User_Answers::where('id_periode', $id_periode)->pluck('id_user_answer');
+            if ($userAnswers->isNotEmpty()) {
+                Tb_User_Answer_Item::whereIn('id_user_answer', $userAnswers)->delete();
+            }
+            
+            // 2. Delete user answers
+            Tb_User_Answers::where('id_periode', $id_periode)->delete();
+            
+            // 3. Delete question options
+            $questions = Tb_Questions::whereHas('category', function($query) use ($id_periode) {
+                $query->where('id_periode', $id_periode);
+            })->pluck('id_question');
+            
+            if ($questions->isNotEmpty()) {
+                Tb_Question_Options::whereIn('id_question', $questions)->delete();
+            }
+            
+            // 4. Delete questions
+            Tb_Questions::whereHas('category', function($query) use ($id_periode) {
+                $query->where('id_periode', $id_periode);
+            })->delete();
+            
+            // 5. Delete categories
+            Tb_Category::where('id_periode', $id_periode)->delete();
+            
+            // 6. Finally delete the periode
             $periode->delete();
+            
+            DB::commit();
+            
+            Log::info('Periode questionnaire deleted successfully', [
+                'periode_id' => $id_periode,
+                'periode_name' => $periode->periode_name,
+                'deleted_by' => Auth::id()
+            ]);
             
             return redirect()->route('admin.questionnaire.index')
                 ->with('success', 'Periode kuesioner berhasil dihapus.');
+                
         } catch (\Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Error deleting periode questionnaire', [
+                'periode_id' => $id_periode,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            
             return redirect()->route('admin.questionnaire.index')
-                ->with('error', 'Terjadi kesalahan saat menghapus periode kuesioner.');
+                ->with('error', 'Terjadi kesalahan saat menghapus periode kuesioner: ' . $e->getMessage());
         }
     }
 
@@ -412,7 +475,7 @@ class QuestionnaireController extends Controller
                 $rules['rating_options.*'] = 'required|string|max:255';
             } elseif ($questionType === 'scale') {
                 $rules['scale_options'] = 'required|array|min:1';
-                $rules['scale_options.*'] = 'required|string|max:255';
+                $rules['scale_options.*' ] = 'required|string|max:255';
             }
 
             $messages = [
@@ -630,10 +693,10 @@ class QuestionnaireController extends Controller
                 $rules['options.*'] = 'required|string|max:255';
             } elseif ($questionType === 'rating') {
                 $rules['rating_options'] = 'required|array|min:1';
-                $rules['rating_options.*'] = 'required|string|max:255';
+                $rules['rating_options.*' ] = 'required|string|max:255';
             } elseif ($questionType === 'scale') {
                 $rules['scale_options'] = 'required|array|min:1';
-                $rules['scale_options.*'] = 'required|string|max:255';
+                $rules['scale_options.*' ] = 'required|string|max:255';
             }
 
             $messages = [
