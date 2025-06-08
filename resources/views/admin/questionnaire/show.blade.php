@@ -205,7 +205,7 @@
                                                                 </div>
                                                                 <div class="flex items-center space-x-4 text-sm text-gray-600">
                                                                     <span class="inline-flex items-center">
-                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : ($question->type == 'rating' ? 'fa-star' : ($question->type == 'scale' ? 'fa-chart-line' : 'fa-map-marker-alt'))))) }} mr-1"></i>
+                                                                        <i class="fas {{ $question->type == 'text' ? 'fa-keyboard' : ($question->type == 'numeric' ? 'fa-calculator' : ($question->type == 'option' ? 'fa-dot-circle' : ($question->type == 'multiple' ? 'fa-check-square' : ($question->type == 'date' ? 'fa-calendar' : ($question->type == 'rating' ? 'fa-star' : ($question->type == 'scale' ? 'fa-chart-line' : 'fa-map-marker-alt')))))) }} mr-1"></i>
                                                                         {{ ucfirst($question->type) }}
                                                                     </span>
                                                                     @if($question->options->count() > 0)

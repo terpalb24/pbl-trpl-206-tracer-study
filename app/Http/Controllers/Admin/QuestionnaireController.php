@@ -377,7 +377,7 @@ class QuestionnaireController extends Controller
             // Define validation rules
             $rules = [
                 'question' => 'required|string|max:1000',
-                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location',
+                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric',
                 'order' => 'required|integer|min:1',
                 // ✅ PERBAIKAN: Tambahkan validation untuk before/after text question
                 'before_text' => 'nullable|string|max:255',
@@ -599,7 +599,7 @@ class QuestionnaireController extends Controller
             // Define validation rules
             $rules = [
                 'question' => 'required|string|max:1000',
-                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location',
+                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric',
                 'order' => 'required|integer|min:1',
                 'before_text' => 'nullable|string|max:255',
                 'after_text' => 'nullable|string|max:255',
@@ -1128,6 +1128,13 @@ class QuestionnaireController extends Controller
                         }
                         $hasAnswer = $hasValidAnswers;
                         
+                    } elseif ($question->type == 'numeric') {
+                        // ✅ PERBAIKAN: For numeric questions - handle like text but with numeric validation
+                        $answer = $answerItems->first()->answer;
+                        if (empty(trim($answer))) {
+                            $hasAnswer = false;
+                        }
+
                     } elseif ($question->type == 'rating' || $question->type == 'scale') {
                         // ✅ PERBAIKAN: For rating and scale questions - SAMA UNTUK ALUMNI DAN COMPANY
                         $firstItem = $answerItems->first();
@@ -1220,6 +1227,8 @@ class QuestionnaireController extends Controller
         
         if ($question->type === 'text') {
             return response()->json(['type' => 'text']);
+        } else if ($question->type === 'numeric') {
+            return response()->json(['type' => 'numeric']);
         } else if ($question->type === 'option') {
             $options = $question->options->pluck('option', 'id_questions_options');
             return response()->json(['type' => 'option', 'options' => $options]);

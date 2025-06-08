@@ -69,11 +69,13 @@
                             <option value="">-- Pilih Tipe --</option>
                             <option value="text" {{ old('question_type') == 'text' ? 'selected' : '' }}>Teks</option>
                             <option value="option" {{ old('question_type') == 'option' ? 'selected' : '' }}>Pilihan Ganda</option>
+                            <option value="numeric" {{ old('question_type') == 'numeric' ? 'selected' : '' }}>Numerik (Hanya Angka)</option>
                             <option value="multiple" {{ old('question_type') == 'multiple' ? 'selected' : '' }}>Multiple Choice</option>
                             <option value="rating" {{ old('question_type') == 'rating' ? 'selected' : '' }}>Rating (Kurang, Cukup, Baik, Baik Sekali)</option>
                             <option value="scale" {{ old('question_type') == 'scale' ? 'selected' : '' }}>Skala Numerik (1, 2, 3, 4, 5)</option>
                             <option value="date" {{ old('question_type') == 'date' ? 'selected' : '' }}>Tanggal</option>
                             <option value="location" {{ old('question_type') == 'location' ? 'selected' : '' }}>Lokasi (Provinsi & Kota)</option>
+
                         </select>
                         @error('question_type')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
@@ -120,7 +122,46 @@
                             <strong>Contoh penggunaan:</strong> "Saya bekerja di [input field] sebagai posisi [input field]"
                         </div>
                     </div>
-
+                    <!-- Numeric input configuration section -->
+                    <div id="numeric-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'numeric' ? '' : 'hidden' }}">
+                        <h4 class="text-lg font-medium mb-3">Konfigurasi Input Numerik</h4>
+                        
+                        <div class="bg-blue-50 p-3 rounded-md mb-4">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pertanyaan numerik hanya menerima input berupa angka (0-9) dan tidak dapat mengetik huruf
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="numeric_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
+                                <input type="text" id="numeric_before" name="before_text" value="{{ old('before_text') }}" 
+                                       placeholder="Contoh: Gaji saya sebesar Rp" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="numeric_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
+                                <input type="text" id="numeric_after" name="after_text" value="{{ old('after_text') }}" 
+                                       placeholder="Contoh: per bulan" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Preview Input:</label>
+                            <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                                <div class="flex items-center flex-wrap">
+                                    <span id="numeric-before-preview" class="mr-2 text-gray-700 font-medium"></span>
+                                    <input type="text" class="flex-grow px-3 py-2 border border-gray-300 rounded-md min-w-48 numeric-only" 
+                                           placeholder="Masukkan angka..." pattern="[0-9]*" inputmode="numeric" disabled>
+                                    <span id="numeric-after-preview" class="ml-2 text-gray-700 font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-2 rounded text-sm text-green-700">
+                            <strong>Contoh penggunaan:</strong> "Gaji saya sebesar Rp [input numerik] per bulan"
+                        </div>
+                    </div>
                     <!-- Rating options section -->
                     <div id="rating-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'rating' ? '' : 'hidden' }}">
                         <h4 class="text-lg font-medium mb-3">Konfigurasi Rating</h4>
@@ -529,7 +570,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const sections = {
                 options: document.getElementById('options-section'),
                 rating: document.getElementById('rating-options-section'),
-                scale: document.getElementById('scale-options-section')
+                scale: document.getElementById('scale-options-section'),
+                text: document.getElementById('text-options-section'),
+                numeric: document.getElementById('numeric-options-section')
             };
             
             // Hide all sections first
@@ -556,8 +599,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('Scale section shown');
                 }
             } else if (this.value === 'text') {
-                if (document.getElementById('text-options-section')) {
-                    document.getElementById('text-options-section').classList.remove('hidden');
+                if (sections.text) {
+                    sections.text.classList.remove('hidden');
+                }
+            } else if (this.value === 'numeric') {
+                if (sections.numeric) {
+                    sections.numeric.classList.remove('hidden');
                 }
             }
             
@@ -582,6 +629,44 @@ document.addEventListener('DOMContentLoaded', function() {
             scaleMinPreview.textContent = scaleMinLabel.value || 'Sangat Kurang';
             scaleMaxPreview.textContent = scaleMaxLabel.value || 'Sangat Baik';
         }
+    }
+
+    // Live preview for text/numeric input before/after text (menggunakan ID yang sama)
+    const textBefore = document.getElementById('text_before');
+    const textAfter = document.getElementById('text_after');
+    const textBeforePreview = document.getElementById('text-before-preview');
+    const textAfterPreview = document.getElementById('text-after-preview');
+    
+    function updateTextPreview() {
+        if (textBefore && textAfter && textBeforePreview && textAfterPreview) {
+            textBeforePreview.textContent = textBefore.value || '';
+            textAfterPreview.textContent = textAfter.value || '';
+        }
+    }
+    
+    if (textBefore && textAfter) {
+        textBefore.addEventListener('input', updateTextPreview);
+        textAfter.addEventListener('input', updateTextPreview);
+        updateTextPreview(); // Initial update
+    }
+
+    // Live preview for numeric input before/after text
+    const numericBefore = document.getElementById('numeric_before');
+    const numericAfter = document.getElementById('numeric_after');
+    const numericBeforePreview = document.getElementById('numeric-before-preview');
+    const numericAfterPreview = document.getElementById('numeric-after-preview');
+    
+    function updateNumericPreview() {
+        if (numericBefore && numericAfter && numericBeforePreview && numericAfterPreview) {
+            numericBeforePreview.textContent = numericBefore.value || '';
+            numericAfterPreview.textContent = numericAfter.value || '';
+        }
+    }
+    
+    if (numericBefore && numericAfter) {
+        numericBefore.addEventListener('input', updateNumericPreview);
+        numericAfter.addEventListener('input', updateNumericPreview);
+        updateNumericPreview(); // Initial update
     }
     
     if (scaleMinLabel && scaleMaxLabel) {

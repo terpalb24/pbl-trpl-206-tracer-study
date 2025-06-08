@@ -94,6 +94,7 @@
                         <select class="w-full px-3 py-2 border rounded-md bg-gray-100" disabled>
                             <option value="{{ $question->type }}" selected>
                                 @if($question->type == 'text') Teks
+                                @elseif($question->type == 'numeric') Numerik (Hanya Angka)
                                 @elseif($question->type == 'option') Pilihan Ganda
                                 @elseif($question->type == 'multiple') Multiple Choice
                                 @elseif($question->type == 'rating') Rating (Kurang, Cukup, Baik, Baik Sekali)
@@ -130,7 +131,44 @@
                         </div>
                     </div>
                     @endif
-
+                    <!-- Numeric options section -->
+                    @if($question->type == 'numeric')
+                    <div id="numeric-options-section" class="mb-4 border p-4 rounded-md">
+                        <h4 class="text-lg font-medium mb-3">Konfigurasi Input Numerik</h4>
+                        
+                        <div class="bg-blue-50 p-3 rounded-md mb-4">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pertanyaan numerik hanya menerima input berupa angka (0-9) dan tidak dapat mengetik huruf
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="numeric_before_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Sebelum Input:</label>
+                                <input type="text" name="before_text" id="numeric_before_text" value="{{ old('before_text', $question->before_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: Gaji saya sebesar Rp">
+                            </div>
+                            <div>
+                                <label for="numeric_after_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Setelah Input:</label>
+                                <input type="text" name="after_text" id="numeric_after_text" value="{{ old('after_text', $question->after_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: per bulan">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Preview Input:</label>
+                            <div class="flex items-center flex-wrap">
+                                <span id="numeric-before-preview" class="mr-2 text-gray-700 font-medium">{{ $question->before_text ?? '' }}</span>
+                                <input type="text" class="flex-grow px-3 py-2 border border-gray-300 rounded-md min-w-48" 
+                                       placeholder="Masukkan angka..." pattern="[0-9]*" inputmode="numeric" disabled>
+                                <span id="numeric-after-preview" class="ml-2 text-gray-700 font-medium">{{ $question->after_text ?? '' }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-2 rounded text-sm text-green-700 mt-3">
+                            <strong>Contoh penggunaan:</strong> "Gaji saya sebesar Rp [input numerik] per bulan"
+                        </div>
+                    </div>
+                    @endif
                     <!-- Rating options section -->
                     @if($question->type == 'rating')
                     <div id="rating-options-section" class="mb-4 border p-4 rounded-md">
@@ -522,7 +560,26 @@ document.addEventListener('DOMContentLoaded', function() {
             updateTextPreview();
         }
     }
-    
+    // Numeric preview functionality for numeric type questions
+    if (questionType === 'numeric') {
+        const numericBeforeInput = document.getElementById('numeric_before_text');
+        const numericAfterInput = document.getElementById('numeric_after_text');
+        const numericBeforePreview = document.getElementById('numeric-before-preview');
+        const numericAfterPreview = document.getElementById('numeric-after-preview');
+        
+        if (numericBeforeInput && numericAfterInput && numericBeforePreview && numericAfterPreview) {
+            const updateNumericPreview = function() {
+                numericBeforePreview.textContent = numericBeforeInput.value || '';
+                numericAfterPreview.textContent = numericAfterInput.value || '';
+            };
+            
+            numericBeforeInput.addEventListener('input', updateNumericPreview);
+            numericAfterInput.addEventListener('input', updateNumericPreview);
+            
+            // Initial preview update
+            updateNumericPreview();
+        }
+    }
     // Scale preview functionality for scale type questions
     if (questionType === 'scale') {
         const scaleMinLabel = document.getElementById('scale_min_label');

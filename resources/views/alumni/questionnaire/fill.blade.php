@@ -146,8 +146,8 @@
                                             </div>
                                         </div>
                                         <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full ml-3">
-                                            <i class="fas fa-{{ $question->type == 'text' ? 'keyboard' : ($question->type == 'option' ? 'dot-circle' : ($question->type == 'multiple' ? 'check-square' : ($question->type == 'location' ? 'map-marker-alt' : ($question->type == 'rating' ? 'star' : ($question->type == 'scale' ? 'chart-line' : 'calendar-alt'))))) }} mr-1"></i>
-                                            {{ ucfirst($question->type) }}
+                                            <i class="fas fa-{{ $question->type == 'text' ? 'keyboard' : ($question->type == 'numeric' ? 'calculator' : ($question->type == 'option' ? 'dot-circle' : ($question->type == 'multiple' ? 'check-square' : ($question->type == 'location' ? 'map-marker-alt' : ($question->type == 'rating' ? 'star' : ($question->type == 'scale' ? 'chart-line' : 'calendar-alt')))))) }} mr-1"></i>
+                                            {{ $question->type == 'numeric' ? 'Numeric' : ucfirst($question->type) }}
                                             @if($question->depends_on)
                                                 <i class="fas fa-link ml-1 text-yellow-600" title="Pertanyaan Bersyarat"></i>
                                             @endif
@@ -176,7 +176,34 @@
                                                 </div>
                                             </div>
                                             <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
-
+                                        @elseif($question->type == 'numeric')
+                                            <!-- Numeric question -->
+                                            <div class="bg-white border border-gray-300 rounded-lg p-4">
+                                                <div class="flex items-center flex-wrap">
+                                                    <i class="fas fa-calculator text-green-600 mr-3"></i>
+                                                    @if($question->before_text)
+                                                        <span class="mr-2 text-gray-700 font-medium">{{ $question->before_text }}</span>
+                                                    @endif
+                                                    
+                                                    <input type="text" 
+                                                           name="answers[{{ $question->id_question }}]" 
+                                                           value="{{ $prevAnswers[$question->id_question] ?? '' }}"
+                                                           class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-48 numeric-only"
+                                                           placeholder="Masukkan angka..."
+                                                           pattern="[0-9]*"
+                                                           inputmode="numeric">
+                                                    
+                                                    @if($question->after_text)
+                                                        <span class="ml-2 text-gray-700 font-medium">{{ $question->after_text }}</span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    Hanya dapat memasukkan angka (0-9)
+                                                </div>
+                                            </div>
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
                                         @elseif($question->type == 'date')
                                             <!-- Date question -->
                                             <div class="bg-white border border-gray-300 rounded-lg p-4">
@@ -483,53 +510,70 @@
 <div id="validation-alert-container"></div>
 
 <style>
-.question-container.border-red-300 {
-    border-color: #fca5a5 !important;
-    background-color: #fef2f2 !important;
-}
-
-.validation-message {
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.validation-message.hidden {
-    display: none;
-}
-
-/* Animation for validation alerts */
-#validation-alert {
-    animation: slideInRight 0.3s ease-out;
-}
-
-@keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
+    .question-container.border-red-300 {
+        border-color: #fca5a5 !important;
+        background-color: #fef2f2 !important;
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
 
-/* Pulsing effect for required questions */
-.question-container.border-red-300 {
-    animation: pulse-red 2s infinite;
-}
+    .validation-message {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
 
-@keyframes pulse-red {
-    0% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    .validation-message.hidden {
+        display: none;
     }
-    70% {
-        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+
+    /* Animation for validation alerts */
+    #validation-alert {
+        animation: slideInRight 0.3s ease-out;
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
-}
-</style>
+
+    /* Pulsing effect for required questions */
+    .question-container.border-red-300 {
+        animation: pulse-red 2s infinite;
+    }
+
+    @keyframes pulse-red {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+    }
+
+    /* Shake animation for numeric input errors */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    /* Numeric input styling */
+    .numeric-only {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        letter-spacing: 1px;
+    }
+
+    .numeric-only:focus {
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -1571,9 +1615,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const locationInput = questionContainer.querySelector('input[name^="location_combined"]:not(:disabled)');
             
             if (textInput && !dateInput && !locationInput) {
-                // Text question
-                isAnswered = textInput.value.trim() !== '';
-                errorMessage = 'Pertanyaan ini harus dijawab';
+                // Text or Numeric question
+                const isNumericQuestion = textInput.classList.contains('numeric-only');
+                
+                if (isNumericQuestion) {
+                    // Numeric validation
+                    const numericValue = textInput.value.trim();
+                    isAnswered = numericValue !== '' && /^\d+$/.test(numericValue);
+                    errorMessage = 'Pertanyaan ini harus dijawab dengan angka';
+                } else {
+                    // Text validation
+                    isAnswered = textInput.value.trim() !== '';
+                    errorMessage = 'Pertanyaan ini harus dijawab';
+                }
                 
             } else if (dateInput) {
                 // Date question
@@ -1794,7 +1848,79 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     `;
+    // Add numeric-only input restriction for questionnaire filling
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('numeric-only')) {
+            // Remove any non-numeric characters
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Update the input value
+            if (e.target.value !== value) {
+                e.target.value = value;
+                
+                // Show brief feedback for invalid characters
+                showNumericInputFeedback(e.target);
+            }
+        }
+    });
+    
+    // Prevent non-numeric key presses on numeric-only inputs
+    document.addEventListener('keypress', function(e) {
+        if (e.target.classList.contains('numeric-only')) {
+            // Allow: backspace, delete, tab, escape, enter, arrow keys
+            if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+Z
+                (e.ctrlKey && [65, 67, 86, 88, 90].indexOf(e.keyCode) !== -1)) {
+                return;
+            }
+            
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+                
+                // Show feedback for blocked characters
+                showNumericInputFeedback(e.target, true);
+            }
+        }
+    });
+    
+    // Function to show numeric input feedback
+    function showNumericInputFeedback(input, isBlocked = false) {
+        // Remove existing feedback
+        const existingFeedback = input.parentNode.querySelector('.numeric-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'numeric-feedback absolute top-full left-0 mt-1 px-2 py-1 bg-red-100 text-red-600 text-xs rounded shadow-sm border border-red-200 z-10';
+        feedback.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Hanya angka yang diperbolehkan';
+        
+        // Make parent relative if not already
+        if (getComputedStyle(input.parentNode).position === 'static') {
+            input.parentNode.style.position = 'relative';
+        }
+        
+        // Add feedback
+        input.parentNode.appendChild(feedback);
+        
+        // Auto remove after 2 seconds
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        }, 2000);
+        
+        // Add a slight shake animation to the input
+        input.style.animation = 'shake 0.3s ease-in-out';
+        setTimeout(() => {
+            input.style.animation = '';
+        }, 300);
+    }
     document.head.appendChild(styleSheet);
+
+    
 });
 </script>
 <!-- script JS  -->

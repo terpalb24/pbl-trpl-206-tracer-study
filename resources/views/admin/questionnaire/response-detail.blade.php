@@ -374,8 +374,8 @@
                                                         </div>
                                                     </div>
                                                     <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full ml-3">
-                                                        <i class="fas fa-{{ $qData['question']->type == 'text' ? 'keyboard' : ($qData['question']->type == 'option' ? 'dot-circle' : ($qData['question']->type == 'multiple' ? 'check-square' : ($qData['question']->type == 'location' ? 'map-marker-alt' : 'calendar-alt'))) }} mr-1"></i>
-                                                        {{ ucfirst($qData['question']->type) }}
+                                                        <i class="fas fa-{{ $qData['question']->type == 'text' ? 'keyboard' : ($qData['question']->type == 'numeric' ? 'calculator' : ($qData['question']->type == 'option' ? 'dot-circle' : ($qData['question']->type == 'multiple' ? 'check-square' : ($qData['question']->type == 'location' ? 'map-marker-alt' : 'calendar-alt')))) }} mr-1"></i>
+                                                        {{ $qData['question']->type == 'numeric' ? 'Numerik' : ucfirst($qData['question']->type) }}
                                                     </span>
                                                 </div>
                                                 
@@ -477,7 +477,7 @@
                                                         @endif
                                                         
                                                     @elseif($qData['question']->type == 'option' && !empty($qData['answer']))
-                                                        <!-- ✅ PERBAIKAN: Single Option dengan Other Answer -->
+                                                        <!-- Single Option dengan Other Answer -->
                                                         <div class="bg-white border border-green-200 rounded-md p-4">
                                                             <div class="flex items-start bg-green-50 p-4 rounded-lg border border-green-100">
                                                                 <i class="fas fa-dot-circle text-green-600 mr-3 mt-1"></i>
@@ -485,13 +485,25 @@
                                                                     <p class="font-medium text-gray-900 mb-1">{{ $qData['answer'] }}</p>
                                                                         
                                                                     @if(!empty($qData['otherAnswer']))
+                                                                        @php
+                                                                            // Find the selected option to get before/after text
+                                                                            $selectedOption = $qData['question']->options->where('option', $qData['answer'])->first();
+                                                                        @endphp
                                                                         <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
                                                                             <div class="flex items-start">
                                                                                 <i class="fas fa-edit text-blue-600 mr-2 mt-0.5 text-sm"></i>
                                                                                 <div class="flex-1">
                                                                                     <p class="text-blue-700 font-medium text-sm mb-1">Detail tambahan:</p>
                                                                                     <div class="bg-white border border-blue-300 rounded-md p-2">
-                                                                                        <span class="font-semibold text-blue-900">{{ $qData['otherAnswer'] }}</span>
+                                                                                        <div class="flex items-center flex-wrap">
+                                                                                            @if($selectedOption && $selectedOption->other_before_text)
+                                                                                                <span class="mr-2 text-blue-600 font-medium">{{ $selectedOption->other_before_text }}</span>
+                                                                                            @endif
+                                                                                            <span class="font-semibold text-blue-900 bg-blue-100 px-2 py-1 rounded">{{ $qData['otherAnswer'] }}</span>
+                                                                                            @if($selectedOption && $selectedOption->other_after_text)
+                                                                                                <span class="ml-2 text-blue-600 font-medium">{{ $selectedOption->other_after_text }}</span>
+                                                                                            @endif
+                                                                                        </div>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
@@ -722,6 +734,47 @@
                                                                 </div>
                                                             @endif
                                                         </div>
+                                                    @elseif($qData['question']->type == 'numeric' && !empty($qData['answer']))
+                                                        <!-- Numeric Answer Display -->
+                                                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                                                            <div class="flex items-center">
+                                                                <i class="fas fa-calculator text-green-600 mr-3 text-xl"></i>
+                                                                <div class="flex-1">
+                                                                    @if($qData['question']->before_text || $qData['question']->after_text)
+                                                                        <div class="flex items-center flex-wrap mb-2">
+                                                                            @if($qData['question']->before_text)
+                                                                                <span class="text-green-700 font-medium mr-2">{{ $qData['question']->before_text }}</span>
+                                                                            @endif
+                                                                            
+                                                                            <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-xl font-mono">
+                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                            </span>
+                                                                            
+                                                                            @if($qData['question']->after_text)
+                                                                                <span class="text-green-700 font-medium ml-2">{{ $qData['question']->after_text }}</span>
+                                                                            @endif
+                                                                        </div>
+                                                                        
+                                                                        <div class="text-xs text-green-600 flex items-center">
+                                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                                            Format: "{{ $qData['question']->before_text ?? '' }} [angka] {{ $qData['question']->after_text ?? '' }}"
+                                                                        </div>
+                                                                    @else
+                                                                        <div class="mb-2">
+                                                                            <span class="text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
+                                                                            <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-2xl font-mono">
+                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                            </span>
+                                                                        </div>
+                                                                        
+                                                                        <div class="text-xs text-green-600 flex items-center">
+                                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                                            Input numerik ({{ strlen(str_replace([',', '.'], '', $qData['answer'])) }} digit)
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     @else
                                                         <!-- Other Answer Types (text, date, option) -->
                                                         <div class="bg-white border border-green-200 rounded-md p-4">
@@ -758,6 +811,32 @@
                                                                                 <span class="font-medium">{{ $dateFormatted }}</span>
                                                                             </div>
                                                                         </div>
+                                                                    @elseif($qData['question']->type == 'numeric')
+                                                                        <!-- Fallback for numeric type -->
+                                                                        @if($qData['question']->before_text || $qData['question']->after_text)
+                                                                            <div class="bg-green-50 rounded-lg p-3">
+                                                                                <div class="flex items-center flex-wrap text-green-800">
+                                                                                    <i class="fas fa-calculator mr-2"></i>
+                                                                                    @if($qData['question']->before_text)
+                                                                                        <span class="mr-2 font-medium">{{ $qData['question']->before_text }}</span>
+                                                                                    @endif
+                                                                                    <span class="font-bold text-lg font-mono bg-white px-2 py-1 rounded border border-green-300">
+                                                                                        {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                    </span>
+                                                                                    @if($qData['question']->after_text)
+                                                                                        <span class="ml-2 font-medium">{{ $qData['question']->after_text }}</span>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </div>
+                                                                        @else
+                                                                            <div class="bg-green-50 rounded-lg p-3">
+                                                                                <div class="flex items-center text-green-800">
+                                                                                    <i class="fas fa-calculator mr-2"></i>
+                                                                                    <span class="font-bold text-lg font-mono">{{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}</span>
+                                                                                    <span class="text-sm text-green-600 ml-2">(numerik)</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
                                                                     @else
                                                                         <!-- Option type or other -->
                                                                         <div class="bg-green-50 rounded-lg p-3">
