@@ -2,27 +2,26 @@
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-   {{-- Sidebar --}}
+    {{-- Sidebar --}}
     @include('components.company.sidebar')
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-    {{-- Header --}}
-    @include('components.company.header', ['title' => 'Kuesioner employee'])
-
-
-
+        {{-- Header --}}
+        @include('components.company.header', ['title' => 'Kuesioner employee'])
 
         <!-- Content Section -->
         <div class="p-6">
+
             @if(session('success'))
                 <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md flex items-center">
                     <i class="fas fa-check-circle mr-2"></i>
                     {{ session('success') }}
                 </div>
             @endif
-            
+
             @if(session('error'))
                 <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md flex items-center">
                     <i class="fas fa-exclamation-circle mr-2"></i>
@@ -33,13 +32,19 @@
             <!-- Breadcrumb -->
             <nav class="mb-6">
                 <ol class="flex items-center space-x-2 text-sm">
-                    <li><a href="{{ route('dashboard.company') }}" class="text-blue-600 hover:underline">Dashboard</a></li>
+                    <li>
+                        <a href="{{ route('dashboard.company') }}" class="text-blue-600 hover:underline">Dashboard</a>
+                    </li>
                     <li><span class="text-gray-500">/</span></li>
-                    <li><a href="{{ route('company.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a></li>
+                    <li>
+                        <a href="{{ route('company.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a>
+                    </li>
                     <li><span class="text-gray-500">/</span></li>
                     <li class="text-gray-700">Pengisian</li>
                 </ol>
             </nav>
+
+         
 
             <!-- Progress Card -->
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 mb-6 border border-blue-200">
@@ -49,18 +54,24 @@
                         <p class="text-sm text-blue-700">{{ $currentCategory->category_name }}</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-bold text-blue-900">{{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ $allCategories->count() }}</div>
+                        <div class="text-2xl font-bold text-blue-900">
+                            {{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ $allCategories->count() }}
+                        </div>
                         <div class="text-sm text-blue-700">Kategori</div>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-sm font-medium text-blue-900">Progress Keseluruhan</span>
-                    <span class="text-sm font-medium text-blue-900">{{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%</span>
+                    <span class="text-sm font-medium text-blue-900">
+                        {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%
+                    </span>
                 </div>
                 <div class="w-full bg-blue-200 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300" 
-                         style="width: {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%"></div>
+                    <div
+                        class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300"
+                        style="width: {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%"
+                    ></div>
                 </div>
             </div>
 
@@ -72,7 +83,9 @@
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i>
                             {{ $currentCategory->category_name }}
                         </h3>
-                        <p class="text-gray-600 mt-1">{{ $currentCategory->description ?? 'Silakan jawab pertanyaan berikut dengan lengkap dan jujur.' }}</p>
+                        <p class="text-gray-600 mt-1">
+                            {{ $currentCategory->description ?? 'Silakan jawab pertanyaan berikut dengan lengkap dan jujur.' }}
+                        </p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <span class="text-xs font-medium px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">
@@ -86,6 +99,7 @@
                 </div>
             </div>
 
+           
             <!-- Questions Form Card -->
             <div class="bg-white rounded-xl shadow-md border border-gray-200">
                 <div class="p-6 border-b border-gray-200">
@@ -98,6 +112,20 @@
                 <div class="p-6">
                     <form id="questionnaireForm" method="POST" action="{{ route('company.questionnaire.submit', $periode->id_periode) }}">
                         @csrf
+                         <!-- Select Alumni -->
+            <div class="mb-6">
+                <label for="alumni_nim" class="block mb-1 font-medium text-gray-700">Pilih Alumni Yang Ingin Dinilai</label>
+                <select
+                    id="alumni_nim"
+                    name="alumni_nim"
+                    class="block w-full rounded border border-gray-300 bg-white px-3 py-2 text-gray-700
+                    focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                >
+                    @foreach ($alumniList as $alumni)
+                        <option value="{{ $alumni->nim }}">{{ $alumni->name }} - {{ $alumni->nim }}</option>
+                    @endforeach
+                </select>
+            </div>
                         <input type="hidden" name="id_category" value="{{ $currentCategory->id_category }}">
                         <input type="hidden" name="action" id="form-action" value="save_draft">
                         
@@ -109,6 +137,7 @@
                                          data-depends-on="{{ $question->depends_on }}"
                                          data-depends-value="{{ $question->depends_value }}"
                                      @endif>
+                                       
                                      
                                     <!-- Question Header -->
                                     <div class="flex justify-between items-start mb-4">

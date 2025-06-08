@@ -15,6 +15,7 @@
             @include('company.sidebar')
         </div>
     </aside>
+    
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">

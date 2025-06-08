@@ -1,6 +1,6 @@
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
     <div class="flex items-center p-4 bg-blue-950 text-white rounded-2xl shadow gap-4">
-        <div class="bg-white p-3 rounded-2xl shadow">
+        <div class="bg-white p-3 rounded-2xl shadow ">
             <i class="fas fa-user-graduate text-blue-950 text-2xl"></i>
         </div>
         <div>

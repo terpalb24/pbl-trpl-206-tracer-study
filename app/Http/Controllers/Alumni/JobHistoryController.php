@@ -14,12 +14,23 @@ class JobHistoryController extends Controller
 {
     use AuthorizesRequests;
 
-    public function index()
-    {
+   public function index()
+{
+    // Ambil user yang sedang login
+    $user = auth()->user();
 
-    $jobHistories = JobHistory::all(); // Ambil semua data tanpa filter user_id
-    return view('alumni.job-history.index', compact('jobHistories'));
+    // Ambil NIM dari user (diasumsikan user adalah alumni dan punya relasi ke tb_alumni)
+    $nim = $user->alumni->nim ?? null;
+
+    if (!$nim) {
+        abort(403, 'Akses ditolak: hanya alumni yang bisa mengakses data ini.');
     }
+
+    // Ambil data job histories berdasarkan nim
+    $jobHistories = JobHistory::where('nim', $nim)->get();
+
+    return view('alumni.job-history.index', compact('jobHistories'));
+}
 
     public function create()
     {

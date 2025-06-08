@@ -50,7 +50,7 @@ public function verifyEmail(Request $request)
     ]);
     // Kirim notifikasi verifikasi email (link berisi token)
     Notification::route('mail', $request->email)
-    ->notify((new EmailVerificationNotification($token))->delay(now()->addSeconds(2)));
+    ->notify((new EmailVerificationNotification($token))->delay(now()->addSeconds(1)));
 
         
 
