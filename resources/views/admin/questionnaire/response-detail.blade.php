@@ -97,6 +97,7 @@
                                     <i class="fas fa-building mr-1"></i>
                                     Perusahaan
                                 </span>
+                                
                             @endif
                         </div>
                     </div>
@@ -105,7 +106,12 @@
                         <p class="text-lg font-bold text-blue-900">#{{ $userAnswer->id_user_answers }}</p>
                     </div>
                 </div>
-
+                @if(isset($userAnswer->user->company))
+                <p class="text-sm text-gray-700">
+                    <i class="fas fa-user-graduate mr-1"></i>
+                    Dinilai: <strong>{{ $userAnswer->nim }}</strong><br> Nama Alumni  :<strong>{{ $userAnswer->alumni->name ?? 'Tidak Diketahui' }}</strong>
+                </p>
+                @endif
                 <!-- Progress Bar -->
                 @if(isset($questionsWithAnswers))
                     @php
@@ -417,7 +423,7 @@
                                                                     Jawaban:
                                                                 </h6>
                                                                 
-                                                                @if($qData['question']->type === 'option' || $qData['question']->type === 'rating')
+                                                                @if($qData['question']->type === 'option')
                                                                     <div class="text-green-700">
                                                                         <div class="mb-2">
                                                                             <span class="text-lg font-semibold">{{ $qData['answer'] }}</span>
@@ -528,6 +534,43 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
+                                                                @elseif($qData['question']->type == 'rating')
+                                                            <!-- Rating Answer Display -->
+                                                            <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                                                                <div class="flex items-center">
+                                                                    <i class="fas fa-star text-purple-600 mr-3 text-lg"></i>
+                                                                    <div class="flex-1">
+                                                                        <span class="font-semibold text-purple-800 text-lg">{{ $qData['answer'] }}</span>
+                                                                        <div class="mt-2">
+                                                                            @php
+                                                                                $ratingLevel = strtolower($qData['answer']);
+                                                                                $ratingColor = 'gray';
+                                                                                $ratingIcon = 'fa-star';
+                                                                                
+                                                                                if (strpos($ratingLevel, 'kurang') !== false) {
+                                                                                    $ratingColor = 'red';
+                                                                                    $ratingIcon = 'fa-star';
+                                                                                } elseif (strpos($ratingLevel, 'cukup') !== false) {
+                                                                                    $ratingColor = 'yellow';
+                                                                                    $ratingIcon = 'fa-star-half-alt';
+                                                                                } elseif (strpos($ratingLevel, 'baik sekali') !== false || strpos($ratingLevel, 'sangat baik') !== false) {
+                                                                                    $ratingColor = 'green';
+                                                                                    $ratingIcon = 'fa-star';
+                                                                                } elseif (strpos($ratingLevel, 'baik') !== false) {
+                                                                                    $ratingColor = 'blue';
+                                                                                    $ratingIcon = 'fa-star';
+                                                                                }
+                                                                            @endphp
+                                                                            
+                                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                                                                                bg-{{ $ratingColor }}-100 text-{{ $ratingColor }}-800">
+                                                                                <i class="fas {{ $ratingIcon }} mr-2"></i>
+                                                                                Tingkat: {{ $qData['answer'] }}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                                 @elseif($qData['question']->type === 'location')
                                                                     <!-- Location Answer -->
                                                                     <div class="text-green-700">

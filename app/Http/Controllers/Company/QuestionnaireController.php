@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Tb_Jobhistory; // Assuming this is the model for job history
+use App\Models\Tb_jobhistory; // Assuming this is the model for job history
 use App\Models\Tb_Alumni; // Assuming this is the model for alumni
 
 class QuestionnaireController extends Controller
@@ -175,7 +175,7 @@ class QuestionnaireController extends Controller
                 
                 if (!$question) continue;
                 
-                if ($question->type == 'text' || $question->type == 'date') {
+                if ($question->type == 'text' || $question->type == 'date' || $question->type == 'numeric' || $question->type == 'email') {
                     $prevAnswers[$item->id_question] = $item->answer;
                     
                 } elseif ($question->type == 'location') {
@@ -316,7 +316,43 @@ class QuestionnaireController extends Controller
                             'answer' => $answer
                         ]);
                     }
-                    
+                
+                } elseif ($question->type == 'numeric') {
+                    // Handle text questions
+                    $answer = $request->input("answers.{$question->id_question}");
+                    if (!empty($answer)) {
+                        Tb_User_Answer_Item::create([
+                            'id_user_answer' => $userAnswer->id_user_answer,
+                            'id_question' => $question->id_question,
+                            'id_questions_options' => null,
+                            'answer' => $answer,
+                            'other_answer' => null
+                        ]);
+                        
+                        Log::info('Saved text answer', [
+                            'question_id' => $question->id_question,
+                            'answer' => $answer
+                        ]);
+                    }
+                
+                } elseif ($question->type == 'email') {
+                    // Handle text questions
+                    $answer = $request->input("answers.{$question->id_question}");
+                    if (!empty($answer)) {
+                        Tb_User_Answer_Item::create([
+                            'id_user_answer' => $userAnswer->id_user_answer,
+                            'id_question' => $question->id_question,
+                            'id_questions_options' => null,
+                            'answer' => $answer,
+                            'other_answer' => null
+                        ]);
+                        
+                        Log::info('Saved text answer', [
+                            'question_id' => $question->id_question,
+                            'answer' => $answer
+                        ]);
+                    }
+                
                 } elseif ($question->type == 'date') {
                     // Handle date questions
                     $answer = $request->input("answers.{$question->id_question}");

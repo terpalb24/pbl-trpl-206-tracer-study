@@ -381,6 +381,64 @@
                                                 </div>
                                             </div>
                                             <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
+                                        @elseif($question->type == 'numeric')
+                                            <!-- Numeric question -->
+                                            <div class="bg-white border border-gray-300 rounded-lg p-4">
+                                                <div class="flex items-center flex-wrap">
+                                                    <i class="fas fa-calculator text-green-600 mr-3"></i>
+                                                    @if($question->before_text)
+                                                        <span class="mr-2 text-gray-700 font-medium">{{ $question->before_text }}</span>
+                                                    @endif
+                                                    
+                                                    <input type="text" 
+                                                           name="answers[{{ $question->id_question }}]" 
+                                                           value="{{ $prevAnswers[$question->id_question] ?? '' }}"
+                                                           class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-48 numeric-only"
+                                                           placeholder="Masukkan angka..."
+                                                           pattern="[0-9]*"
+                                                           inputmode="numeric"
+                                                           data-question-id="{{ $question->id_question }}">
+                                                    
+                                                    @if($question->after_text)
+                                                        <span class="ml-2 text-gray-700 font-medium">{{ $question->after_text }}</span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    Hanya dapat memasukkan angka (0-9)
+                                                </div>
+                                            </div>
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
+
+                                        @elseif($question->type == 'email')
+                                            <!-- Email question -->
+                                            <div class="bg-white border border-gray-300 rounded-lg p-4">
+                                                <div class="flex items-center flex-wrap">
+                                                    <i class="fas fa-envelope text-blue-600 mr-3"></i>
+                                                    @if($question->before_text)
+                                                        <span class="mr-2 text-gray-700 font-medium">{{ $question->before_text }}</span>
+                                                    @endif
+                                                    
+                                                    <input type="email" 
+                                                           name="answers[{{ $question->id_question }}]" 
+                                                           value="{{ $prevAnswers[$question->id_question] ?? '' }}"
+                                                           class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-48 email-validation"
+                                                           placeholder="contoh@domain.com"
+                                                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                                           data-question-id="{{ $question->id_question }}">
+                                                    
+                                                    @if($question->after_text)
+                                                        <span class="ml-2 text-gray-700 font-medium">{{ $question->after_text }}</span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    Masukkan email yang valid dengan domain (contoh: nama@gmail.com)
+                                                </div>
+                                            </div>
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
                                         @endif
                                     </div>
                                 </div>
@@ -436,7 +494,7 @@
 <!-- Enhanced Confirmation Modal -->
 <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-        <div class="text-center"></div>
+        <div class="text-center">
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
                 <i class="fas fa-check text-green-600 text-xl"></i>
             </div>
@@ -448,7 +506,7 @@
                 <div class="flex items-center">
                     <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
                     <p class="text-sm text-yellow-800">
-                        Setelah diselesaikan, Anda tidak dapat mengubah jawaban lagi.
+                        <strong>Perhatian:</strong> Setelah diselesaikan, Anda tidak dapat mengubah jawaban lagi.
                     </p>
                 </div>
             </div>
@@ -525,6 +583,23 @@
         box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
     }
 }
+
+/* Numeric input styling */
+    .numeric-only {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        letter-spacing: 1px;
+    }
+
+    .numeric-only:focus {
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+
+    /* Shake animation for numeric input errors */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
 </style>
 
 <script>
@@ -545,87 +620,25 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     console.log('✅ Questionnaire data loaded:', window.questionnaireData);
-    console.log('✅ Conditional questions found:', window.questionnaireData.conditionalQuestions);
     
     // GLOBAL FORM ELEMENTS
     const form = document.getElementById('questionnaireForm');
     const formAction = document.getElementById('form-action');
     
-    // ✅ PERBAIKAN: Initialization dengan urutan yang benar
-    function initializeQuestionnaire() {
-        console.log('=== STARTING QUESTIONNAIRE INITIALIZATION ===');
-        
-        // 1. SEMBUNYIKAN SEMUA CONDITIONAL QUESTIONS DULU
-        hideAllConditionalQuestions();
-        
-        // 2. LOAD SAVED ANSWERS
-        loadSavedAnswers();
-        
-        // 3. SETUP EVENT LISTENERS
-        setupEventListeners();
-        
-        // 4. INITIALIZE LOCATION QUESTIONS
-        initializeLocationQuestions();
-        
-        // 5. INITIALIZE CONDITIONAL QUESTIONS BERDASARKAN JAWABAN YANG ADA
-        initializeConditionalQuestionsBasedOnAnswers();
-        
-        console.log('=== QUESTIONNAIRE INITIALIZATION COMPLETE ===');
-    }
-    
-    // ✅ PERBAIKAN: Hide all conditional questions by default
-    function hideAllConditionalQuestions() {
-        console.log('=== HIDING ALL CONDITIONAL QUESTIONS ===');
-        
-        const conditionalQuestions = document.querySelectorAll('.conditional-question');
-        console.log('Found conditional questions to hide:', conditionalQuestions.length);
-        
-        conditionalQuestions.forEach((question, index) => {
-            console.log(`Hiding conditional question ${index + 1}:`, question.id);
-            
-            // Hide the question
-            question.style.display = 'none';
-            question.classList.add('hidden');
-            
-            // Disable all form elements in conditional questions
-            const formElements = question.querySelectorAll('input, select, textarea');
-            formElements.forEach(element => {
-                element.disabled = true;
-                // Clear values
-                if (element.type === 'radio' || element.type === 'checkbox') {
-                    element.checked = false;
-                } else {
-                    element.value = '';
-                }
-            });
-            
-            // Clear validation messages
-            const validationMessages = question.querySelectorAll('.validation-message');
-            validationMessages.forEach(msg => {
-                msg.classList.add('hidden');
-                msg.textContent = '';
-            });
-            
-            // Remove error styling
-            question.classList.remove('border-red-300', 'bg-red-50');
-        });
-        
-        console.log('✅ All conditional questions hidden and disabled');
-    }
-    
-    // ✅ PERBAIKAN: Load saved answers dengan benar
+    // ✅ PERBAIKAN: Load saved answers dengan benar untuk semua tipe input
     function loadSavedAnswers() {
         console.log('=== LOADING SAVED ANSWERS ===');
         
-        // Load regular answers (text, date, option, rating, scale)
+        // Load regular answers (text, date, option, rating, scale, numeric, email)
         Object.entries(window.questionnaireData.prevAnswers).forEach(([questionId, answer]) => {
             console.log(`Loading answer for question ${questionId}:`, answer);
             
-            // Try to find radio input first (for option, rating, scale)
+            // ✅ CARI SEMUA JENIS INPUT UNTUK QUESTION INI
+            // Try radio inputs first (for option, rating, scale)
             let input = document.querySelector(`input[name="answers[${questionId}]"][value="${answer}"]`);
             
             if (!input) {
-                // Try other input types (text, date)
+                // Try other input types (text, date, numeric, email)
                 input = document.querySelector(`input[name="answers[${questionId}]"]`) ||
                        document.querySelector(`select[name="answers[${questionId}]"]`) ||
                        document.querySelector(`textarea[name="answers[${questionId}]"]`);
@@ -636,11 +649,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.checked = true;
                     console.log(`✅ Checked radio/checkbox for question ${questionId}`);
                 } else {
+                    // ✅ UNTUK TEXT, DATE, NUMERIC, EMAIL
                     input.value = answer;
-                    console.log(`✅ Set value for question ${questionId}`);
+                    console.log(`✅ Set value "${answer}" for question ${questionId} (type: ${input.type})`);
+                    
+                    // ✅ TRIGGER CHANGE EVENT UNTUK VALIDASI
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             } else {
-                console.warn(`❌ Could not find input for question ${questionId}`);
+                console.warn(`❌ Could not find input for question ${questionId} with answer:`, answer);
             }
         });
         
@@ -663,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (otherInput) {
                 otherInput.value = otherAnswer;
                 const otherDiv = otherInput.closest('div');
-                if (otherDiv) {
+                if (otherDiv && otherDiv.id && otherDiv.id.includes('other_field_')) {
                     otherDiv.classList.remove('hidden');
                 }
                 console.log(`✅ Loaded other answer for question ${questionId}`);
@@ -678,7 +696,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (otherInput) {
                         otherInput.value = otherAnswer;
                         const otherDiv = otherInput.closest('div');
-                        if (otherDiv) {
+                        if (otherDiv && otherDiv.id && otherDiv.id.includes('multiple_other_field_')) {
                             otherDiv.classList.remove('hidden');
                         }
                         console.log(`✅ Loaded multiple other answer for question ${questionId}, option ${optionId}`);
@@ -756,6 +774,68 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Event listeners setup complete');
     }
     
+    // ✅ PERBAIKAN: Initialize dengan urutan yang benar
+    function initializeQuestionnaire() {
+        console.log('=== STARTING QUESTIONNAIRE INITIALIZATION ===');
+        
+        // 1. SEMBUNYIKAN SEMUA CONDITIONAL QUESTIONS DULU
+        hideAllConditionalQuestions();
+        
+        // 2. SETUP EVENT LISTENERS
+        setupEventListeners();
+        
+        // 3. LOAD SAVED ANSWERS
+        loadSavedAnswers();
+        
+        // 4. INITIALIZE LOCATION QUESTIONS
+        initializeLocationQuestions();
+        
+        // 5. INITIALIZE CONDITIONAL QUESTIONS BERDASARKAN JAWABAN YANG ADA
+        initializeConditionalQuestionsBasedOnAnswers();
+        
+        console.log('=== QUESTIONNAIRE INITIALIZATION COMPLETE ===');
+    }
+    
+    // ✅ PERBAIKAN: Hide all conditional questions by default
+    function hideAllConditionalQuestions() {
+        console.log('=== HIDING ALL CONDITIONAL QUESTIONS ===');
+        
+        const conditionalQuestions = document.querySelectorAll('.conditional-question');
+        console.log('Found conditional questions to hide:', conditionalQuestions.length);
+        
+        conditionalQuestions.forEach((question, index) => {
+            console.log(`Hiding conditional question ${index + 1}:`, question.id);
+            
+            // Hide the question
+            question.style.display = 'none';
+            question.classList.add('hidden');
+            
+            // Disable all form elements in conditional questions
+            const formElements = question.querySelectorAll('input, select, textarea');
+            formElements.forEach(element => {
+                element.disabled = true;
+                // Clear values
+                if (element.type === 'radio' || element.type === 'checkbox') {
+                    element.checked = false;
+                } else {
+                    element.value = '';
+                }
+            });
+            
+            // Clear validation messages
+            const validationMessages = question.querySelectorAll('.validation-message');
+            validationMessages.forEach(msg => {
+                msg.classList.add('hidden');
+                msg.textContent = '';
+            });
+            
+            // Remove error styling
+            question.classList.remove('border-red-300', 'bg-red-50');
+        });
+        
+        console.log('✅ All conditional questions hidden and disabled');
+    }
+    
     // ✅ PERBAIKAN: Handle dependent questions properly
     function handleDependentQuestions(parentQuestionId, selectedValue) {
         console.log(`=== HANDLING DEPENDENT QUESTIONS ===`);
@@ -814,8 +894,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Remove error styling
                 dependentQuestion.classList.remove('border-red-300', 'bg-red-50');
-                
-                console.log(`❌ Hidden dependent question: ${questionId}`);
                 
                 // Recursively hide nested dependent questions
                 hideNestedDependentQuestions(questionId);
@@ -1008,37 +1086,6 @@ document.addEventListener('DOMContentLoaded', function() {
             { id: '94', name: 'Papua' }
         ],
         cities: {
-            '11': [
-                { id: '1101', name: 'Kabupaten Simeulue' },
-                { id: '1102', name: 'Kabupaten Aceh Singkil' },
-                { id: '1103', name: 'Kabupaten Aceh Selatan' },
-                { id: '1104', name: 'Kabupaten Aceh Tenggara' },
-                { id: '1105', name: 'Kabupaten Aceh Timur' },
-                { id: '1171', name: 'Kota Banda Aceh' },
-                { id: '1172', name: 'Kota Sabang' },
-                { id: '1173', name: 'Kota Langsa' },
-                { id: '1174', name: 'Kota Lhokseumawe' }
-            ],
-            '12': [
-                { id: '1201', name: 'Kabupaten Nias' },
-                { id: '1202', name: 'Kabupaten Mandailing Natal' },
-                { id: '1203', name: 'Kabupaten Tapanuli Selatan' },
-                { id: '1204', name: 'Kabupaten Tapanuli Tengah' },
-                { id: '1205', name: 'Kabupaten Tapanuli Utara' },
-                { id: '1206', name: 'Kabupaten Toba Samosir' },
-                { id: '1207', name: 'Kabupaten Labuhan Batu' },
-                { id: '1208', name: 'Kabupaten Asahan' },
-                { id: '1209', name: 'Kabupaten Simalungun' },
-                { id: '1210', name: 'Kabupaten Dairi' },
-                { id: '1211', name: 'Kabupaten Karo' },
-                { id: '1212', name: 'Kabupaten Deli Serdang' },
-                { id: '1213', name: 'Kabupaten Langkat' },
-                { id: '1271', name: 'Kota Sibolga' },
-                { id: '1272', name: 'Kota Medan' },
-                { id: '1273', name: 'Kota Binjai' },
-                { id: '1274', name: 'Kota Tebing Tinggi' },
-                { id: '1275', name: 'Kota Pematangsiantar' }
-            ],
             '31': [
                 { id: '3101', name: 'Kabupaten Kepulauan Seribu' },
                 { id: '3171', name: 'Kota Jakarta Selatan' },
@@ -1050,30 +1097,17 @@ document.addEventListener('DOMContentLoaded', function() {
             '32': [
                 { id: '3201', name: 'Kabupaten Bogor' },
                 { id: '3202', name: 'Kabupaten Sukabumi' },
-                { id: '3203', name: 'Kabupaten Cianjur' },
-                { id: '3204', name: 'Kabupaten Bandung' },
-                { id: '3205', name: 'Kabupaten Garut' },
-                { id: '3206', name: 'Kabupaten Tasikmalaya' },
-                { id: '3207', name: 'Kabupaten Ciamis' },
-                { id: '3208', name: 'Kabupaten Kuningan' },
-                { id: '3209', name: 'Kabupaten Cirebon' },
-                { id: '3210', name: 'Kabupaten Majalengka' },
-                { id: '3211', name: 'Kabupaten Sumedang' },
-                { id: '3212', name: 'Kabupaten Indramayu' },
                 { id: '3271', name: 'Kota Bogor' },
                 { id: '3272', name: 'Kota Sukabumi' },
                 { id: '3273', name: 'Kota Bandung' },
                 { id: '3274', name: 'Kota Cirebon' },
                 { id: '3275', name: 'Kota Bekasi' },
-                { id: '3276', name: 'Kota Depok' },
-                { id: '3277', name: 'Kota Cimahi' },
-                { id: '3278', name: 'Kota Tasikmalaya' },
-                { id: '3279', name: 'Kota Banjar' }
+                { id: '3276', name: 'Kota Depok' }
             ]
         }
     };
 
-    // LOCATION FUNCTIONS (keep existing location functions)
+    // LOCATION FUNCTIONS
     function initializeLocationQuestions() {
         console.log('=== INITIALIZING LOCATION QUESTIONS ===');
         
@@ -1195,12 +1229,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const provinceSelect = document.getElementById(`province-${questionId}`);
         const citySelect = document.getElementById(`city-${questionId}`);
-        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-        const locationTextSpan = document.getElementById(`location-text-${questionId}`);
+        const locationDisplaySpan = document.getElementById(`location-display-${questionId}`);
         const combinedInput = document.getElementById(`location-combined-${questionId}`);
         
-        // Check if all elements exist
-        const elements = { provinceSelect, citySelect, selectedLocationDiv, locationTextSpan, combinedInput };
+        const elements = { provinceSelect, citySelect, locationDisplaySpan, combinedInput };
         const missingElements = Object.entries(elements).filter(([key, value]) => !value).map(([key]) => key);
         
         if (missingElements.length > 0) {
@@ -1223,8 +1255,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const locationString = `${cityName}, ${provinceName}`;
                 
                 // Update display
-                locationTextSpan.textContent = locationString;
-                selectedLocationDiv.classList.remove('hidden');
+                locationDisplaySpan.textContent = locationString;
                 
                 // Store data
                 const locationDataObj = {
@@ -1237,16 +1268,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 combinedInput.value = JSON.stringify(locationDataObj);
                 
-                // Remove validation styling
-                const container = combinedInput.closest('.question-container');
-                if (container) {
-                    container.classList.remove('border-red-300', 'bg-red-50');
-                    const validationMsg = container.querySelector('.validation-message');
-                    if (validationMsg) {
-                        validationMsg.classList.add('hidden');
-                    }
-                }
-                
                 console.log('Location data saved:', locationDataObj);
             }
         } else {
@@ -1257,11 +1278,11 @@ document.addEventListener('DOMContentLoaded', function() {
     function clearLocationDisplay(questionId) {
         console.log('Clearing location display for question:', questionId);
         
-        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+        const locationDisplaySpan = document.getElementById(`location-display-${questionId}`);
         const combinedInput = document.getElementById(`location-combined-${questionId}`);
         
-        if (selectedLocationDiv) {
-            selectedLocationDiv.classList.add('hidden');
+        if (locationDisplaySpan) {
+            locationDisplaySpan.textContent = 'Belum dipilih';
         }
         
         if (combinedInput) {
@@ -1303,130 +1324,332 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // VALIDATION FUNCTIONS
+    // ✅ PERBAIKAN: VALIDATION FUNCTION - SATU SAJA, YANG BENAR
     function validateCurrentCategory() {
-        let isValid = true;
-        const unansweredQuestions = [];
+        console.log('=== VALIDATING CURRENT CATEGORY ===');
         
-        console.log('=== STARTING VALIDATION ===');
+        const validationErrors = [];
+        let hasErrors = false;
         
-        // Clear previous validation messages
-        document.querySelectorAll('.validation-message').forEach(msg => {
-            msg.classList.add('hidden');
-        });
+        // Clear previous validation styles
         document.querySelectorAll('.question-container').forEach(container => {
-            container.classList.remove('border-red-300', 'bg-red-50');
+            container.classList.remove('border-red-300');
+            const validationMsg = container.querySelector('.validation-message');
+            if (validationMsg) {
+                validationMsg.classList.add('hidden');
+                validationMsg.textContent = '';
+            }
         });
         
-        // Hide validation alert
-        document.getElementById('validation-alert').classList.add('hidden');
+        // Only validate visible questions that are not disabled
+        const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
         
-        document.querySelectorAll('.question-container').forEach(container => {
-            // Skip hidden questions (conditional questions that are not shown)
-            if (container.style.display === 'none') {
-                console.log('Skipping hidden question:', container.id);
+        visibleQuestions.forEach((questionContainer, index) => {
+            const questionId = questionContainer.id.replace('question-', '');
+            const questionTitle = questionContainer.querySelector('h5').textContent.trim();
+            
+            // Check if question is conditional and currently visible
+            const isConditional = questionContainer.classList.contains('conditional-question');
+            const isCurrentlyVisible = questionContainer.style.display !== 'none';
+            
+            // Skip validation for conditional questions that are not visible
+            if (isConditional && !isCurrentlyVisible) {
                 return;
             }
             
-            const questionId = container.id.replace('question-', '');
-            const questionTitle = container.querySelector('h5').textContent.trim();
-            let hasAnswer = false;
+            let isRequired = true; // Assume all questions are required
+            let isAnswered = false;
+            let errorMessage = 'Pertanyaan ini wajib dijawab';
             
-            console.log('Validating question:', questionId, questionTitle);
+            // ✅ PERBAIKAN: Check different question types dengan lebih tepat
+            const textInput = questionContainer.querySelector(`input[name="answers[${questionId}]"][type="text"]:not(:disabled)`);
+            const dateInput = questionContainer.querySelector(`input[name="answers[${questionId}]"][type="date"]:not(:disabled)`);
+            const emailInput = questionContainer.querySelector(`input[name="answers[${questionId}]"][type="email"]:not(:disabled)`);
+            const radioInputs = questionContainer.querySelectorAll(`input[name="answers[${questionId}]"][type="radio"]`);
+            const checkboxInputs = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]`);
+            const locationInput = questionContainer.querySelector(`input[name="location_combined[${questionId}]"]`);
             
-            // Check text inputs (not disabled)
-            const textInput = container.querySelector(`input[name="answers[${questionId}]"][type="text"]:not(:disabled)`);
-            if (textInput && textInput.value.trim() !== '') {
-                hasAnswer = true;
-                console.log('✅ Text answer found');
-            }
-            
-            // Check date inputs (not disabled)
-            const dateInput = container.querySelector(`input[name="answers[${questionId}]"][type="date"]:not(:disabled)`);
-            if (dateInput && dateInput.value.trim() !== '') {
-                hasAnswer = true;
-                console.log('✅ Date answer found');
-            }
-            
-            // Check radio buttons (not disabled)
-            const radioInputs = container.querySelectorAll(`input[name="answers[${questionId}]"]:checked:not(:disabled)`);
-            if (radioInputs.length > 0) {
-                hasAnswer = true;
-                console.log('✅ Radio answer found');
-            }
-            
-            // Check checkboxes (not disabled)
-            const checkboxInputs = container.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked:not(:disabled)`);
-            if (checkboxInputs.length > 0) {
-                hasAnswer = true;
-                console.log('✅ Checkbox answer found');
-            }
-            
-            // Check location inputs (not disabled)
-            const locationInput = container.querySelector(`input[name="location_combined[${questionId}]"]:not(:disabled)`);
-            if (locationInput && locationInput.value.trim() !== '') {
-                hasAnswer = true;
-                console.log('✅ Location answer found');
-            }
-            
-            if (!hasAnswer) {
-                unansweredQuestions.push(questionTitle);
-                isValid = false;
+            if (textInput) {
+                // ✅ TEXT QUESTION (termasuk numeric)
+                const isNumeric = textInput.classList.contains('numeric-only');
+                const textValue = textInput.value.trim();
                 
-                console.log('❌ No answer found for question:', questionId);
-                
-                // Show validation message
-                const validationMsg = container.querySelector('.validation-message');
-                if (validationMsg) {
-                    validationMsg.textContent = 'Pertanyaan ini wajib dijawab';
-                    validationMsg.classList.remove('hidden');
+                if (textValue === '') {
+                    isAnswered = false;
+                    errorMessage = isNumeric ? 'Angka harus diisi' : 'Jawaban tidak boleh kosong';
+                } else if (isNumeric && !/^\d+$/.test(textValue)) {
+                    isAnswered = false;
+                    errorMessage = 'Hanya angka yang diperbolehkan';
                 } else {
-                    // Create validation message if not exists
-                    const newValidationMsg = document.createElement('div');
-                    newValidationMsg.className = 'text-red-500 text-sm mt-1 validation-message';
-                    newValidationMsg.textContent = 'Pertanyaan ini wajib dijawab';
-                    container.appendChild(newValidationMsg);
+                    isAnswered = true;
                 }
                 
-                // Add error styling
-                container.classList.add('border-red-300', 'bg-red-50');
+            } else if (dateInput) {
+                // ✅ DATE QUESTION
+                isAnswered = dateInput.value.trim() !== '';
+                errorMessage = 'Tanggal harus dipilih';
+                
+            } else if (emailInput) {
+                // ✅ EMAIL QUESTION
+                const emailValue = emailInput.value.trim();
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                
+                if (emailValue === '') {
+                    isAnswered = false;
+                    errorMessage = 'Email harus diisi';
+                } else if (!emailRegex.test(emailValue)) {
+                    isAnswered = false;
+                    errorMessage = 'Format email tidak valid (harus mengandung @domain.com)';
+                } else {
+                    isAnswered = true;
+                }
+                
+            } else if (radioInputs.length > 0) {
+                // ✅ RADIO QUESTION (option, rating, scale)
+                const checkedRadio = questionContainer.querySelector(`input[name="answers[${questionId}]"]:checked`);
+                isAnswered = checkedRadio !== null;
+                errorMessage = 'Pilih salah satu pilihan';
+                
+                // Check "other" field if needed
+                if (isAnswered && checkedRadio) {
+                    const isOtherOption = parseInt(checkedRadio.getAttribute('data-is-other')) === 1;
+                    if (isOtherOption) {
+                        const otherInput = questionContainer.querySelector(`input[name="other_answers[${questionId}]"]`);
+                        if (otherInput && otherInput.value.trim() === '') {
+                            isAnswered = false;
+                            errorMessage = 'Isian "Lainnya" harus diisi';
+                        }
+                    }
+                }
+                
+            } else if (checkboxInputs.length > 0) {
+                // ✅ MULTIPLE CHOICE QUESTION
+                const checkedBoxes = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`);
+                isAnswered = checkedBoxes.length > 0;
+                errorMessage = 'Minimal satu pilihan harus dipilih';
+                
+                // Check "other" fields for multiple choice
+                if (isAnswered) {
+                    let allOtherFieldsValid = true;
+                    
+                    checkedBoxes.forEach(checkbox => {
+                        const isOtherOption = parseInt(checkbox.getAttribute('data-is-other')) === 1;
+                        if (isOtherOption) {
+                            const optionId = checkbox.value;
+                            const otherField = questionContainer.querySelector(`#multiple_other_field_${questionId}_${optionId}`);
+                            
+                            if (otherField && !otherField.classList.contains('hidden')) {
+                                const otherInput = otherField.querySelector('input[type="text"]');
+                                if (otherInput && otherInput.value.trim() === '') {
+                                    allOtherFieldsValid = false;
+                                    errorMessage = 'Isian "Lainnya" harus diisi';
+                                }
+                            }
+                        }
+                    });
+                    
+                    isAnswered = allOtherFieldsValid;
+                }
+                
+            } else if (locationInput) {
+                // ✅ LOCATION QUESTION
+                isAnswered = locationInput.value.trim() !== '';
+                errorMessage = 'Lokasi harus dipilih';
+            }
+            
+            console.log(`Question ${questionId} validation result:`, {
+                isRequired,
+                isAnswered,
+                errorMessage,
+                isConditional,
+                isCurrentlyVisible
+            });
+            
+            if (isRequired && !isAnswered) {
+                hasErrors = true;
+                validationErrors.push(`${index + 1}. ${questionTitle}`);
+                
+                // Add visual indication
+                questionContainer.classList.add('border-red-300');
+                
+                // Show error message
+                const validationMsg = questionContainer.querySelector('.validation-message');
+                if (validationMsg) {
+                    validationMsg.textContent = errorMessage;
+                    validationMsg.classList.remove('hidden');
+                }
             }
         });
         
-        if (!isValid) {
-            console.log('Validation failed. Unanswered questions:', unansweredQuestions);
+        if (hasErrors) {
+            console.log('Validation failed:', validationErrors);
             
-            // Show validation alert
-            const validationAlert = document.getElementById('validation-alert');
-            const validationMessage = document.getElementById('validation-message');
-            
-            if (unansweredQuestions.length === 1) {
-                validationMessage.textContent = `Harap jawab pertanyaan: "${unansweredQuestions[0]}"`;
-            } else {
-                validationMessage.textContent = `Harap jawab ${unansweredQuestions.length} pertanyaan yang belum dijawab.`;
-            }
-            
-            validationAlert.classList.remove('hidden');
-            
-            // Scroll to first unanswered question
-            const firstUnanswered = document.querySelector('.question-container.border-red-300');
-            if (firstUnanswered) {
-                firstUnanswered.scrollIntoView({ 
+            // Scroll to first error
+            const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
+            if (firstErrorQuestion) {
+                firstErrorQuestion.scrollIntoView({ 
                     behavior: 'smooth', 
                     block: 'center' 
                 });
             }
             
-            // Auto-hide alert after 5 seconds
-            setTimeout(() => {
-                validationAlert.classList.add('hidden');
-            }, 5000);
-            
-        } else {
-            console.log('✅ All visible questions answered');
+            // Show validation alert
+            showValidationAlert(validationErrors);
+            return false;
         }
         
-        return isValid;
+        console.log('✅ Validation passed');
+        return true;
+    }
+    
+    function showValidationAlert(errors) {
+        const alertHtml = `
+            <div id="validation-alert" class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 max-w-md">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
+                    <div class="flex-1">
+                        <strong class="font-bold">Perhatian!</strong>
+                        <p class="text-sm mb-2">Silakan jawab pertanyaan berikut sebelum melanjutkan:</p>
+                        <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
+                            ${errors.map(error => `<li class="flex items-start"><i class="fas fa-circle text-xs mr-2 mt-1.5"></i><span>${error}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+        
+        // Auto remove after 10 seconds
+        setTimeout(() => {
+            const alert = document.getElementById('validation-alert');
+            if (alert) {
+                alert.remove();
+            }
+        }, 10000);
+    }
+
+    // ✅ NUMERIC DAN EMAIL VALIDATION
+    // Add numeric-only input restriction
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('numeric-only')) {
+            // Remove any non-numeric characters
+            let value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Update the input value
+            if (e.target.value !== value) {
+                e.target.value = value;
+                
+                // Show brief feedback for invalid characters
+                showNumericInputFeedback(e.target);
+            }
+        }
+    });
+    
+    // Prevent non-numeric key presses on numeric-only inputs
+    document.addEventListener('keypress', function(e) {
+        if (e.target.classList.contains('numeric-only')) {
+            // Allow: backspace, delete, tab, escape, enter, arrow keys
+            if ([8, 9, 27, 13, 46, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+                // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+Z
+                (e.ctrlKey && [65, 67, 86, 88, 90].indexOf(e.keyCode) !== -1)) {
+                return;
+            }
+            
+            // Ensure that it is a number and stop the keypress
+            if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                e.preventDefault();
+                
+                // Show feedback for blocked characters
+                showNumericInputFeedback(e.target, true);
+            }
+        }
+    });
+    
+    // Function to show numeric input feedback
+    function showNumericInputFeedback(input, isBlocked = false) {
+        // Remove existing feedback
+        const existingFeedback = input.parentNode.querySelector('.numeric-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'numeric-feedback absolute top-full left-0 mt-1 px-2 py-1 bg-red-100 text-red-600 text-xs rounded shadow-sm border border-red-200 z-10';
+        feedback.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Hanya angka yang diperbolehkan';
+        
+        // Make parent relative if not already
+        if (getComputedStyle(input.parentNode).position === 'static') {
+            input.parentNode.style.position = 'relative';
+        }
+        
+        // Add feedback
+        input.parentNode.appendChild(feedback);
+        
+        // Auto remove after 2 seconds
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        }, 2000);
+        
+        // Add a slight shake animation to the input
+        input.style.animation = 'shake 0.3s ease-in-out';
+        setTimeout(() => {
+            input.style.animation = '';
+        }, 300);
+    }
+
+    // Email validation for email type questions
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('email-validation')) {
+            const email = e.target.value;
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            
+            // Remove existing feedback
+            const existingFeedback = e.target.parentNode.querySelector('.email-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            // Validate email format
+            if (email && !emailRegex.test(email)) {
+                showEmailValidationFeedback(e.target);
+            } else {
+                // Remove error styling if email is valid
+                e.target.classList.remove('border-red-500');
+            }
+        }
+    });
+    
+    // Function to show email validation feedback
+    function showEmailValidationFeedback(input) {
+        // Add error styling
+        input.classList.add('border-red-500');
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'email-feedback absolute top-full left-0 mt-1 px-2 py-1 bg-red-100 text-red-600 text-xs rounded shadow-sm border border-red-200 z-10';
+        feedback.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Format email tidak valid (harus ada @domain.com)';
+        
+        // Make parent relative if not already
+        if (getComputedStyle(input.parentNode).position === 'static') {
+            input.parentNode.style.position = 'relative';
+        }
+        
+        // Add feedback
+        input.parentNode.appendChild(feedback);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        }, 3000);
     }
 
     // BUTTON HANDLERS
@@ -1479,482 +1702,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         form.submit();
     });
-
-    // VALIDATION FUNCTION
-    function validateCurrentCategory() {
-        console.log('=== VALIDATING CURRENT CATEGORY ===');
-        
-        const validationErrors = [];
-        let hasErrors = false;
-        
-        // Clear previous validation styles
-        document.querySelectorAll('.question-container').forEach(container => {
-            container.classList.remove('border-red-300');
-            const validationMsg = container.querySelector('.validation-message');
-            if (validationMsg) {
-                validationMsg.classList.add('hidden');
-                validationMsg.textContent = '';
-            }
-        });
-        
-        // Only validate visible questions that are not disabled
-        const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
-        
-        visibleQuestions.forEach((questionContainer, index) => {
-            const questionId = questionContainer.id.replace('question-', '');
-            const questionTitle = questionContainer.querySelector('h5').textContent.trim();
-            
-            // Check if question is conditional and currently visible
-            const isConditional = questionContainer.classList.contains('conditional-question');
-            const isCurrentlyVisible = questionContainer.style.display !== 'none';
-            
-            // Skip validation for conditional questions that are not visible
-            if (isConditional && !isCurrentlyVisible) {
-                return;
-            }
-            
-            let isRequired = true; // Assume all questions are required
-            let isAnswered = false;
-            let errorMessage = 'Pertanyaan ini wajib dijawab';
-            
-            // Check different question types
-            const textInput = questionContainer.querySelector(`input[name="answers[${questionId}]"]:not([type="radio"]):not([type="checkbox"])`);
-            const radioInputs = questionContainer.querySelectorAll(`input[name="answers[${questionId}]"][type="radio"]`);
-            const checkboxInputs = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]`);
-            const locationInput = questionContainer.querySelector(`input[name="location_combined[${questionId}]"]`);
-            
-            if (textInput) {
-                // Text or date question
-                isAnswered = textInput.value.trim() !== '';
-                errorMessage = 'Jawaban tidak boleh kosong';
-                
-            } else if (radioInputs.length > 0) {
-                // Radio question (option, rating, scale)
-                const checkedRadio = questionContainer.querySelector(`input[name="answers[${questionId}]"]:checked`);
-                isAnswered = checkedRadio !== null;
-                errorMessage = 'Pilih salah satu pilihan';
-                
-                // Check "other" field if needed
-                if (isAnswered && checkedRadio) {
-                    const isOtherOption = parseInt(checkedRadio.getAttribute('data-is-other')) === 1;
-                    if (isOtherOption) {
-                        const otherInput = questionContainer.querySelector(`input[name="other_answers[${questionId}]"]`);
-                        if (otherInput && otherInput.value.trim() === '') {
-                            isAnswered = false;
-                            errorMessage = 'Isian "Lainnya" harus diisi';
-                        }
-                    }
-                }
-                
-            } else if (checkboxInputs.length > 0) {
-                // Multiple choice question
-                const checkedBoxes = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`);
-                isAnswered = checkedBoxes.length > 0;
-                errorMessage = 'Minimal satu pilihan harus dipilih';
-                
-                // Check "other" fields for multiple choice
-                if (isAnswered) {
-                    let allOtherFieldsValid = true;
-                    
-                    checkedBoxes.forEach(checkbox => {
-                        const isOtherOption = parseInt(checkbox.getAttribute('data-is-other')) === 1;
-                        if (isOtherOption) {
-                            const optionId = checkbox.value;
-                            const otherField = questionContainer.querySelector(`#multiple_other_field_${questionId}_${optionId}`);
-                            
-                            if (otherField && !otherField.classList.contains('hidden')) {
-                                const otherInput = otherField.querySelector('input[type="text"]');
-                                if (otherInput && otherInput.value.trim() === '') {
-                                    allOtherFieldsValid = false;
-                                    errorMessage = 'Isian "Lainnya" harus diisi';
-                                }
-                            }
-                        }
-                    });
-                    
-                    isAnswered = allOtherFieldsValid;
-                }
-                
-            } else if (locationInput) {
-                // Location question
-                isAnswered = locationInput.value.trim() !== '';
-                errorMessage = 'Lokasi harus dipilih';
-            }
-            
-            console.log(`Question ${questionId} validation result:`, {
-                isRequired,
-                isAnswered,
-                errorMessage,
-                isConditional,
-                isCurrentlyVisible
-            });
-            
-            if (isRequired && !isAnswered) {
-                hasErrors = true;
-                validationErrors.push(`${index + 1}. ${questionTitle}`);
-                
-                // Add visual indication
-                questionContainer.classList.add('border-red-300');
-                
-                // Show error message
-                const validationMsg = questionContainer.querySelector('.validation-message');
-                if (validationMsg) {
-                    validationMsg.textContent = errorMessage;
-                    validationMsg.classList.remove('hidden');
-                }
-            }
-        });
-        
-        if (hasErrors) {
-            console.log('Validation failed:', validationErrors);
-            
-            // Scroll to first error
-            const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
-            if (firstErrorQuestion) {
-                firstErrorQuestion.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-            }
-            
-            // Show validation alert
-            showValidationAlert(validationErrors);
-            return false;
-        }
-        
-        console.log('✅ Validation passed');
-        return true;
-    }
-    
-    function showValidationAlert(errors) {
-        const alertHtml = `
-            <div id="validation-alert" class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 max-w-md">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
-                    <div class="flex-1">
-                        <strong class="font-bold">Perhatian!</strong>
-                        <p class="text-sm mb-2">Silakan jawab pertanyaan berikut sebelum melanjutkan:</p>
-                        <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
-                            ${errors.map(error => `<li class="flex items-start"><i class="fas fa-circle text-xs mr-2 mt-1.5"></i><span>${error}</span></li>`).join('')}
-                        </ul>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', alertHtml);
-        
-        // Auto remove after 10 seconds
-        setTimeout(() => {
-            const alert = document.getElementById('validation-alert');
-            if (alert) {
-                alert.remove();
-            }
-        }, 10000);
-    }
-
-    // ✅ PROFILE DROPDOWN
-    document.getElementById('profile-toggle')?.addEventListener('click', function() {
-        const dropdown = document.getElementById('profile-dropdown');
-        dropdown.classList.toggle('hidden');
-    });
-
-    // ✅ SIDEBAR TOGGLE
-    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('-translate-x-full');
-    });
-
-    document.getElementById('close-sidebar')?.addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.add('-translate-x-full');
-    });
-
-    // ✅ LOGOUT HANDLER
-    document.getElementById('logout-btn')?.addEventListener('click', function(event) {
-        event.preventDefault();
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("logout") }}';
-
-        const csrfTokenInput = document.createElement('input');
-        csrfTokenInput.type = 'hidden';
-        csrfTokenInput.name = '_token';
-        csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        form.appendChild(csrfTokenInput);
-        document.body.appendChild(form);
-        form.submit();
-    });
     
     // ✅ START INITIALIZATION
     initializeQuestionnaire();
-    
-    // ✅ BUTTON EVENT HANDLERS
-    document.getElementById('save-draft-btn')?.addEventListener('click', function() {
-        console.log('Saving draft...');
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'save_draft';
-        }
-        form.submit();
-    });
-
-    document.getElementById('prev-category-btn')?.addEventListener('click', function() {
-        console.log('Going to previous category...');
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'prev_category';
-        }
-        form.submit();
-    });
-
-    document.getElementById('next-category-btn')?.addEventListener('click', function() {
-        console.log('Attempting to go to next category...');
-        if (validateCurrentCategory()) {
-            const actionInput = document.querySelector('input[name="action"]');
-            if (actionInput) {
-                actionInput.value = 'next_category';
-            }
-            form.submit();
-        }
-    });
-
-    document.getElementById('submit-final-btn')?.addEventListener('click', function() {
-        console.log('Attempting final submission...');
-        if (validateCurrentCategory()) {
-            // Show confirmation modal
-            document.getElementById('confirmation-modal').classList.remove('hidden');
-        }
-    });
-
-    // MODAL HANDLERS
-    document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        document.getElementById('confirmation-modal').classList.add('hidden');
-    });
-
-    document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'submit_final';
-        }
-        form.submit();
-    });
-
-    // VALIDATION FUNCTION
-    function validateCurrentCategory() {
-        console.log('=== VALIDATING CURRENT CATEGORY ===');
-        
-        const validationErrors = [];
-        let hasErrors = false;
-        
-        // Clear previous validation styles
-        document.querySelectorAll('.question-container').forEach(container => {
-            container.classList.remove('border-red-300');
-            const validationMsg = container.querySelector('.validation-message');
-            if (validationMsg) {
-                validationMsg.classList.add('hidden');
-                validationMsg.textContent = '';
-            }
-        });
-        
-        // Only validate visible questions that are not disabled
-        const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
-        
-        visibleQuestions.forEach((questionContainer, index) => {
-            const questionId = questionContainer.id.replace('question-', '');
-            const questionTitle = questionContainer.querySelector('h5').textContent.trim();
-            
-            // Check if question is conditional and currently visible
-            const isConditional = questionContainer.classList.contains('conditional-question');
-            const isCurrentlyVisible = questionContainer.style.display !== 'none';
-            
-            // Skip validation for conditional questions that are not visible
-            if (isConditional && !isCurrentlyVisible) {
-                return;
-            }
-            
-            let isRequired = true; // Assume all questions are required
-            let isAnswered = false;
-            let errorMessage = 'Pertanyaan ini wajib dijawab';
-            
-            // Check different question types
-            const textInput = questionContainer.querySelector(`input[name="answers[${questionId}]"]:not([type="radio"]):not([type="checkbox"])`);
-            const radioInputs = questionContainer.querySelectorAll(`input[name="answers[${questionId}]"][type="radio"]`);
-            const checkboxInputs = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]`);
-            const locationInput = questionContainer.querySelector(`input[name="location_combined[${questionId}]"]`);
-            
-            if (textInput) {
-                // Text or date question
-                isAnswered = textInput.value.trim() !== '';
-                errorMessage = 'Jawaban tidak boleh kosong';
-                
-            } else if (radioInputs.length > 0) {
-                // Radio question (option, rating, scale)
-                const checkedRadio = questionContainer.querySelector(`input[name="answers[${questionId}]"]:checked`);
-                isAnswered = checkedRadio !== null;
-                errorMessage = 'Pilih salah satu pilihan';
-                
-                // Check "other" field if needed
-                if (isAnswered && checkedRadio) {
-                    const isOtherOption = parseInt(checkedRadio.getAttribute('data-is-other')) === 1;
-                    if (isOtherOption) {
-                        const otherInput = questionContainer.querySelector(`input[name="other_answers[${questionId}]"]`);
-                        if (otherInput && otherInput.value.trim() === '') {
-                            isAnswered = false;
-                            errorMessage = 'Isian "Lainnya" harus diisi';
-                        }
-                    }
-                }
-                
-            } else if (checkboxInputs.length > 0) {
-                // Multiple choice question
-                const checkedBoxes = questionContainer.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`);
-                isAnswered = checkedBoxes.length > 0;
-                errorMessage = 'Minimal satu pilihan harus dipilih';
-                
-                // Check "other" fields for multiple choice
-                if (isAnswered) {
-                    let allOtherFieldsValid = true;
-                    
-                    checkedBoxes.forEach(checkbox => {
-                        const isOtherOption = parseInt(checkbox.getAttribute('data-is-other')) === 1;
-                        if (isOtherOption) {
-                            const optionId = checkbox.value;
-                            const otherField = questionContainer.querySelector(`#multiple_other_field_${questionId}_${optionId}`);
-                            
-                            if (otherField && !otherField.classList.contains('hidden')) {
-                                const otherInput = otherField.querySelector('input[type="text"]');
-                                if (otherInput && otherInput.value.trim() === '') {
-                                    allOtherFieldsValid = false;
-                                    errorMessage = 'Isian "Lainnya" harus diisi';
-                                }
-                            }
-                        }
-                    });
-                    
-                    isAnswered = allOtherFieldsValid;
-                }
-                
-            } else if (locationInput) {
-                // Location question
-                isAnswered = locationInput.value.trim() !== '';
-                errorMessage = 'Lokasi harus dipilih';
-            }
-            
-            console.log(`Question ${questionId} validation result:`, {
-                isRequired,
-                isAnswered,
-                errorMessage,
-                isConditional,
-                isCurrentlyVisible
-            });
-            
-            if (isRequired && !isAnswered) {
-                hasErrors = true;
-                validationErrors.push(`${index + 1}. ${questionTitle}`);
-                
-                // Add visual indication
-                questionContainer.classList.add('border-red-300');
-                
-                // Show error message
-                const validationMsg = questionContainer.querySelector('.validation-message');
-                if (validationMsg) {
-                    validationMsg.textContent = errorMessage;
-                    validationMsg.classList.remove('hidden');
-                }
-            }
-        });
-        
-        if (hasErrors) {
-            console.log('Validation failed:', validationErrors);
-            
-            // Scroll to first error
-            const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
-            if (firstErrorQuestion) {
-                firstErrorQuestion.scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'center' 
-                });
-            }
-            
-            // Show validation alert
-            showValidationAlert(validationErrors);
-            return false;
-        }
-        
-        console.log('✅ Validation passed');
-        return true;
-    }
-    
-    function showValidationAlert(errors) {
-        const alertHtml = `
-            <div id="validation-alert" class="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50 max-w-md">
-                <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle mr-2 mt-0.5"></i>
-                    <div class="flex-1">
-                        <strong class="font-bold">Perhatian!</strong>
-                        <p class="text-sm mb-2">Silakan jawab pertanyaan berikut sebelum melanjutkan:</p>
-                        <ul class="text-sm space-y-1 max-h-32 overflow-y-auto">
-                            ${errors.map(error => `<li class="flex items-start"><i class="fas fa-circle text-xs mr-2 mt-1.5"></i><span>${error}</span></li>`).join('')}
-                        </ul>
-                    </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="text-red-500 hover:text-red-700 ml-2">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', alertHtml);
-        
-        // Auto remove after 10 seconds
-        setTimeout(() => {
-            const alert = document.getElementById('validation-alert');
-            if (alert) {
-                alert.remove();
-            }
-        }, 10000);
-    }
-
-    // ✅ PROFILE DROPDOWN
-    document.getElementById('profile-toggle')?.addEventListener('click', function() {
-        const dropdown = document.getElementById('profile-dropdown');
-        dropdown.classList.toggle('hidden');
-    });
-
-    // ✅ SIDEBAR TOGGLE
-    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.toggle('-translate-x-full');
-    });
-
-    document.getElementById('close-sidebar')?.addEventListener('click', function() {
-        const sidebar = document.getElementById('sidebar');
-        sidebar.classList.add('-translate-x-full');
-    });
-
-    // ✅ LOGOUT HANDLER
-    document.getElementById('logout-btn')?.addEventListener('click', function(event) {
-        event.preventDefault();
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("logout") }}';
-
-        const csrfTokenInput = document.createElement('input');
-        csrfTokenInput.type = 'hidden';
-        csrfTokenInput.name = '_token';
-        csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        form.appendChild(csrfTokenInput);
-        document.body.appendChild(form);
-        form.submit();
-    });
 });
 </script>
 
