@@ -3,26 +3,16 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-    <!-- Sidebar -->
-    @include('company.sidebar')
+ {{-- Sidebar --}}
+    @include('components.company.sidebar')
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-        <!-- Header -->
-        <main class="flex-grow overflow-y-auto" id="main-content">
+   
         {{-- Header --}}
         @include('components.company.header', ['title' => 'Kuesioner employee'])
 
-            <!-- Action Buttons -->
-            <div class="flex items-center space-x-3">
-                @if($userAnswer->status == 'completed')
-                    <button onclick="window.print()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
-                        <i class="fas fa-print mr-1"></i> Print
-                    </button>
-                @endif
-                
-                <!-- Profile Dropdown -->
-                @include('components.company.profile-dropdown')
+            
 
         <!-- Content Section -->
         <div class="p-6" id="printable-content">
@@ -58,6 +48,12 @@
                         <p class="text-lg font-bold text-blue-900">#{{ $userAnswer->id_user_answer }}</p>
                     </div>
                 </div>
+
+    <p class="text-sm text-gray-700">
+        <i class="fas fa-user-graduate mr-1"></i>
+        Dinilai: <strong>{{ $userAnswer->nim }}</strong><br> Nama Alumni  :<strong>{{ $userAnswer->alumni->name ?? 'Tidak Diketahui' }}</strong>
+    </p>
+
 
                 <!-- Progress Bar -->
                 @php
@@ -194,6 +190,7 @@
                         Jawaban Kuesioner
                     </h3>
                 </div>
+                
 
                 <div class="p-6">
                     @if(count($questionsWithAnswers) > 0)
@@ -502,10 +499,15 @@
                     <a href="{{ route('company.questionnaire.results') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-md font-medium transition-colors duration-200">
                         <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar
                     </a>
+                    @if($userAnswer->periode->status == 'active')
+                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                            <i class="fas fa-plus mr-2"></i> Isi Kuesioner Alumni Lain
+                        </a>
+                    @endif
                 </div>
                 <div class="flex space-x-3">
                     @if($userAnswer->periode->status == 'active' && $userAnswer->status == 'draft')
-                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i> Lanjutkan Mengisi
                         </a>
                     @endif

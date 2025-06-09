@@ -9,11 +9,12 @@ use App\Models\Tb_Question_Options;
 use App\Models\Tb_Periode;
 use App\Models\Tb_User_Answers;
 use App\Models\Tb_User_Answer_Item;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\Tb_Jobhistory; // Assuming this is the model for job history
+use App\Models\Tb_Alumni; // Assuming this is the model for alumni
 
 class QuestionnaireController extends Controller
 {
@@ -58,10 +59,30 @@ class QuestionnaireController extends Controller
         return view('company.questionnaire.index', compact('availableActivePeriodes', 'draftUserAnswers', 'completedUserAnswers'));
     }
     
-    public function fill($id_periode, $category = null)
+      public function fill($id_periode, $category = null)
     {
         $periode = Tb_Periode::findOrFail($id_periode);
-        
+        $idCompany = Auth::user()->company->id_company ?? null;
+
+        // Ambil semua alumni yang pernah bekerja di perusahaan ini
+        $alumniList = Tb_jobhistory::with('alumni')
+            ->where('id_company', $idCompany)
+            ->get()
+            ->pluck('alumni')
+            ->unique('nim');
+
+        // Ambil daftar NIM alumni yang sudah dinilai (status completed) pada periode ini oleh perusahaan ini
+        $completedNims = Tb_User_Answers::where('id_user', Auth::id())
+            ->where('id_periode', $id_periode)
+            ->where('status', 'completed')
+            ->pluck('nim')
+            ->toArray();
+
+        // Filter alumniList agar hanya alumni yang BELUM dinilai (tidak ada di $completedNims)
+        $alumniList = $alumniList->filter(function($alumni) use ($completedNims) {
+            return $alumni && !in_array($alumni->nim, $completedNims);
+        });
+
         // Check if period is active
         if ($periode->status !== 'active') {
             return redirect()->route('company.questionnaire.index')->with('error', 'Periode kuesioner tidak aktif.');
@@ -188,6 +209,7 @@ class QuestionnaireController extends Controller
                         }
                         $prevMultipleOtherAnswers[$item->id_question][$item->id_questions_options] = $item->other_answer;
                     }
+
                 }
             }
         }
@@ -208,14 +230,22 @@ class QuestionnaireController extends Controller
             'prevLocationAnswers',
             'conditionalQuestions',  // ✅ TAMBAHKAN INI
             'totalCategories',       // ✅ TAMBAHKAN INI
-            'progressPercentage'     // ✅ TAMBAHKAN INI
+            'progressPercentage',
+             'alumniList'     // ✅ TAMBAHKAN INI
         ));
     }
     
     public function submit(Request $request, $id_periode)
     {
         try {
-            // Debug log - capture ALL form data including other answers
+            $nim = $request->input('alumni_nim');
+
+            // Validasi alumni wajib dipilih
+            if (empty($nim)) {
+                return redirect()->back()->with('error', 'Anda harus memilih alumni yang ingin dinilai.');
+            }
+
+            // Debug log - tetap tampilkan data lengkap
             Log::info('Company questionnaire submission - FULL DEBUG', [
                 'action' => $request->input('action'),
                 'category_id' => $request->input('id_category'),
@@ -226,20 +256,32 @@ class QuestionnaireController extends Controller
                 'location_combined' => $request->input('location_combined'),
                 'all_request_data' => $request->all()
             ]);
-            
-            // Get current category and verify it's for company
+
+            // Ambil kategori dan validasi for_type
             $category = Tb_Category::findOrFail($request->input('id_category'));
-            
+
             if (!in_array($category->for_type, ['company', 'both'])) {
                 return redirect()->back()->with('error', 'Kategori tidak tersedia untuk perusahaan.');
             }
-            
-            // Find or create user answer
+
             $userId = Auth::id();
+
+            // Cegah submit dua kali untuk alumni yang sama pada periode yang sama (status completed)
+            $alreadyCompleted = \App\Models\Tb_User_Answers::where('id_user', $userId)
+                ->where('id_periode', $id_periode)
+                ->where('nim', $nim)
+                ->where('status', 'completed')
+                ->exists();
+            if ($alreadyCompleted) {
+                return redirect()->back()->with('error', 'Alumni ini sudah dinilai dan tidak dapat dinilai dua kali pada periode yang sama.');
+            }
+            
+            // Cari atau buat record jawaban user berdasarkan user, periode, dan nim alumni yang dinilai
             $userAnswer = Tb_User_Answers::firstOrCreate(
                 [
                     'id_user' => $userId,
-                    'id_periode' => $id_periode
+                    'id_periode' => $id_periode,
+                    'nim' => $nim
                 ],
                 [
                     'status' => 'draft',
@@ -483,60 +525,63 @@ class QuestionnaireController extends Controller
     /**
      * Display a listing of the user's questionnaire results.
      */
-    public function results()
-    {
-        $userId = Auth::id();
-        
-        // Get all user answers (both completed and draft) with proper relationships
-        $userAnswers = Tb_User_Answers::where('id_user', $userId)
-            ->with(['periode', 'user.company'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+public function results()
+{
+    $userId = Auth::id();
+    
+    // Get all user answers (both completed and draft) with proper relationships
+    $userAnswers = Tb_User_Answers::where('id_user', $userId)
+        ->with(['periode', 'user.company'])
+        ->orderBy('created_at', 'desc')
+        ->get();
 
-        // Add additional data for each answer
-        foreach ($userAnswers as $userAnswer) {
-            // Calculate completion percentage
-            $totalQuestions = 0;
-            $answeredQuestions = 0;
-            
-            // Get categories for this period that are for company
-            $categories = Tb_Category::where('id_periode', $userAnswer->id_periode)
-                ->where(function($query) {
-                    $query->where('for_type', 'company')
-                          ->orWhere('for_type', 'both');
-                })
-                ->get();
-            
-            foreach ($categories as $category) {
-                $questions = Tb_Questions::where('id_category', $category->id_category)->get();
-                $totalQuestions += $questions->count();
-                
-                // Count answered questions
-                $answeredCount = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
-                    ->whereIn('id_question', $questions->pluck('id_question'))
-                    ->whereNotNull('answer')
-                    ->orWhereNotNull('id_questions_options')
-                    ->count();
-                
-                $answeredQuestions += $answeredCount;
-            }
-            
-            $userAnswer->completion_percentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
-            $userAnswer->total_questions = $totalQuestions;
-            $userAnswer->answered_questions = $answeredQuestions;
-            
-            // Format dates
-            $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
-            $userAnswer->formatted_updated_at = $userAnswer->updated_at->format('d M Y, H:i');
-            
-            // Get submit date if completed
-            if ($userAnswer->status == 'completed' && $userAnswer->submitted_at) {
-                $userAnswer->formatted_submitted_at = \Carbon\Carbon::parse($userAnswer->submitted_at)->format('d M Y, H:i');
-            }
-        }
+    // Add additional data for each answer
+    foreach ($userAnswers as $userAnswer) {
+        // ===== Tambahkan informasi alumni yang dinilai =====
+        $alumni = Tb_Alumni::where('nim', $userAnswer->nim)->first();
+        $userAnswer->alumni = $alumni;
+
+        // ===== Hitung completion =====
+        $totalQuestions = 0;
+        $answeredQuestions = 0;
         
-        return view('company.questionnaire.results', compact('userAnswers'));
+        $categories = Tb_Category::where('id_periode', $userAnswer->id_periode)
+            ->where(function($query) {
+                $query->where('for_type', 'company')
+                      ->orWhere('for_type', 'both');
+            })
+            ->get();
+        
+        foreach ($categories as $category) {
+            $questions = Tb_Questions::where('id_category', $category->id_category)->get();
+            $totalQuestions += $questions->count();
+
+            $answeredCount = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+                ->whereIn('id_question', $questions->pluck('id_question'))
+                ->where(function($query) {
+                    $query->whereNotNull('answer')
+                          ->orWhereNotNull('id_questions_options');
+                })
+                ->count();
+
+            $answeredQuestions += $answeredCount;
+        }
+
+        $userAnswer->completion_percentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
+        $userAnswer->total_questions = $totalQuestions;
+        $userAnswer->answered_questions = $answeredQuestions;
+
+        // Format dates
+        $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
+        $userAnswer->formatted_updated_at = $userAnswer->updated_at->format('d M Y, H:i');
+
+        if ($userAnswer->status == 'completed' && $userAnswer->submitted_at) {
+            $userAnswer->formatted_submitted_at = \Carbon\Carbon::parse($userAnswer->submitted_at)->format('d M Y, H:i');
+        }
     }
+
+    return view('company.questionnaire.results', compact('userAnswers'));
+}
     
     /**
      * Display a specific questionnaire response.
@@ -725,6 +770,7 @@ class QuestionnaireController extends Controller
                 ];
             }
         }
+        
         
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
     }

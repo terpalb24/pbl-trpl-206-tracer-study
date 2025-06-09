@@ -17,6 +17,7 @@ class Tb_User_Answers extends Model
         'id_user',
         'id_periode',
         'status',
+        'nim',
     ];
 
     public function user()
@@ -32,5 +33,9 @@ class Tb_User_Answers extends Model
     public function items()
     {
         return $this->hasMany(Tb_User_Answer_Item::class, 'id_user_answer', 'id_user_answer');
+    }
+    public function alumni()
+    {
+        return $this->belongsTo(Tb_Alumni::class, 'nim', 'nim');
     }
 }

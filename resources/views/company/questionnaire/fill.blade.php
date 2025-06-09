@@ -2,27 +2,26 @@
 
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
+
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-   {{-- Sidebar --}}
+    {{-- Sidebar --}}
     @include('components.company.sidebar')
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-    {{-- Header --}}
-    @include('components.company.header', ['title' => 'Kuesioner employee'])
-
-
-
+        {{-- Header --}}
+        @include('components.company.header', ['title' => 'Kuesioner employee'])
 
         <!-- Content Section -->
         <div class="p-6">
+
             @if(session('success'))
                 <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md flex items-center">
                     <i class="fas fa-check-circle mr-2"></i>
                     {{ session('success') }}
                 </div>
             @endif
-            
+
             @if(session('error'))
                 <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md flex items-center">
                     <i class="fas fa-exclamation-circle mr-2"></i>
@@ -33,13 +32,19 @@
             <!-- Breadcrumb -->
             <nav class="mb-6">
                 <ol class="flex items-center space-x-2 text-sm">
-                    <li><a href="{{ route('dashboard.company') }}" class="text-blue-600 hover:underline">Dashboard</a></li>
+                    <li>
+                        <a href="{{ route('dashboard.company') }}" class="text-blue-600 hover:underline">Dashboard</a>
+                    </li>
                     <li><span class="text-gray-500">/</span></li>
-                    <li><a href="{{ route('company.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a></li>
+                    <li>
+                        <a href="{{ route('company.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a>
+                    </li>
                     <li><span class="text-gray-500">/</span></li>
                     <li class="text-gray-700">Pengisian</li>
                 </ol>
             </nav>
+
+         
 
             <!-- Progress Card -->
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 mb-6 border border-blue-200">
@@ -49,18 +54,24 @@
                         <p class="text-sm text-blue-700">{{ $currentCategory->category_name }}</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-bold text-blue-900">{{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ $allCategories->count() }}</div>
+                        <div class="text-2xl font-bold text-blue-900">
+                            {{ isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1 }}/{{ $allCategories->count() }}
+                        </div>
                         <div class="text-sm text-blue-700">Kategori</div>
                     </div>
                 </div>
-                
+
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-sm font-medium text-blue-900">Progress Keseluruhan</span>
-                    <span class="text-sm font-medium text-blue-900">{{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%</span>
+                    <span class="text-sm font-medium text-blue-900">
+                        {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%
+                    </span>
                 </div>
                 <div class="w-full bg-blue-200 rounded-full h-3">
-                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300" 
-                         style="width: {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%"></div>
+                    <div
+                        class="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300"
+                        style="width: {{ round(((isset($currentCategoryIndex) ? ($currentCategoryIndex + 1) : 1) / $allCategories->count()) * 100) }}%"
+                    ></div>
                 </div>
             </div>
 
@@ -72,7 +83,9 @@
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i>
                             {{ $currentCategory->category_name }}
                         </h3>
-                        <p class="text-gray-600 mt-1">{{ $currentCategory->description ?? 'Silakan jawab pertanyaan berikut dengan lengkap dan jujur.' }}</p>
+                        <p class="text-gray-600 mt-1">
+                            {{ $currentCategory->description ?? 'Silakan jawab pertanyaan berikut dengan lengkap dan jujur.' }}
+                        </p>
                     </div>
                     <div class="flex items-center space-x-2">
                         <span class="text-xs font-medium px-3 py-1 rounded-full bg-indigo-100 text-indigo-700">
@@ -86,6 +99,7 @@
                 </div>
             </div>
 
+           
             <!-- Questions Form Card -->
             <div class="bg-white rounded-xl shadow-md border border-gray-200">
                 <div class="p-6 border-b border-gray-200">
@@ -96,11 +110,25 @@
                 </div>
 
                 <div class="p-6">
-                    <form id="questionnaireForm" method="POST" action="{{ route('company.questionnaire.submit', $periode->id_periode) }}">
+                    <form id="questionnaireForm" method="POST" action="{{ route('company.questionnaire.submit', [$periode->id_periode]) }}">
                         @csrf
+                        <div class="mb-6">
+                            <label for="alumni_nim" class="block text-sm font-medium text-gray-700">Pilih Alumni yang Dinilai</label>
+                            <select name="alumni_nim" id="alumni_nim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50" required>
+                                <option value="">-- Pilih Alumni --</option>
+                                @foreach($alumniList as $alumni)
+                                    <option value="{{ $alumni->nim }}" {{ (old('alumni_nim') ?? request('alumni_nim')) == $alumni->nim ? 'selected' : '' }}>
+                                        {{ $alumni->name ?? $alumni->nama }} ({{ $alumni->nim }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @if(session('error'))
+                                <div class="text-red-500 text-sm mt-1">{{ session('error') }}</div>
+                            @endif
+                            <p class="text-xs text-gray-500 mt-1">Nama alumni hanya muncul jika alumni tersebut belum pernah dinilai pada periode ini. Setelah submit, Anda dapat memilih alumni lain untuk dinilai.</p>
+                        </div>
                         <input type="hidden" name="id_category" value="{{ $currentCategory->id_category }}">
                         <input type="hidden" name="action" id="form-action" value="save_draft">
-                        
                         <div class="space-y-8">
                             @foreach($questions as $question)
                                 <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 question-container {{ $question->depends_on ? 'conditional-question' : '' }}"
@@ -109,6 +137,7 @@
                                          data-depends-on="{{ $question->depends_on }}"
                                          data-depends-value="{{ $question->depends_value }}"
                                      @endif>
+                                       
                                      
                                     <!-- Question Header -->
                                     <div class="flex justify-between items-start mb-4">
@@ -407,7 +436,7 @@
 <!-- Enhanced Confirmation Modal -->
 <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-xl shadow-2xl p-6 max-w-md w-full mx-4">
-        <div class="text-center">
+        <div class="text-center"></div>
             <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
                 <i class="fas fa-check text-green-600 text-xl"></i>
             </div>
@@ -502,7 +531,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing company questionnaire functionality');
     
-    // ✅ PERBAIKAN: Pass data dari backend ke JavaScript dengan benar
+    // ✅ PERBAIKAN: Pass data dari backend to JavaScript dengan benar
     window.questionnaireData = {
         prevAnswers: @json($prevAnswers ?? []),
         prevMultipleAnswers: @json($prevMultipleAnswers ?? []),
@@ -1910,48 +1939,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ✅ LOGOUT HANDLER
-    document.getElementById('logout-btn')?.addEventListener('click', function(event) {
-        event.preventDefault();
-
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("logout") }}';
-
-        const csrfTokenInput = document.createElement('input');
-        csrfTokenInput.type = 'hidden';
-        csrfTokenInput.name = '_token';
-        csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        form.appendChild(csrfTokenInput);
-        document.body.appendChild(form);
-        form.submit();
-    });
-});
-cument.addEventListener('DOMContentLoaded', function() {
-    // Sidebar functionality
-    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('hidden');
-    });
-
-    document.getElementById('close-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.add('hidden');
-    });
-
-    // Profile dropdown functionality
-    document.getElementById('profile-toggle')?.addEventListener('click', function() {
-        document.getElementById('profile-dropdown').classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('profile-dropdown');
-        const toggle = document.getElementById('profile-toggle');
-        
-        if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
-            dropdown.classList.add('hidden');
-        }
-    });
-
-    // Logout functionality
     document.getElementById('logout-btn')?.addEventListener('click', function(event) {
         event.preventDefault();
 

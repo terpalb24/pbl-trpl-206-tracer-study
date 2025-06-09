@@ -1855,8 +1855,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="flex items-start space-x-4">
                         <!-- Icon -->
                         <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            <div class="w                                <i class="fas fa-exclamation-triangle text-red-500"></i>
                             </div>
                         </div>
 
@@ -2093,5 +2092,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <!-- script JS  -->
-<script src="{{ asset('./js/alumni.js') }}"></script>
+<script src="{{ asset('js/quesioner_fill.js') }}"></script>
 @endsection
