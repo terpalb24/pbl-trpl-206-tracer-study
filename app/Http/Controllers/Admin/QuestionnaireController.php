@@ -440,7 +440,7 @@ class QuestionnaireController extends Controller
             // Define validation rules
             $rules = [
                 'question' => 'required|string|max:1000',
-                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric',
+                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric,email',
                 'order' => 'required|integer|min:1',
                 // ✅ PERBAIKAN: Tambahkan validation untuk before/after text question
                 'before_text' => 'nullable|string|max:255',
@@ -662,7 +662,7 @@ class QuestionnaireController extends Controller
             // Define validation rules
             $rules = [
                 'question' => 'required|string|max:1000',
-                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric',
+                'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric,email',
                 'order' => 'required|integer|min:1',
                 'before_text' => 'nullable|string|max:255',
                 'after_text' => 'nullable|string|max:255',
@@ -1192,6 +1192,13 @@ class QuestionnaireController extends Controller
                         $hasAnswer = $hasValidAnswers;
                         
                     } elseif ($question->type == 'numeric') {
+                        // ✅ PERBAIKAN: For numeric questions - handle like text but with numeric validation
+                        $answer = $answerItems->first()->answer;
+                        if (empty(trim($answer))) {
+                            $hasAnswer = false;
+                        }
+
+                    } elseif ($question->type == 'email') {
                         // ✅ PERBAIKAN: For numeric questions - handle like text but with numeric validation
                         $answer = $answerItems->first()->answer;
                         if (empty(trim($answer))) {

@@ -414,7 +414,44 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                
+                                                                @elseif($qData['question']->type === 'email')
+                                                                    <!-- Email Answer -->
+                                                                    <div class="text-green-700">
+                                                                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                                            <div class="flex items-center">
+                                                                                <i class="fas fa-envelope text-blue-600 mr-3 text-xl"></i>
+                                                                                <div class="flex-1">
+                                                                                    @if($qData['question']->before_text || $qData['question']->after_text)
+                                                                                        <div class="flex items-center flex-wrap mb-2">
+                                                                                            @if($qData['question']->before_text)
+                                                                                                <span class="text-blue-700 font-medium mr-2">{{ $qData['question']->before_text }}</span>
+                                                                                            @endif
+                                                                                            
+                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-4 py-2 font-bold text-blue-900 text-lg hover:bg-blue-50 transition-colors">
+                                                                                                {{ $qData['answer'] }}
+                                                                                            </a>
+                                                                                            
+                                                                                            @if($qData['question']->after_text)
+                                                                                                <span class="text-blue-700 font-medium ml-2">{{ $qData['question']->after_text }}</span>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                    @else
+                                                                                        <div class="mb-2">
+                                                                                            <span class="text-sm text-blue-600 font-medium block mb-1">Email yang diinput:</span>
+                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-4 py-2 font-bold text-blue-900 text-xl hover:bg-blue-50 transition-colors inline-block">
+                                                                                                {{ $qData['answer'] }}
+                                                                                            </a>
+                                                                                        </div>
+                                                                                    @endif
+                                                                                    
+                                                                                    <div class="text-xs text-blue-600 flex items-center mt-2">
+                                                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                                                        Email terverifikasi • Klik untuk mengirim email
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 @elseif($qData['question']->type === 'location')
                                                                     <!-- ✅ PERBAIKAN: Enhanced Location Answer Display -->
                                                                     <div class="text-green-700">

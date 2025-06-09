@@ -70,6 +70,7 @@
                             <option value="text" {{ old('question_type') == 'text' ? 'selected' : '' }}>Teks</option>
                             <option value="option" {{ old('question_type') == 'option' ? 'selected' : '' }}>Pilihan Ganda</option>
                             <option value="numeric" {{ old('question_type') == 'numeric' ? 'selected' : '' }}>Numerik (Hanya Angka)</option>
+                            <option value="email" {{ old('question_type') == 'email' ? 'selected' : '' }}>Email (Validasi Domain)</option>
                             <option value="multiple" {{ old('question_type') == 'multiple' ? 'selected' : '' }}>Multiple Choice</option>
                             <option value="rating" {{ old('question_type') == 'rating' ? 'selected' : '' }}>Rating (Kurang, Cukup, Baik, Baik Sekali)</option>
                             <option value="scale" {{ old('question_type') == 'scale' ? 'selected' : '' }}>Skala Numerik (1, 2, 3, 4, 5)</option>
@@ -120,6 +121,56 @@
                         
                         <div class="bg-green-50 p-2 rounded text-sm text-green-700">
                             <strong>Contoh penggunaan:</strong> "Saya bekerja di [input field] sebagai posisi [input field]"
+                        </div>
+                    </div>
+                    <!-- Email input configuration section -->
+                    <div id="email-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'email' ? '' : 'hidden' }}">
+                        <h4 class="text-lg font-medium mb-3">Konfigurasi Input Email</h4>
+                        
+                        <div class="bg-blue-50 p-3 rounded-md mb-4">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pertanyaan email otomatis memvalidasi format email dan memastikan ada domain (@gmail.com, @yahoo.com, dll)
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label for="email_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
+                                <input type="text" id="email_before" name="before_text" value="{{ old('before_text') }}" 
+                                       placeholder="Contoh: Email aktif saya adalah" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                            <div>
+                                <label for="email_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
+                                <input type="text" id="email_after" name="after_text" value="{{ old('after_text') }}" 
+                                       placeholder="Contoh: yang bisa dihubungi" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Preview Input:</label>
+                            <div class="bg-gray-50 p-4 rounded-md border border-gray-200">
+                                <div class="flex items-center flex-wrap">
+                                    <span id="email-before-preview" class="mr-2 text-gray-700 font-medium"></span>
+                                    <input type="email" class="flex-grow px-3 py-2 border border-gray-300 rounded-md min-w-48 email-only" 
+                                           placeholder="contoh@domain.com" disabled>
+                                    <span id="email-after-preview" class="ml-2 text-gray-700 font-medium"></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 p-2 rounded text-sm text-green-700">
+                            <strong>Contoh penggunaan:</strong> "Email aktif saya adalah [user@domain.com] yang bisa dihubungi"
+                        </div>
+                        
+                        <div class="mt-3 bg-yellow-50 border border-yellow-200 p-3 rounded-md">
+                            <h5 class="font-medium text-yellow-800 mb-2">Validasi Email:</h5>
+                            <ul class="text-sm text-yellow-700 space-y-1">
+                                <li>• Harus mengandung karakter @</li>
+                                <li>• Harus ada domain setelah @ (contoh: gmail.com, yahoo.com)</li>
+                                <li>• Format email yang valid secara umum</li>
+                                <li>• Tidak boleh ada spasi atau karakter khusus yang tidak diizinkan</li>
+                            </ul>
                         </div>
                     </div>
                     <!-- Numeric input configuration section -->
@@ -572,7 +623,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 rating: document.getElementById('rating-options-section'),
                 scale: document.getElementById('scale-options-section'),
                 text: document.getElementById('text-options-section'),
-                numeric: document.getElementById('numeric-options-section')
+                numeric: document.getElementById('numeric-options-section'),
+                email: document.getElementById('email-options-section'),
             };
             
             // Hide all sections first
@@ -606,8 +658,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (sections.numeric) {
                     sections.numeric.classList.remove('hidden');
                 }
+            } else if (this.value === 'email') {
+                if (sections.email) {
+                    sections.email.classList.remove('hidden');
+                }
             }
-            
+
             // Remove required from option inputs when not option/multiple type
             if (this.value !== 'option' && this.value !== 'multiple' && sections.options) {
                 const visibleInputs = sections.options.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
@@ -673,6 +729,24 @@ document.addEventListener('DOMContentLoaded', function() {
         scaleMinLabel.addEventListener('input', updateScalePreview);
         scaleMaxLabel.addEventListener('input', updateScalePreview);
         updateScalePreview();
+    }
+    // Live preview for email input before/after text
+    const emailBefore = document.getElementById('email_before');
+    const emailAfter = document.getElementById('email_after');
+    const emailBeforePreview = document.getElementById('email-before-preview');
+    const emailAfterPreview = document.getElementById('email-after-preview');
+    
+    function updateEmailPreview() {
+        if (emailBefore && emailAfter && emailBeforePreview && emailAfterPreview) {
+            emailBeforePreview.textContent = emailBefore.value || '';
+            emailAfterPreview.textContent = emailAfter.value || '';
+        }
+    }
+    
+    if (emailBefore && emailAfter) {
+        emailBefore.addEventListener('input', updateEmailPreview);
+        emailAfter.addEventListener('input', updateEmailPreview);
+        updateEmailPreview(); // Initial update
     }
     
     // Add option button for option/multiple types
