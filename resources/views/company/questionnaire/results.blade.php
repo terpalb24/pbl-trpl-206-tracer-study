@@ -32,6 +32,23 @@
                     <p>{{ session('error') }}</p>
                 </div>
             @endif
+
+            {{-- Tombol Isi Kuesioner Lagi jika masih ada periode aktif --}}
+            @php
+                // Ambil data periode aktif dari session jika dikirim dari controller index
+                $availableActivePeriodes = $availableActivePeriodes ?? (session('availableActivePeriodes') ?? collect());
+            @endphp
+            @if(isset($availableActivePeriodes) && $availableActivePeriodes->isNotEmpty())
+                <div class="mb-6">
+                    <a href="{{ route('company.questionnaire.index') }}"
+                       class="inline-flex items-center px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow transition">
+                        <i class="fas fa-plus mr-2"></i> Isi Kuesioner Lagi
+                    </a>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Masih ada alumni yang dapat Anda nilai pada periode aktif.
+                    </p>
+                </div>
+            @endif
             
             @if($userAnswers->isEmpty())
                 <div class="bg-white rounded-xl shadow-md p-8 text-center">

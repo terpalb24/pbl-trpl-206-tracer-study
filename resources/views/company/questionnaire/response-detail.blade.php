@@ -499,10 +499,15 @@
                     <a href="{{ route('company.questionnaire.results') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-md font-medium transition-colors duration-200">
                         <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar
                     </a>
+                    @if($userAnswer->periode->status == 'active')
+                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                            <i class="fas fa-plus mr-2"></i> Isi Kuesioner Alumni Lain
+                        </a>
+                    @endif
                 </div>
                 <div class="flex space-x-3">
                     @if($userAnswer->periode->status == 'active' && $userAnswer->status == 'draft')
-                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i> Lanjutkan Mengisi
                         </a>
                     @endif

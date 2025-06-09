@@ -62,13 +62,26 @@ class QuestionnaireController extends Controller
       public function fill($id_periode, $category = null)
     {
         $periode = Tb_Periode::findOrFail($id_periode);
-       $idCompany = Auth::user()->company->id_company ?? null;
+        $idCompany = Auth::user()->company->id_company ?? null;
 
-        $alumniList = Tb_Jobhistory::with('alumni')
-    ->where('id_company', $idCompany)
-    ->get()
-    ->pluck('alumni')
-    ->unique('nim'); // supaya tidak duplikat
+        // Ambil semua alumni yang pernah bekerja di perusahaan ini
+        $alumniList = Tb_jobhistory::with('alumni')
+            ->where('id_company', $idCompany)
+            ->get()
+            ->pluck('alumni')
+            ->unique('nim');
+
+        // Ambil daftar NIM alumni yang sudah dinilai (status completed) pada periode ini oleh perusahaan ini
+        $completedNims = Tb_User_Answers::where('id_user', Auth::id())
+            ->where('id_periode', $id_periode)
+            ->where('status', 'completed')
+            ->pluck('nim')
+            ->toArray();
+
+        // Filter alumniList agar hanya alumni yang BELUM dinilai (tidak ada di $completedNims)
+        $alumniList = $alumniList->filter(function($alumni) use ($completedNims) {
+            return $alumni && !in_array($alumni->nim, $completedNims);
+        });
 
         // Check if period is active
         if ($periode->status !== 'active') {
@@ -224,43 +237,57 @@ class QuestionnaireController extends Controller
     
     public function submit(Request $request, $id_periode)
     {
-           
-         try {
-     $nim = $request->input('alumni_nim'); // disini kamu mengirimkan nim alumni yang dinilai
+        try {
+            $nim = $request->input('alumni_nim');
 
-        // Debug log - tetap tampilkan data lengkap
-        Log::info('Company questionnaire submission - FULL DEBUG', [
-            'action' => $request->input('action'),
-            'category_id' => $request->input('id_category'),
-            'answers' => $request->input('answers'),
-            'other_answers' => $request->input('other_answers'),
-            'multiple' => $request->input('multiple'),
-            'multiple_other_answers' => $request->input('multiple_other_answers'),
-            'location_combined' => $request->input('location_combined'),
-            'all_request_data' => $request->all()
-        ]);
+            // Validasi alumni wajib dipilih
+            if (empty($nim)) {
+                return redirect()->back()->with('error', 'Anda harus memilih alumni yang ingin dinilai.');
+            }
 
-        // Ambil kategori dan validasi for_type
-        $category = Tb_Category::findOrFail($request->input('id_category'));
+            // Debug log - tetap tampilkan data lengkap
+            Log::info('Company questionnaire submission - FULL DEBUG', [
+                'action' => $request->input('action'),
+                'category_id' => $request->input('id_category'),
+                'answers' => $request->input('answers'),
+                'other_answers' => $request->input('other_answers'),
+                'multiple' => $request->input('multiple'),
+                'multiple_other_answers' => $request->input('multiple_other_answers'),
+                'location_combined' => $request->input('location_combined'),
+                'all_request_data' => $request->all()
+            ]);
 
-        if (!in_array($category->for_type, ['company', 'both'])) {
-            return redirect()->back()->with('error', 'Kategori tidak tersedia untuk perusahaan.');
-        }
+            // Ambil kategori dan validasi for_type
+            $category = Tb_Category::findOrFail($request->input('id_category'));
 
-        $userId = Auth::id();
+            if (!in_array($category->for_type, ['company', 'both'])) {
+                return redirect()->back()->with('error', 'Kategori tidak tersedia untuk perusahaan.');
+            }
 
-        // Cari atau buat record jawaban user berdasarkan user, periode, dan nim alumni yang dinilai
-        $userAnswer = Tb_User_Answers::firstOrCreate(
-            [
-                'id_user' => $userId,
-                'id_periode' => $id_periode,
-                'nim' => $nim
-            ],
-            [
-                'status' => 'draft',
-                'submitted_at' => null
-            ]
-        );
+            $userId = Auth::id();
+
+            // Cegah submit dua kali untuk alumni yang sama pada periode yang sama (status completed)
+            $alreadyCompleted = \App\Models\Tb_User_Answers::where('id_user', $userId)
+                ->where('id_periode', $id_periode)
+                ->where('nim', $nim)
+                ->where('status', 'completed')
+                ->exists();
+            if ($alreadyCompleted) {
+                return redirect()->back()->with('error', 'Alumni ini sudah dinilai dan tidak dapat dinilai dua kali pada periode yang sama.');
+            }
+            
+            // Cari atau buat record jawaban user berdasarkan user, periode, dan nim alumni yang dinilai
+            $userAnswer = Tb_User_Answers::firstOrCreate(
+                [
+                    'id_user' => $userId,
+                    'id_periode' => $id_periode,
+                    'nim' => $nim
+                ],
+                [
+                    'status' => 'draft',
+                    'submitted_at' => null
+                ]
+            );
             
             // Get questions for this category
             $questions = Tb_Questions::where('id_category', $category->id_category)->get();
