@@ -1,51 +1,58 @@
 @extends('layouts.app')
 @section('content')
 <!-- Navbar -->
-  <header class="fixed z-999 left-0 right-0 items-center bg-[#0c2a5b] text-white p-4">
+<header class="fixed z-999 left-0 right-0 items-center bg-[#0c2a5b] text-white p-4">
     <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center">
-        <img src="assets\images/Group 3.png" alt="Logo" class="h-10" />
-      </div>
-
-      <!-- Desktop Menu -->
-      <nav class="hidden md:flex items-center gap-6">
-        <a href="#" class="hover:text-[#F2692A]">Beranda</a>
-        <a href="{{route('about')}}" class="hover:text-[#F2692A]">Tentang</a>
-        <a href="#" class="hover:text-[#F2692A]">Kontak</a>
-        <a href="#" class="hover:text-[#F2692A]">Statistik</a>
-        <div class="relative group">
-          <button class="hover:text-[#F2692A]">Laporan</button>
-          <ul class="absolute hidden group-hover:block bg-white text-black mt-2 rounded-md shadow-md w-70">
-            <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Laporan Tracer Study Polibatam 2022</a></li>
-            <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Laporan Tracer Study Polibatam 2023</a></li>
-          </ul>
+        <div class="flex items-center">
+            <img src="assets\images/Group 3.png" alt="Logo" class="h-10" />
         </div>
-        <a href="{{route('login')}}" class="flex items-center gap-2 hover:text-[#F2692A]"><i class="fa-solid fa-user"></i> Login</a>
-      </nav>
 
-      <!-- Hamburger (Mobile) -->
-      <div class="md:hidden">
-        <button id="hamburgerBtn"><i class="fa-solid fa-bars text-2xl"></i></button>
-      </div>
+        <!-- Desktop Menu -->
+        <nav class="hidden md:flex items-center gap-6">
+            <a href="#" class="hover:text-[#F2692A]">Beranda</a>
+            <a href="{{route('about')}}" class="hover:text-[#F2692A]">Tentang</a>
+            <a href="#" class="hover:text-[#F2692A]">Kontak</a>
+            <a href="#" class="hover:text-[#F2692A]">Statistik</a>
+            <div class="relative group">
+                <button class="hover:text-[#F2692A]">Laporan</button>
+                <ul class="absolute hidden group-hover:block bg-white text-black mt-2 rounded-md shadow-md w-70">
+                    <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Laporan Tracer Study Polibatam 2022</a></li>
+                    <li><a href="#" class="block px-4 py-2 hover:bg-gray-100">Laporan Tracer Study Polibatam 2023</a></li>
+                </ul>
+            </div>
+            <a href="{{route('login')}}" class="flex items-center gap-2 hover:text-[#F2692A]"><i class="fa-solid fa-user"></i> Login</a>
+        </nav>
+
+        <!-- Hamburger (Mobile) -->
+        <div class="md:hidden">
+            <button id="hamburgerBtn"><i class="fa-solid fa-bars text-2xl"></i></button>
+        </div>
     </div>
 
     <!-- Mobile Menu -->
     <div id="mobileMenu" class="md:hidden hidden flex-col px-4 pb-4 space-y-2 bg-[#0c2a5b]">
-      <a href="#" class="block">Beranda</a>
-      <a href="#" class="block">Tentang</a>
-      <a href="#" class="block">Kontak</a>
-      <a href="#" class="block">Statistik</a>
-      <a href="#" class="block">Laporan</a>
-      <a href="#" class="block">Login</a>
+        <a href="#" class="block">Beranda</a>
+        <a href="#" class="block">Tentang</a>
+        <a href="#" class="block">Kontak</a>
+        <a href="#" class="block">Statistik</a>
+        <a href="#" class="block">Laporan</a>
+        <a href="#" class="block">Login</a>
     </div>
-  </header>
+</header>
+
+<!-- Include Google Translate Widget Component -->
+<x-translate-widget 
+    position="top-right" 
+    :languages="['en', 'id']" 
+    theme="light" 
+/>
 
 <!-- Hero Section -->
 <section class="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between p-6 md:p-12 min-h-screen">
     <div class="md:w-1/2 space-y-6">
         <p class="text-lg">Selalu terhubung dengan</p>
         <h1 class="text-4xl md:text-7xl font-bold leading-tight">
-            Tracer Study <br><span class="text-[#0c2a5b]">Polibatam</span>
+            Tracer Study <br><span class="text-[#0c2a5b">Polibatam</span>
         </h1>
         <p class="text-md">Halo, alumni!</p>
         <p class="text-gray-800">Mari sukseskan pelaksanaan <span class="font-bold text-[#0c2a5b]">tracer study</span> Politeknik Negeri Batam.</p>
@@ -165,12 +172,13 @@
     </div>
 </footer>
 
-  <script>
+<script>
     // Toggle menu mobile
     document.getElementById('hamburgerBtn').addEventListener('click', () => {
-      const menu = document.getElementById('mobileMenu');
-      menu.classList.toggle('hidden');
+        const menu = document.getElementById('mobileMenu');
+        menu.classList.toggle('hidden');
     });
-  </script>
-  @endsection
-  
+</script>
+<!-- Google Translate Widget CSS -->
+    <link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
+@endsection

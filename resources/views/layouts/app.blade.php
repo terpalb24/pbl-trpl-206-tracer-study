@@ -13,7 +13,7 @@
     <!-- Tailwind CSS & Custom CSS -->
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="{{ asset('css/hamburger.css') }}">
-
+    
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
