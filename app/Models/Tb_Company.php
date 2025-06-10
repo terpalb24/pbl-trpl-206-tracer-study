@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Notifications\Notifiable;
 
 class Tb_Company extends Authenticatable
 {
-    use HasFactory;
-    //
+    use HasFactory, Notifiable;
+
     protected $table = 'tb_company';
     protected $primaryKey = 'id_company';
     public $incrementing = true;
@@ -44,4 +44,8 @@ class Tb_Company extends Authenticatable
         );
     }
     
+    public function routeNotificationForMail()
+    {
+        return $this->company_email;
+    }
 }

@@ -70,8 +70,57 @@ $admin = auth()->user()->admin;
                 <a href="#" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
                     <i class="fas fa-download"></i> Download Template
                 </a>
+                <!-- Tombol Kirim Pengingat ke Semua -->
+                <form action="" method="POST" id="remind-all-form" class="inline-block">
+                    @csrf
+                    <input type="hidden" name="id_periode" id="remind-all-id-periode" value="">
+                    <button type="button" onclick="showRemindAllModal()" class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                        <i class="fas fa-bell"></i> Kirim Pengingat ke Semua
+                    </button>
+                </form>
             </div>
         </div>
+        <!-- Modal Pilih Periode -->
+        <div id="remindAllModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+                <h3 class="text-lg font-semibold mb-4">Kirim Pengingat ke Semua</h3>
+                <form id="remindAllModalForm" method="POST">
+                    @csrf
+                    <label for="periode_id_select" class="block mb-2 text-sm font-medium text-gray-700">Pilih Periode Aktif</label>
+                    <select id="periode_id_select" name="id_periode" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4" required>
+                        <option value="">-- Pilih Periode Aktif --</option>
+                        @foreach($periodes as $periode)
+                            @if($periode->status == 'active')
+                                <option value="{{ $periode->id_periode }}">{{ $periode->periode_name }} ({{ $periode->start_date->format('d M Y') }} - {{ $periode->end_date->format('d M Y') }})</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" onclick="closeRemindAllModal()" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Batal</button>
+                        <button type="submit" class="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700">Kirim</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script>
+            function showRemindAllModal() {
+                document.getElementById('remindAllModal').classList.remove('hidden');
+            }
+            function closeRemindAllModal() {
+                document.getElementById('remindAllModal').classList.add('hidden');
+            }
+            document.getElementById('remindAllModalForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const periodeId = document.getElementById('periode_id_select').value;
+                if (!periodeId) {
+                    alert('Pilih periode aktif terlebih dahulu!');
+                    return;
+                }
+                // Set action form ke route yang benar
+                this.action = '/admin/questionnaire/' + periodeId + '/remind-all';
+                this.submit();
+            });
+        </script>
 
         @if(session('success'))
             <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
