@@ -3,12 +3,12 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
- {{-- Sidebar --}}
+ <!-- Sidebar -->
+    {{-- Sidebar --}}
     @include('components.company.sidebar')
 
     <!-- Main Content -->
     <main class="flex-grow overflow-y-auto" id="main-content">
-   
         {{-- Header --}}
         @include('components.company.header', ['title' => 'Kuesioner employee'])
 
@@ -341,7 +341,7 @@
                                                                                             @endif
                                                                                             
                                                                                             <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-lg font-mono">
-                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                                {{ $qData['answer'] }}
                                                                                             </span>
                                                                                             
                                                                                             @if(!empty($qData['question']->after_text))
@@ -357,7 +357,7 @@
                                                                                         <div class="mb-2">
                                                                                             <span class="text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
                                                                                             <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-2xl font-mono">
-                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                                {{ $qData['answer'] }}
                                                                                             </span>
                                                                                         </div>
                                                                                         
@@ -426,38 +426,44 @@
                                                                 </div>
                                                             </div>
                                                         @elseif($qData['question']->type == 'rating')
-                                                            <!-- Rating Answer Display -->
+                                                            <!-- ✅ PERBAIKAN: Rating Answer Display dengan null check -->
                                                             <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
-                                                                <div class="flex items-center">
-                                                                    <i class="fas fa-star text-purple-600 mr-3 text-lg"></i>
-                                                                    <div class="flex-1">
-                                                                        <span class="font-semibold text-purple-800 text-lg">{{ $qData['answer'] }}</span>
-                                                                        <div class="mt-2">
-                                                                            @php
-                                                                                $ratingLevel = strtolower($qData['answer']);
-                                                                                $ratingColor = 'gray';
-                                                                                $ratingIcon = 'fa-star';
-                                                                                
-                                                                                if (strpos($ratingLevel, 'kurang') !== false) {
-                                                                                    $ratingColor = 'red';
-                                                                                    $ratingIcon = 'fa-star';
-                                                                                } elseif (strpos($ratingLevel, 'cukup') !== false) {
-                                                                                    $ratingColor = 'yellow';
-                                                                                    $ratingIcon = 'fa-star-half-alt';
-                                                                                } elseif (strpos($ratingLevel, 'baik sekali') !== false || strpos($ratingLevel, 'sangat baik') !== false) {
-                                                                                    $ratingColor = 'green';
-                                                                                    $ratingIcon = 'fa-star';
-                                                                                } elseif (strpos($ratingLevel, 'baik') !== false) {
-                                                                                    $ratingColor = 'blue';
-                                                                                    $ratingIcon = 'fa-star';
-                                                                                }
-                                                                            @endphp
-                                                                            
-                                                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                                                                                bg-{{ $ratingColor }}-100 text-{{ $ratingColor }}-800">
-                                                                                <i class="fas {{ $ratingIcon }} mr-2"></i>
-                                                                                Tingkat: {{ $qData['answer'] }}
-                                                                            </span>
+                                                                <div class="flex items-center justify-between">
+                                                                    <div class="flex items-center">
+                                                                        <i class="fas fa-star text-purple-600 mr-3 text-lg"></i>
+                                                                        <div class="flex-1">
+                                                                            <div class="mb-2">
+                                                                                <span class="text-sm text-purple-600 font-medium block mb-1">Rating yang dipilih:</span>
+                                                                                <span class="font-bold text-purple-800 text-xl">
+                                                                                    @if($qData['ratingOption'])
+                                                                                        {{ $qData['ratingOption']->option }}
+                                                                                    @else
+                                                                                        {{ $qData['answer'] }}
+                                                                                    @endif
+                                                                                </span>
+                                                                            </div>
+                                                                            <!-- Show other answer if exists -->
+                                                                            @if($qData['otherAnswer'])
+                                                                                <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                                                    <div class="flex items-start">
+                                                                                        <i class="fas fa-edit text-blue-600 mr-2 mt-0.5"></i>
+                                                                                        <div class="flex-1">
+                                                                                            <span class="font-semibold text-blue-800 text-sm">Keterangan Tambahan:</span>
+                                                                                            <p class="text-blue-700 mt-1">{{ $qData['otherAnswer'] }}</p>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endif
+                                                                        </div>
+                                                                    </div>
+                                                                    
+                                                                    <!-- Rating badge -->
+                                                                    <div class="ml-4">
+                                                                        <div class="bg-white rounded-lg px-4 py-2 border border-purple-300 shadow-sm">
+                                                                            <div class="text-center">
+                                                                                <div class="text-2xl font-bold text-purple-600">★</div>
+                                                                                <div class="text-xs text-purple-600 font-medium">Rating</div>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -580,17 +586,23 @@
                         <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar
                     </a>
                     @if($userAnswer->periode->status == 'active')
-                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                        <!-- ✅ FIX: Change this link to go to select alumni page instead -->
+                        <a href="{{ route('company.questionnaire.select-alumni', $userAnswer->id_periode) }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
                             <i class="fas fa-plus mr-2"></i> Isi Kuesioner Alumni Lain
                         </a>
                     @endif
                 </div>
                 <div class="flex space-x-3">
                     @if($userAnswer->periode->status == 'active' && $userAnswer->status == 'draft')
-                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                        <!-- ✅ FIX: Add the nim parameter to continue filling -->
+                        <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode, $userAnswer->nim]) }}" class="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
                             <i class="fas fa-edit mr-2"></i> Lanjutkan Mengisi
                         </a>
                     @endif
+                    
+                    <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
+                        <i class="fas fa-print mr-2"></i> Cetak
+                    </button>
                 </div>
             </div>
         </div>

@@ -17,7 +17,6 @@ class Tb_Category extends Model
         'id_periode',
         'category_name',
         'order',
-        'type',
         'for_type' // 'alumni', 'company', or 'both'
     ];
 
