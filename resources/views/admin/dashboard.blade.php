@@ -16,7 +16,7 @@
         <x-admin.welcome-header :role="'Administrator'" />
 
         <div class="mb-6">
-            <x-admin.statistic-cards :alumniCount="$alumniCount" :companyCount="$companyCount" />
+            <x-admin.statistic-cards :alumniCount="$alumniCount" :companyCount="$companyCount" :answerCount="$answerCount" />
         </div>
 
         <div class="mb-6">

@@ -22,7 +22,7 @@
             <i class="fas fa-check-circle text-orange-500 text-2xl"></i>
         </div>
         <div>
-            <div class="text-2xl font-bold">2.300</div>
+            <div class="text-2xl font-bold">{{ number_format($answerCount) }}</div>
             <div class="text-2xl">Mengisi Kuisioner</div>
         </div>
     </div>

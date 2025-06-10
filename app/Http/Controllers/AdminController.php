@@ -19,7 +19,8 @@ class AdminController extends Controller
     $result = DB::select("
         SELECT 
             (SELECT COUNT(*) FROM tb_alumni) AS alumni_count,
-            (SELECT COUNT(*) FROM tb_company) AS company_count
+            (SELECT COUNT(*) FROM tb_company) AS company_count,
+            (SELECT COUNT(*) FROM tb_user_answers WHERE `status` = 'completed') AS answer_count
     ");
 
     // $result adalah array objek, ambil elemen pertama
@@ -27,6 +28,7 @@ class AdminController extends Controller
 
     $alumniCount = $data->alumni_count;
     $companyCount = $data->company_count;
+    $answerCount = $data->answer_count;
 
     // Statistik status alumni
     $statusCounts = Tb_Alumni::select('status', DB::raw('count(*) as total'))
@@ -45,10 +47,7 @@ class AdminController extends Controller
         $statisticData[$status] = $statusCounts[$status] ?? 0;
     }
 
-    // Misal data kuisioner tetap statis dulu
-    $questionnaireCount = 2300;
-
-    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'questionnaireCount', 'statisticData'));
+    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'answerCount', 'statisticData'));
 }
     // Tampilkan semua alumni
 // Tampilkan semua alumni
