@@ -164,7 +164,7 @@ public function update(Request $request)
         'email' => 'required|email',
         'batch' => 'required|integer',
         'graduation_year' => 'required',
-        'status' => 'required|in:Bekerja,Tidak Bekerja,Melanjutkan Studi,Berwiraswasta,Sedang Mencari Kerja',
+        'status' => 'required|in:bekerja,tidak bekerja,melanjutkan studi,berwiraswasta,sedang mencari kerja',
         'id_study' => 'required|exists:tb_study_program,id_study',
     ]);
 
