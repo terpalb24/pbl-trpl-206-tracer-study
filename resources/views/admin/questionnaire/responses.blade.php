@@ -135,8 +135,11 @@
                                         <td class="px-4 py-3">
                                             <div>
                                                 <p class="font-medium">{{ $userAnswer->display_name }}</p>
-                                                @if($userAnswer->nim)
-                                                    <p class="text-xs text-gray-500">NIM: {{ $userAnswer->nim }}</p>
+                                                @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
+                                                    <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
+                                                @endif
+                                                @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
+                                                    <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
                                                 @endif
                                                 <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
                                             </div>

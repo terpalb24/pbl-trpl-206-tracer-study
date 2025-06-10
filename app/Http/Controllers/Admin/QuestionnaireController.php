@@ -954,6 +954,7 @@ class QuestionnaireController extends Controller
             $user = $answer->user;
             $alumni = $user ? $user->alumni : null;
             $company = $user ? $user->company : null;
+
             
             if ($alumni) {
                 $answer->display_name = $alumni->name ?? $alumni->full_name ?? $user->name;
@@ -1045,17 +1046,11 @@ class QuestionnaireController extends Controller
         $categories = Tb_Category::where('id_periode', $id_periode)
             ->where(function($query) use ($userType) {
                 if ($userType === 'alumni') {
-                    // Alumni can only see alumni and both categories
-                    $query->where('for_type', 'alumni')
-                          ->orWhere('for_type', 'both');
+                    $query->whereIn('for_type', ['alumni', 'both']);
                 } elseif ($userType === 'company') {
-                    // Company can only see company and both categories
-                    $query->where('for_type', 'company')
-                          ->orWhere('for_type', 'both');
+                    $query->whereIn('for_type', ['company', 'both']);
                 } else {
-                    // If user type is unknown, don't show any categories
-                    // This prevents data leakage
-                    $query->where('for_type', 'unknown_type_that_does_not_exist');
+                    $query->whereIn('for_type', ['alumni', 'company', 'both']);
                 }
             })
             ->orderBy('order')
@@ -1068,193 +1063,37 @@ class QuestionnaireController extends Controller
             'filtered_categories' => $categories->pluck('category_name', 'for_type')->toArray()
         ]);
         
-        // ✅ PERBAIKAN: Prepare questions with answers data structure (SAMA UNTUK ALUMNI DAN COMPANY)
+        // ✅ PERBAIKAN: Prepare questions with answers data structure (GUNAKAN LOGIC YANG SAMA DENGAN COMPANY CONTROLLER)
         $questionsWithAnswers = [];
         
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
-                ->visible()
-                ->with(['options' => function($query) {
-                    $query->orderBy('order');
-                }])
+                ->where('status', 'visible')
+                ->with('options')
                 ->orderBy('order')
                 ->get();
             
             $questionArray = [];
             
             foreach ($questions as $question) {
-                // Get answer items for this question
+                // ✅ PERBAIKAN: Get answer items for this question
                 $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
                     ->where('id_question', $question->id_question)
                     ->get();
                 
-                // ✅ PERBAIKAN: Initialize variables consistently
-                $answer = null;
-                $otherAnswer = null;
-                $otherOption = null;
-                $multipleAnswers = [];
-                $multipleOtherAnswers = [];
-                $multipleOtherOptions = [];
-                $hasAnswer = false;
+                // ✅ PERBAIKAN: Use the same processing logic as company controller
+                $processedAnswerData = $this->processAnswersForDisplay($question, $answerItems);
                 
-                if ($answerItems->isNotEmpty()) {
-                    $hasAnswer = true;
-                    
-                    if ($question->type == 'text' || $question->type == 'date') {
-                        // For text and date questions
-                        $answer = $answerItems->first()->answer;
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'location') {
-                        // For location questions - handle JSON parsing
-                        $locationAnswer = $answerItems->first()->answer;
-                        if (!empty($locationAnswer)) {
-                            try {
-                                $locationData = json_decode($locationAnswer, true);
-                                if (is_array($locationData)) {
-                                    $answer = $locationData['display'] ?? $locationAnswer;
-                                } else {
-                                    $answer = $locationAnswer;
-                                }
-                            } catch (\Exception $e) {
-                                $answer = $locationAnswer;
-                            }
-                        }
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'option') {
-                        // ✅ PERBAIKAN: For single option questions - SAMA UNTUK ALUMNI DAN COMPANY
-                        $firstItem = $answerItems->first();
-                        if ($firstItem->id_questions_options) {
-                            // ✅ Use the same option lookup method for both alumni and company
-                            $selectedOption = $question->options->where('id_questions_options', $firstItem->id_questions_options)->first();
-                            if ($selectedOption) {
-                                $answer = $selectedOption->option;
-                                $otherOption = null;
-                                
-                                // Handle other answer
-                                if ($selectedOption->is_other_option == 1 && !empty($firstItem->other_answer)) {
-                                    $otherAnswer = $firstItem->other_answer;
-                                    $otherOption = $selectedOption;
-                                }
-                            } else {
-                                // ✅ DEBUGGING: Log missing option
-                                \Log::warning('Missing option for answer item', [
-                                    'user_answer_id' => $userAnswer->id_user_answer,
-                                    'question_id' => $question->id_question,
-                                    'option_id' => $firstItem->id_questions_options,
-                                    'user_type' => $userType,
-                                    'available_options' => $question->options->pluck('id_questions_options')->toArray()
-                                ]);
-                                $hasAnswer = false;
-                            }
-                        } else {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'multiple') {
-                        // ✅ PERBAIKAN: For multiple choice questions - SAMA UNTUK ALUMNI DAN COMPANY
-                        $hasValidAnswers = false;
-                        foreach ($answerItems as $item) {
-                            if ($item->id_questions_options) {
-                                // ✅ Use the same option lookup method for both alumni and company
-                                $selectedOption = $question->options->where('id_questions_options', $item->id_questions_options)->first();
-                                if ($selectedOption) {
-                                    $hasValidAnswers = true;
-                                    $displayText = $selectedOption->option;
-                                    
-                                    // Handle other answers for multiple choice
-                                    if ($selectedOption->is_other_option == 1 && !empty($item->other_answer)) {
-                                        $multipleOtherAnswers[$selectedOption->id_questions_options] = $item->other_answer;
-                                        $multipleOtherOptions[] = $selectedOption;
-                                    } else {
-                                        $multipleOtherAnswers[$selectedOption->id_questions_options] = null;
-                                        $multipleOtherOptions[] = null;
-                                    }
-                                    
-                                    $multipleAnswers[] = $displayText;
-                                } else {
-                                    // ✅ DEBUGGING: Log missing option
-                                    \Log::warning('Missing option for multiple answer item', [
-                                        'user_answer_id' => $userAnswer->id_user_answer,
-                                        'question_id' => $question->id_question,
-                                        'option_id' => $item->id_questions_options,
-                                        'user_type' => $userType,
-                                        'available_options' => $question->options->pluck('id_questions_options')->toArray()
-                                    ]);
-                                }
-                            }
-                        }
-                        $hasAnswer = $hasValidAnswers;
-                        
-                    } elseif ($question->type == 'numeric') {
-                        // ✅ PERBAIKAN: For numeric questions - handle like text but with numeric validation
-                        $answer = $answerItems->first()->answer;
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-
-                    } elseif ($question->type == 'email') {
-                        // ✅ PERBAIKAN: For numeric questions - handle like text but with numeric validation
-                        $answer = $answerItems->first()->answer;
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-
-                    } elseif ($question->type == 'rating' || $question->type == 'scale') {
-                        // ✅ PERBAIKAN: For rating and scale questions - SAMA UNTUK ALUMNI DAN COMPANY
-                        $firstItem = $answerItems->first();
-                        if ($firstItem->id_questions_options) {
-                            $selectedOption = $question->options->where('id_questions_options', $firstItem->id_questions_options)->first();
-                            if ($selectedOption) {
-                                $answer = $selectedOption->option;
-                            } else {
-                                // ✅ DEBUGGING: Log missing option
-                                \Log::warning('Missing option for rating/scale answer item', [
-                                    'user_answer_id' => $userAnswer->id_user_answer,
-                                    'question_id' => $question->id_question,
-                                    'option_id' => $firstItem->id_questions_options,
-                                    'user_type' => $userType,
-                                    'available_options' => $question->options->pluck('id_questions_options')->toArray()
-                                ]);
-                                $hasAnswer = false;
-                            }
-                        } else {
-                            $hasAnswer = false;
-                        }
-                    }
-                } else {
-                    // No answer items found
-                    $hasAnswer = false;
-                }
-                
-                // ✅ DEBUGGING: Log question processing
-                if (config('app.debug')) {
-                    \Log::info('Question processed', [
-                        'question_id' => $question->id_question,
-                        'question_type' => $question->type,
-                        'user_type' => $userType,
-                        'has_answer' => $hasAnswer,
-                        'answer' => $answer,
-                        'multiple_answers_count' => count($multipleAnswers),
-                        'answer_items_count' => $answerItems->count()
-                    ]);
-                }
-                
-                $questionArray[] = [
+                $questionData = [
                     'question' => $question,
-                    'answer' => $answer,
-                    'hasAnswer' => $hasAnswer,
-                    'otherAnswer' => $otherAnswer ?? null,
-                    'otherOption' => $otherOption ?? null,
-                    'multipleAnswers' => $multipleAnswers,
-                    'multipleOtherAnswers' => $multipleOtherAnswers,
-                    'multipleOtherOptions' => $multipleOtherOptions,
+                    'answer' => $processedAnswerData['answer'],
+                    'otherAnswer' => $processedAnswerData['otherAnswer'],
+                    'multipleAnswers' => $processedAnswerData['multipleAnswers'],
+                    'multipleOtherAnswers' => $processedAnswerData['multipleOtherAnswers'],
+                    'hasAnswer' => !empty($processedAnswerData['answer']) || !empty($processedAnswerData['multipleAnswers'])
                 ];
+                
+                $questionArray[] = $questionData;
             }
             
             if (!empty($questionArray)) {
@@ -1268,13 +1107,24 @@ class QuestionnaireController extends Controller
         // ✅ DEBUGGING: Log final data structure
         if (config('app.debug')) {
             \Log::info('Response detail data prepared', [
-                'user_answer_id' => $userAnswer->id_user_answer,
                 'user_type' => $userType,
                 'categories_count' => count($questionsWithAnswers),
-                'total_questions' => collect($questionsWithAnswers)->sum(function($cat) {
-                    return count($cat['questions']);
-                }),
-                'categories_shown' => collect($questionsWithAnswers)->pluck('category.category_name')->toArray()
+                'categories_shown' => collect($questionsWithAnswers)->pluck('category.category_name')->toArray(),
+                'sample_questions_with_answers' => collect($questionsWithAnswers)->take(1)->map(function($cat) {
+                    return [
+                        'category' => $cat['category']->category_name,
+                        'questions_count' => count($cat['questions']),
+                        'sample_questions' => collect($cat['questions'])->take(2)->map(function($q) {
+                            return [
+                                'question_id' => $q['question']->id_question,
+                                'question_type' => $q['question']->type,
+                                'has_answer' => $q['hasAnswer'],
+                                'answer' => $q['answer'],
+                                'multiple_answers' => $q['multipleAnswers']
+                            ];
+                        })->toArray()
+                    ];
+                })->toArray()
             ]);
         }
         
@@ -1286,6 +1136,194 @@ class QuestionnaireController extends Controller
             'userType',
             'questionsWithAnswers'
         ));
+    }
+
+    /**
+     * ✅ PERBAIKAN: Helper method untuk memproses jawaban untuk ditampilkan
+     */
+    private function processAnswersForDisplay($question, $answers)
+    {
+        $result = [
+            'answer' => null,
+            'otherAnswer' => null,
+            'otherOption' => null,
+            'ratingOption' => null,
+            'multipleAnswers' => [],
+            'multipleOtherAnswers' => []
+        ];
+
+        if ($answers->isEmpty()) {
+            return $result;
+        }
+
+        switch ($question->type) {
+            case 'text':
+            case 'email':
+            case 'numeric':
+            case 'date':
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                $result['otherAnswer'] = $firstAnswer->other_answer;
+                break;
+
+            case 'option':
+                $firstAnswer = $answers->first();
+                
+                // ✅ PERBAIKAN: Cek apakah ada id_questions_options
+                if ($firstAnswer->id_questions_options) {
+                    $option = Tb_Question_Options::find($firstAnswer->id_questions_options);
+                    if ($option) {
+                        $result['answer'] = $option->option; // Gunakan text option, bukan ID
+                        
+                        if ($option->is_other_option && $firstAnswer->other_answer) {
+                            $result['otherAnswer'] = $firstAnswer->other_answer;
+                            $result['otherOption'] = $option;
+                        }
+                    } else {
+                        // Jika option tidak ditemukan berdasarkan ID, gunakan answer langsung
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                } else {
+                    // ✅ PERBAIKAN: Jika tidak ada id_questions_options, coba cari berdasarkan answer value
+                    if (is_numeric($firstAnswer->answer)) {
+                        // Kemungkinan answer berisi ID option
+                        $option = Tb_Question_Options::find($firstAnswer->answer);
+                        if ($option) {
+                            $result['answer'] = $option->option;
+                            
+                            if ($option->is_other_option && $firstAnswer->other_answer) {
+                                $result['otherAnswer'] = $firstAnswer->other_answer;
+                                $result['otherOption'] = $option;
+                            }
+                        } else {
+                            $result['answer'] = $firstAnswer->answer;
+                        }
+                    } else {
+                        // Answer sudah berupa text
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                }
+                break;
+
+            case 'rating':
+                $firstAnswer = $answers->first();
+                
+                // ✅ PERBAIKAN: Sama seperti option, pastikan menampilkan text bukan ID
+                if ($firstAnswer->id_questions_options) {
+                    $ratingOption = Tb_Question_Options::find($firstAnswer->id_questions_options);
+                    if ($ratingOption) {
+                        $result['answer'] = $ratingOption->option;
+                        $result['ratingOption'] = $ratingOption;
+                        
+                        if ($ratingOption->is_other_option && $firstAnswer->other_answer) {
+                            $result['otherAnswer'] = $firstAnswer->other_answer;
+                            $result['otherOption'] = $ratingOption;
+                        }
+                    } else {
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                } else {
+                    // Coba cari berdasarkan answer value jika numeric
+                    if (is_numeric($firstAnswer->answer)) {
+                        $ratingOption = Tb_Question_Options::find($firstAnswer->answer);
+                        if ($ratingOption) {
+                            $result['answer'] = $ratingOption->option;
+                            $result['ratingOption'] = $ratingOption;
+                        } else {
+                            // Cari berdasarkan question dan value
+                            $ratingOption = Tb_Question_Options::where('id_question', $question->id_question)
+                                ->where('option', $firstAnswer->answer)
+                                ->first();
+                            
+                            if ($ratingOption) {
+                                $result['answer'] = $ratingOption->option;
+                                $result['ratingOption'] = $ratingOption;
+                            } else {
+                                $result['answer'] = $firstAnswer->answer;
+                            }
+                        }
+                    } else {
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                }
+                break;
+
+            case 'scale':
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                break;
+
+            case 'multiple':
+                foreach ($answers as $answer) {
+                    // ✅ PERBAIKAN: Pastikan multiple choice menampilkan text option
+                    if ($answer->id_questions_options) {
+                        $option = Tb_Question_Options::find($answer->id_questions_options);
+                        if ($option) {
+                            $result['multipleAnswers'][] = $option->option; // Text option, bukan ID
+                            
+                            if ($option->is_other_option && $answer->other_answer) {
+                                $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                            }
+                        } else {
+                            // Fallback jika option tidak ditemukan
+                            $result['multipleAnswers'][] = $answer->answer;
+                        }
+                    } else {
+                        // ✅ PERBAIKAN: Jika tidak ada id_questions_options, cek apakah answer berisi ID
+                        if (is_numeric($answer->answer)) {
+                            $option = Tb_Question_Options::find($answer->answer);
+                            if ($option) {
+                                $result['multipleAnswers'][] = $option->option;
+                                
+                                if ($option->is_other_option && $answer->other_answer) {
+                                    $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                                }
+                            } else {
+                                $result['multipleAnswers'][] = $answer->answer;
+                            }
+                        } else {
+                            // Answer sudah berupa text
+                            $result['multipleAnswers'][] = $answer->answer;
+                        }
+                    }
+                }
+                break;
+
+            case 'location':
+                $firstAnswer = $answers->first();
+                try {
+                    $locationData = json_decode($firstAnswer->answer, true);
+                    if (is_array($locationData) && isset($locationData['display'])) {
+                        $result['answer'] = $locationData['display'];
+                    } else {
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                } catch (\Exception $e) {
+                    $result['answer'] = $firstAnswer->answer;
+                }
+                break;
+
+            default:
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                break;
+        }
+
+        // ✅ DEBUG: Log hasil untuk debugging
+        if (config('app.debug')) {
+            \Log::debug('processAnswersForDisplay result', [
+                'question_id' => $question->id_question,
+                'question_type' => $question->type,
+                'raw_answers_count' => $answers->count(),
+                'processed_result' => [
+                    'answer' => $result['answer'],
+                    'multipleAnswers' => $result['multipleAnswers'],
+                    'otherAnswer' => $result['otherAnswer']
+                ]
+            ]);
+        }
+
+        return $result;
     }
 
     /**

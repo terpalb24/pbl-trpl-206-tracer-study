@@ -726,20 +726,15 @@ class QuestionnaireController extends Controller
             case 'rating':
                 $firstAnswer = $answers->first();
                 
-                // ✅ PERBAIKAN UTAMA: Coba beberapa cara untuk mendapatkan rating option
                 $ratingOption = null;
                 
-                // Cara 1: Cek jika id_questions_options ada di jawaban
                 if ($firstAnswer->id_questions_options) {
                     $ratingOption = Tb_Question_Options::find($firstAnswer->id_questions_options);
                 }
                 
-                // Cara 2: Jika tidak ada, coba cari berdasarkan answer value
                 if (!$ratingOption && is_numeric($firstAnswer->answer)) {
-                    // Cari berdasarkan ID option di kolom answer
                     $ratingOption = Tb_Question_Options::find($firstAnswer->answer);
                     
-                    // Jika masih tidak ketemu, cari berdasarkan id_question dan value
                     if (!$ratingOption) {
                         $ratingOption = Tb_Question_Options::where('id_question', $question->id_question)
                             ->where('id_questions_options', $firstAnswer->answer)
@@ -747,7 +742,6 @@ class QuestionnaireController extends Controller
                     }
                 }
                 
-                // Set hasil
                 if ($ratingOption) {
                     $result['answer'] = $ratingOption->option;
                     $result['ratingOption'] = $ratingOption;
@@ -756,17 +750,8 @@ class QuestionnaireController extends Controller
                         $result['otherAnswer'] = $firstAnswer->other_answer;
                     }
                 } else {
-                    // Fallback: gunakan answer langsung
                     $result['answer'] = $firstAnswer->answer;
                     $result['ratingOption'] = null;
-                    
-                    // ✅ DEBUG: Log untuk debugging
-                    \Log::debug('Rating option not found', [
-                        'question_id' => $question->id_question,
-                        'answer' => $firstAnswer->answer,
-                        'id_questions_options' => $firstAnswer->id_questions_options,
-                        'available_options' => Tb_Question_Options::where('id_question', $question->id_question)->pluck('option', 'id_questions_options')->toArray()
-                    ]);
                 }
                 break;
 
@@ -777,17 +762,46 @@ class QuestionnaireController extends Controller
 
             case 'multiple':
                 foreach ($answers as $answer) {
+                    // ✅ PERBAIKAN UTAMA: Konsisten dengan admin controller
                     if ($answer->id_questions_options) {
                         $option = Tb_Question_Options::find($answer->id_questions_options);
                         if ($option) {
-                            $result['multipleAnswers'][] = $answer->id_questions_options;
+                            // ✅ SIMPAN TEXT OPTION, BUKAN ID (sama seperti admin)
+                            $result['multipleAnswers'][] = $option->option;
                             
                             if ($option->is_other_option && $answer->other_answer) {
-                                $result['multipleOtherAnswers'][$answer->id_questions_options] = $answer->other_answer;
+                                // ✅ GUNAKAN ID OPTION SEBAGAI KEY untuk other answers
+                                $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
                             }
+                        } else {
+                            $result['multipleAnswers'][] = $answer->answer;
                         }
                     } else {
-                        $result['multipleAnswers'][] = $answer->answer;
+                        // ✅ PERBAIKAN: Jika tidak ada id_questions_options, cek apakah answer berisi ID
+                        if (is_numeric($answer->answer)) {
+                            $option = Tb_Question_Options::find($answer->answer);
+                            if ($option) {
+                                $result['multipleAnswers'][] = $option->option;
+                                
+                                if ($option->is_other_option && $answer->other_answer) {
+                                    $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                                }
+                            } else {
+                                $result['multipleAnswers'][] = $answer->answer;
+                            }
+                        } else {
+                            // Answer sudah berupa text
+                            $result['multipleAnswers'][] = $answer->answer;
+                            
+                            // ✅ TAMBAHAN: Cari option berdasarkan text untuk other answer
+                            $option = Tb_Question_Options::where('id_question', $question->id_question)
+                                ->where('option', $answer->answer)
+                                ->first();
+                            
+                            if ($option && $option->is_other_option && $answer->other_answer) {
+                                $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                            }
+                        }
                     }
                 }
                 break;
@@ -810,6 +824,23 @@ class QuestionnaireController extends Controller
                 $firstAnswer = $answers->first();
                 $result['answer'] = $firstAnswer->answer;
                 break;
+        }
+
+        // ✅ DEBUG: Log untuk debugging multiple choice
+        if ($question->type === 'multiple' && config('app.debug')) {
+            \Log::debug('Company processAnswersForDisplay - Multiple choice result', [
+                'question_id' => $question->id_question,
+                'raw_answers_count' => $answers->count(),
+                'processed_multipleAnswers' => $result['multipleAnswers'],
+                'processed_multipleOtherAnswers' => $result['multipleOtherAnswers'],
+                'raw_answers_data' => $answers->map(function($ans) {
+                    return [
+                        'id_questions_options' => $ans->id_questions_options,
+                        'answer' => $ans->answer,
+                        'other_answer' => $ans->other_answer
+                    ];
+                })->toArray()
+            ]);
         }
 
         return $result;
