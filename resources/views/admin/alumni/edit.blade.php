@@ -175,13 +175,18 @@
                 >
                     <option value="">-- Pilih Status --</option>
                     <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>
-                        bekerja
+                        Bekerja
                     </option>
                     <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>
-                        tidak bekerja
+                        Tidak Bekerja
                     </option>
-                    <option value="Melanjutkan studi" {{ old('status', $alumni->status) == 'Melanjutkan studi' ? 'selected' : '' }}>
-                        Lanjut Studi
+                    <option value="melanjutkan studi" {{ old('status', $alumni->status) == 'melanjutkan studi' ? 'selected' : '' }}>
+                        Melanjutkan Studi
+                    </option>
+                      <option value="berwiraswasta" {{ old('status', $alumni->status) == 'berwiraswasta' ? 'selected' : '' }}>
+                       Berwiraswasta
+                    </option>  <option value="sedang mencari kerja" {{ old('status', $alumni->status) == 'sedang mencari kerja' ? 'selected' : '' }}>
+                       Sedang Mencari Kerja
                     </option>
                 </select>
                 @error('status')

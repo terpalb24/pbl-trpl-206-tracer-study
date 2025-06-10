@@ -8,17 +8,21 @@
     </x-slot>
 
     <x-slot name="header">
-    <x-admin.header>Beranda</x-admin.header>
-        
-        
+        <x-admin.header>Beranda</x-admin.header>
         <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
 
-    <x-admin.welcome-header :role="'Administrator'" />
+    <div class="container mx-auto px-4 py-6 max-w-7xl">
+        <x-admin.welcome-header :role="'Administrator'" />
 
-    <x-admin.statistic-cards :alumniCount="$alumniCount" :companyCount="$companyCount" />
+        <div class="mb-6">
+            <x-admin.statistic-cards :alumniCount="$alumniCount" :companyCount="$companyCount" />
+        </div>
 
-    <x-admin.statistic-chart />
+        <div class="mb-6">
+            <x-admin.statistic-chart :statisticData="$statisticData" />
+        </div>
+    </div>
 
     <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>

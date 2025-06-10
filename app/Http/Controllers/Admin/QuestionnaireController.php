@@ -11,12 +11,14 @@ use App\Models\Tb_Question_Options;
 use App\Models\Tb_User_Answer_Item;
 use App\Models\Tb_User;
 use App\Models\Tb_Alumni;
+use App\Models\Tb_Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use App\Notifications\RemindFillQuestionnaireNotification;
 
 class QuestionnaireController extends Controller
 {
@@ -1405,5 +1407,78 @@ class QuestionnaireController extends Controller
                 'message' => 'Gagal mengambil data kota/kabupaten'
             ], 500);
         }
+    }
+
+    /**
+     * Send reminder to user to fill the questionnaire.
+     */
+    public function remindUserToFill($id_periode, $id_user_answer)
+    {
+        $userAnswer = \App\Models\Tb_User_Answers::with(['user.alumni', 'user.company'])->findOrFail($id_user_answer);
+        $user = $userAnswer->user;
+
+        // Cek tipe user dan ambil email dari tabel yang sesuai
+        $alumni = $user ? $user->alumni : null;
+        $company = $user ? $user->company : null;
+
+        $target = null;
+        if ($alumni && !empty($alumni->email)) {
+            $target = $alumni;
+        } elseif ($company && !empty($company->company_email)) {
+            $target = $company;
+        }
+
+        if (!$target) {
+            return redirect()->back()->with('error', 'User tidak memiliki email.');
+        }
+
+        try {
+            $periode = \App\Models\Tb_Periode::findOrFail($id_periode);
+            $target->notify(new RemindFillQuestionnaireNotification($periode));
+            return redirect()->back()->with('success', 'Notifikasi pengingat berhasil dikirim ke email user.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal mengirim notifikasi: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send reminder to all users (alumni and companies) for the periode.
+     */
+    public function remindAllUsers($id_periode)
+    {
+        $periode = \App\Models\Tb_Periode::findOrFail($id_periode);
+
+        // Ambil alumni sesuai target periode
+        $alumniQuery = Tb_Alumni::query();
+        if ($periode->all_alumni) {
+            // Semua alumni
+        } elseif ($periode->target_type === 'specific_years' && is_array($periode->target_graduation_years)) {
+            $alumniQuery->whereIn('graduation_year', $periode->target_graduation_years);
+        } elseif ($periode->target_type === 'years_ago' && is_array($periode->years_ago_list)) {
+            $currentYear = now()->year;
+            $targetYears = collect($periode->years_ago_list)->map(fn($y) => (string)($currentYear - $y))->toArray();
+            $alumniQuery->whereIn('graduation_year', $targetYears);
+        }
+        $alumniList = $alumniQuery->get();
+
+        // Ambil semua perusahaan (jika ada kategori untuk perusahaan)
+        $hasCompanyCategory = $periode->categories()->whereIn('for_type', ['company', 'both'])->exists();
+        $companyList = $hasCompanyCategory ? Tb_Company::all() : collect();
+
+        $sent = 0;
+        foreach ($alumniList as $alumni) {
+            if ($alumni->email) {
+                $alumni->notify(new RemindFillQuestionnaireNotification($periode));
+                $sent++;
+            }
+        }
+        foreach ($companyList as $company) {
+            if ($company->company_email) {
+                $company->notify(new RemindFillQuestionnaireNotification($periode));
+                $sent++;
+            }
+        }
+
+        return redirect()->back()->with('success', "Notifikasi pengingat berhasil dikirim ke $sent user (alumni & perusahaan) untuk periode ini.");
     }
 }

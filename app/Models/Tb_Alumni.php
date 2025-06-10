@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class Tb_Alumni extends Authenticatable
 {
-    use HasFactory,Notifiable;
+    use HasFactory, Notifiable;
 
     // Menetapkan nama tabel yang digunakan model
     protected $table = 'tb_alumni';

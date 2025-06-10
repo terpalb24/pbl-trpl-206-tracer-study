@@ -28,10 +28,27 @@ class AdminController extends Controller
     $alumniCount = $data->alumni_count;
     $companyCount = $data->company_count;
 
+    // Statistik status alumni
+    $statusCounts = Tb_Alumni::select('status', DB::raw('count(*) as total'))
+        ->whereIn('status', [
+            'bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'
+        ])
+        ->groupBy('status')
+        ->pluck('total', 'status')
+        ->toArray();
+
+    $allStatuses = [
+        'bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'
+    ];
+    $statisticData = [];
+    foreach ($allStatuses as $status) {
+        $statisticData[$status] = $statusCounts[$status] ?? 0;
+    }
+
     // Misal data kuisioner tetap statis dulu
     $questionnaireCount = 2300;
 
-    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'questionnaireCount'));
+    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'questionnaireCount', 'statisticData'));
 }
     // Tampilkan semua alumni
 // Tampilkan semua alumni
@@ -499,12 +516,6 @@ public function companyDestroy($id_user)
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
-
-
-
-
-
-
 
     //
 }

@@ -171,6 +171,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     // Responses
     Route::get('/admin/questionnaire/{id_periode}/responses', [QuestionnaireController::class, 'responses'])->name('admin.questionnaire.responses');
     Route::get('/admin/questionnaire/{id_periode}/responses/{id_user_answer}', [QuestionnaireController::class, 'responseDetail'])->name('admin.questionnaire.response-detail');
+    Route::post('/admin/questionnaire/{id_periode}/remind-all', [QuestionnaireController::class, 'remindAllUsers'])->name('admin.questionnaire.remind-all');
     
     // Export
     Route::get('/admin/questionnaire/{id_periode}/export', [QuestionnaireController::class, 'export'])->name('admin.questionnaire.export');
