@@ -42,10 +42,12 @@
 
 <!-- Include Google Translate Widget Component -->
 <x-translate-widget 
-    position="top-right" 
+    position="bottom-left" 
     :languages="['en', 'id']" 
     theme="light" 
 />
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
 
 <!-- Hero Section -->
 <section class="max-w-7xl mx-auto flex flex-col-reverse md:flex-row items-center justify-between p-6 md:p-12 min-h-screen">
@@ -179,6 +181,5 @@
         menu.classList.toggle('hidden');
     });
 </script>
-<!-- Google Translate Widget CSS -->
-    <link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
+
 @endsection

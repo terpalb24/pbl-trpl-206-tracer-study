@@ -12,3 +12,11 @@
     <!-- Profile Dropdown Button -->
     @include('components.company.profile-dropdown')
 </div>
+<!-- Include Google Translate Widget Component -->
+<x-translate-widget 
+    position="bottom-left" 
+    :languages="['en', 'id']" 
+    theme="light" 
+/>
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">

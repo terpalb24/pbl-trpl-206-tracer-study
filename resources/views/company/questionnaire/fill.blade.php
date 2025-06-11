@@ -59,7 +59,7 @@
                         </div>
                         <div class="ml-4">
                             <h3 class="text-lg font-semibold text-blue-900">{{ $alumni->name }}</h3>
-                            <p class="text-blue-700">NIM: {{ $alumni->nim }}</p>
+                            <p class="text-blue-700">{{ $alumni->nim }}</p>
                             @if($alumni->graduation_year)
                                 <p class="text-sm text-blue-600">Tahun Lulus: {{ $alumni->graduation_year }}</p>
                             @endif

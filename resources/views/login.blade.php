@@ -3,7 +3,7 @@
 @section('content')
 <!-- Include Google Translate Widget Component -->
 <x-translate-widget 
-    position="top-right" 
+    position="bottom-left" 
     :languages="['en', 'id']" 
     theme="light" 
 />
