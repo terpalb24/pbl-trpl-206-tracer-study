@@ -181,6 +181,12 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     // Location API
     Route::get('/admin/questionnaire/provinces', [QuestionnaireController::class, 'getProvinces'])->name('admin.questionnaire.provinces');
     Route::get('/admin/questionnaire/cities/{provinceId}', [QuestionnaireController::class, 'getCities'])->name('admin.questionnaire.cities');
+
+    // Questionnaire Import/Export (DYNAMIC)
+    Route::get('/admin/questionnaires/import-export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'index'])->name('admin.questionnaires.import-export');
+    Route::post('/admin/questionnaires/import', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'import'])->name('admin.questionnaires.import');
+    Route::get('/admin/questionnaires/export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'export'])->name('admin.questionnaires.export');
+    Route::get('/admin/questionnaires/download-template', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'downloadTemplate'])->name('admin.questionnaires.download-template');
 });
 Route::get('/logout', function () {
     Auth::logout();

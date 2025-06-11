@@ -64,10 +64,10 @@ $admin = auth()->user()->admin;
                 <a href="{{ route('admin.questionnaire.create') }}" class="inline-flex items-center gap-2 bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-md text-sm font-medium transition">
                     <i class="fas fa-plus"></i> Tambah Kuisioner
                 </a>
-                <a href="{{ route('admin.questionnaire.import.form', isset($periode) ? $periode->id_periode : 1) }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
-                    <i class="fas fa-file-import"></i> Import Kuisioner
+                <a href="{{ route('admin.questionnaires.import-export') }}" class="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                    <i class="fas fa-file-import"></i> Import/Export Kuisioner
                 </a>
-                <a href="#" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                <a href="{{ route('admin.questionnaires.download-template') }}" class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
                     <i class="fas fa-download"></i> Download Template
                 </a>
                 <!-- Tombol Kirim Pengingat ke Semua -->
