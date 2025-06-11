@@ -357,7 +357,7 @@ class QuestionnaireController extends Controller
                     // This was the last category, mark as completed
                     $userAnswer->update([
                         'status' => 'completed',
-                        'submitted_at' => now()
+                        'created_at' => now()
                     ]);
                     session()->forget('current_category_index');
                     DB::commit();
@@ -368,7 +368,7 @@ class QuestionnaireController extends Controller
             } elseif ($action === 'submit_final') {
                 $userAnswer->update([
                     'status' => 'completed',
-                    'submitted_at' => now()
+                    'created_at' => now()
                 ]);
                 session()->forget('current_category_index');
                 DB::commit();

@@ -977,8 +977,8 @@ class QuestionnaireController extends Controller
             }
             
             // Format submit date
-            if ($answer->status == 'completed' && $answer->submitted_at) {
-                $answer->formatted_submitted_at = \Carbon\Carbon::parse($answer->submitted_at)->format('d M Y, H:i');
+            if ($answer->status == 'completed' && $answer->created_at) {
+                $answer->formatted_created_at = \Carbon\Carbon::parse($answer->created_at)->format('d M Y, H:i');
             }
         }
         

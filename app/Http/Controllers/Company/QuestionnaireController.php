@@ -405,7 +405,7 @@ class QuestionnaireController extends Controller
                     // Last category, mark as completed
                     $userAnswer->update([
                         'status' => 'completed',
-                        'create_at' => now()
+                        'created_at' => now()
                     ]);
                     
                     return redirect()->route('company.questionnaire.thank-you')
@@ -415,7 +415,7 @@ class QuestionnaireController extends Controller
                 // Mark as completed
                 $userAnswer->update([
                     'status' => 'completed', 
-                    'create_at' => now()
+                    'created_at' => now()
                 ]);
                 
                 return redirect()->route('company.questionnaire.thank-you')
@@ -481,8 +481,8 @@ class QuestionnaireController extends Controller
             $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
             $userAnswer->formatted_updated_at = $userAnswer->updated_at->format('d M Y, H:i');
 
-            if ($userAnswer->status == 'completed' && $userAnswer->create_at) {
-                $userAnswer->formatted_create_at = $userAnswer->create_at->format('d M Y, H:i');
+            if ($userAnswer->status == 'completed' && $userAnswer->created_at) {
+                $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
             }
         }
 

@@ -18,11 +18,11 @@ class Tb_User_Answers extends Model
         'id_periode',
         'status',
         'nim', // TAMBAHAN: Field nim untuk relasi dengan alumni
-        'submitted_at', // TAMBAHAN: Field untuk tracking kapan diselesaikan
+        'created_at', // TAMBAHAN: Field untuk tracking kapan diselesaikan
     ];
 
     protected $casts = [
-        'submitted_at' => 'datetime', // TAMBAHAN: Cast submitted_at ke datetime
+        'created_at' => 'datetime', // TAMBAHAN: Cast created_at ke datetime
     ];
 
     public function user()
@@ -88,7 +88,7 @@ class Tb_User_Answers extends Model
 
     public function getFormattedSubmittedAtAttribute()
     {
-        return $this->submitted_at ? $this->submitted_at->format('d M Y, H:i') : null;
+        return $this->created_at ? $this->created_at->format('d M Y, H:i') : null;
     }
 
     // TAMBAHAN: Method untuk mendapatkan progress completion
@@ -124,7 +124,7 @@ class Tb_User_Answers extends Model
     // TAMBAHAN: Method untuk check apakah sudah lengkap
     public function isComplete()
     {
-        return $this->status === 'completed' && $this->submitted_at !== null;
+        return $this->status === 'completed' && $this->created_at !== null;
     }
 
     // TAMBAHAN: Method untuk check apakah masih dalam tahap draft
