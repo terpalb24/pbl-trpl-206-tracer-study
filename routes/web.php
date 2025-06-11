@@ -1,16 +1,24 @@
 <?php
 
+use App\Models\User;
+use Illuminate\Support\Str;
+use App\Mail\ForgotPassword;
+use Illuminate\Http\Request;
+use App\Http\Middleware\CheckRole;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Password;
 use App\Http\Controllers\AdminController;
+use Illuminate\Auth\Events\PasswordReset;
 use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\Alumni\JobHistoryController; // Tambahkan ini di atas
 use App\Http\Controllers\Admin\QuestionnaireController;
 use App\Http\Controllers\Admin\QuestionnaireImportController;
+use App\Http\Controllers\Alumni\JobHistoryController; // Tambahkan ini di atas
 use App\Http\Controllers\Alumni\QuestionnaireController as AlumniQuestionnaireController;
 use App\Http\Controllers\Company\QuestionnaireController as CompanyQuestionnaireController;
-use App\Http\Middleware\CheckRole;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,12 +35,60 @@ Route::get('/about', fn () => view('about'))->name('about');
 */
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::post('/logout', [AuthController::class , 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class , 'logout'])->name('logout'); 
 
 // Password Change (for all authenticated users)
 Route::middleware('auth')->group(function () {
     Route::get('/change-password', [AuthController::class, 'ChangePasswordForm'])->name('password.change');
     Route::post('/change-password', [AuthController::class, 'updatePasswordAll'])->name('password.update');
+});
+
+// Forgot Password
+Route::middleware('guest')->group(function() {
+    Route::get('/forgot-password', function () {
+    return view('forgot-password');
+    })->name('password.request');
+
+    Route::post('/forgot-password', function (Request $request) {
+    $request->validate(['email' => 'required|email']);
+ 
+    $status = Password::sendResetLink(
+        $request->only('email')
+    );
+ 
+    return $status === Password::ResetLinkSent
+        ? back()->with(['status' => __($status)])
+        : back()->withErrors(['email' => __($status)]);
+    })->name('password.email');
+
+    Route::get('/reset-password/{token}', function (string $token) {
+    return view('auth.reset-password-confirmation', ['token' => $token]);
+    })->name('password.reset');
+
+    Route::post('/reset-password-confirmation', function (Request $request) {
+    $request->validate([
+        'token' => 'required',
+        'email' => 'required|email',
+        'password' => 'required|min:8|confirmed',
+    ]);
+ 
+    $status = Password::reset(
+        $request->only('email', 'password', 'password_confirmation', 'token'),
+        function (User $user, string $password) {
+            $user->forceFill([
+                'password' => Hash::make($password)
+            ])->setRememberToken(Str::random(60));
+ 
+            $user->save();
+ 
+            event(new PasswordReset($user));
+        }
+    );
+ 
+    return $status === Password::PasswordReset
+        ? redirect()->route('login')->with('status', __($status))
+        : back()->withErrors(['email' => [__($status)]]);
+})->name('password.update');
 });
 
 /*
@@ -184,3 +240,8 @@ Route::get('/logout', function () {
     Auth::logout();
     return redirect('/');
 })->name('logout');
+
+// Route for mailtrap
+Route::get('/send-forgot-password', function () {
+Mail::to('sigma@gmail.com')->send(new ForgotPassword());
+});
