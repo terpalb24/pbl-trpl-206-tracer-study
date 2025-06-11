@@ -1,7 +1,7 @@
 <div class="bg-gradient-to-r from-white via-sky-300 to-orange-300 rounded-lg shadow-md mb-6 overflow-hidden">
     <div class="flex flex-col md:flex-row">
         <div class="p-6 md:w-2/3">
-            <h2 class="text-5xl font-bold text-black mb-2">Halo!</h2>
+            <h2 class="text-5xl font-bold text-black mb-2">Hello!</h2>
             <h3 class="text-4xl font-semibold text-black mb-4">{{ $company->company_name }}</h3>
             <p class="text-2xl font-normal text-black mb-6">
                 Terima kasih telah berpartisipasi dalam Tracer Study Polibatam!

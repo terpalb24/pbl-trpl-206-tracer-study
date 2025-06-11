@@ -5,3 +5,4 @@
         </button>
         <h1 class="text-2xl font-bold text-blue-800">{{ $slot ?? 'Beranda' }}</h1>
     </div>
+    

@@ -143,11 +143,11 @@
                     <select name="status" id="status"
                         class="w-full border px-3 py-2 rounded @error('status') border-red-500 @enderror">
                         <option value="">-- Pilih Status --</option>
-                        <option value="Bekerja" {{ old('status', $alumni->status) == 'Bekerja' ? 'selected' : '' }}>Bekerja</option>
-                        <option value="Tidak Bekerja" {{ old('status', $alumni->status) == 'Tidak Bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
-                        <option value="Melanjutkan Studi" {{ old('status', $alumni->status) == 'Melanjutkan Studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
-                        <option value="Berwiraswasta" {{ old('status', $alumni->status) == 'Berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
-                        <option value="Sedang Mencari Kerja" {{ old('status', $alumni->status) == 'Sedang Mencari Kerja' ? 'selected' : '' }}>Sedang Mencari Kerja</option>
+                        <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
+                        <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
+                        <option value="melanjutkan studi" {{ old('status', $alumni->status) == 'melanjutkan studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
+                        <option value="berwiraswasta" {{ old('status', $alumni->status) == 'berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
+                        <option value="sedang mencari kerja" {{ old('status', $alumni->status) == 'sedang mencari kerja' ? 'selected' : '' }}>Sedang Mencari Kerja</option>
                     </select>
                     @error('status')
                         <p class="text-red-500 text-xs">{{ $message }}</p>

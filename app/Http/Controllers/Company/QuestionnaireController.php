@@ -13,8 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\Tb_Jobhistory; // Assuming this is the model for job history
-use App\Models\Tb_Alumni; // Assuming this is the model for alumni
+use App\Models\Tb_jobhistory;
+use App\Models\Tb_Alumni;
 
 class QuestionnaireController extends Controller
 {
@@ -22,13 +22,10 @@ class QuestionnaireController extends Controller
     {
         $userId = Auth::id();
         
-        // Get all active periods where there are categories for company
+        // PERBAIKAN: Gunakan 'for_type' sesuai database
         $availableActivePeriodes = Tb_Periode::where('status', 'active')
             ->whereHas('categories', function($query) {
-                $query->where(function($q) {
-                    $q->where('for_type', 'company')
-                      ->orWhere('for_type', 'both');
-                });
+                $query->whereIn('for_type', ['company', 'both']); // Sesuai dengan database
             })
             ->whereDate('start_date', '<=', now())
             ->whereDate('end_date', '>=', now())
@@ -37,14 +34,8 @@ class QuestionnaireController extends Controller
         // Get all user answers (completed and draft) for filtering
         $allUserAnswers = Tb_User_Answers::where('id_user', $userId)->get();
 
-        // Filter available periods - exclude completed ones
-        $availableActivePeriodes = $availableActivePeriodes->filter(function($periode) use ($allUserAnswers) {
-            $existingAnswer = $allUserAnswers->where('id_periode', $periode->id_periode)->first();
-            // Only show if no answer exists OR if answer exists but is still draft
-            return !$existingAnswer || $existingAnswer->status !== 'completed';
-        });
 
-        // Get draft answers (incomplete questionnaires)
+        // Get draft answers
         $draftUserAnswers = Tb_User_Answers::where('id_user', $userId)
             ->where('status', 'draft')
             ->get();
@@ -58,45 +49,143 @@ class QuestionnaireController extends Controller
 
         return view('company.questionnaire.index', compact('availableActivePeriodes', 'draftUserAnswers', 'completedUserAnswers'));
     }
-    
-      public function fill($id_periode, $category = null)
+
+    public function selectAlumni($id_periode)
     {
         $periode = Tb_Periode::findOrFail($id_periode);
-       $idCompany = Auth::user()->company->id_company ?? null;
-
-        $alumniList = Tb_Jobhistory::with('alumni')
-    ->where('id_company', $idCompany)
-    ->get()
-    ->pluck('alumni')
-    ->unique('nim'); // supaya tidak duplikat
+        $idCompany = Auth::user()->company->id_company ?? null;
 
         // Check if period is active
         if ($periode->status !== 'active') {
-            return redirect()->route('company.questionnaire.index')->with('error', 'Periode kuesioner tidak aktif.');
+            return redirect()->route('company.questionnaire.index')
+                ->with('error', 'Periode kuesioner tidak aktif.');
+        }
+
+        // PERBAIKAN: Gunakan 'for_type' sesuai database
+        $hasCategories = Tb_Category::where('id_periode', $id_periode)
+            ->whereIn('for_type', ['company', 'both'])
+            ->exists();
+
+        if (!$hasCategories) {
+            return redirect()->route('company.questionnaire.index')
+                ->with('error', 'Tidak ada kategori kuesioner untuk perusahaan pada periode ini.');
+        }
+
+        if (!$idCompany) {
+            return redirect()->route('company.questionnaire.index')
+                ->with('error', 'Data perusahaan tidak ditemukan.');
+        }
+
+        // Ambil semua alumni yang pernah bekerja di perusahaan ini
+        $allAlumniFromJobHistory = Tb_jobhistory::with('alumni')
+            ->where('id_company', $idCompany)
+            ->get()
+            ->filter(function($jobHistory) {
+                return $jobHistory->alumni !== null;
+            })
+            ->unique('nim')
+            ->values();
+
+        // Ambil daftar NIM alumni yang sudah dinilai
+        $completedNims = Tb_User_Answers::where('id_user', Auth::id())
+            ->where('id_periode', $id_periode)
+            ->where('status', 'completed')
+            ->pluck('nim')
+            ->toArray();
+
+        // Filter alumni yang belum dinilai
+        $availableAlumni = $allAlumniFromJobHistory->filter(function($jobHistory) use ($completedNims) {
+            return !in_array($jobHistory->nim, $completedNims);
+        });
+
+        // Get alumni yang sedang dalam proses (draft)
+        $draftNims = Tb_User_Answers::where('id_user', Auth::id())
+            ->where('id_periode', $id_periode)
+            ->where('status', 'draft')
+            ->pluck('nim')
+            ->toArray();
+
+        return view('company.questionnaire.select-alumni', compact(
+            'periode', 
+            'availableAlumni', 
+            'completedNims', 
+            'draftNims'
+        ));
+    }
+    
+    public function fill($id_periode, $nim, $category = null)
+    {
+        $periode = Tb_Periode::findOrFail($id_periode);
+        $idCompany = Auth::user()->company->id_company ?? null;
+
+        // Verify that this alumni worked for this company
+        $jobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
+            ->where('nim', $nim)
+            ->exists();
+
+        if (!$jobHistoryExists) {
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Alumni ini tidak pernah bekerja di perusahaan Anda.');
+        }
+
+        // Check if this alumni has already been evaluated
+        $existingCompletedAnswer = Tb_User_Answers::where('id_user', Auth::id())
+            ->where('id_periode', $id_periode)
+            ->where('nim', $nim)
+            ->where('status', 'completed')
+            ->first();
+
+        if ($existingCompletedAnswer) {
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Alumni ini sudah pernah dinilai pada periode ini.');
+        }
+
+        // Get alumni data
+        $alumni = Tb_Alumni::where('nim', $nim)->first();
+        if (!$alumni) {
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Data alumni tidak ditemukan.');
+        }
+
+        // Check if period is active
+        if ($periode->status !== 'active') {
+            return redirect()->route('company.questionnaire.index')
+                ->with('error', 'Periode kuesioner tidak aktif.');
         }
         
-        // Get all categories for this period (company or both types)
+        // PERBAIKAN: Get categories dengan field yang benar
         $allCategories = Tb_Category::where('id_periode', $id_periode)
-            ->where(function($query) {
-                $query->where('for_type', 'company')
-                      ->orWhere('for_type', 'both');
-            })
+            ->whereIn('for_type', ['company', 'both']) // Gunakan for_type
             ->orderBy('order')
             ->get();
+
+        // DEBUGGING: Log categories
+        Log::info('Categories found for company', [
+            'periode_id' => $id_periode,
+            'company_id' => $idCompany,
+            'categories_count' => $allCategories->count(),
+            'categories' => $allCategories->map(function($cat) {
+                return [
+                    'id' => $cat->id_category,
+                    'name' => $cat->category_name,
+                    'for_type' => $cat->for_type,
+                    'order' => $cat->order
+                ];
+            })->toArray()
+        ]);
             
         if ($allCategories->isEmpty()) {
-            return redirect()->route('company.questionnaire.index')->with('error', 'Belum ada kategori untuk kuesioner ini.');
+            return redirect()->route('company.questionnaire.index')
+                ->with('error', 'Tidak ada kategori kuesioner untuk perusahaan pada periode ini.');
         }
         
         // Determine current category
         if (!$category) {
             $currentCategory = $allCategories->first();
         } else {
-            $currentCategory = Tb_Category::findOrFail($category);
-            
-            // Verify this category is for company
-            if (!in_array($currentCategory->for_type, ['company', 'both'])) {
-                return redirect()->route('company.questionnaire.index')->with('error', 'Kategori tidak tersedia untuk perusahaan.');
+            $currentCategory = $allCategories->where('id_category', $category)->first();
+            if (!$currentCategory) {
+                $currentCategory = $allCategories->first();
             }
         }
         
@@ -104,8 +193,7 @@ class QuestionnaireController extends Controller
         $currentCategoryIndex = $allCategories->search(function($cat) use ($currentCategory) {
             return $cat->id_category == $currentCategory->id_category;
         });
-        
-        // Ensure index is never null (use 0 as fallback)
+                                    
         if ($currentCategoryIndex === false) {
             $currentCategoryIndex = 0;
         }
@@ -113,27 +201,42 @@ class QuestionnaireController extends Controller
         $prevCategory = $currentCategoryIndex > 0 ? $allCategories[$currentCategoryIndex - 1] : null;
         $nextCategory = $currentCategoryIndex < $allCategories->count() - 1 ? $allCategories[$currentCategoryIndex + 1] : null;
         
-        // Get questions for the current category
+        // PERBAIKAN: Get questions - GUNAKAN filter status karena ada di database
         $questions = Tb_Questions::where('id_category', $currentCategory->id_category)
-            ->visible() // Only get visible questions
+            ->where('status', 'visible') // ✅ KEMBALIKAN filter status
             ->with('options')
             ->orderBy('order')
             ->get();
-    
-        // ✅ PERBAIKAN: Tambahkan conditional questions data
+
+        // DEBUGGING: Log questions
+        Log::info('Questions found for company', [
+            'category_id' => $currentCategory->id_category,
+            'category_name' => $currentCategory->category_name,
+            'questions_count' => $questions->count(),
+            'questions' => $questions->map(function($q) {
+                return [
+                    'id' => $q->id_question,
+                    'question' => $q->question,
+                    'type' => $q->type,
+                    'status' => $q->status,
+                    'order' => $q->order,
+                    'options_count' => $q->options ? $q->options->count() : 0
+                ];
+            })->toArray()
+        ]);
+
+        // PERBAIKAN: Handle conditional questions dengan field yang benar
         $conditionalQuestions = [];
         foreach ($questions as $question) {
-            if (!empty($question->depends_on) && !empty($question->depends_value)) {
-                $conditionalQuestions[] = [
-                    'id' => $question->id_question,
-                    'depends_on' => $question->depends_on,
-                    'depends_value' => $question->depends_value,
-                    'type' => $question->type
+            if ($question->depends_on) { // Gunakan depends_on
+                $conditionalQuestions[$question->depends_on][] = [
+                    'question_id' => $question->id_question,
+                    'condition_value' => $question->depends_value // Gunakan depends_value
                 ];
             }
         }
         
-        // ✅ PERBAIKAN: Hitung progress yang benar
+        // Calculate progress
         $totalCategories = $allCategories->count();
         $progressPercentage = $totalCategories > 0 ? round((($currentCategoryIndex + 1) / $totalCategories) * 100) : 0;
     
@@ -146,647 +249,600 @@ class QuestionnaireController extends Controller
     
         $userAnswer = Tb_User_Answers::where('id_user', Auth::id())
             ->where('id_periode', $id_periode)
+            ->where('nim', $nim)
             ->first();
     
         if ($userAnswer) {
-            // Get answer items for this category's questions
-            $questionIds = $questions->pluck('id_question')->toArray();
+            $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)->get();
             
-            $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
-                ->whereIn('id_question', $questionIds)
-                ->get();
-            
-            // Process answers by question type
             foreach ($answerItems as $item) {
-                $question = $questions->firstWhere('id_question', $item->id_question);
-                
-                if (!$question) continue;
-                
-                if ($question->type == 'text' || $question->type == 'date') {
-                    $prevAnswers[$item->id_question] = $item->answer;
-                    
-                } elseif ($question->type == 'location') {
-                    // Parse location JSON data
-                    $locationData = json_decode($item->answer, true);
-                    if ($locationData && is_array($locationData)) {
-                        $prevLocationAnswers[$item->id_question] = json_encode($locationData);
-                        // Also set the display value for the form
-                        $prevAnswers[$item->id_question] = $locationData['display'] ?? '';
-                    } else {
-                        // Fallback for old data format
-                        $prevAnswers[$item->id_question] = $item->answer;
-                    }
-                    
-                } elseif ($question->type == 'option' || $question->type == 'rating' || $question->type == 'scale') {
-                    $prevAnswers[$item->id_question] = $item->id_questions_options;
-                    
-                    if ($item->other_answer && $question->type == 'option') {
-                        $prevOtherAnswers[$item->id_question] = $item->other_answer;
-                    }
-                    
-                } elseif ($question->type == 'multiple') {
+                $question = Tb_Questions::find($item->id_question);
+                if ($question && $question->type === 'multiple') {
                     if (!isset($prevMultipleAnswers[$item->id_question])) {
                         $prevMultipleAnswers[$item->id_question] = [];
                     }
-                    $prevMultipleAnswers[$item->id_question][] = $item->id_questions_options;
+                    $prevMultipleAnswers[$item->id_question][] = $item->answer;
                     
                     if ($item->other_answer) {
                         if (!isset($prevMultipleOtherAnswers[$item->id_question])) {
                             $prevMultipleOtherAnswers[$item->id_question] = [];
                         }
-                        $prevMultipleOtherAnswers[$item->id_question][$item->id_questions_options] = $item->other_answer;
+                        $prevMultipleOtherAnswers[$item->id_question][$item->answer] = $item->other_answer;
                     }
-
+                } elseif ($question && $question->type === 'location') {
+                    try {
+                        $locationData = json_decode($item->answer, true);
+                        if (is_array($locationData)) {
+                            $prevLocationAnswers[$item->id_question] = [
+                                'province_id' => $locationData['province_id'] ?? '',
+                                'province_name' => $locationData['province_name'] ?? '',
+                                'city_id' => $locationData['city_id'] ?? '',
+                                'city_name' => $locationData['city_name'] ?? ''
+                            ];
+                        }
+                    } catch (\Exception $e) {
+                        // Fallback jika bukan JSON
+                        $prevLocationAnswers[$item->id_question] = [
+                            'province_id' => '',
+                            'province_name' => '',
+                            'city_id' => '',
+                            'city_name' => $item->answer
+                        ];
+                    }
+                } else {
+                    $prevAnswers[$item->id_question] = $item->answer;
+                    if ($item->other_answer) {
+                        $prevOtherAnswers[$item->id_question] = $item->other_answer;
+                    }
                 }
             }
         }
         
-        // ✅ PERBAIKAN: Pass semua data yang diperlukan ke view
         return view('company.questionnaire.fill', compact(
             'periode',
+            'alumni',
+            'nim',
             'currentCategory',
             'allCategories',
             'currentCategoryIndex',
+            'totalCategories',
+            'progressPercentage',
             'prevCategory',
             'nextCategory',
             'questions',
+            'conditionalQuestions',
             'prevAnswers',
             'prevOtherAnswers',
             'prevMultipleAnswers',
             'prevMultipleOtherAnswers',
-            'prevLocationAnswers',
-            'conditionalQuestions',  // ✅ TAMBAHKAN INI
-            'totalCategories',       // ✅ TAMBAHKAN INI
-            'progressPercentage',
-             'alumniList'     // ✅ TAMBAHKAN INI
+            'prevLocationAnswers'
         ));
     }
-    
-    public function submit(Request $request, $id_periode)
+
+    public function submit(Request $request, $id_periode, $nim)
     {
-           
-         try {
-     $nim = $request->input('alumni_nim'); // disini kamu mengirimkan nim alumni yang dinilai
+        try {
+            $userId = Auth::id();
+            $idCompany = Auth::user()->company->id_company ?? null;
 
-        // Debug log - tetap tampilkan data lengkap
-        Log::info('Company questionnaire submission - FULL DEBUG', [
-            'action' => $request->input('action'),
-            'category_id' => $request->input('id_category'),
-            'answers' => $request->input('answers'),
-            'other_answers' => $request->input('other_answers'),
-            'multiple' => $request->input('multiple'),
-            'multiple_other_answers' => $request->input('multiple_other_answers'),
-            'location_combined' => $request->input('location_combined'),
-            'all_request_data' => $request->all()
-        ]);
+            // Verify that this alumni worked for this company
+            $jobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
+                ->where('nim', $nim)
+                ->exists();
 
-        // Ambil kategori dan validasi for_type
-        $category = Tb_Category::findOrFail($request->input('id_category'));
-
-        if (!in_array($category->for_type, ['company', 'both'])) {
-            return redirect()->back()->with('error', 'Kategori tidak tersedia untuk perusahaan.');
-        }
-
-        $userId = Auth::id();
-
-        // Cari atau buat record jawaban user berdasarkan user, periode, dan nim alumni yang dinilai
-        $userAnswer = Tb_User_Answers::firstOrCreate(
-            [
-                'id_user' => $userId,
-                'id_periode' => $id_periode,
-                'nim' => $nim
-            ],
-            [
-                'status' => 'draft',
-                'submitted_at' => null
-            ]
-        );
-            
-            // Get questions for this category
-            $questions = Tb_Questions::where('id_category', $category->id_category)->get();
-            
-            // Process all question answers
-            foreach ($questions as $question) {
-                // Delete existing answers for this question first
-                Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
-                    ->where('id_question', $question->id_question)
-                    ->delete();
-                
-                if ($question->type == 'text') {
-                    // Handle text questions
-                    $answer = $request->input("answers.{$question->id_question}");
-                    if (!empty($answer)) {
-                        Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => null,
-                            'answer' => $answer,
-                            'other_answer' => null
-                        ]);
-                        
-                        Log::info('Saved text answer', [
-                            'question_id' => $question->id_question,
-                            'answer' => $answer
-                        ]);
-                    }
-                    
-                } elseif ($question->type == 'date') {
-                    // Handle date questions
-                    $answer = $request->input("answers.{$question->id_question}");
-                    if (!empty($answer)) {
-                        Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => null,
-                            'answer' => $answer,
-                            'other_answer' => null
-                        ]);
-                        
-                        Log::info('Saved date answer', [
-                            'question_id' => $question->id_question,
-                            'answer' => $answer
-                        ]);
-                    }
-                    
-                } elseif ($question->type == 'location') {
-                    // Handle location questions
-                    $locationCombined = $request->input("location_combined.{$question->id_question}");
-                    if (!empty($locationCombined)) {
-                        Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => null,
-                            'answer' => $locationCombined,
-                            'other_answer' => null
-                        ]);
-                        
-                        Log::info('Saved location answer', [
-                            'question_id' => $question->id_question,
-                            'answer' => $locationCombined
-                        ]);
-                    }
-                    
-                } elseif ($question->type == 'option') {
-                    // Handle radio button questions
-                    $selectedOption = $request->input("answers.{$question->id_question}");
-                    if (!empty($selectedOption)) {
-                        $otherAnswer = null;
-                        
-                        // Check if this is an "other" option and get the user input
-                        $option = Tb_Question_Options::find($selectedOption);
-                        if ($option && $option->is_other_option) {
-                            $otherAnswer = $request->input("other_answers.{$question->id_question}");
-                            
-                            Log::info('Processing other option for radio', [
-                                'question_id' => $question->id_question,
-                                'option_id' => $selectedOption,
-                                'option' => $option->option,
-                                'other_answer_raw' => $otherAnswer,
-                                'other_answer_trimmed' => trim($otherAnswer ?? ''),
-                                'is_other_option' => $option->is_other_option,
-                                'other_before_text' => $option->other_before_text,
-                                'other_after_text' => $option->other_after_text
-                            ]);
-                        }
-                        
-                        $savedAnswer = Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => $selectedOption,
-                            'answer' => null,
-                            'other_answer' => $otherAnswer
-                        ]);
-                        
-                        Log::info('Saved radio answer', [
-                            'question_id' => $question->id_question,
-                            'option_id' => $selectedOption,
-                            'other_answer' => $otherAnswer,
-                            'saved_id' => $savedAnswer->id_user_answer_item
-                        ]);
-                    }
-                    
-                } elseif ($question->type == 'multiple') {
-                    // Handle checkbox questions
-                    $selectedOptions = $request->input("multiple.{$question->id_question}", []);
-                    foreach ($selectedOptions as $optionId) {
-                        $otherAnswer = null;
-                        
-                        // Check if this is an "other" option and get the user input
-                        $option = Tb_Question_Options::find($optionId);
-                        if ($option && $option->is_other_option) {
-                            $otherAnswer = $request->input("multiple_other_answers.{$question->id_question}.{$optionId}");
-                            
-                            Log::info('Processing other option for multiple', [
-                                'question_id' => $question->id_question,
-                                'option_id' => $optionId,
-                                'option' => $option->option,
-                                'other_answer_raw' => $otherAnswer,
-                                'other_answer_trimmed' => trim($otherAnswer ?? ''),
-                                'is_other_option' => $option->is_other_option
-                            ]);
-                        }
-                        
-                        $savedAnswer = Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => $optionId,
-                            'answer' => null,
-                            'other_answer' => $otherAnswer
-                        ]);
-                        
-                        Log::info('Saved checkbox answer', [
-                            'question_id' => $question->id_question,
-                            'option_id' => $optionId,
-                            'other_answer' => $otherAnswer,
-                            'saved_id' => $savedAnswer->id_user_answer_item
-                        ]);
-                    }
-                } elseif ($question->type == 'rating' || $question->type == 'scale') {
-                    // Handle rating and scale questions
-                    $selectedOption = $request->input("answers.{$question->id_question}");
-                    if (!empty($selectedOption)) {
-                        Tb_User_Answer_Item::create([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $question->id_question,
-                            'id_questions_options' => $selectedOption,
-                            'answer' => null,
-                            'other_answer' => null
-                        ]);
-                        
-                        Log::info('Saved rating/scale answer', [
-                            'question_id' => $question->id_question,
-                            'option_id' => $selectedOption,
-                            'question_type' => $question->type
-                        ]);
-                    }
-                }
+            if (!$jobHistoryExists) {
+                return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                    ->with('error', 'Alumni ini tidak pernah bekerja di perusahaan Anda.');
             }
-            
-            // Get action from form
+
+            $periode = Tb_Periode::findOrFail($id_periode);
+            $categoryId = $request->input('id_category');
             $action = $request->input('action', 'save_draft');
-            
-            // Get all categories for navigation
-            $allCategories = Tb_Category::where('id_periode', $id_periode)
-                ->where(function($query) {
-                    $query->where('for_type', 'company')
-                          ->orWhere('for_type', 'both');
+
+            // Get or create user answer record
+            $userAnswer = Tb_User_Answers::firstOrCreate(
+                [
+                    'id_user' => $userId,
+                    'id_periode' => $id_periode,
+                    'nim' => $nim
+                ],
+                [
+                    'status' => 'draft'
+                ]
+            );
+
+            // Delete existing answers for this category
+            Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+                ->whereHas('question', function($query) use ($categoryId) {
+                    $query->where('id_category', $categoryId);
                 })
-                ->orderBy('order')
+                ->delete();
+
+            // PERBAIKAN: Get questions untuk category ini dengan filter status
+            $questions = Tb_Questions::where('id_category', $categoryId)
+                ->where('status', 'visible') // ✅ KEMBALIKAN filter status
                 ->get();
-                
-            $currentCategoryIndex = $allCategories->search(function($cat) use ($category) {
-                return $cat->id_category == $category->id_category;
-            });
-            
-            if ($currentCategoryIndex === false) {
-                $currentCategoryIndex = 0;
+
+            // Process answers for each question
+            foreach ($questions as $question) {
+                $this->processQuestionAnswer($request, $userAnswer, $question);
             }
-            
-            $isLastCategory = ($currentCategoryIndex == $allCategories->count() - 1);
-            
-            // Handle different actions
-            if ($action == 'save_draft') {
-                return redirect()->back()->with('success', 'Draft berhasil disimpan.');
+
+            // Determine next action based on button clicked
+            if ($action === 'save_draft') {
+                return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $categoryId])
+                    ->with('success', 'Draft berhasil disimpan.');
+            } elseif ($action === 'prev_category') {
+                $allCategories = Tb_Category::where('id_periode', $id_periode)
+                    ->whereIn('for_type', ['company', 'both'])
+                    ->orderBy('order')
+                    ->get();
                 
-            } elseif ($action == 'next_category') {
-                if (!$isLastCategory) {
-                    $nextCategory = $allCategories[$currentCategoryIndex + 1];
-                    return redirect()->route('company.questionnaire.fill', [$id_periode, $nextCategory->id_category])
-                        ->with('success', 'Jawaban berhasil disimpan. Lanjut ke kategori berikutnya.');
+                $currentIndex = $allCategories->search(function($cat) use ($categoryId) {
+                    return $cat->id_category == $categoryId;
+                });
+                
+                if ($currentIndex > 0) {
+                    $prevCategory = $allCategories[$currentIndex - 1];
+                    return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $prevCategory->id_category]);
+                }
+                
+                return redirect()->route('company.questionnaire.fill', [$id_periode, $nim]);
+            } elseif ($action === 'next_category') {
+                $allCategories = Tb_Category::where('id_periode', $id_periode)
+                    ->whereIn('for_type', ['company', 'both'])
+                    ->orderBy('order')
+                    ->get();
+                
+                $currentIndex = $allCategories->search(function($cat) use ($categoryId) {
+                    return $cat->id_category == $categoryId;
+                });
+                
+                if ($currentIndex < $allCategories->count() - 1) {
+                    $nextCategory = $allCategories[$currentIndex + 1];
+                    return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $nextCategory->id_category]);
                 } else {
-                    // This is the last category, mark as completed
+                    // Last category, mark as completed
                     $userAnswer->update([
                         'status' => 'completed',
-                        'submitted_at' => now()
+                        'create_at' => now()
                     ]);
                     
                     return redirect()->route('company.questionnaire.thank-you')
-                        ->with('success', 'Kuesioner berhasil diselesaikan!');
+                        ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
                 }
-                
-            } elseif ($action == 'submit_final') {
+            } elseif ($action === 'submit_final') {
                 // Mark as completed
                 $userAnswer->update([
-                    'status' => 'completed',
-                    'submitted_at' => now()
+                    'status' => 'completed', 
+                    'create_at' => now()
                 ]);
                 
                 return redirect()->route('company.questionnaire.thank-you')
-                    ->with('success', 'Kuesioner berhasil diselesaikan!');
+                    ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
             }
-            
-            // Fallback
-            return redirect()->back()->with('success', 'Jawaban berhasil disimpan.');
-            
+
+            return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $categoryId]);
+
         } catch (\Exception $e) {
-            Log::error('Error submitting company questionnaire:', [
-                'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-                'request_data' => $request->all()
-            ]);
-            
-            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyimpan jawaban: ' . $e->getMessage());
+            Log::error('Company questionnaire submission error: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.')
+                ->withInput();
         }
     }
-    
+
+    // Method lainnya tetap sama...
     public function thankYou()
     {
         return view('company.questionnaire.thank-you');
     }
-    
-    /**
-     * Display a listing of the user's questionnaire results.
-     */
-public function results()
-{
-    $userId = Auth::id();
-    
-    // Get all user answers (both completed and draft) with proper relationships
-    $userAnswers = Tb_User_Answers::where('id_user', $userId)
-        ->with(['periode', 'user.company'])
-        ->orderBy('created_at', 'desc')
-        ->get();
 
-    // Add additional data for each answer
-    foreach ($userAnswers as $userAnswer) {
-        // ===== Tambahkan informasi alumni yang dinilai =====
-        $alumni = Tb_Alumni::where('nim', $userAnswer->nim)->first();
-        $userAnswer->alumni = $alumni;
-
-        // ===== Hitung completion =====
-        $totalQuestions = 0;
-        $answeredQuestions = 0;
+    public function results()
+    {
+        $userId = Auth::id();
         
-        $categories = Tb_Category::where('id_periode', $userAnswer->id_periode)
-            ->where(function($query) {
-                $query->where('for_type', 'company')
-                      ->orWhere('for_type', 'both');
-            })
+        $userAnswers = Tb_User_Answers::where('id_user', $userId)
+            ->with(['periode', 'user.company'])
+            ->orderBy('created_at', 'desc')
             ->get();
-        
-        foreach ($categories as $category) {
-            $questions = Tb_Questions::where('id_category', $category->id_category)->get();
-            $totalQuestions += $questions->count();
 
-            $answeredCount = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
-                ->whereIn('id_question', $questions->pluck('id_question'))
-                ->where(function($query) {
-                    $query->whereNotNull('answer')
-                          ->orWhereNotNull('id_questions_options');
-                })
-                ->count();
+        foreach ($userAnswers as $userAnswer) {
+            $alumni = Tb_Alumni::where('nim', $userAnswer->nim)->first();
+            $userAnswer->alumni = $alumni;
 
-            $answeredQuestions += $answeredCount;
+            $totalQuestions = 0;
+            $answeredQuestions = 0;
+            
+            $categories = Tb_Category::where('id_periode', $userAnswer->id_periode)
+                ->whereIn('for_type', ['company', 'both'])
+                ->get();
+            
+            foreach ($categories as $category) {
+                // PERBAIKAN: Tambahkan filter status
+                $categoryQuestions = Tb_Questions::where('id_category', $category->id_category)
+                    ->where('status', 'visible') // ✅ KEMBALIKAN filter status
+                    ->count();
+                $totalQuestions += $categoryQuestions;
+
+                $answeredInCategory = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+                    ->whereHas('question', function($query) use ($category) {
+                        $query->where('id_category', $category->id_category)
+                              ->where('status', 'visible'); // ✅ KEMBALIKAN filter status
+                    })
+                    ->count();
+                $answeredQuestions += $answeredInCategory;
+            }
+
+            $userAnswer->completion_percentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
+            $userAnswer->total_questions = $totalQuestions;
+            $userAnswer->answered_questions = $answeredQuestions;
+
+            $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
+            $userAnswer->formatted_updated_at = $userAnswer->updated_at->format('d M Y, H:i');
+
+            if ($userAnswer->status == 'completed' && $userAnswer->create_at) {
+                $userAnswer->formatted_create_at = $userAnswer->create_at->format('d M Y, H:i');
+            }
         }
 
-        $userAnswer->completion_percentage = $totalQuestions > 0 ? round(($answeredQuestions / $totalQuestions) * 100) : 0;
-        $userAnswer->total_questions = $totalQuestions;
-        $userAnswer->answered_questions = $answeredQuestions;
-
-        // Format dates
-        $userAnswer->formatted_created_at = $userAnswer->created_at->format('d M Y, H:i');
-        $userAnswer->formatted_updated_at = $userAnswer->updated_at->format('d M Y, H:i');
-
-        if ($userAnswer->status == 'completed' && $userAnswer->submitted_at) {
-            $userAnswer->formatted_submitted_at = \Carbon\Carbon::parse($userAnswer->submitted_at)->format('d M Y, H:i');
-        }
+        return view('company.questionnaire.results', compact('userAnswers'));
     }
-
-    return view('company.questionnaire.results', compact('userAnswers'));
-}
     
-    /**
-     * Display a specific questionnaire response.
-     */
     public function responseDetail($id_periode, $id_user_answer)
     {
         $userId = Auth::id();
         
-        // Security: Ensure this answer belongs to this user
         $userAnswer = Tb_User_Answers::where('id_user_answer', $id_user_answer)
             ->where('id_user', $userId)
-            ->where('id_periode', $id_periode)
-            ->with(['user.company', 'periode'])
+            ->with(['periode', 'alumni'])
             ->firstOrFail();
         
-        // Get company data - use relationship as fallback
         $company = auth()->user()->company ?? session('company');
         
-        // If still no company data, create a basic object to prevent errors
         if (!$company) {
             $company = (object) [
-                'name' => auth()->user()->username ?? 'Unknown Company',
-                'field' => null,
-                'city' => null,
-                'address' => null
+                'company_name' => 'Nama Perusahaan Tidak Ditemukan',
+                'address' => 'Alamat Tidak Ditemukan'
             ];
         }
         
-        // Get categories for this period - PERBAIKAN: Hanya ambil kategori untuk company
         $categories = Tb_Category::where('id_periode', $id_periode)
-            ->where(function($query) {
-                $query->where('for_type', 'company')
-                      ->orWhere('for_type', 'both');
-            })
+            ->whereIn('for_type', ['company', 'both'])
             ->orderBy('order')
             ->get();
         
-        // Get questions and answers
         $questionsWithAnswers = [];
         
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
-                ->visible()
+                ->where('status', 'visible')
                 ->with('options')
                 ->orderBy('order')
                 ->get();
-            
-            $questionArray = [];
-            
+
+            $categoryData = [
+                'category' => $category,
+                'questions' => []
+            ];
+
             foreach ($questions as $question) {
-                $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+                $answers = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
                     ->where('id_question', $question->id_question)
                     ->get();
+
+                // ✅ PERBAIKAN: Process answers and set hasAnswer flag
+                $hasAnswer = $answers->isNotEmpty();
+                $processedAnswerData = $this->processAnswersForDisplay($question, $answers);
                 
-                // Initialize variables to match view expectations
-                $answer = null;
-                $otherAnswer = null;
-                $otherOption = null;
-                $multipleAnswers = [];
-                $multipleOtherAnswers = [];
-                $multipleOtherOptions = [];
-                $hasAnswer = false; // Add this flag
-                
-                if ($answerItems->isNotEmpty()) {
-                    $hasAnswer = true; // Set to true if there are answer items
-                    
-                    if ($question->type == 'text' || $question->type == 'date') {
-                        // For text and date questions
-                        $answer = $answerItems->first()->answer;
-                        // Check if answer is actually empty
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'location') {
-                        // For location questions - handle JSON parsing
-                        $locationAnswer = $answerItems->first()->answer;
-                        if (!empty($locationAnswer)) {
-                            try {
-                                $locationData = json_decode($locationAnswer, true);
-                                if (is_array($locationData)) {
-                                    $answer = $locationData['display'] ?? $locationAnswer;
-                                } else {
-                                    $answer = $locationAnswer;
-                                }
-                            } catch (\Exception $e) {
-                                $answer = $locationAnswer;
-                            }
-                        }
-                        // Check if answer is actually empty
-                        if (empty(trim($answer))) {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'rating' || $question->type == 'scale') {
-                        // For rating and scale questions
-                        $firstItem = $answerItems->first();
-                        if ($firstItem->id_questions_options) {
-                            $selectedOption = Tb_Question_Options::find($firstItem->id_questions_options);
-                            if ($selectedOption) {
-                                $answer = $selectedOption->option;
-                            } else {
-                                $hasAnswer = false;
-                            }
-                        } else {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'option') {
-                        // For single option questions
-                        $firstItem = $answerItems->first();
-                        if ($firstItem->id_questions_options) {
-                            $selectedOption = Tb_Question_Options::find($firstItem->id_questions_options);
-                            if ($selectedOption) {
-                                $answer = $selectedOption->option;
-                                $otherOption = null;
-                                
-                                if ($selectedOption->is_other_option == 1) {
-                                    $otherAnswer = $firstItem->other_answer;
-                                    $otherOption = $selectedOption;
-                                }
-                            } else {
-                                $hasAnswer = false;
-                            }
-                        } else {
-                            $hasAnswer = false;
-                        }
-                        
-                    } elseif ($question->type == 'multiple') {
-                        // For multiple choice questions
-                        $hasValidAnswers = false;
-                        foreach ($answerItems as $item) {
-                            if ($item->id_questions_options) {
-                                $selectedOption = Tb_Question_Options::find($item->id_questions_options);
-                                if ($selectedOption) {
-                                    $hasValidAnswers = true;
-                                    $displayText = $selectedOption->option;
-                                    
-                                    // Handle other answers for multiple choice
-                                    if ($selectedOption->is_other_option == 1 && $item->other_answer) {
-                                        $otherDisplay = '';
-                                        if ($selectedOption->other_before_text) {
-                                            $otherDisplay .= $selectedOption->other_before_text . ' ';
-                                        }
-                                        $otherDisplay .= $item->other_answer;
-                                        if ($selectedOption->other_after_text) {
-                                            $otherDisplay .= ' ' . $selectedOption->other_after_text;
-                                        }
-                                        $displayText .= ': ' . $otherDisplay;
-                                        
-                                        $multipleOtherAnswers[] = $item->other_answer;
-                                        $multipleOtherOptions[] = $selectedOption;
-                                    } else {
-                                        $multipleOtherAnswers[] = null;
-                                        $multipleOtherOptions[] = null;
-                                    }
-                                    
-                                    $multipleAnswers[] = $displayText;
-                                }
-                            }
-                        }
-                        $hasAnswer = $hasValidAnswers;
-                    }
-                } else {
-                    // No answer items found
-                    $hasAnswer = false;
-                }
-                
-                $questionArray[] = [
+                $questionData = [
                     'question' => $question,
-                    'answer' => $answer,
-                    'hasAnswer' => $hasAnswer, // Add this key
-                    'otherAnswer' => $otherAnswer ?? null,
-                    'otherOption' => $otherOption ?? null,
-                    'multipleAnswers' => $multipleAnswers,
-                    'multipleOtherAnswers' => $multipleOtherAnswers,
-                    'multipleOtherOptions' => $multipleOtherOptions,
+                    'answers' => $answers,
+                    'hasAnswer' => $hasAnswer,
+                    'answer' => $processedAnswerData['answer'],
+                    'otherAnswer' => $processedAnswerData['otherAnswer'],
+                    'otherOption' => $processedAnswerData['otherOption'],
+                    'multipleAnswers' => $processedAnswerData['multipleAnswers'],
+                    'multipleOtherAnswers' => $processedAnswerData['multipleOtherAnswers'],
+                    'ratingOption' => $processedAnswerData['ratingOption'] ?? null // ✅ TAMBAHAN
                 ];
+
+                $categoryData['questions'][] = $questionData;
             }
-            
-            // Only add category if it has questions
-            if (!empty($questionArray)) {
-                $questionsWithAnswers[] = [
-                    'category' => $category,
-                    'questions' => $questionArray
-                ];
-            }
+
+            $questionsWithAnswers[] = $categoryData;
         }
-        
         
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
     }
 
-    /**
-     * Get provinces from external API
-     */
     public function getProvinces()
     {
         try {
             $response = file_get_contents('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-            $provinces = json_decode($response, true);
-            
             return response()->json([
                 'success' => true,
-                'data' => $provinces
+                'data' => json_decode($response, true)
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memuat data provinsi'
-            ]);
+                'message' => 'Failed to fetch provinces'
+            ], 500);
         }
     }
 
-    /**
-     * Get cities/regencies by province ID from external API
-     */
     public function getCities($provinceId)
     {
         try {
             $response = file_get_contents("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinceId}.json");
-            $cities = json_decode($response, true);
-            
             return response()->json([
                 'success' => true,
-                'data' => $cities
+                'data' => json_decode($response, true)
             ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal memuat data kota/kabupaten'
+                'message' => 'Failed to fetch cities'
+            ], 500);
+        }
+    }
+
+    /**
+     * PERBAIKAN: Helper method sesuai struktur database yang sebenarnya
+     */
+    private function processQuestionAnswer($request, $userAnswer, $question)
+    {
+        $questionId = $question->id_question;
+        $questionType = $question->type; // Gunakan 'type' sesuai database
+
+        // Handle different question types berdasarkan struktur database yang sebenarnya
+        switch ($questionType) {
+            case 'text':
+            case 'email':
+            case 'numeric':
+            case 'date':
+                $answer = $request->input("question_{$questionId}");
+                if ($answer !== null && $answer !== '') {
+                    Tb_User_Answer_Item::create([
+                        'id_user_answer' => $userAnswer->id_user_answer,
+                        'id_question' => $questionId,
+                        'answer' => $answer
+                    ]);
+                }
+                break;
+
+            case 'option':
+            case 'rating':
+            case 'scale':
+                $answer = $request->input("question_{$questionId}");
+                $otherAnswer = $request->input("question_{$questionId}_other");
+                
+                if ($answer) {
+                    // Cari option ID berdasarkan value
+                    $option = Tb_Question_Options::where('id_question', $questionId)
+                        ->where('option', $answer)
+                        ->first();
+                    
+                    Tb_User_Answer_Item::create([
+                        'id_user_answer' => $userAnswer->id_user_answer,
+                        'id_question' => $questionId,
+                        'id_questions_options' => $option ? $option->id_questions_options : null,
+                        'answer' => $answer,
+                        'other_answer' => $otherAnswer
+                    ]);
+                }
+                break;
+
+            case 'multiple':
+                $answers = $request->input("question_{$questionId}", []);
+                
+                foreach ($answers as $answer) {
+                    $otherAnswer = $request->input("question_{$questionId}_other_{$answer}");
+                    
+                    // Cari option ID berdasarkan value
+                    $option = Tb_Question_Options::where('id_question', $questionId)
+                        ->where('option', $answer)
+                        ->first();
+                    
+                    Tb_User_Answer_Item::create([
+                        'id_user_answer' => $userAnswer->id_user_answer,
+                        'id_question' => $questionId,
+                        'id_questions_options' => $option ? $option->id_questions_options : null,
+                        'answer' => $answer,
+                        'other_answer' => $otherAnswer
+                    ]);
+                }
+                break;
+
+            case 'location':
+                $provinceId = $request->input("question_{$questionId}_province");
+                $provinceName = $request->input("question_{$questionId}_province_name");
+                $cityId = $request->input("question_{$questionId}_city");
+                $cityName = $request->input("question_{$questionId}_city_name");
+
+                if ($provinceId && $cityId) {
+                    $locationData = [
+                        'province_id' => $provinceId,
+                        'province_name' => $provinceName,
+                        'city_id' => $cityId,
+                        'city_name' => $cityName,
+                        'display' => $provinceName . ', ' . $cityName
+                    ];
+                    
+                    Tb_User_Answer_Item::create([
+                        'id_user_answer' => $userAnswer->id_user_answer,
+                        'id_question' => $questionId,
+                        'answer' => json_encode($locationData)
+                    ]);
+                }
+                break;
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Helper method untuk memproses jawaban untuk ditampilkan
+     */
+    private function processAnswersForDisplay($question, $answers)
+    {
+        $result = [
+            'answer' => null,
+            'otherAnswer' => null,
+            'otherOption' => null,
+            'ratingOption' => null,
+            'multipleAnswers' => [],
+            'multipleOtherAnswers' => []
+        ];
+
+        if ($answers->isEmpty()) {
+            return $result;
+        }
+
+        switch ($question->type) {
+            case 'text':
+            case 'email':
+            case 'numeric':
+            case 'date':
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                $result['otherAnswer'] = $firstAnswer->other_answer;
+                break;
+
+            case 'option':
+                $firstAnswer = $answers->first();
+                if ($firstAnswer->id_questions_options) {
+                    $option = Tb_Question_Options::find($firstAnswer->id_questions_options);
+                    $result['answer'] = $option ? $option->option : $firstAnswer->answer;
+                    
+                    if ($option && $option->is_other_option && $firstAnswer->other_answer) {
+                        $result['otherAnswer'] = $firstAnswer->other_answer;
+                        $result['otherOption'] = $option;
+                    }
+                } else {
+                    $result['answer'] = $firstAnswer->answer;
+                }
+                break;
+
+            case 'rating':
+                $firstAnswer = $answers->first();
+                
+                $ratingOption = null;
+                
+                if ($firstAnswer->id_questions_options) {
+                    $ratingOption = Tb_Question_Options::find($firstAnswer->id_questions_options);
+                }
+                
+                if (!$ratingOption && is_numeric($firstAnswer->answer)) {
+                    $ratingOption = Tb_Question_Options::find($firstAnswer->answer);
+                    
+                    if (!$ratingOption) {
+                        $ratingOption = Tb_Question_Options::where('id_question', $question->id_question)
+                            ->where('id_questions_options', $firstAnswer->answer)
+                            ->first();
+                    }
+                }
+                
+                if ($ratingOption) {
+                    $result['answer'] = $ratingOption->option;
+                    $result['ratingOption'] = $ratingOption;
+                    
+                    if ($ratingOption->is_other_option && $firstAnswer->other_answer) {
+                        $result['otherAnswer'] = $firstAnswer->other_answer;
+                    }
+                } else {
+                    $result['answer'] = $firstAnswer->answer;
+                    $result['ratingOption'] = null;
+                }
+                break;
+
+            case 'scale':
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                break;
+
+            case 'multiple':
+                foreach ($answers as $answer) {
+                    // ✅ PERBAIKAN UTAMA: Konsisten dengan admin controller
+                    if ($answer->id_questions_options) {
+                        $option = Tb_Question_Options::find($answer->id_questions_options);
+                        if ($option) {
+                            // ✅ SIMPAN TEXT OPTION, BUKAN ID (sama seperti admin)
+                            $result['multipleAnswers'][] = $option->option;
+                            
+                            if ($option->is_other_option && $answer->other_answer) {
+                                // ✅ GUNAKAN ID OPTION SEBAGAI KEY untuk other answers
+                                $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                            }
+                        } else {
+                            $result['multipleAnswers'][] = $answer->answer;
+                        }
+                    } else {
+                        // ✅ PERBAIKAN: Jika tidak ada id_questions_options, cek apakah answer berisi ID
+                        if (is_numeric($answer->answer)) {
+                            $option = Tb_Question_Options::find($answer->answer);
+                            if ($option) {
+                                $result['multipleAnswers'][] = $option->option;
+                                
+                                if ($option->is_other_option && $answer->other_answer) {
+                                    $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                                }
+                            } else {
+                                $result['multipleAnswers'][] = $answer->answer;
+                            }
+                        } else {
+                            // Answer sudah berupa text
+                            $result['multipleAnswers'][] = $answer->answer;
+                            
+                            // ✅ TAMBAHAN: Cari option berdasarkan text untuk other answer
+                            $option = Tb_Question_Options::where('id_question', $question->id_question)
+                                ->where('option', $answer->answer)
+                                ->first();
+                            
+                            if ($option && $option->is_other_option && $answer->other_answer) {
+                                $result['multipleOtherAnswers'][$option->id_questions_options] = $answer->other_answer;
+                            }
+                        }
+                    }
+                }
+                break;
+
+            case 'location':
+                $firstAnswer = $answers->first();
+                try {
+                    $locationData = json_decode($firstAnswer->answer, true);
+                    if (is_array($locationData) && isset($locationData['display'])) {
+                        $result['answer'] = $locationData['display'];
+                    } else {
+                        $result['answer'] = $firstAnswer->answer;
+                    }
+                } catch (\Exception $e) {
+                    $result['answer'] = $firstAnswer->answer;
+                }
+                break;
+
+            default:
+                $firstAnswer = $answers->first();
+                $result['answer'] = $firstAnswer->answer;
+                break;
+        }
+
+        // ✅ DEBUG: Log untuk debugging multiple choice
+        if ($question->type === 'multiple' && config('app.debug')) {
+            \Log::debug('Company processAnswersForDisplay - Multiple choice result', [
+                'question_id' => $question->id_question,
+                'raw_answers_count' => $answers->count(),
+                'processed_multipleAnswers' => $result['multipleAnswers'],
+                'processed_multipleOtherAnswers' => $result['multipleOtherAnswers'],
+                'raw_answers_data' => $answers->map(function($ans) {
+                    return [
+                        'id_questions_options' => $ans->id_questions_options,
+                        'answer' => $ans->answer,
+                        'other_answer' => $ans->other_answer
+                    ];
+                })->toArray()
             ]);
         }
+
+        return $result;
     }
 }

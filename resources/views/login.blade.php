@@ -1,6 +1,12 @@
 @extends('layouts.app')
 
 @section('content')
+<!-- Include Google Translate Widget Component -->
+<x-translate-widget 
+    position="bottom-left" 
+    :languages="['en', 'id']" 
+    theme="light" 
+/>
 <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
 
     <div class="flex flex-col-reverse lg:flex-row items-center w-full max-w-6xl mx-auto rounded-lg shadow-lg overflow-hidden bg-white">
@@ -88,5 +94,7 @@
         }
     }
 </script>
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
 @endsection
 

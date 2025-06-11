@@ -155,10 +155,11 @@ Route::middleware(['auth:web', CheckRole::class . ':3'])->group(function () {
     Route::get('/company/profil', [CompanyController::class, 'edit'])->name('company.edit');
     Route::put('/company/profil', [CompanyController::class, 'update'])->name('company.update');
     
-    // Questionnaire routes
+    // Questionnaire routes - DIUBAH: Tambah route baru untuk pemilihan alumni
     Route::get('/company/questionnaire', [CompanyQuestionnaireController::class, 'index'])->name('company.questionnaire.index');
-    Route::get('/company/questionnaire/fill/{id_periode}/{category?}', [CompanyQuestionnaireController::class, 'fill'])->name('company.questionnaire.fill');
-    Route::post('/company/questionnaire/submit/{id_periode}', [CompanyQuestionnaireController::class, 'submit'])->name('company.questionnaire.submit');
+    Route::get('/company/questionnaire/{id_periode}/select-alumni', [CompanyQuestionnaireController::class, 'selectAlumni'])->name('company.questionnaire.select-alumni');
+    Route::get('/company/questionnaire/fill/{id_periode}/{nim}/{category?}', [CompanyQuestionnaireController::class, 'fill'])->name('company.questionnaire.fill');
+    Route::post('/company/questionnaire/submit/{id_periode}/{nim}', [CompanyQuestionnaireController::class, 'submit'])->name('company.questionnaire.submit');
     Route::get('/company/questionnaire/thank-you', [CompanyQuestionnaireController::class, 'thankYou'])->name('company.questionnaire.thank-you');
     Route::get('/company/questionnaire/results', [CompanyQuestionnaireController::class, 'results'])->name('company.questionnaire.results');
     Route::get('/company/questionnaire/{id_periode}/response/{id_user_answer}', [CompanyQuestionnaireController::class, 'responseDetail'])->name('company.questionnaire.response-detail');
@@ -226,6 +227,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     // Responses
     Route::get('/admin/questionnaire/{id_periode}/responses', [QuestionnaireController::class, 'responses'])->name('admin.questionnaire.responses');
     Route::get('/admin/questionnaire/{id_periode}/responses/{id_user_answer}', [QuestionnaireController::class, 'responseDetail'])->name('admin.questionnaire.response-detail');
+    Route::post('/admin/questionnaire/{id_periode}/remind-all', [QuestionnaireController::class, 'remindAllUsers'])->name('admin.questionnaire.remind-all');
     
     // Export
     Route::get('/admin/questionnaire/{id_periode}/export', [QuestionnaireController::class, 'export'])->name('admin.questionnaire.export');
@@ -235,6 +237,12 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     // Location API
     Route::get('/admin/questionnaire/provinces', [QuestionnaireController::class, 'getProvinces'])->name('admin.questionnaire.provinces');
     Route::get('/admin/questionnaire/cities/{provinceId}', [QuestionnaireController::class, 'getCities'])->name('admin.questionnaire.cities');
+
+    // Questionnaire Import/Export (DYNAMIC)
+    Route::get('/admin/questionnaires/import-export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'index'])->name('admin.questionnaires.import-export');
+    Route::post('/admin/questionnaires/import', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'import'])->name('admin.questionnaires.import');
+    Route::get('/admin/questionnaires/export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'export'])->name('admin.questionnaires.export');
+    Route::get('/admin/questionnaires/download-template', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'downloadTemplate'])->name('admin.questionnaires.download-template');
 });
 Route::get('/logout', function () {
     Auth::logout();

@@ -32,6 +32,23 @@
                     <p>{{ session('error') }}</p>
                 </div>
             @endif
+
+            {{-- Tombol Isi Kuesioner Lagi jika masih ada periode aktif --}}
+            @php
+                // Ambil data periode aktif dari session jika dikirim dari controller index
+                $availableActivePeriodes = $availableActivePeriodes ?? (session('availableActivePeriodes') ?? collect());
+            @endphp
+            @if(isset($availableActivePeriodes) && $availableActivePeriodes->isNotEmpty())
+                <div class="mb-6">
+                    <a href="{{ route('company.questionnaire.index') }}"
+                       class="inline-flex items-center px-5 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-md shadow transition">
+                        <i class="fas fa-plus mr-2"></i> Isi Kuesioner Lagi
+                    </a>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Masih ada alumni yang dapat Anda nilai pada periode aktif.
+                    </p>
+                </div>
+            @endif
             
             @if($userAnswers->isEmpty())
                 <div class="bg-white rounded-xl shadow-md p-8 text-center">
@@ -53,7 +70,7 @@
                         <table class="min-w-full bg-white">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="py-3 px-4 text-left">Periode</th>
+                                    <th class="py-3 px-4 text-left">Alumni</th>
                                     <th class="py-3 px-4 text-left">Tanggal Pengisian</th>
                                     <th class="py-3 px-4 text-left">Status</th>
                                     <th class="py-3 px-4 text-left">Aksi</th>
@@ -62,7 +79,7 @@
                             <tbody class="divide-y divide-gray-200">
                                 @foreach($userAnswers as $userAnswer)
                                     <tr class="hover:bg-gray-50">
-                                        <td class="py-3 px-4">{{ $userAnswer->periode->periode_name }}</td>
+                                        <td class="py-3 px-4">{{ $userAnswer->alumni->name ?? 'Unknown Alumni' }}</td>
                                         <td class="py-3 px-4">{{ $userAnswer->updated_at->format('d M Y, H:i') }}</td>
                                         <td class="py-3 px-4">
                                             @if($userAnswer->status == 'completed')
@@ -82,7 +99,8 @@
                                                 <i class="fas fa-eye mr-1"></i> Lihat
                                             </a>
                                             @if($userAnswer->periode->status == 'active' && $userAnswer->status == 'draft')
-                                                <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode]) }}" 
+                                                <!-- FIX: Add nim parameter to the route -->
+                                                <a href="{{ route('company.questionnaire.fill', [$userAnswer->id_periode, $userAnswer->nim ?? $userAnswer->user->nim ?? $userAnswer->alumni->nim]) }}" 
                                                    class="text-green-600 hover:underline ml-3">
                                                     <i class="fas fa-edit mr-1"></i> Lanjutkan
                                                 </a>

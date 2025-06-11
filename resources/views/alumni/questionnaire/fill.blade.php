@@ -410,7 +410,7 @@
                                                                        data-question-id="{{ $question->id_question }}"
                                                                        {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $scaleOption->id_questions_options ? 'checked' : '' }}>
                                                                 <label for="scale_{{ $scaleOption->id_questions_options }}" class="cursor-pointer">
-                                                                    <span class="inline-block w-12 h-12 rounded-full border-2 {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $scaleOption->id_questions_options ? 'bg-blue-500 text-white border-blue-500' : 'bg-white border-gray-300' }} text-center leading-10 text-lg font-bold hover:bg-blue-50 hover:border-blue-300 transition-all duration-200">
+                                                                    <span class="inline-block w-12 h-12 rounded-full border-2 {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $scaleOption->id_questions_options ? 'bg-green-500 text-white border-green-500' : 'bg-white border-gray-300' }} text-center leading-10 text-lg font-bold hover:bg-green-50 hover:border-green-300 transition-all duration-200 scale-option">
                                                                         {{ $i }}
                                                                     </span>
                                                                 </label>
@@ -421,6 +421,33 @@
                                                 </div>
                                             </div>
                                             <!-- TAMBAHKAN VALIDATION MESSAGE -->
+                                            <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
+                                        @elseif($question->type == 'email')
+                                            <!-- Email question -->
+                                            <div class="bg-white border border-gray-300 rounded-lg p-4">
+                                                <div class="flex items-center flex-wrap">
+                                                    <i class="fas fa-envelope text-blue-600 mr-3"></i>
+                                                    @if($question->before_text)
+                                                        <span class="mr-2 text-gray-700 font-medium">{{ $question->before_text }}</span>
+                                                    @endif
+                                                    
+                                                    <input type="email" 
+                                                           name="answers[{{ $question->id_question }}]" 
+                                                           value="{{ $prevAnswers[$question->id_question] ?? '' }}"
+                                                           class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-48 email-validation"
+                                                           placeholder="contoh@domain.com"
+                                                           pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+                                                    
+                                                    @if($question->after_text)
+                                                        <span class="ml-2 text-gray-700 font-medium">{{ $question->after_text }}</span>
+                                                    @endif
+                                                </div>
+                                                
+                                                <div class="mt-2 text-xs text-gray-500 flex items-center">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    Masukkan email yang valid dengan domain (contoh: nama@gmail.com)
+                                                </div>
+                                            </div>
                                             <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
                                         @endif
                                     </div>
@@ -573,7 +600,38 @@
     .numeric-only:focus {
         box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
     }
-    </style>
+
+    /* ✅ TAMBAHAN CSS UNTUK SCALE STYLING */
+    .scale-option {
+        transition: all 0.3s ease;
+    }
+
+    .scale-option:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    /* Style untuk scale option yang dipilih */
+    .scale-option.selected {
+        background-color: #10b981 !important;
+        color: white !important;
+        border-color: #10b981 !important;
+        transform: scale(1.15);
+        box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Style untuk scale option yang tidak dipilih */
+    .scale-option:not(.selected) {
+        background-color: white;
+        color: #374151;
+        border-color: #d1d5db;
+    }
+
+    .scale-option:not(.selected):hover {
+        background-color: #f0fdf4;
+        border-color: #86efac;
+    }
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -593,7 +651,83 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     console.log('✅ Questionnaire data loaded:', window.questionnaireData);
+
+    // ✅ TAMBAHKAN FUNCTION UNTUK SCALE QUESTIONS
+    function initializeScaleQuestions() {
+        console.log('Initializing scale questions styling...');
+        
+        // Handle scale changes dengan visual feedback
+        document.querySelectorAll('.scale-radio').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id');
+                const selectedValue = this.value;
+                
+                console.log('Scale changed:', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
+                
+                // ✅ IMMEDIATE UPDATE: Update visual styling untuk semua scale options dalam pertanyaan ini
+                updateScaleVisualState(questionId);
+                
+                // Handle conditional questions
+                handleDependentQuestions(questionId, selectedValue);
+            });
+        });
+        
+        // ✅ Initialize visual state untuk scale questions yang sudah ada jawaban
+        document.querySelectorAll('.scale-radio:checked').forEach(checkedRadio => {
+            const questionId = checkedRadio.getAttribute('data-question-id');
+            updateScaleVisualState(questionId);
+        });
+        
+        console.log('Scale questions initialization complete');
+    }
     
+    function updateScaleVisualState(questionId) {
+        console.log('Updating scale visual state for question:', questionId);
+        
+        // Ambil semua scale options untuk pertanyaan ini
+        const scaleRadios = document.querySelectorAll(`input[data-question-id="${questionId}"].scale-radio`);
+        
+        scaleRadios.forEach(radio => {
+            const label = document.querySelector(`label[for="${radio.id}"]`);
+            if (label) {
+                const scaleOption = label.querySelector('.scale-option');
+                if (scaleOption) {
+                    if (radio.checked) {
+                        // ✅ PERBAIKI: Style untuk yang dipilih - HIJAU dengan !important
+                        scaleOption.classList.add('selected');
+                        scaleOption.classList.remove('bg-white', 'border-gray-300', 'text-gray-700');
+                        scaleOption.classList.add('bg-green-500', 'text-white', 'border-green-500');
+                        
+                        // ✅ TAMBAHKAN INLINE STYLES UNTUK MEMASTIKAN PERUBAHAN
+                        scaleOption.style.backgroundColor = '#10b981 !important'; // green-500
+                        scaleOption.style.color = 'white !important';
+                        scaleOption.style.borderColor = '#10b981 !important';
+                        scaleOption.style.transform = 'scale(1.15)';
+                        scaleOption.style.boxShadow = '0 6px 16px rgba(34, 197, 94, 0.4)';
+                        
+                        console.log(`✅ Applied selected style to scale option ${radio.value} for question ${questionId}`);
+                    } else {
+                        // ✅ PERBAIKI: Style untuk yang tidak dipilih
+                        scaleOption.classList.remove('selected', 'bg-green-500', 'text-white', 'border-green-500');
+                        scaleOption.classList.add('bg-white', 'border-gray-300', 'text-gray-700');
+                        
+                        // ✅ RESET INLINE STYLES
+                        scaleOption.style.backgroundColor = 'white';
+                        scaleOption.style.color = '#374151'; // gray-700
+                        scaleOption.style.borderColor = '#d1d5db'; // gray-300
+                        scaleOption.style.transform = 'scale(1)';
+                        scaleOption.style.boxShadow = 'none';
+                        
+                        console.log(`❌ Applied unselected style to scale option ${radio.value} for question ${questionId}`);
+                    }
+                }
+            }
+        });
+    }
+
     // ✅ PERBAIKAN: Load saved answers dengan benar setelah DOM ready
     function loadSavedAnswers() {
         console.log('=== LOADING SAVED ANSWERS ===');
@@ -608,6 +742,12 @@ document.addEventListener('DOMContentLoaded', function() {
             if (input) {
                 if (input.type === 'radio' || input.type === 'checkbox') {
                     input.checked = true;
+                    
+                    // ✅ KHUSUS UNTUK SCALE RADIO: Update visual state immediately
+                    if (input.classList.contains('scale-radio')) {
+                        const questionId = input.getAttribute('data-question-id');
+                        updateScaleVisualState(questionId);
+                    }
                 } else {
                     input.value = answer;
                 }
@@ -634,7 +774,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (otherInput) {
                 otherInput.value = otherAnswer;
-                // Show other input container if hidden
                 const otherContainer = otherInput.closest('.other-input-container');
                 if (otherContainer) {
                     otherContainer.style.display = 'block';
@@ -651,7 +790,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (otherInput) {
                     otherInput.value = otherAnswer;
-                    // Show other input container if hidden
                     const otherContainer = otherInput.closest('.other-input-container');
                     if (otherContainer) {
                         otherContainer.style.display = 'block';
@@ -665,15 +803,12 @@ document.addEventListener('DOMContentLoaded', function() {
         Object.entries(window.questionnaireData.prevLocationAnswers).forEach(([questionId, locationData]) => {
             console.log(`Loading location data for question ${questionId}:`, locationData);
             
-            // Set province and city if available
             if (locationData.province_id) {
                 const provinceSelect = document.getElementById(`province-${questionId}`);
                 if (provinceSelect) {
                     provinceSelect.value = locationData.province_id;
-                    // Trigger change to load cities
                     provinceSelect.dispatchEvent(new Event('change'));
                     
-                    // Set city after a delay to allow cities to load
                     setTimeout(() => {
                         if (locationData.city_id) {
                             const citySelect = document.getElementById(`city-${questionId}`);
@@ -686,7 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Update display if available
             if (locationData.display) {
                 const locationDisplay = document.getElementById(`location-text-${questionId}`);
                 if (locationDisplay) {
@@ -700,16 +834,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // GLOBAL FORM ELEMENTS
-    const form = document.getElementById('questionnaireForm');
-    const formAction = document.getElementById('form-action');
 
     // LOCATION FUNCTIONS - SIMPLIFIED VERSION
     function initializeLocationQuestions() {
         console.log('=== INITIALIZING LOCATION QUESTIONS ===');
         
-        // Find all province selects
         const provinceSelects = document.querySelectorAll('.province-select');
         console.log('Found province selects:', provinceSelects.length);
         
@@ -736,7 +865,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Show loading
         provinceSelect.innerHTML = '<option value="">-- Memuat provinsi... --</option>';
         
         fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
@@ -754,7 +882,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Invalid provinces data');
                 }
                 
-                // Clear and populate provinces
                 provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
                 
                 provinces.forEach(province => {
@@ -769,15 +896,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log(`Successfully loaded ${provinces.length} provinces for question ${questionId}`);
                 
-                // Load saved data after provinces are populated
                 setTimeout(() => {
                     loadSavedLocationData(questionId);
                 }, 200);
             })
             .catch(error => {
                 console.error('Error loading provinces:', error);
-                
-                // Fallback to manual data
                 console.log('Using fallback province data');
                 loadFallbackProvinces(provinceSelect, questionId);
             });
@@ -833,7 +957,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log(`Loaded ${fallbackProvinces.length} fallback provinces for question ${questionId}`);
         
-        // Load saved data
         setTimeout(() => {
             loadSavedLocationData(questionId);
         }, 200);
@@ -850,13 +973,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Province change event
         provinceSelect.addEventListener('change', function() {
             console.log('Province changed:', this.value, 'for question:', questionId);
             handleProvinceChange(questionId, this.value);
         });
         
-        // City change event
         citySelect.addEventListener('change', function() {
             console.log('City changed:', this.value, 'for question:', questionId);
             updateLocationDisplay(questionId);
@@ -874,11 +995,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Reset city select
         citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
         citySelect.disabled = true;
         
-        // Clear location display and hidden input
         const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
         const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
         
@@ -894,7 +1013,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Show loading
         citySelect.innerHTML = '<option value="">-- Memuat kota/kabupaten... --</option>';
         
         const apiUrl = `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`;
@@ -921,7 +1039,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // Populate city options
                 citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
                 
                 cities.forEach(city => {
@@ -940,7 +1057,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error loading cities:', error);
                 
-                // Use fallback cities
                 const fallbackCities = getFallbackCities(provinceId);
                 if (fallbackCities && fallbackCities.length > 0) {
                     console.log('Using fallback cities for province:', provinceId);
@@ -1013,13 +1129,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Get selected text values
         const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
         const cityName = citySelect.options[citySelect.selectedIndex].text;
         
         const displayText = `${cityName}, ${provinceName}`;
         
-        // Create location data object
         const locationData = {
             province_id: provinceId,
             province_name: provinceName,
@@ -1028,11 +1142,9 @@ document.addEventListener('DOMContentLoaded', function() {
             display: displayText
         };
         
-        // Update display
         locationTextSpan.textContent = displayText;
         selectedLocationDiv.classList.remove('hidden');
         
-        // Update hidden input
         locationCombinedInput.value = JSON.stringify(locationData);
         
         console.log('Location updated:', locationData);
@@ -1060,14 +1172,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Set province
             if (savedLocation.province_id) {
                 provinceSelect.value = savedLocation.province_id;
                 
-                // Load cities for this province
                 handleProvinceChange(questionId, savedLocation.province_id);
                 
-                // Set city after a delay to ensure cities are loaded
                 setTimeout(() => {
                     if (savedLocation.city_id) {
                         citySelect.value = savedLocation.city_id;
@@ -1076,7 +1185,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 500);
             }
             
-            // Show saved display immediately if available
             if (savedLocation.display) {
                 const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
                 const locationTextSpan = document.getElementById(`location-text-${questionId}`);
@@ -1109,15 +1217,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     radioElement: this
                 });
                 
-                // Hide all other fields for this question first
                 document.querySelectorAll(`[id^="other_field_${questionId}_"]`).forEach(field => {
                     field.classList.add('hidden');
                     const input = field.querySelector('input[type="text"]');
                     if (input) {
                         input.value = '';
-                        // Remove required attribute when hiding
                         input.removeAttribute('required');
-                        // ✅ PERBAIKAN: JANGAN hapus name attribute, cukup disable
                         input.disabled = true;
                         
                         console.log('Hidden other field:', {
@@ -1128,7 +1233,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                // Show this other field if applicable
                 if (isOther) {
                     const otherField = document.getElementById(`other_field_${questionId}_${this.value}`);
                     console.log('Looking for other field:', `other_field_${questionId}_${this.value}`, otherField);
@@ -1137,11 +1241,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         otherField.classList.remove('hidden');
                         const otherInput = otherField.querySelector('input[type="text"]');
                         if (otherInput) {
-                            // ✅ PERBAIKAN CRITICAL: Pastikan name attribute SELALU konsisten
-                            const correctName = `other_answers[${questionId}]`; // Gunakan plural untuk konsistensi
+                            const correctName = `other_answers[${questionId}]`;
                             otherInput.setAttribute('name', correctName);
                             otherInput.setAttribute('required', 'required');
-                            otherInput.disabled = false; // Enable input
+                            otherInput.disabled = false;
                             
                             console.log('Other input configured:', {
                                 questionId: questionId,
@@ -1155,7 +1258,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 required: otherInput.required
                             });
                             
-                            // Focus on the input
                             setTimeout(() => otherInput.focus(), 100);
                         }
                     } else {
@@ -1163,7 +1265,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Handle conditional questions
                 handleDependentQuestions(questionId, this.value);
             });
         });
@@ -1190,10 +1291,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         const otherInput = otherField.querySelector('input[type="text"]');
                         
                         if (this.checked) {
-                            // Show and enable the other field
                             otherField.classList.remove('hidden');
                             if (otherInput) {
-                                // ✅ PERBAIKAN CRITICAL: Pastikan name attribute konsisten untuk multiple choice
                                 const correctName = `multiple_other_answers[${questionId}][${optionId}]`;
                                 otherInput.setAttribute('name', correctName);
                                 otherInput.setAttribute('required', 'required');
@@ -1208,11 +1307,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                     required: otherInput.required
                                 });
                                 
-                                // Focus on the input
                                 setTimeout(() => otherInput.focus(), 100);
                             }
                         } else {
-                            // Hide and disable the other field
                             otherField.classList.add('hidden');
                             if (otherInput) {
                                 otherInput.value = '';
@@ -1232,7 +1329,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
                 
-                // Handle dependencies for multiple choice
                 const checkedValues = [];
                 document.querySelectorAll(`input[name="multiple[${questionId}][]"]:checked`).forEach(cb => {
                     checkedValues.push(cb.value);
@@ -1243,8 +1339,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
         });
-        
-        // Tambahkan event listeners untuk rating dan scale questions
 
         // Handle rating changes
         document.querySelectorAll('.rating-radio').forEach(radio => {
@@ -1257,12 +1351,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     selectedValue: selectedValue
                 });
                 
-                // Handle conditional questions
                 handleDependentQuestions(questionId, selectedValue);
             });
         });
 
-        // Handle scale changes
+        // ✅ PERBAIKI: Handle scale changes
         document.querySelectorAll('.scale-radio').forEach(radio => {
             radio.addEventListener('change', function() {
                 const questionId = this.getAttribute('data-question-id');
@@ -1272,6 +1365,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     questionId: questionId,
                     selectedValue: selectedValue
                 });
+                
+                // ✅ IMMEDIATE UPDATE: Update visual state saat scale berubah
+                updateScaleVisualState(questionId);
                 
                 // Handle conditional questions
                 handleDependentQuestions(questionId, selectedValue);
@@ -1285,9 +1381,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initializeDependenciesOnLoad() {
         console.log('=== INITIALIZING DEPENDENCIES ON LOAD ===');
         
-        // ✅ TAMBAHKAN DELAY UNTUK MEMASTIKAN DOM READY
         setTimeout(() => {
-            // First, check all existing answers and trigger conditional questions
             document.querySelectorAll('.option-radio:checked, .rating-radio:checked, .scale-radio:checked').forEach(radio => {
                 const questionId = radio.getAttribute('data-question-id');
                 const selectedValue = radio.value;
@@ -1300,7 +1394,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleDependentQuestions(questionId, selectedValue);
             });
             
-            // Also check for multiple choice questions (if any affect dependencies)
             document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
                 const questionId = checkbox.getAttribute('data-question-id');
                 const selectedValue = checkbox.value;
@@ -1313,11 +1406,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 handleDependentQuestions(questionId, selectedValue);
             });
             
-            // ✅ SHOW CONDITIONAL QUESTIONS THAT SHOULD BE VISIBLE BASED ON EXISTING ANSWERS
-            const conditionalQuestions = document.querySelectorAll('.conditional-question');
-            console.log('Found conditional questions:', conditionalQuestions.length);
-            
-            conditionalQuestions.forEach(question => {
+            document.querySelectorAll('.conditional-question').forEach(question => {
                 const dependsOn = question.getAttribute('data-depends-on');
                 const dependsValue = question.getAttribute('data-depends-value');
                 const questionId = question.id.replace('question-', '');
@@ -1328,8 +1417,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     dependsValue: dependsValue
                 });
                 
-                // ✅ PERBAIKI CARA MENGECEK PARENT QUESTION
-                // Check if parent question has the required answer
                 const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
                 let parentValue = null;
                 
@@ -1349,7 +1436,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (parentValue == dependsValue) {
                     question.style.display = 'block';
                     
-                    // Enable all inputs
                     const inputs = question.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
                         input.disabled = false;
@@ -1359,7 +1445,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     question.style.display = 'none';
                     
-                    // Disable all inputs
                     const inputs = question.querySelectorAll('input, select, textarea');
                     inputs.forEach(input => {
                         input.disabled = true;
@@ -1368,10 +1453,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log(`❌ Hidden conditional question ${questionId} on load`);
                 }
             });
-        }, 500); // Delay 500ms untuk memastikan semua sudah ter-load
+        }, 500);
     }
 
-    // ✅ PERBAIKI FUNCTION handleDependentQuestions
     function handleDependentQuestions(parentQuestionId, selectedValue) {
         console.log(`=== HANDLING DEPENDENT QUESTIONS ===`);
         console.log(`Parent Question ID: ${parentQuestionId}, Selected Value: ${selectedValue}`);
@@ -1392,10 +1476,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (dependsValue == selectedValue) {
-                // ✅ SHOW THE QUESTION
                 dependentQuestion.style.display = 'block';
                 
-                // Enable all inputs
                 const inputs = dependentQuestion.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
                     input.disabled = false;
@@ -1403,22 +1485,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 console.log(`✅ Showed dependent question ${questionId}`);
             } else {
-                // ✅ HIDE THE QUESTION
                 dependentQuestion.style.display = 'none';
                 
-                // Disable all inputs and clear their values
                 const inputs = dependentQuestion.querySelectorAll('input, select, textarea');
                 inputs.forEach(input => {
                     input.disabled = true;
                     
-                    // Clear values when hiding
                     if (input.type === 'radio' || input.type === 'checkbox') {
                         input.checked = false;
                     } else {
                         input.value = '';
                     }
                     
-                    // Hide any other fields related to this input
                     if (input.type === 'radio' && input.getAttribute('data-is-other') === '1') {
                         const otherField = document.getElementById(`other_field_${questionId}_${input.value}`);
                         if (otherField) {
@@ -1447,7 +1525,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ TAMBAHKAN FUNCTION DEBUG UNTUK TROUBLESHOOTING
     function debugConditionalQuestions() {
         console.log('=== DEBUG CONDITIONAL QUESTIONS ===');
         
@@ -1463,7 +1540,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const dependsValue = question.getAttribute('data-depends-value');
             const isVisible = question.style.display !== 'none';
             
-            // Check parent question status
             const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
             let parentValue = null;
             
@@ -1483,7 +1559,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // Check all checked radios
         const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
         console.log('Currently checked radios:');
         checkedRadios.forEach(radio => {
@@ -1495,17 +1570,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // INITIALIZE ALL FUNCTIONALITY
+    // ✅ GLOBAL FORM ELEMENTS
+    const form = document.getElementById('questionnaireForm');
+    const formAction = document.getElementById('form-action');
+
+    // ✅ INITIALIZE ALL FUNCTIONALITY
     console.log('Initializing all questionnaire functionality...');
     initializeLocationQuestions();
     initializeConditionalQuestions();
+    initializeScaleQuestions(); // ✅ TAMBAHAN PENTING
     
     // ✅ LOAD SAVED ANSWERS AFTER INITIALIZATION
     setTimeout(() => {
         console.log('Loading saved answers...');
         loadSavedAnswers();
         debugConditionalQuestions();
-    }, 1500); // Increased delay to ensure all data is loaded
+        
+        // ✅ TAMBAHAN: Update scale visual states setelah load answers
+        document.querySelectorAll('.scale-radio').forEach(radio => {
+            if (radio.checked) {
+                const questionId = radio.getAttribute('data-question-id');
+                updateScaleVisualState(questionId);
+                console.log(`Updated scale visual for question ${questionId} after loading`);
+            }
+        });
+    }, 500); // ✅ KURANGI DELAY JADI 500ms
     
     console.log('Alumni questionnaire initialization complete!');
 
@@ -1613,6 +1702,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const radioInputs = questionContainer.querySelectorAll('input[type="radio"]:not(:disabled)');
             const checkboxInputs = questionContainer.querySelectorAll('input[type="checkbox"]:not(:disabled)');
             const locationInput = questionContainer.querySelector('input[name^="location_combined"]:not(:disabled)');
+            const emailInput = questionContainer.querySelector('input[type="email"]:not(:disabled)');
             
             if (textInput && !dateInput && !locationInput) {
                 // Text or Numeric question
@@ -1685,6 +1775,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Location question
                 isAnswered = locationInput.value.trim() !== '';
                 errorMessage = 'Lokasi harus dipilih';
+            } else if (emailInput) {
+                // Email question
+                const emailValue = emailInput.value.trim();
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                
+                
+                if (emailValue === '') {
+                    isAnswered = false;
+                    errorMessage = 'Email harus diisi';
+                } else if (!emailRegex.test(emailValue)) {
+                    isAnswered = false;
+                    errorMessage = 'Format email tidak valid (harus mengandung @domain.com)';
+                } else {
+                    isAnswered = true;
+                }
             }
             
             console.log(`Question ${questionId} validation result:`, {
@@ -1750,8 +1855,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="flex items-start space-x-4">
                         <!-- Icon -->
                         <div class="flex-shrink-0">
-                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
-                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            <div class="w                                <i class="fas fa-exclamation-triangle text-red-500"></i>
                             </div>
                         </div>
 
@@ -1918,11 +2022,75 @@ document.addEventListener('DOMContentLoaded', function() {
             input.style.animation = '';
         }, 300);
     }
+
+    // Email validation for email type questions
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('email-validation')) {
+            const email = e.target.value;
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            
+            // Remove existing feedback
+            const existingFeedback = e.target.parentNode.querySelector('.email-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            // Validate email format
+            if (email && !emailRegex.test(email)) {
+                showEmailValidationFeedback(e.target);
+            } else {
+                // Remove error styling if email is valid
+                e.target.classList.remove('border-red-500');
+            }
+        }
+    });
+    
+    // Function to show email validation feedback
+    function showEmailValidationFeedback(input) {
+        // Add error styling
+        input.classList.add('border-red-500');
+        
+        // Create feedback element
+        const feedback = document.createElement('div');
+        feedback.className = 'email-feedback absolute top-full left-0 mt-1 px-2 py-1 bg-red-100 text-red-600 text-xs rounded shadow-sm border border-red-200 z-10';
+        feedback.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Format email tidak valid (harus ada @domain.com)';
+        
+        // Make parent relative if not already
+        if (getComputedStyle(input.parentNode).position === 'static') {
+            input.parentNode.style.position = 'relative';
+        }
+        
+        // Add feedback
+        input.parentNode.appendChild(feedback);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.remove();
+            }
+        }, 3000);
+    }
+    
+    // Update validation for email questions
+    if (emailInput) {
+        const emailValue = emailInput.value.trim();
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        
+        if (emailValue === '') {
+            isAnswered = false;
+            errorMessage = 'Email harus diisi';
+        } else if (!emailRegex.test(emailValue)) {
+            isAnswered = false;
+            errorMessage = 'Format email tidak valid (harus mengandung @domain.com)';
+        } else {
+            isAnswered = true;
+        }
+    }
     document.head.appendChild(styleSheet);
 
     
 });
 </script>
 <!-- script JS  -->
-<script src="{{ asset('./js/alumni.js') }}"></script>
+<script src="{{ asset('js/quesioner_fill.js') }}"></script>
 @endsection

@@ -39,7 +39,12 @@
       <a href="#" class="block">Login</a>
     </div>
   </header>
-
+<!-- Include Google Translate Widget Component -->
+<x-translate-widget 
+    position="top-right" 
+    :languages="['en', 'id']" 
+    theme="light" 
+/>
 <!-- Seksi Penjelasan Tracer Study -->
 <section class="bg-[#fdf0ef] py-16 px-6 flex items-center justify-center min-h-screen">
   <div class="max-w-4xl bg-white p-10 rounded-lg shadow-md relative">
@@ -126,7 +131,8 @@
         </div>
     </div>
 </footer>
-
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
   <script>
     // Toggle menu mobile
     document.getElementById('hamburgerBtn').addEventListener('click', () => {

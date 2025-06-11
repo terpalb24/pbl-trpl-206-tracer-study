@@ -95,6 +95,7 @@
                             <option value="{{ $question->type }}" selected>
                                 @if($question->type == 'text') Teks
                                 @elseif($question->type == 'numeric') Numerik (Hanya Angka)
+                                @elseif($question->type == 'email') Email (Validasi Domain)
                                 @elseif($question->type == 'option') Pilihan Ganda
                                 @elseif($question->type == 'multiple') Multiple Choice
                                 @elseif($question->type == 'rating') Rating (Kurang, Cukup, Baik, Baik Sekali)
@@ -166,6 +167,40 @@
                         
                         <div class="bg-green-50 p-2 rounded text-sm text-green-700 mt-3">
                             <strong>Contoh penggunaan:</strong> "Gaji saya sebesar Rp [input numerik] per bulan"
+                        </div>
+                    </div>
+                    @endif
+                    <!-- Email options section -->
+                    @if($question->type == 'email')
+                    <div id="email-options-section" class="mb-4 border p-4 rounded-md">
+                        <h4 class="text-lg font-medium mb-3">Konfigurasi Input Email</h4>
+                        
+                        <div class="bg-blue-50 p-3 rounded-md mb-4">
+                            <p class="text-sm text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                Pertanyaan email otomatis memvalidasi format email dan memastikan ada domain
+                            </p>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label for="email_before_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Sebelum Input:</label>
+                                <input type="text" name="before_text" id="email_before_text" value="{{ old('before_text', $question->before_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: Email aktif saya adalah">
+                            </div>
+                            <div>
+                                <label for="email_after_text" class="block text-gray-700 text-sm font-bold mb-2">Teks Setelah Input:</label>
+                                <input type="text" name="after_text" id="email_after_text" value="{{ old('after_text', $question->after_text) }}" class="w-full px-3 py-2 border rounded-md" placeholder="Contoh: yang bisa dihubungi">
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3 bg-gray-50 p-4 rounded-md border border-gray-200">
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Preview Input:</label>
+                            <div class="flex items-center flex-wrap">
+                                <span id="email-before-preview" class="mr-2 text-gray-700 font-medium">{{ $question->before_text ?? '' }}</span>
+                                <input type="email" class="flex-grow px-3 py-2 border border-gray-300 rounded-md min-w-48" 
+                                       placeholder="contoh@domain.com" disabled>
+                                <span id="email-after-preview" class="ml-2 text-gray-700 font-medium">{{ $question->after_text ?? '' }}</span>
+                            </div>
                         </div>
                     </div>
                     @endif

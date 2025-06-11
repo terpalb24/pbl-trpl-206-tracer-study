@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Notifications\Notifiable;
 
 class Tb_Company extends Authenticatable
 {
-    use HasFactory;
-    //
+    use HasFactory, Notifiable;
+
     protected $table = 'tb_company';
     protected $primaryKey = 'id_company';
     public $incrementing = true;
@@ -29,14 +29,14 @@ class Tb_Company extends Authenticatable
 
     public function jobHistories()
     {
-        return $this->hasMany(Tb_JobHistory::class, 'id_company', 'id_company');
+        return $this->hasMany(Tb_jobhistory::class, 'id_company', 'id_company');
     }
 
     public function alumni()
     {
         return $this->hasManyThrough(
             Tb_Alumni::class,
-            Tb_JobHistory::class,
+            Tb_jobhistory::class,
             'id_company', // Foreign key on JobHistory
             'nim',        // Foreign key on Alumni
             'id_company', // Local key on Company
@@ -44,4 +44,8 @@ class Tb_Company extends Authenticatable
         );
     }
     
+    public function routeNotificationForMail()
+    {
+        return $this->company_email;
+    }
 }
