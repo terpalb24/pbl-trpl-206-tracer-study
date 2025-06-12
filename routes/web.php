@@ -88,7 +88,7 @@ Route::middleware('guest')->group(function() {
     return $status === Password::PasswordReset
         ? redirect()->route('login')->with('status', __($status))
         : back()->withErrors(['email' => [__($status)]]);
-})->name('password.update');
+})->name('password.reset.update');
 });
 
 /*
@@ -244,7 +244,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::get('/admin/questionnaires/export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'export'])->name('admin.questionnaires.export');
     Route::get('/admin/questionnaires/download-template', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'downloadTemplate'])->name('admin.questionnaires.download-template');
 });
-Route::get('/logout', function () {
-    Auth::logout();
-    return redirect('/');
-})->name('logout');
+// Route for mailtrap
+Route::get('/send-forgot-password', function () {
+Mail::to('sigma@gmail.com')->send(new ForgotPassword());
+});
