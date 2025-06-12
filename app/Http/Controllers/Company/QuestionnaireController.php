@@ -271,22 +271,57 @@ class QuestionnaireController extends Controller
                     }
                 } elseif ($question && $question->type === 'location') {
                     try {
+                        // Log data mentah untuk debugging
+                        Log::info('Raw location answer data', [
+                            'question_id' => $item->id_question, 
+                            'raw_answer' => $item->answer
+                        ]);
+                        
+                        // Parse JSON dari database
                         $locationData = json_decode($item->answer, true);
-                        if (is_array($locationData)) {
+                        
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($locationData)) {
+                            // Simpan data lokasi lengkap tanpa mengubah format
+                            $prevLocationAnswers[$item->id_question] = $locationData;
+                            
+                            Log::info('Successfully parsed location data', [
+                                'question_id' => $item->id_question,
+                                'parsed_data' => $locationData
+                            ]);
+                        } else {
+                            // Format lama atau bukan JSON valid
+                            Log::warning('Invalid location data format', [
+                                'question_id' => $item->id_question,
+                                'raw_data' => $item->answer,
+                                'json_error' => json_last_error_msg()
+                            ]);
+                            
+                            // Coba gunakan format legacy
                             $prevLocationAnswers[$item->id_question] = [
-                                'province_id' => $locationData['province_id'] ?? '',
-                                'province_name' => $locationData['province_name'] ?? '',
-                                'city_id' => $locationData['city_id'] ?? '',
-                                'city_name' => $locationData['city_name'] ?? ''
+                                'country_code' => 'ID', // Default ke Indonesia
+                                'country_name' => 'Indonesia',
+                                'state_code' => '',
+                                'state_name' => '',
+                                'city_code' => '',
+                                'city_name' => $item->answer, // Simpan sebagai nama kota
+                                'display' => $item->answer
                             ];
                         }
                     } catch (\Exception $e) {
-                        // Fallback jika bukan JSON
+                        Log::error('Error processing location data', [
+                            'question_id' => $item->id_question,
+                            'error' => $e->getMessage()
+                        ]);
+                        
+                        // Format fallback
                         $prevLocationAnswers[$item->id_question] = [
-                            'province_id' => '',
-                            'province_name' => '',
-                            'city_id' => '',
-                            'city_name' => $item->answer
+                            'country_code' => 'ID',
+                            'country_name' => 'Indonesia',
+                            'state_code' => '',
+                            'state_name' => '',
+                            'city_code' => '',
+                            'city_name' => '',
+                            'display' => $item->answer
                         ];
                     }
                 } else {
@@ -556,34 +591,125 @@ class QuestionnaireController extends Controller
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
     }
 
-    public function getProvinces()
+    /**
+     * Get list of countries from local JSON file
+     */
+    public function getCountries()
     {
         try {
-            $response = file_get_contents('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+            $path = public_path('js/location-data/countries.json');
+            
+            if (!file_exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Countries data file not found'
+                ], 404);
+            }
+            
+            $content = file_get_contents($path);
+            $data = json_decode($content, true);
+            
             return response()->json([
                 'success' => true,
-                'data' => json_decode($response, true)
+                'data' => $data['countries'] ?? []
             ]);
         } catch (\Exception $e) {
+            Log::error('Error fetching countries data: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch provinces'
+                'message' => 'Failed to fetch countries data'
             ], 500);
         }
     }
 
-    public function getCities($provinceId)
+    /**
+     * Get provinces/states for a country from local JSON file
+     */
+    public function getProvinces(Request $request)
     {
         try {
-            $response = file_get_contents("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinceId}.json");
+            $countryCode = $request->input('country', 'ID');
+            $path = public_path("js/location-data/{$countryCode}.json");
+            
+            if (!file_exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No data found for country code: {$countryCode}"
+                ], 404);
+            }
+            
+            $content = file_get_contents($path);
+            $data = json_decode($content, true);
+            
+            // Format data to match expected structure
+            $states = [];
+            if (isset($data['states'])) {
+                foreach ($data['states'] as $state) {
+                    $states[] = [
+                        'id' => $state['code'],
+                        'name' => $state['name']
+                    ];
+                }
+            }
+            
             return response()->json([
                 'success' => true,
-                'data' => json_decode($response, true)
+                'data' => $states
             ]);
         } catch (\Exception $e) {
+            Log::error('Error fetching provinces data: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch cities'
+                'message' => 'Failed to fetch provinces data'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get cities for a state from local JSON file
+     */
+    public function getCities($stateCode)
+    {
+        try {
+            // Extract country code from state code (e.g., "ID-JK" -> "ID")
+            $countryCode = substr($stateCode, 0, 2);
+            $path = public_path("js/location-data/{$countryCode}.json");
+            
+            if (!file_exists($path)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "No data found for country code: {$countryCode}"
+                ], 404);
+            }
+            
+            $content = file_get_contents($path);
+            $data = json_decode($content, true);
+            
+            // Find the state with matching code
+            $cities = [];
+            if (isset($data['states'])) {
+                foreach ($data['states'] as $state) {
+                    if ($state['code'] === $stateCode && isset($state['cities'])) {
+                        foreach ($state['cities'] as $city) {
+                            $cities[] = [
+                                'id' => $city['code'],
+                                'name' => $city['name']
+                            ];
+                        }
+                        break;
+                    }
+                }
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $cities
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching cities data: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch cities data'
             ], 500);
         }
     }
@@ -594,9 +720,8 @@ class QuestionnaireController extends Controller
     private function processQuestionAnswer($request, $userAnswer, $question)
     {
         $questionId = $question->id_question;
-        $questionType = $question->type; // Gunakan 'type' sesuai database
+        $questionType = $question->type;
 
-        // Handle different question types berdasarkan struktur database yang sebenarnya
         switch ($questionType) {
             case 'text':
             case 'email':
@@ -656,24 +781,45 @@ class QuestionnaireController extends Controller
                 break;
 
             case 'location':
-                $provinceId = $request->input("question_{$questionId}_province");
-                $provinceName = $request->input("question_{$questionId}_province_name");
-                $cityId = $request->input("question_{$questionId}_city");
-                $cityName = $request->input("question_{$questionId}_city_name");
-
-                if ($provinceId && $cityId) {
-                    $locationData = [
-                        'province_id' => $provinceId,
-                        'province_name' => $provinceName,
-                        'city_id' => $cityId,
-                        'city_name' => $cityName,
-                        'display' => $provinceName . ', ' . $cityName
-                    ];
-                    
-                    Tb_User_Answer_Item::create([
-                        'id_user_answer' => $userAnswer->id_user_answer,
-                        'id_question' => $questionId,
-                        'answer' => json_encode($locationData)
+                // Get location data from the combined JSON input
+                $locationCombined = $request->input("location_combined.{$questionId}");
+                
+                Log::info('Location data received', [
+                    'question_id' => $questionId,
+                    'raw_input' => $locationCombined
+                ]);
+                
+                if ($locationCombined) {
+                    try {
+                        $locationData = json_decode($locationCombined, true);
+                        
+                        if (is_array($locationData)) {
+                            Tb_User_Answer_Item::create([
+                                'id_user_answer' => $userAnswer->id_user_answer,
+                                'id_question' => $questionId,
+                                'answer' => $locationCombined // Save the complete JSON string
+                            ]);
+                            
+                            Log::info('Location data saved successfully', [
+                                'question_id' => $questionId,
+                                'location_data' => $locationData
+                            ]);
+                        } else {
+                            Log::warning('Invalid location data format', [
+                                'question_id' => $questionId,
+                                'raw_input' => $locationCombined
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error processing location data', [
+                            'question_id' => $questionId,
+                            'error' => $e->getMessage(),
+                            'raw_input' => $locationCombined
+                        ]);
+                    }
+                } else {
+                    Log::warning('No location data received', [
+                        'question_id' => $questionId
                     ]);
                 }
                 break;
@@ -810,8 +956,21 @@ class QuestionnaireController extends Controller
                 $firstAnswer = $answers->first();
                 try {
                     $locationData = json_decode($firstAnswer->answer, true);
-                    if (is_array($locationData) && isset($locationData['display'])) {
-                        $result['answer'] = $locationData['display'];
+                    if (is_array($locationData)) {
+                        // Handle new multinational format
+                        if (isset($locationData['display'])) {
+                            $result['answer'] = $locationData['display'];
+                        } 
+                        // Handle legacy format
+                        else if (isset($locationData['province_name']) && isset($locationData['city_name'])) {
+                            $result['answer'] = $locationData['province_name'] . ', ' . $locationData['city_name'];
+                        } 
+                        else {
+                            $result['answer'] = $firstAnswer->answer;
+                        }
+                        
+                        // Pass all location data to view
+                        $result['locationData'] = $locationData;
                     } else {
                         $result['answer'] = $firstAnswer->answer;
                     }
@@ -844,5 +1003,19 @@ class QuestionnaireController extends Controller
         }
 
         return $result;
+    }
+
+    /**
+     * Helper to format location display text
+     */
+    private function formatLocationDisplay($country, $state, $city)
+    {
+        $parts = [];
+        
+        if (!empty($city)) $parts[] = $city;
+        if (!empty($state)) $parts[] = $state;
+        if (!empty($country)) $parts[] = $country;
+        
+        return implode(', ', $parts);
     }
 }

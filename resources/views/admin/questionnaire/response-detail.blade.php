@@ -372,28 +372,6 @@
                                                 <!-- Answer Section -->
                                                 <div class="border-t border-gray-300 pt-4">
 
-                                                    @php
-                                                        // Enhanced answer checking logic
-                                                        $hasAnswer = false;
-                                                        $answerType = 'none';
-                                                        
-                                                        if ($qData['question']->type == 'multiple') {
-                                                            $hasAnswer = isset($qData['multipleAnswers']) && is_array($qData['multipleAnswers']) && count($qData['multipleAnswers']) > 0;
-                                                            $answerType = 'multiple';
-                                                        } elseif ($qData['question']->type == 'option') {
-                                                            $hasAnswer = isset($qData['answer']) && !empty(trim($qData['answer'])) && $qData['answer'] !== null;
-                                                            $answerType = 'option';
-                                                        } elseif ($qData['question']->type == 'rating') {
-                                                            $hasAnswer = isset($qData['answer']) && !empty(trim($qData['answer'])) && $qData['answer'] !== null;
-                                                            $answerType = 'rating';
-                                                        } elseif ($qData['question']->type == 'scale') {
-                                                            $hasAnswer = isset($qData['answer']) && !empty(trim($qData['answer'])) && $qData['answer'] !== null && is_numeric($qData['answer']);
-                                                            $answerType = 'scale';
-                                                        } else {
-                                                            $hasAnswer = isset($qData['answer']) && !empty(trim($qData['answer'])) && $qData['answer'] !== null;
-                                                            $answerType = 'other';
-                                                        }
-                                                    @endphp
 
                                                     @if($hasAnswer)
                                                         @if($qData['question']->type === 'multiple')

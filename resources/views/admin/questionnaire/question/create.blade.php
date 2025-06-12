@@ -625,6 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 text: document.getElementById('text-options-section'),
                 numeric: document.getElementById('numeric-options-section'),
                 email: document.getElementById('email-options-section'),
+                location: document.getElementById('location-options-section'),
             };
             
             // Hide all sections first
@@ -661,6 +662,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (this.value === 'email') {
                 if (sections.email) {
                     sections.email.classList.remove('hidden');
+                }
+            } else if (this.value === 'location') {
+                if (sections.location) {
+                    sections.location.classList.remove('hidden');
                 }
             }
 
@@ -958,6 +963,28 @@ document.addEventListener('DOMContentLoaded', function() {
             populateDependsValueOptions(this.value, null);
         });
     }
+    
+    // Add support for location type
+    document.addEventListener('DOMContentLoaded', function() {
+        const questionType = document.getElementById('question_type');
+        const locationSection = document.getElementById('location-options-section');
+        
+        if (questionType) {
+            const originalChangeHandler = questionType.onchange;
+            
+            questionType.onchange = function() {
+                // Call the original handler if exists
+                if (typeof originalChangeHandler === 'function') {
+                    originalChangeHandler.call(this);
+                }
+                
+                // Additional handler for location type
+                if (locationSection) {
+                    locationSection.classList.toggle('hidden', this.value !== 'location');
+                }
+            };
+        }
+    });
     
     // Initial setup based on current question type
     if (questionType) {

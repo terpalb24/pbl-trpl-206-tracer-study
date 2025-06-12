@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "MY-JHR",
+      "name": "Johor",
+      "cities": [
+        {"code": "MY-JHR-JB", "name": "Johor Bahru"},
+        {"code": "MY-JHR-BT", "name": "Batu Pahat"},
+        {"code": "MY-JHR-KL", "name": "Kluang"},
+        {"code": "MY-JHR-MS", "name": "Muar"},
+        {"code": "MY-JHR-KT", "name": "Kota Tinggi"}
+      ]
+    },
+    {
+      "code": "MY-KDH",
+      "name": "Kedah",
+      "cities": [
+        {"code": "MY-KDH-ALS", "name": "Alor Setar"},
+        {"code": "MY-KDH-SG", "name": "Sungai Petani"},
+        {"code": "MY-KDH-KB", "name": "Kulim"},
+        {"code": "MY-KDH-LB", "name": "Langkawi"},
+        {"code": "MY-KDH-JT", "name": "Jitra"}
+      ]
+    },
+    {
+      "code": "MY-KUL",
+      "name": "Kuala Lumpur",
+      "cities": [
+        {"code": "MY-KUL-KL", "name": "Kuala Lumpur"}
+      ]
+    },
+    {
+      "code": "MY-SWK",
+      "name": "Sarawak",
+      "cities": [
+        {"code": "MY-SWK-KCH", "name": "Kuching"},
+        {"code": "MY-SWK-MRD", "name": "Miri"},
+        {"code": "MY-SWK-BIT", "name": "Bintulu"},
+        {"code": "MY-SWK-SMR", "name": "Sibu"},
+        {"code": "MY-SWK-SMJ", "name": "Sri Aman"}
+      ]
+    }
+  ]
+}
