@@ -19,14 +19,11 @@ jobs:
         with:
           node-version: "22.x"
 
-      - name: Install npm
-        uses: npm/action-setup@v4
-
       - name: Install dependencies
-        run: pnpm install
+        run: npm install
 
       - name: Build assets
-        run: pnpm build
+        run: npm run build
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v1
