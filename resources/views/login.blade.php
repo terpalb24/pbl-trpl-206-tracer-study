@@ -1,6 +1,16 @@
 @extends('layouts.app')
 
 @section('content')
+@if(Auth::check())
+    <script>
+        // Redirect ke dashboard sesuai role jika sudah login
+        @php
+            $role = Auth::user()->role;
+            $redirect = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+        @endphp
+        window.location.href = "{{ $redirect }}";
+    </script>
+@endif
 <!-- Include Google Translate Widget Component -->
 <x-translate-widget 
     position="bottom-left" 
@@ -28,7 +38,8 @@
                     <label for="username" class="block mb-1 text-sm font-medium text-gray-700">Masukkan Username</label>
                     <div class="relative">
                         <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-user"></i></span>
-                        <input id="username" name="username" type="text" required autofocus class="input-field" placeholder="Masukkan Username">
+                        <input id="username" name="username" type="text" required autofocus class="input-field" placeholder="Masukkan Username"
+                            value="{{ old('username', $username ?? '') }}">
                     </div>
                 </div>
 
@@ -37,11 +48,18 @@
                     <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Masukkan Kata Sandi</label>
                     <div class="relative">
                         <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-lock"></i></span>
-                        <input id="password" name="password" type="password" required class="input-field" placeholder="Masukkan Kata Sandi">
+                        <input id="password" name="password" type="password" required class="input-field" placeholder="Masukkan Kata Sandi"
+                            value="{{ isset($password) && $password ? decrypt($password) : '' }}">
                         <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-2.5 text-gray-500 focus:outline-none">
                             <i class="fas fa-eye" id="toggleIcon-password"></i>
                         </button>
                     </div>
+                </div>
+
+                <!-- Remember Me -->
+                <div class="flex items-center">
+                    <input type="checkbox" id="remember" name="remember" class="mr-2" {{ (old('remember') || (isset($username) && isset($password))) ? 'checked' : '' }}>
+                    <label for="remember" class="text-sm text-gray-700">Ingat saya</label>
                 </div>
 
                 <!-- Forgot Password -->
@@ -55,30 +73,28 @@
                     <a href="/" class="btn-secondary">Batal</a>
                 </div>
                 <!-- Alert untuk berhasil kirim email atau ngga -->
-    @if ($errors->any())
-<div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-  <ul>
-    @foreach ($errors->all() as $error)
-    <li>{{ $error }}</li>
-    @endforeach
-  </ul>
-</div>
-@endif
+                @if ($errors->any())
+                <div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
+                  <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                  </ul>
+                </div>
+                @endif
 
-@if (session('status'))
-<div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-  {{ session('status') }}
-</div>
-@endif
+                @if (session('status'))
+                <div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
+                  {{ session('status') }}
+                </div>
+                @endif
             </form>
         </div>
-
         <!-- Right Side - Image -->
         <div class="w-full lg:w-1/2 flex justify-center items-center p-6">
             <img src="{{ asset('assets/images/login.png') }}" alt="Login" class="max-w-xs md:max-w-md lg:max-w-lg">
         </div>
     </div>
-
 </div>
 
 <script>

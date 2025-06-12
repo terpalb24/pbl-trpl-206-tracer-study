@@ -1,6 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
+@if(Auth::check())
+    <script>
+        // Redirect ke dashboard sesuai role jika sudah login
+        @php
+            $role = Auth::user()->role;
+            $redirect = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+        @endphp
+        window.location.href = "{{ $redirect }}";
+    </script>
+@endif
+
 <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
 
     <div class="flex flex-col-reverse lg:flex-row items-center w-full max-w-6xl mx-auto rounded-lg shadow-lg overflow-hidden bg-white">

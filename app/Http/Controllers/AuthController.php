@@ -11,10 +11,73 @@ use Illuminate\Support\Facades\Hash;
     
     class AuthController extends Controller
     {
-        public function showLoginForm()
+        public function showLoginForm(Request $request)
         {
-            return view('login');
-        }public function login(Request $request)
+            // Jika sudah login, redirect ke dashboard sesuai role
+            if (Auth::check()) {
+                $user = Auth::user();
+                switch ($user->role) {
+                    case 1:
+                        return redirect()->route('dashboard.admin');
+                    case 2:
+                        return redirect()->route('dashboard.alumni');
+                    case 3:
+                        return redirect()->route('dashboard.company');
+                    default:
+                        Auth::logout();
+                        return redirect('/login')->with('error', 'Role tidak dikenali.');
+                }
+            }
+
+            // Ambil cookies jika ada
+            $username = $request->cookie('remember_username');
+            $password = $request->cookie('remember_password');
+
+            // Jika ada cookies username dan password, lakukan login otomatis
+            if ($username && $password) {
+                $credentials = [
+                    'username' => $username,
+                    'password' => decrypt($password),
+                ];
+                if (Auth::guard('web')->attempt($credentials)) {
+                    $request->session()->regenerate();
+                    $user = Auth::guard('web')->user();
+                    switch ($user->role) {
+                        case 1:
+                            return redirect()->route('dashboard.admin');
+                        case 2:
+                            $alumni = \App\Models\Tb_Alumni::where('id_user', $user->id_user)->first();
+                            if (!$alumni) {
+                                Auth::logout();
+                                return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
+                            }
+                            if ($alumni->is_First_login) {
+                                return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
+                            }
+                            session(['alumni_nim' => $alumni->nim]);
+                            session([
+                                'alumni' => $alumni,
+                                'study_program' => $alumni->studyProgram,
+                            ]);
+                            return redirect()->route('dashboard.alumni');
+                        case 3:
+                            $company = \App\Models\Tb_Company::where('id_user', $user->id_user)->first();
+                            if (!$company) {
+                                Auth::logout();
+                                return redirect('/login')->with('error', 'Data company tidak ditemukan. Silakan hubungi administrator.');
+                            }
+                            session(['id_company' => $company->id_company]);
+                            return redirect()->route('dashboard.company');
+                        default:
+                            Auth::logout();
+                            return redirect('/login')->with('error', 'Role tidak dikenali.');
+                    }
+                }
+            }
+
+            return view('login', compact('username', 'password'));
+        }
+        public function login(Request $request)
         {
             // Validasi input
             $credentials = $request->validate([
@@ -26,6 +89,15 @@ use Illuminate\Support\Facades\Hash;
             if (Auth::guard('web')->attempt($credentials)) {
                 // Regenerasi session untuk keamanan
                 $request->session()->regenerate();
+
+                // Simpan cookies jika "ingat saya" dicentang
+                if ($request->has('remember')) {
+                    cookie()->queue(cookie('remember_username', $request->username, 60 * 24 * 30)); // 30 hari
+                    cookie()->queue(cookie('remember_password', encrypt($request->password), 60 * 24 * 30));
+                } else {
+                    cookie()->queue(cookie()->forget('remember_username'));
+                    cookie()->queue(cookie()->forget('remember_password'));
+                }
         
                 // Ambil user dari guard web
                 $user = Auth::guard('web')->user();
@@ -89,7 +161,11 @@ use Illuminate\Support\Facades\Hash;
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
-    
+
+            // Hapus cookies remember_username dan remember_password saat logout
+            cookie()->queue(cookie()->forget('remember_username'));
+            cookie()->queue(cookie()->forget('remember_password'));
+
             return redirect('/login');
         }
         public function ChangePasswordForm(){
@@ -152,4 +228,4 @@ use Illuminate\Support\Facades\Hash;
         
 
     }
-    
+
