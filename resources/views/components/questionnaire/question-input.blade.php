@@ -100,49 +100,39 @@
 
 {{-- Location Question --}}
 @elseif($questionType === 'location')
-    <div class="bg-white border border-gray-300 rounded-lg p-4 location-question" data-question-id="{{ $questionId }}">
+    <div class="bg-white border border-gray-300 rounded-lg p-4" data-question-type="location">
         <div class="flex items-center mb-4">
             <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>
             <span class="font-medium text-gray-700">Pilih Lokasi</span>
         </div>
         
-        <div class="grid grid-cols-1 gap-4">
-            <!-- Negara -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label for="country-select-{{ $questionId }}" class="block text-gray-700 text-sm font-bold mb-2">Negara:</label>
-                <select id="country-select-{{ $questionId }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                    <option value="">-- Pilih Negara --</option>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Provinsi:</label>
+                <select name="question_{{ $questionId }}_province" 
+                        id="province-{{ $questionId }}" 
+                        class="province-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        data-question-id="{{ $questionId }}">
+                    <option value="">-- Pilih Provinsi --</option>
                 </select>
             </div>
-            
-            <!-- Provinsi/State -->
             <div>
-                <label for="state-select-{{ $questionId }}" class="block text-gray-700 text-sm font-bold mb-2">Provinsi/State:</label>
-                <select id="state-select-{{ $questionId }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
-                    <option value="">-- Pilih Provinsi/State --</option>
-                </select>
-            </div>
-            
-            <!-- Kota -->
-            <div>
-                <label for="city-select-{{ $questionId }}" class="block text-gray-700 text-sm font-bold mb-2">Kota:</label>
-                <select id="city-select-{{ $questionId }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
-                    <option value="">-- Pilih Kota --</option>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Kota/Kabupaten:</label>
+                <select name="question_{{ $questionId }}_city" 
+                        id="city-{{ $questionId }}" 
+                        class="city-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        data-question-id="{{ $questionId }}" disabled>
+                    <option value="">-- Pilih Kota/Kabupaten --</option>
                 </select>
             </div>
         </div>
         
-        <!-- Hidden input to store combined value -->
-        <input type="hidden" id="location-combined-{{ $questionId }}" name="location_combined[{{ $questionId }}]" value="">
+        {{-- Hidden inputs untuk menyimpan nama provinsi dan kota --}}
+        <input type="hidden" name="question_{{ $questionId }}_province_name" value="{{ $prevLocationAnswer['province_name'] ?? '' }}">
+        <input type="hidden" name="question_{{ $questionId }}_city_name" value="{{ $prevLocationAnswer['city_name'] ?? '' }}">
         
-        <!-- Hidden input for initial value (when editing) -->
-        @if(isset($prevLocationAnswer))
-            <input type="hidden" id="location-initial-{{ $questionId }}" value="{{ is_array($prevLocationAnswer) ? json_encode($prevLocationAnswer) : $prevLocationAnswer }}">
-        @endif
-        
-        <!-- Location display section -->
         <div id="selected-location-{{ $questionId }}" 
-             class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md {{ isset($prevLocationAnswer) && !empty($prevLocationAnswer['display'] ?? '') ? '' : 'hidden' }}">
+             class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md {{ isset($prevLocationAnswer) && !empty($prevLocationAnswer['display']) ? '' : 'hidden' }}">
             <div class="flex items-center">
                 <i class="fas fa-map-pin text-green-600 mr-2"></i>
                 <div>
@@ -154,235 +144,6 @@
             </div>
         </div>
     </div>
-    
-    <!-- JavaScript for location selection -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const questionId = '{{ $questionId }}';
-        const countrySelect = document.getElementById(`country-select-${questionId}`);
-        const stateSelect = document.getElementById(`state-select-${questionId}`);
-        const citySelect = document.getElementById(`city-select-${questionId}`);
-        const combinedInput = document.getElementById(`location-combined-${questionId}`);
-        const initialInput = document.getElementById(`location-initial-${questionId}`);
-        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-        const locationTextEl = document.getElementById(`location-text-${questionId}`);
-        
-        if (!countrySelect || !stateSelect || !citySelect || !combinedInput) {
-            console.error('One or more location elements not found');
-            return;
-        }
-        
-        // List of countries - common ones first for convenience
-        const countries = [
-            { code: 'ID', name: 'Indonesia' },
-            { code: 'MY', name: 'Malaysia' },
-            { code: 'SG', name: 'Singapura' },
-            { code: 'US', name: 'Amerika Serikat' },
-            { code: 'AU', name: 'Australia' },
-            { code: 'GB', name: 'Britania Raya' },
-            { code: 'JP', name: 'Jepang' },
-            { code: 'CN', name: 'Tiongkok' },
-            // Add more countries in alphabetical order
-            { code: 'AF', name: 'Afghanistan' },
-            { code: 'AL', name: 'Albania' },
-            { code: 'DZ', name: 'Aljazair' },
-            { code: 'AR', name: 'Argentina' },
-            { code: 'AT', name: 'Austria' },
-            { code: 'BR', name: 'Brasil' },
-            { code: 'CA', name: 'Kanada' },
-            { code: 'FR', name: 'Perancis' },
-            { code: 'DE', name: 'Jerman' },
-            { code: 'IN', name: 'India' },
-            { code: 'IT', name: 'Italia' },
-            { code: 'NL', name: 'Belanda' },
-            { code: 'NZ', name: 'Selandia Baru' },
-            { code: 'KR', name: 'Korea Selatan' },
-            { code: 'ES', name: 'Spanyol' },
-            { code: 'CH', name: 'Swiss' },
-            { code: 'TH', name: 'Thailand' },
-            { code: 'AE', name: 'Uni Emirat Arab' },
-            { code: 'VN', name: 'Vietnam' },
-        ];
-        
-        // Populate countries dropdown
-        countries.forEach(country => {
-            const option = document.createElement('option');
-            option.value = country.code;
-            option.textContent = country.name;
-            countrySelect.appendChild(option);
-        });
-        
-        // Country selection event
-        countrySelect.addEventListener('change', function() {
-            if (this.value) {
-                stateSelect.disabled = false;
-                stateSelect.innerHTML = '<option value="">-- Memuat Provinsi/State... --</option>';
-                
-                // Use local JSON file instead of API
-                fetch(`/js/location-data/${this.value}.json`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Clear current options
-                        stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
-                        
-                        // Add new options
-                        if (data && data.states) {
-                            data.states.forEach(state => {
-                                const option = document.createElement('option');
-                                option.value = state.code;
-                                option.textContent = state.name;
-                                stateSelect.appendChild(option);
-                            });
-                        }
-                        
-                        // Update combined value
-                        updateCombinedValue();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching states:', error);
-                        stateSelect.innerHTML = '<option value="">-- Error loading data --</option>';
-                    });
-            } else {
-                stateSelect.disabled = true;
-                citySelect.disabled = true;
-                stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
-                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                updateCombinedValue();
-            }
-        });
-        
-        // State selection event
-        stateSelect.addEventListener('change', function() {
-            if (this.value) {
-                citySelect.disabled = false;
-                citySelect.innerHTML = '<option value="">-- Memuat Kota... --</option>';
-                
-                // Get the countries and find the selected state
-                const countryCode = countrySelect.value;
-                
-                // Use parent state data instead of a new API call
-                fetch(`/js/location-data/${countryCode}.json`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Find the selected state
-                        const selectedState = data.states.find(state => state.code === this.value);
-                        
-                        // Clear current options
-                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                        
-                        // Add new options
-                        if (selectedState && selectedState.cities) {
-                            selectedState.cities.forEach(city => {
-                                const option = document.createElement('option');
-                                option.value = city.code;
-                                option.textContent = city.name;
-                                citySelect.appendChild(option);
-                            });
-                        }
-                        
-                        // Update combined value
-                        updateCombinedValue();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching cities:', error);
-                        citySelect.innerHTML = '<option value="">-- Error loading data --</option>';
-                    });
-            } else {
-                citySelect.disabled = true;
-                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                updateCombinedValue();
-            }
-        });
-        
-        // City selection event
-        citySelect.addEventListener('change', function() {
-            updateCombinedValue();
-        });
-        
-        // Function to update combined value
-        function updateCombinedValue() {
-            const countryCode = countrySelect.value;
-            const countryName = countrySelect.options[countrySelect.selectedIndex]?.text || '';
-            const stateCode = stateSelect.value;
-            const stateName = stateSelect.options[stateSelect.selectedIndex]?.text || '';
-            const cityCode = citySelect.value;
-            const cityName = citySelect.options[citySelect.selectedIndex]?.text || '';
-            
-            // Create display text
-            let displayText = '';
-            if (cityName) displayText = cityName;
-            if (stateName) displayText = displayText ? `${displayText}, ${stateName}` : stateName;
-            if (countryName) displayText = displayText ? `${displayText}, ${countryName}` : countryName;
-            
-            // Build location object
-            const locationData = {
-                country_code: countryCode,
-                country_name: countryName,
-                state_code: stateCode,
-                state_name: stateName,
-                city_code: cityCode,
-                city_name: cityName,
-                display: displayText
-            };
-            
-            // Update hidden input with JSON string
-            combinedInput.value = JSON.stringify(locationData);
-            
-            // Update display
-            if (displayText) {
-                selectedLocationDiv.classList.remove('hidden');
-                locationTextEl.textContent = displayText;
-            } else {
-                selectedLocationDiv.classList.add('hidden');
-                locationTextEl.textContent = '';
-            }
-        }
-        
-        // Load initial values if available
-        if (initialInput && initialInput.value) {
-            try {
-                const initialData = JSON.parse(initialInput.value);
-                if (initialData) {
-                    // Set country
-                    if (initialData.country_code) {
-                        countrySelect.value = initialData.country_code;
-                        
-                        // Trigger change event to load states
-                        countrySelect.dispatchEvent(new Event('change'));
-                        
-                        // Set state and city after waiting for provinces to load
-                        setTimeout(() => {
-                            if (initialData.state_code) {
-                                stateSelect.value = initialData.state_code;
-                                stateSelect.dispatchEvent(new Event('change'));
-                                
-                                // Set city after cities load
-                                setTimeout(() => {
-                                    if (initialData.city_code) {
-                                        citySelect.value = initialData.city_code;
-                                        citySelect.dispatchEvent(new Event('change'));
-                                    }
-                                }, 500);
-                            }
-                        }, 500);
-                    }
-                }
-            } catch (e) {
-                console.error('Error parsing initial location data:', e);
-            }
-        }
-    });
-    </script>
 
 {{-- Single Option Question --}}
 @elseif($questionType === 'option')
