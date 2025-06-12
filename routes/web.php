@@ -248,8 +248,3 @@ Route::get('/logout', function () {
     Auth::logout();
     return redirect('/');
 })->name('logout');
-
-// Route for mailtrap
-Route::get('/send-forgot-password', function () {
-Mail::to('sigma@gmail.com')->send(new ForgotPassword());
-});
