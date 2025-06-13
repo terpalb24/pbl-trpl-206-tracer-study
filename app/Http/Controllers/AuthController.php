@@ -51,6 +51,7 @@ use Illuminate\Support\Facades\Hash;
                                 Auth::logout();
                                 return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
                             }
+                            //alumni first login check
                             if ($alumni->is_First_login) {
                                 return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
                             }
