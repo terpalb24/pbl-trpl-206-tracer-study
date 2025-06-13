@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tb_company', function (Blueprint $table) {
             $table->integer('id_company', true);
-            $table->integer('id_user');
+            $table->integer('id_user')->nullable();
             $table->string('company_name',50);
             $table->string('company_address',255)->nullable();
             $table->string('company_email',50)->nullable();

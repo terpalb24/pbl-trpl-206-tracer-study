@@ -342,9 +342,25 @@ public function companyIndex(Request $request)
         $query->where('company_name', 'LIKE', "%{$search}%");
     }
 
-    $companies = $query->orderBy('company_name')->paginate(10)->withQueryString();
+    // Perusahaan dengan data lengkap
+    $companies = $query
+        ->where(function($q) {
+            $q->whereNotNull('company_address')
+              ->orWhereNotNull('company_email')
+              ->orWhereNotNull('company_phone_number');
+        })
+        ->orderBy('company_name')
+        ->paginate(10)
+        ->withQueryString();
 
-    return view('admin.company.index', compact('companies'));
+    // Perusahaan hanya punya company_name (data lain null)
+    $incompleteCompanies = Tb_Company::whereNull('company_address')
+        ->whereNull('company_email')
+        ->whereNull('company_phone_number')
+        ->with(['jobHistories.alumni'])
+        ->get();
+
+    return view('admin.company.index', compact('companies', 'incompleteCompanies'));
 }
 public function companyCreate()
 {
@@ -395,6 +411,10 @@ public function companyUpdate(Request $request, $id_company)
 
     $company = Tb_company::findOrFail($id_company);
 
+    // Cek jika data perusahaan sebelumnya kosong (hanya company_name, data lain null)
+    $isIncomplete = !$company->company_address && !$company->company_email && !$company->company_phone_number && !$company->id_user;
+
+    // Update data perusahaan
     $company->update([
         'company_name' => $request->company_name,
         'company_email' => $request->company_email,
@@ -402,14 +422,27 @@ public function companyUpdate(Request $request, $id_company)
         'company_address' => $request->company_address,
     ]);
 
-    // Update juga email di tb_user jika perlu
-    $user = Tb_Company::where('id_company', $company->id_company)->first();
-    if ($user) {
-        $user->update([
+    // Jika sebelumnya incomplete dan sekarang sudah ada email, buat user perusahaan
+    if ($isIncomplete && $request->company_email) {
+        $user = Tb_User::create([
             'username' => $request->company_email,
-            'email' => $request->company_email,
-            // password tidak diubah disini
+            'password' => bcrypt($request->company_email),
+            'role' => 3,
         ]);
+        $company->update([
+            'id_user' => $user->id_user,
+        ]);
+    }
+
+    // Update juga email di tb_user jika perlu (jika sudah ada user)
+    if ($company->id_user) {
+        $user = Tb_User::find($company->id_user);
+        if ($user) {
+            $user->update([
+                'username' => $request->company_email,
+                // password tidak diubah di sini
+            ]);
+        }
     }
 
     return redirect()->route('admin.company.index')->with('success', 'Data company berhasil diperbarui.');
@@ -519,7 +552,7 @@ public function companyDestroy($id_user)
     // Download template alumni (Excel)
 public function alumniTemplate()
 {
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
     // Header
     $sheet->fromArray([

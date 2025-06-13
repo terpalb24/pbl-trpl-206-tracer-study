@@ -34,31 +34,42 @@ class JobHistoryController extends Controller
 
     public function create()
     {
-        $companies = Tb_Company::all();
+        $companies = \App\Models\Tb_Company::all();
         return view('alumni.job-history.create', compact('companies'));
     }
+
 public function store(Request $request)
 {
-    // Validasi dasar
     $request->validate([
-        'id_company' => 'required|exists:tb_company,id_company',
+        'id_company' => 'nullable|exists:tb_company,id_company',
+        'new_company_name' => 'nullable|string|max:255',
         'position' => 'required|string|max:255',
         'salary' => 'required|string',
         'start_date' => 'required|date',
         'end_date' => 'nullable|date',
     ]);
 
-    // Ambil start dan end date
-    $startDate = Carbon::parse($request->start_date);
-    $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfMonth() : null;
+    $id_company = $request->id_company;
+    // Jika alumni mengisi nama perusahaan baru
+    if (!$id_company && $request->filled('new_company_name')) {
+        $company = \App\Models\Tb_Company::create([
+            'company_name' => $request->new_company_name,
+            'company_address' => null,
+            'company_email' => null,
+            'company_phone_number' => null,
+            'id_user' => null,
+        ]);
+        $id_company = $company->id_company;
+    }
 
-    // Hitung durasi kerja
+    $startDate = \Carbon\Carbon::parse($request->start_date);
+    $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date)->endOfMonth() : null;
+
     $duration = null;
     if ($endDate) {
         $months = $startDate->diffInMonths($endDate);
         $years = intdiv($months, 12);
         $remainingMonths = $months % 12;
-
         $duration = trim(
             ($years > 0 ? "$years tahun " : '') .
             ($remainingMonths > 0 ? "$remainingMonths bulan" : '')
@@ -67,10 +78,9 @@ public function store(Request $request)
         $duration = 'Masih bekerja';
     }
 
-    // Simpan ke DB
-    jobhistory::create([
+    JobHistory::create([
         'nim' => auth()->user()->alumni->nim,
-        'id_company' => $request->id_company,
+        'id_company' => $id_company,
         'position' => $request->position,
         'salary' => $request->salary,
         'start_date' => $startDate->format('Y-m-d'),

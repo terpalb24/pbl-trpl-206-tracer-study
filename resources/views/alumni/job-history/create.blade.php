@@ -20,14 +20,19 @@
 
                     <div class="space-y-6">
                         <!-- Nama Perusahaan -->
-                        <div>
-                            <label for="id_company" class="block text-gray-700 font-medium mb-2">Nama Perusahaan</label>
-                            <select name="id_company" id="id_company" class="w-full select2" required>
-                                <option value="">Pilih atau ketik nama perusahaan...</option>
+                        <div class="mb-4">
+                            <label for="id_company" class="block text-gray-700 font-semibold mb-2">Nama Perusahaan</label>
+                            <select name="id_company" id="id_company" class="input-field" onchange="toggleNewCompanyInput(this)">
+                                <option value="">-- Pilih Perusahaan --</option>
                                 @foreach($companies as $company)
                                     <option value="{{ $company->id_company }}">{{ $company->company_name }}</option>
                                 @endforeach
+                                <option value="__other">Perusahaan tidak ada di daftar</option>
                             </select>
+                        </div>
+                        <div class="mb-4" id="new-company-input" style="display:none;">
+                            <label for="new_company_name" class="block text-gray-700 font-semibold mb-2">Nama Perusahaan Baru</label>
+                            <input type="text" name="new_company_name" id="new_company_name" class="input-field" placeholder="Masukkan nama perusahaan">
                         </div>
 
                         <!-- Sedang Bekerja -->
@@ -182,5 +187,15 @@
         
     });
     
+    function toggleNewCompanyInput(select) {
+    var input = document.getElementById('new-company-input');
+    if (select.value === '__other') {
+        input.style.display = 'block';
+        document.getElementById('id_company').value = '';
+    } else {
+        input.style.display = 'none';
+        document.getElementById('new_company_name').value = '';
+    }
+}
 </script>
 @endsection
