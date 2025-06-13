@@ -35,6 +35,10 @@
                 class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
                 <i class="bi bi-download"></i> Export Excel
             </a>
+            <a href="{{ route('admin.alumni.template') }}"
+                class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
+                <i class="bi bi-file-earmark-excel"></i> Download Template
+            </a>
         </form>
         @if(session('error'))
             <div class="text-red-500 mt-4">{{ session('error') }}</div>

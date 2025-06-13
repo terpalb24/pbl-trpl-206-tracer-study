@@ -15,9 +15,9 @@ return new class extends Migration
             $table->integer('id_company', true);
             $table->integer('id_user');
             $table->string('company_name',50);
-            $table->string('company_address',255);
-            $table->string('company_email',50);
-            $table->string('company_phone_number',15);
+            $table->string('company_address',255)->nullable();
+            $table->string('company_email',50)->nullable();
+            $table->string('company_phone_number',15)->nullable();
             $table->timestamps();
             $table->foreign('id_user')->references('id_user')->on('tb_user')->onDelete('cascade')->onUpdate('cascade');
         });

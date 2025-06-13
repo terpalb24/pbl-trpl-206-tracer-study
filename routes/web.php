@@ -184,6 +184,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::delete('/admin/alumni/{id_user}', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy');
     Route::post('/admin/alumni/import', [AdminController::class, 'import'])->name('admin.alumni.import');
     Route::get('/admin/alumni/export', [AdminController::class, 'export'])->name('admin.alumni.export');
+    Route::get('/admin/alumni/template', [AdminController::class, 'alumniTemplate'])->name('admin.alumni.template');
     
     // Company Management
     Route::get('/admin/company', [AdminController::class, 'companyIndex'])->name('admin.company.index');
@@ -194,6 +195,7 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
     Route::post('/admin/company/import', [AdminController::class, 'companyImport'])->name('admin.company.import');
     Route::get('/admin/company/export', [AdminController::class, 'companyExport'])->name('admin.company.export');
+    Route::get('/admin/company/template', [AdminController::class, 'companyTemplate'])->name('admin.company.template');
     
     // Questionnaire Management
     Route::get('/admin/questionnaire', [QuestionnaireController::class, 'index'])->name('admin.questionnaire.index');

@@ -337,7 +337,7 @@ public function companyIndex(Request $request)
 {
     $query = Tb_company::query();
 
-    if ($request->has('search')) {
+    if ($request->has('search')){
         $search = $request->input('search');
         $query->where('company_name', 'LIKE', "%{$search}%");
     }
@@ -515,6 +515,52 @@ public function companyDestroy($id_user)
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
+
+    // Download template alumni (Excel)
+public function alumniTemplate()
+{
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    // Header
+    $sheet->fromArray([
+        'NIM', 'NIK', 'Nama', 'Gender', 'Tanggal Lahir', 'Email', 'Nomor HP',
+        'IPK', 'Alamat', 'Angkatan', 'Tahun Lulus', 'Program Studi'
+    ], null, 'A1');
+    // Contoh data
+    $sheet->fromArray([
+        '12345678', '3201010101010001', 'Budi Santoso', 'pria', '1999-01-01', 'budi@email.com', '08123456789',
+        '3.50', 'Jl. Merdeka No.1', '2017', '2021', 'Teknik Informatika'
+    ], null, 'A2');
+
+    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $fileName = 'template_alumni.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+}
+
+// Download template company (Excel)
+public function companyTemplate()
+{
+    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
+    // Header
+    $sheet->fromArray([
+        'Nama Perusahaan', 'Alamat', 'Email', 'Nomor Telepon'
+    ], null, 'A1');
+    // Contoh data
+    $sheet->fromArray([
+        'PT Maju Jaya', 'Jl. Sudirman No.10', 'majujaya@email.com', '0211234567'
+    ], null, 'A2');
+
+    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+    $fileName = 'template_company.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+}
 
     //
 }
