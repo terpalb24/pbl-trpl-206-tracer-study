@@ -100,50 +100,43 @@
 
 {{-- Location Question --}}
 @elseif($questionType === 'location')
-    <div class="bg-white border border-gray-300 rounded-lg p-4" data-question-type="location">
-        <div class="flex items-center mb-4">
-            <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>
-            <span class="font-medium text-gray-700">Pilih Lokasi</span>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Location question -->
+    <div class="location-question" data-question-id="{{ $question->id_question }}">
+        <div class="grid grid-cols-1 gap-4 mb-4">
+            <!-- Negara -->
             <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Provinsi:</label>
-                <select name="question_{{ $questionId }}_province" 
-                        id="province-{{ $questionId }}" 
-                        class="province-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        data-question-id="{{ $questionId }}">
-                    <option value="">-- Pilih Provinsi --</option>
+                <label for="country-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Negara:</label>
+                <select id="country-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="">-- Pilih Negara --</option>
                 </select>
             </div>
+            
+            <!-- Provinsi/State -->
             <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Kota/Kabupaten:</label>
-                <select name="question_{{ $questionId }}_city" 
-                        id="city-{{ $questionId }}" 
-                        class="city-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        data-question-id="{{ $questionId }}" disabled>
-                    <option value="">-- Pilih Kota/Kabupaten --</option>
+                <label for="state-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Provinsi/State:</label>
+                <select id="state-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
+                    <option value="">-- Pilih Provinsi/State --</option>
+                </select>
+            </div>
+            
+            <!-- Kota -->
+            <div>
+                <label for="city-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Kota:</label>
+                <select id="city-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
+                    <option value="">-- Pilih Kota --</option>
                 </select>
             </div>
         </div>
         
-        {{-- Hidden inputs untuk menyimpan nama provinsi dan kota --}}
-        <input type="hidden" name="question_{{ $questionId }}_province_name" value="{{ $prevLocationAnswer['province_name'] ?? '' }}">
-        <input type="hidden" name="question_{{ $questionId }}_city_name" value="{{ $prevLocationAnswer['city_name'] ?? '' }}">
+        <!-- Hidden input to store combined value -->
+        <input type="hidden" id="location-combined-{{ $question->id_question }}" name="location_combined[{{ $question->id_question }}]" value="">
         
-        <div id="selected-location-{{ $questionId }}" 
-             class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md {{ isset($prevLocationAnswer) && !empty($prevLocationAnswer['display']) ? '' : 'hidden' }}">
-            <div class="flex items-center">
-                <i class="fas fa-map-pin text-green-600 mr-2"></i>
-                <div>
-                    <p class="text-sm text-green-600 font-medium">Lokasi terpilih:</p>
-                    <p id="location-text-{{ $questionId }}" class="font-semibold text-gray-800">
-                        {{ $prevLocationAnswer['display'] ?? '' }}
-                    </p>
-                </div>
-            </div>
-        </div>
+        <!-- Hidden input for initial value (when editing) -->
+        @if(isset($prevLocationAnswers[$question->id_question]))
+            <input type="hidden" id="location-initial-{{ $question->id_question }}" value="{{ json_encode($prevLocationAnswers[$question->id_question]) }}">
+        @endif
     </div>
+    <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
 
 {{-- Single Option Question --}}
 @elseif($questionType === 'option')

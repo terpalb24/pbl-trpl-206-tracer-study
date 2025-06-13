@@ -165,30 +165,14 @@ class QuestionnaireController extends Controller
                 }
                 
             } elseif ($question && $question->type === 'location') {
-                // ✅ PERBAIKAN HANDLING UNTUK LOCATION
                 try {
-                    $locationData = json_decode($answer->answer, true);
-                    if ($locationData && is_array($locationData)) {
-                        $prevLocationAnswers[$answer->id_question] = $locationData;
-                    } else {
-                        // Jika answer adalah string biasa, coba parse sebagai "City, Province"
-                        $parts = explode(', ', $answer->answer);
-                        if (count($parts) >= 2) {
-                            $prevLocationAnswers[$answer->id_question] = [
-                                'display' => $answer->answer,
-                                'city_name' => $parts[0],
-                                'province_name' => $parts[1]
-                            ];
-                        } else {
-                            $prevLocationAnswers[$answer->id_question] = [
-                                'display' => $answer->answer
-                            ];
-                        }
+                    $locationData = json_decode($answer->answer, true);  // $answerItem diganti dengan $answer
+                    if ($locationData) {
+                        $displayValue = $locationData['display'] ?? '';
+                        $prevLocationAnswers[$answer->id_question] = $locationData;  // Simpan seluruh data lokasi
                     }
                 } catch (\Exception $e) {
-                    $prevLocationAnswers[$answer->id_question] = [
-                        'display' => $answer->answer
-                    ];
+                    $prevLocationAnswers[$answer->id_question] = $answer->answer;
                 }
             } else {
                 // Untuk single answer
@@ -681,23 +665,27 @@ class QuestionnaireController extends Controller
             }
         }
 
-        // Handle location answers
+        // Saat menyimpan data lokasi
         if ($request->has('location_combined')) {
             foreach ($request->location_combined as $questionId => $locationData) {
                 if (!empty($locationData)) {
                     try {
+                        // Parse location data
+                        $locationObject = json_decode($locationData);
+                        
+                        // Simpan sebagai JSON di database
                         $saved = Tb_User_Answer_Item::updateOrCreate([
                             'id_user_answer' => $userAnswer->id_user_answer,
                             'id_question' => $questionId
                         ], [
-                            'answer' => is_array($locationData) ? json_encode($locationData) : $locationData,
+                            'answer' => $locationData, // Store as JSON string
                             'id_questions_options' => null,
                             'other_answer' => null
                         ]);
                         
                         \Log::info('Location answer saved', [
                             'question_id' => $questionId,
-                            'location_data' => $locationData,
+                            'location_data' => $locationObject,
                             'id' => $saved->id_user_answer_item
                         ]);
                         

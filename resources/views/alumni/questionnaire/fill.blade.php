@@ -219,51 +219,234 @@
 
                                         @elseif($question->type == 'location')
                                             <!-- Location question -->
-                                            <div class="bg-white border border-gray-300 rounded-lg p-4">
-                                                <div class="flex items-center mb-4">
-                                                    <i class="fas fa-map-marker-alt text-red-600 mr-2"></i>
-                                                    <span class="font-medium text-gray-700">Pilih Lokasi</span>
-                                                </div>
-                                                
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="location-question" data-question-id="{{ $question->id_question }}">
+                                                <div class="grid grid-cols-1 gap-4 mb-4">
+                                                    <!-- Negara -->
                                                     <div>
-                                                        <label class="block text-gray-700 text-sm font-bold mb-2">Provinsi:</label>
-                                                        <select id="province-{{ $question->id_question }}" 
-                                                                class="province-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                data-question-id="{{ $question->id_question }}">
-                                                            <option value="">-- Pilih Provinsi --</option>
+                                                        <label for="country-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Negara:</label>
+                                                        <select id="country-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                                                            <option value="">-- Pilih Negara --</option>
                                                         </select>
                                                     </div>
+                                                    
+                                                    <!-- Provinsi/State -->
                                                     <div>
-                                                        <label class="block text-gray-700 text-sm font-bold mb-2">Kota/Kabupaten:</label>
-                                                        <select id="city-{{ $question->id_question }}" 
-                                                                class="city-select w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                                data-question-id="{{ $question->id_question }}" disabled>
-                                                            <option value="">-- Pilih Kota/Kabupaten --</option>
+                                                        <label for="state-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Provinsi/State:</label>
+                                                        <select id="state-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
+                                                            <option value="">-- Pilih Provinsi/State --</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Kota -->
+                                                    <div>
+                                                        <label for="city-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">Kota:</label>
+                                                        <select id="city-select-{{ $question->id_question }}" class="w-full px-3 py-2 border border-gray-300 rounded-md" disabled>
+                                                            <option value="">-- Pilih Kota --</option>
                                                         </select>
                                                     </div>
                                                 </div>
                                                 
-                                                <input type="hidden" 
-                                                       name="location_combined[{{ $question->id_question }}]"
-                                                       id="location-combined-{{ $question->id_question }}"
-                                                       value="{{ isset($prevLocationAnswers[$question->id_question]) ? json_encode($prevLocationAnswers[$question->id_question]) : '' }}">
+                                                <!-- Hidden input to store combined value -->
+                                                <input type="hidden" id="location-combined-{{ $question->id_question }}" name="location_combined[{{ $question->id_question }}]" value="">
                                                 
-                                                <div id="selected-location-{{ $question->id_question }}" 
-                                                     class="mt-4 p-3 bg-green-50 border border-green-200 rounded-md {{ isset($prevLocationAnswers[$question->id_question]) && !empty($prevLocationAnswers[$question->id_question]['display']) ? '' : 'hidden' }}">
-                                                    <div class="flex items-center">
-                                                        <i class="fas fa-map-pin text-green-600 mr-2"></i>
-                                                        <div>
-                                                            <p class="text-sm text-green-600 font-medium">Lokasi terpilih:</p>
-                                                            <p id="location-text-{{ $question->id_question }}" class="font-semibold text-gray-800">
-                                                                {{ $prevLocationAnswers[$question->id_question]['display'] ?? '' }}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <!-- Hidden input for initial value (when editing) -->
+                                                @if(isset($prevLocationAnswers[$question->id_question]))
+                                                    <input type="hidden" id="location-initial-{{ $question->id_question }}" value="{{ json_encode($prevLocationAnswers[$question->id_question]) }}">
+                                                @endif
                                             </div>
                                             <div class="text-red-500 text-sm mt-1 validation-message hidden"></div>
-                                        
+                                            
+                                            <!-- JavaScript for location selection -->
+                                            <script>
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    // Get all location questions
+                                                    const locationQuestions = document.querySelectorAll('.location-question');
+                                                    
+                                                    // Process each location question
+                                                    locationQuestions.forEach(function(locationQuestion) {
+                                                        const questionId = locationQuestion.dataset.questionId;
+                                                        const countrySelect = document.getElementById(`country-select-${questionId}`);
+                                                        const stateSelect = document.getElementById(`state-select-${questionId}`);
+                                                        const citySelect = document.getElementById(`city-select-${questionId}`);
+                                                        const combinedInput = document.getElementById(`location-combined-${questionId}`);
+                                                        const initialInput = document.getElementById(`location-initial-${questionId}`);
+                                                        
+                                                        // Load countries from JSON file
+                                                        fetch('/js/location-data/countries.json')
+                                                            .then(response => response.json())
+                                                            .then(countries => {
+                                                                // Clear current options
+                                                                countrySelect.innerHTML = '<option value="">-- Pilih Negara --</option>';
+                                                                
+                                                                // Populate countries dropdown
+                                                                countries.forEach(country => {
+                                                                    const option = document.createElement('option');
+                                                                    option.value = country.code;
+                                                                    option.textContent = country.name;
+                                                                    countrySelect.appendChild(option);
+                                                                });
+                                                                
+                                                                // Load initial values if available after countries are loaded
+                                                                if (initialInput) {
+                                                                    loadInitialLocationData();
+                                                                }
+                                                            })
+                                                            .catch(error => {
+                                                                console.error('Error loading countries:', error);
+                                                                countrySelect.innerHTML = '<option value="">-- Error loading countries --</option>';
+                                                            });
+                                                        
+                                                        // Country selection event
+                                                        countrySelect.addEventListener('change', function() {
+                                                            if (this.value) {
+                                                                stateSelect.disabled = false;
+                                                                stateSelect.innerHTML = '<option value="">-- Memuat Provinsi/State... --</option>';
+                                                                
+                                                                // Load states from JSON file
+                                                                fetch(`/js/location-data/${this.value}.json`)
+                                                                    .then(response => response.json())
+                                                                    .then(data => {
+                                                                        // Clear current options
+                                                                        stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+                                                                        
+                                                                        // Add new options
+                                                                        if (data && data.states) {
+                                                                            data.states.forEach(state => {
+                                                                                const option = document.createElement('option');
+                                                                                option.value = state.code;
+                                                                                option.textContent = state.name;
+                                                                                stateSelect.appendChild(option);
+                                                                            });
+                                                                        }
+                                                                        
+                                                                        // Update combined value
+                                                                        updateCombinedValue();
+                                                                    })
+                                                                    .catch(error => {
+                                                                        console.error('Error fetching states:', error);
+                                                                        stateSelect.innerHTML = '<option value="">-- Error loading data --</option>';
+                                                                    });
+                                                            } else {
+                                                                stateSelect.disabled = true;
+                                                                citySelect.disabled = true;
+                                                                stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+                                                                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                                                                updateCombinedValue();
+                                                            }
+                                                        });
+                                                        
+                                                        // State selection event
+                                                        stateSelect.addEventListener('change', function() {
+                                                            if (this.value) {
+                                                                citySelect.disabled = false;
+                                                                citySelect.innerHTML = '<option value="">-- Memuat Kota... --</option>';
+                                                                
+                                                                // Get the selected country and find the selected state
+                                                                const countryCode = countrySelect.value;
+                                                                
+                                                                fetch(`/js/location-data/${countryCode}.json`)
+                                                                    .then(response => response.json())
+                                                                    .then(data => {
+                                                                        // Find the selected state
+                                                                        const selectedState = data.states.find(state => state.code === this.value);
+                                                                        
+                                                                        // Clear current options
+                                                                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                                                                        
+                                                                        // Add new options
+                                                                        if (selectedState && selectedState.cities) {
+                                                                            selectedState.cities.forEach(city => {
+                                                                                const option = document.createElement('option');
+                                                                                option.value = city.code;
+                                                                                option.textContent = city.name;
+                                                                                citySelect.appendChild(option);
+                                                                            });
+                                                                        }
+                                                                        
+                                                                        // Update combined value
+                                                                        updateCombinedValue();
+                                                                    })
+                                                                    .catch(error => {
+                                                                        console.error('Error fetching cities:', error);
+                                                                        citySelect.innerHTML = '<option value="">-- Error loading data --</option>';
+                                                                    });
+                                                            } else {
+                                                                citySelect.disabled = true;
+                                                                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                                                                updateCombinedValue();
+                                                            }
+                                                        });
+                                                        
+                                                        // City selection event
+                                                        citySelect.addEventListener('change', function() {
+                                                            updateCombinedValue();
+                                                        });
+                                                        
+                                                        // Function to update combined value
+                                                        function updateCombinedValue() {
+                                                            const countryText = countrySelect.options[countrySelect.selectedIndex]?.text || '';
+                                                            const stateText = stateSelect.options[stateSelect.selectedIndex]?.text || '';
+                                                            const cityText = citySelect.options[citySelect.selectedIndex]?.text || '';
+                                                            
+                                                            const combinedValue = {
+                                                                country: {
+                                                                    code: countrySelect.value,
+                                                                    name: countryText
+                                                                },
+                                                                state: {
+                                                                    id: stateSelect.value,
+                                                                    name: stateText
+                                                                },
+                                                                city: {
+                                                                    id: citySelect.value,
+                                                                    name: cityText
+                                                                },
+                                                                display: [cityText, stateText, countryText].filter(Boolean).join(', ')
+                                                            };
+                                                            
+                                                            combinedInput.value = JSON.stringify(combinedValue);
+                                                            console.log(`Updated location data for question ${questionId}:`, combinedValue);
+                                                        }
+                                                        
+                                                        // Function to load initial values if available
+                                                        function loadInitialLocationData() {
+                                                            if (initialInput) {
+                                                                try {
+                                                                    const initialData = JSON.parse(initialInput.value);
+                                                                    if (initialData) {
+                                                                        // Set country
+                                                                        if (initialData.country && initialData.country.code) {
+                                                                            countrySelect.value = initialData.country.code;
+                                                                            
+                                                                            // Trigger change event to load provinces
+                                                                            const event = new Event('change');
+                                                                            countrySelect.dispatchEvent(event);
+                                                                            
+                                                                            // Set state and city after provinces load
+                                                                            setTimeout(() => {
+                                                                                if (initialData.state && initialData.state.id) {
+                                                                                    stateSelect.value = initialData.state.id;
+                                                                                    stateSelect.dispatchEvent(new Event('change'));
+                                                                                    
+                                                                                    // Set city after cities load
+                                                                                    setTimeout(() => {
+                                                                                        if (initialData.city && initialData.city.id) {
+                                                                                            citySelect.value = initialData.city.id;
+                                                                                            citySelect.dispatchEvent(new Event('change'));
+                                                                                        }
+                                                                                    }, 500);
+                                                                                }
+                                                                            }, 500);
+                                                                        }
+                                                                    }
+                                                                } catch (e) {
+                                                                    console.error('Error parsing initial location data', e);
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                });
+                                            </script>
                                         @elseif($question->type == 'option')
                                             <!-- Single choice question -->
                                             <div class="bg-white border border-gray-300 rounded-lg p-4">
@@ -637,7 +820,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing alumni questionnaire functionality');
     
-    // ✅ PERBAIKAN: Pass data dari backend ke JavaScript dengan benar
+    // ✅ PERBAIKAN: Pass data dari backend to JavaScript dengan benar
     window.questionnaireData = {
         prevAnswers: @json($prevAnswers ?? []),
         prevMultipleAnswers: @json($prevMultipleAnswers ?? []),
@@ -748,6 +931,25 @@ document.addEventListener('DOMContentLoaded', function() {
                         const questionId = input.getAttribute('data-question-id');
                         updateScaleVisualState(questionId);
                     }
+                    
+                    // ✅ HANDLE OTHER OPTIONS UNTUK RADIO
+                    if (input.classList.contains('option-radio')) {
+                        const isOther = parseInt(input.getAttribute('data-is-other')) === 1;
+                        const questionId = input.getAttribute('data-question-id');
+                        
+                        if (isOther) {
+                            const otherField = document.getElementById(`other_field_${questionId}_${input.value}`);
+                            if (otherField) {
+                                otherField.classList.remove('hidden');
+                                const otherInput = otherField.querySelector('input[type="text"]');
+                                if (otherInput) {
+                                    otherInput.disabled = false;
+                                    otherInput.setAttribute('required', 'required');
+                                }
+                            }
+                        }
+                    }
+                    
                 } else {
                     input.value = answer;
                 }
@@ -761,6 +963,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = document.querySelector(`input[name="multiple[${questionId}][]"][value="${answer}"]`);
                 if (checkbox) {
                     checkbox.checked = true;
+                    
+                    // ✅ HANDLE OTHER OPTIONS UNTUK CHECKBOX
+                    const isOther = parseInt(checkbox.getAttribute('data-is-other')) === 1;
+                    if (isOther) {
+                        const optionId = checkbox.value;
+                        const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
+                        if (otherField) {
+                            otherField.classList.remove('hidden');
+                            const otherInput = otherField.querySelector('input[type="text"]');
+                            if (otherInput) {
+                                otherInput.disabled = false;
+                                otherInput.setAttribute('required', 'required');
+                            }
+                        }
+                    }
+                    
                     console.log(`✅ Loaded multiple choice for question ${questionId}:`, answer);
                 }
             });
@@ -769,15 +987,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Load other answers
         Object.entries(window.questionnaireData.prevOtherAnswers).forEach(([questionId, otherAnswer]) => {
             const otherInput = document.querySelector(`input[name="other_answers[${questionId}]"]`) ||
-                              document.querySelector(`input[name="other_answer[${questionId}]"]`) ||
-                              document.querySelector(`textarea[name="other_answers[${questionId}]"]`);
-            
+                          document.querySelector(`input[name="other_answer[${questionId}]"]`) ||
+                          document.querySelector(`textarea[name="other_answers[${questionId}]"]`);
+        
             if (otherInput) {
                 otherInput.value = otherAnswer;
-                const otherContainer = otherInput.closest('.other-input-container');
+                
+                // ✅ SHOW THE OTHER FIELD CONTAINER
+                const otherContainer = otherInput.closest('[id^="other_field_"]');
                 if (otherContainer) {
-                    otherContainer.style.display = 'block';
+                    otherContainer.classList.remove('hidden');
+                    otherInput.disabled = false;
+                    otherInput.setAttribute('required', 'required');
                 }
+                
                 console.log(`✅ Loaded other answer for question ${questionId}:`, otherAnswer);
             }
         });
@@ -786,420 +1009,82 @@ document.addEventListener('DOMContentLoaded', function() {
         Object.entries(window.questionnaireData.prevMultipleOtherAnswers).forEach(([questionId, optionAnswers]) => {
             Object.entries(optionAnswers).forEach(([optionId, otherAnswer]) => {
                 const otherInput = document.querySelector(`input[name="multiple_other_answers[${questionId}][${optionId}]"]`) ||
-                                  document.querySelector(`textarea[name="multiple_other_answers[${questionId}][${optionId}]"]`);
-                
+                              document.querySelector(`textarea[name="multiple_other_answers[${questionId}][${optionId}]"]`);
+            
                 if (otherInput) {
                     otherInput.value = otherAnswer;
-                    const otherContainer = otherInput.closest('.other-input-container');
+                    
+                    // ✅ SHOW THE OTHER FIELD CONTAINER  
+                    const otherContainer = otherInput.closest('[id^="multiple_other_field_"]');
                     if (otherContainer) {
-                        otherContainer.style.display = 'block';
+                        otherContainer.classList.remove('hidden');
+                        otherInput.disabled = false;
+                        otherInput.setAttribute('required', 'required');
                     }
+                    
                     console.log(`✅ Loaded multiple other answer for question ${questionId}, option ${optionId}:`, otherAnswer);
                 }
             });
         });
         
-        // Load location answers
+        // ✅ PERBAIKAN UTAMA: Load location answers properly
         Object.entries(window.questionnaireData.prevLocationAnswers).forEach(([questionId, locationData]) => {
             console.log(`Loading location data for question ${questionId}:`, locationData);
-            
-            if (locationData.province_id) {
-                const provinceSelect = document.getElementById(`province-${questionId}`);
-                if (provinceSelect) {
-                    provinceSelect.value = locationData.province_id;
-                    provinceSelect.dispatchEvent(new Event('change'));
+        
+            const combinedInput = document.getElementById(`location-combined-${questionId}`);
+            const initialInput = document.getElementById(`location-initial-${questionId}`);
+        
+            if (combinedInput && locationData) {
+                // ✅ Set the combined input value immediately
+                combinedInput.value = JSON.stringify(locationData);
+                
+                // ✅ Trigger location data loading after a short delay
+                setTimeout(() => {
+                    const countrySelect = document.getElementById(`country-select-${questionId}`);
+                    const stateSelect = document.getElementById(`state-select-${questionId}`);
+                    const citySelect = document.getElementById(`city-select-${questionId}`);
                     
-                    setTimeout(() => {
-                        if (locationData.city_id) {
-                            const citySelect = document.getElementById(`city-${questionId}`);
-                            if (citySelect) {
-                                citySelect.value = locationData.city_id;
-                                citySelect.dispatchEvent(new Event('change'));
+                    if (countrySelect && locationData.country && locationData.country.code) {
+                        // Set country
+                        countrySelect.value = locationData.country.code;
+                        
+                        // Trigger change event to load states
+                        const countryChangeEvent = new Event('change', { bubbles: true });
+                        countrySelect.dispatchEvent(countryChangeEvent);
+                        
+                        // Set state after states are loaded
+                        setTimeout(() => {
+                            if (stateSelect && locationData.state && locationData.state.id) {
+                                stateSelect.value = locationData.state.id;
+                                stateSelect.disabled = false;
+                                
+                                // Trigger change event to load cities
+                                const stateChangeEvent = new Event('change', { bubbles: true });
+                                stateSelect.dispatchEvent(stateChangeEvent);
+                                
+                                // Set city after cities are loaded
+                                setTimeout(() => {
+                                    if (citySelect && locationData.city && locationData.city.id) {
+                                        citySelect.value = locationData.city.id;
+                                        citySelect.disabled = false;
+                                        
+                                        // Trigger change event
+                                        const cityChangeEvent = new Event('change', { bubbles: true });
+                                        citySelect.dispatchEvent(cityChangeEvent);
+                                    }
+                                }, 800);
                             }
-                        }
-                    }, 1000);
-                }
-            }
-            
-            if (locationData.display) {
-                const locationDisplay = document.getElementById(`location-text-${questionId}`);
-                if (locationDisplay) {
-                    locationDisplay.textContent = locationData.display;
-                }
-                
-                const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-                if (selectedLocationDiv) {
-                    selectedLocationDiv.style.display = 'block';
-                }
-            }
-        });
-    }
-
-    // LOCATION FUNCTIONS - SIMPLIFIED VERSION
-    function initializeLocationQuestions() {
-        console.log('=== INITIALIZING LOCATION QUESTIONS ===');
-        
-        const provinceSelects = document.querySelectorAll('.province-select');
-        console.log('Found province selects:', provinceSelects.length);
-        
-        if (provinceSelects.length === 0) {
-            console.log('No location questions found');
-            return;
-        }
-        
-        provinceSelects.forEach((provinceSelect, index) => {
-            const questionId = provinceSelect.id.replace('province-', '');
-            console.log(`Setting up location question ${index + 1}: ${questionId}`);
-            
-            loadProvincesFromAPI(questionId);
-            setupLocationEventListeners(questionId);
-        });
-    }
-    
-    function loadProvincesFromAPI(questionId) {
-        console.log('Loading provinces from API for question:', questionId);
-        
-        const provinceSelect = document.getElementById(`province-${questionId}`);
-        if (!provinceSelect) {
-            console.error('Province select not found for question:', questionId);
-            return;
-        }
-        
-        provinceSelect.innerHTML = '<option value="">-- Memuat provinsi... --</option>';
-        
-        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
-            .then(response => {
-                console.log('Province API Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(provinces => {
-                console.log('Provinces received:', provinces.length);
-                
-                if (!provinces || !Array.isArray(provinces)) {
-                    throw new Error('Invalid provinces data');
-                }
-                
-                provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
-                
-                provinces.forEach(province => {
-                    if (province && province.id && province.name) {
-                        const option = document.createElement('option');
-                        option.value = province.id;
-                        option.textContent = province.name;
-                        option.setAttribute('data-name', province.name);
-                        provinceSelect.appendChild(option);
+                        }, 800);
                     }
-                });
+                }, 1000);
                 
-                console.log(`Successfully loaded ${provinces.length} provinces for question ${questionId}`);
-                
-                setTimeout(() => {
-                    loadSavedLocationData(questionId);
-                }, 200);
-            })
-            .catch(error => {
-                console.error('Error loading provinces:', error);
-                console.log('Using fallback province data');
-                loadFallbackProvinces(provinceSelect, questionId);
-            });
-    }
-    
-    function loadFallbackProvinces(provinceSelect, questionId) {
-        const fallbackProvinces = [
-            { id: '11', name: 'Aceh' },
-            { id: '12', name: 'Sumatera Utara' },
-            { id: '13', name: 'Sumatera Barat' },
-            { id: '14', name: 'Riau' },
-            { id: '15', name: 'Jambi' },
-            { id: '16', name: 'Sumatera Selatan' },
-            { id: '17', name: 'Bengkulu' },
-            { id: '18', name: 'Lampung' },
-            { id: '19', name: 'Kepulauan Bangka Belitung' },
-            { id: '21', name: 'Kepulauan Riau' },
-            { id: '31', name: 'DKI Jakarta' },
-            { id: '32', name: 'Jawa Barat' },
-            { id: '33', name: 'Jawa Tengah' },
-            { id: '34', name: 'DI Yogyakarta' },
-            { id: '35', name: 'Jawa Timur' },
-            { id: '36', name: 'Banten' },
-            { id: '51', name: 'Bali' },
-            { id: '52', name: 'Nusa Tenggara Barat' },
-            { id: '53', name: 'Nusa Tenggara Timur' },
-            { id: '61', name: 'Kalimantan Barat' },
-            { id: '62', name: 'Kalimantan Tengah' },
-            { id: '63', name: 'Kalimantan Selatan' },
-            { id: '64', name: 'Kalimantan Timur' },
-            { id: '65', name: 'Kalimantan Utara' },
-            { id: '71', name: 'Sulawesi Utara' },
-            { id: '72', name: 'Sulawesi Tengah' },
-            { id: '73', name: 'Sulawesi Selatan' },
-            { id: '74', name: 'Sulawesi Tenggara' },
-            { id: '75', name: 'Gorontalo' },
-            { id: '76', name: 'Sulawesi Barat' },
-            { id: '81', name: 'Maluku' },
-            { id: '82', name: 'Maluku Utara' },
-            { id: '91', name: 'Papua Barat' },
-            { id: '94', name: 'Papua' }
-        ];
-        
-        provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
-        
-        fallbackProvinces.forEach(province => {
-            const option = document.createElement('option');
-            option.value = province.id;
-            option.textContent = province.name;
-            option.setAttribute('data-name', province.name);
-            provinceSelect.appendChild(option);
+                console.log(`✅ Set up location loading for question ${questionId}`);
+            }
         });
         
-        console.log(`Loaded ${fallbackProvinces.length} fallback provinces for question ${questionId}`);
-        
-        setTimeout(() => {
-            loadSavedLocationData(questionId);
-        }, 200);
+        console.log('✅ All saved answers loaded successfully');
     }
     
-    function setupLocationEventListeners(questionId) {
-        console.log('Setting up event listeners for question:', questionId);
-        
-        const provinceSelect = document.getElementById(`province-${questionId}`);
-        const citySelect = document.getElementById(`city-${questionId}`);
-        
-        if (!provinceSelect || !citySelect) {
-            console.error('Province or city select not found for question:', questionId);
-            return;
-        }
-        
-        provinceSelect.addEventListener('change', function() {
-            console.log('Province changed:', this.value, 'for question:', questionId);
-            handleProvinceChange(questionId, this.value);
-        });
-        
-        citySelect.addEventListener('change', function() {
-            console.log('City changed:', this.value, 'for question:', questionId);
-            updateLocationDisplay(questionId);
-        });
-        
-        console.log('Event listeners set up successfully for question:', questionId);
-    }
-    
-    function handleProvinceChange(questionId, provinceId) {
-        console.log(`Province changed for question ${questionId}: ${provinceId}`);
-        
-        const citySelect = document.getElementById(`city-${questionId}`);
-        if (!citySelect) {
-            console.error('City select not found for question:', questionId);
-            return;
-        }
-        
-        citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-        citySelect.disabled = true;
-        
-        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-        const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
-        
-        if (selectedLocationDiv) {
-            selectedLocationDiv.classList.add('hidden');
-        }
-        if (locationCombinedInput) {
-            locationCombinedInput.value = '';
-        }
-        
-        if (!provinceId) {
-            console.log('No province selected, city select disabled');
-            return;
-        }
-        
-        citySelect.innerHTML = '<option value="">-- Memuat kota/kabupaten... --</option>';
-        
-        const apiUrl = `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`;
-        console.log('Fetching cities from:', apiUrl);
-        
-        fetch(apiUrl)
-            .then(response => {
-                console.log('City API Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(cities => {
-                console.log('Cities received:', cities.length);
-                
-                if (!cities || !Array.isArray(cities)) {
-                    throw new Error('Invalid cities data received');
-                }
-                
-                if (cities.length === 0) {
-                    console.warn('No cities found for province:', provinceId);
-                    citySelect.innerHTML = '<option value="">-- Tidak ada kota/kabupaten --</option>';
-                    return;
-                }
-                
-                citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-                
-                cities.forEach(city => {
-                    if (city && city.id && city.name) {
-                        const option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        option.setAttribute('data-name', city.name);
-                        citySelect.appendChild(option);
-                    }
-                });
-                
-                citySelect.disabled = false;
-                console.log(`Successfully loaded ${cities.length} cities for province ${provinceId}`);
-            })
-            .catch(error => {
-                console.error('Error loading cities:', error);
-                
-                const fallbackCities = getFallbackCities(provinceId);
-                if (fallbackCities && fallbackCities.length > 0) {
-                    console.log('Using fallback cities for province:', provinceId);
-                    citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-                    
-                    fallbackCities.forEach(city => {
-                        const option = document.createElement('option');
-                        option.value = city.id;
-                        option.textContent = city.name;
-                        option.setAttribute('data-name', city.name);
-                        citySelect.appendChild(option);
-                    });
-                    
-                    citySelect.disabled = false;
-                } else {
-                    citySelect.innerHTML = '<option value="">-- Error memuat kota/kabupaten --</option>';
-                    citySelect.disabled = true;
-                }
-            });
-    }
-    
-    function getFallbackCities(provinceId) {
-        const fallbackData = {
-            '11': [
-                { id: '1101', name: 'Kabupaten Simeulue' },
-                { id: '1102', name: 'Kabupaten Aceh Singkil' },
-                { id: '1171', name: 'Kota Banda Aceh' },
-                { id: '1172', name: 'Kota Sabang' }
-            ],
-            '31': [
-                { id: '3101', name: 'Kabupaten Kepulauan Seribu' },
-                { id: '3171', name: 'Kota Jakarta Selatan' },
-                { id: '3172', name: 'Kota Jakarta Timur' },
-                { id: '3173', name: 'Kota Jakarta Pusat' },
-                { id: '3174', name: 'Kota Jakarta Barat' },
-                { id: '3175', name: 'Kota Jakarta Utara' }
-            ],
-            '34': [
-                { id: '3401', name: 'Kabupaten Kulon Progo' },
-                { id: '3402', name: 'Kabupaten Bantul' },
-                { id: '3403', name: 'Kabupaten Gunung Kidul' },
-                { id: '3404', name: 'Kabupaten Sleman' },
-                { id: '3471', name: 'Kota Yogyakarta' }
-            ]
-        };
-        
-        return fallbackData[provinceId] || null;
-    }
-    
-    function updateLocationDisplay(questionId) {
-        console.log('Updating location display for question:', questionId);
-        
-        const provinceSelect = document.getElementById(`province-${questionId}`);
-        const citySelect = document.getElementById(`city-${questionId}`);
-        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-        const locationTextSpan = document.getElementById(`location-text-${questionId}`);
-        const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
-        
-        if (!provinceSelect || !citySelect || !selectedLocationDiv || !locationTextSpan || !locationCombinedInput) {
-            console.error('Location elements not found for question:', questionId);
-            return;
-        }
-        
-        const provinceId = provinceSelect.value;
-        const cityId = citySelect.value;
-        
-        if (!provinceId || !cityId) {
-            selectedLocationDiv.classList.add('hidden');
-            locationCombinedInput.value = '';
-            return;
-        }
-        
-        const provinceName = provinceSelect.options[provinceSelect.selectedIndex].text;
-        const cityName = citySelect.options[citySelect.selectedIndex].text;
-        
-        const displayText = `${cityName}, ${provinceName}`;
-        
-        const locationData = {
-            province_id: provinceId,
-            province_name: provinceName,
-            city_id: cityId,
-            city_name: cityName,
-            display: displayText
-        };
-        
-        locationTextSpan.textContent = displayText;
-        selectedLocationDiv.classList.remove('hidden');
-        
-        locationCombinedInput.value = JSON.stringify(locationData);
-        
-        console.log('Location updated:', locationData);
-    }
-    
-    function loadSavedLocationData(questionId) {
-        console.log('Loading saved location data for question:', questionId);
-        
-        const combinedInput = document.getElementById(`location-combined-${questionId}`);
-        
-        if (!combinedInput || !combinedInput.value) {
-            console.log('No saved location data found for question:', questionId);
-            return;
-        }
-        
-        try {
-            const savedLocation = JSON.parse(combinedInput.value);
-            console.log('Found saved location data:', savedLocation);
-            
-            const provinceSelect = document.getElementById(`province-${questionId}`);
-            const citySelect = document.getElementById(`city-${questionId}`);
-            
-            if (!provinceSelect || !citySelect) {
-                console.error('Province or city select not found for loading saved data');
-                return;
-            }
-            
-            if (savedLocation.province_id) {
-                provinceSelect.value = savedLocation.province_id;
-                
-                handleProvinceChange(questionId, savedLocation.province_id);
-                
-                setTimeout(() => {
-                    if (savedLocation.city_id) {
-                        citySelect.value = savedLocation.city_id;
-                        updateLocationDisplay(questionId);
-                    }
-                }, 500);
-            }
-            
-            if (savedLocation.display) {
-                const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
-                const locationTextSpan = document.getElementById(`location-text-${questionId}`);
-                
-                if (selectedLocationDiv && locationTextSpan) {
-                    locationTextSpan.textContent = savedLocation.display;
-                    selectedLocationDiv.classList.remove('hidden');
-                }
-            }
-            
-        } catch (error) {
-            console.error('Error parsing saved location data:', error);
-        }
-    }
-
     // CONDITIONAL QUESTIONS FUNCTION
     function initializeConditionalQuestions() {
         console.log('Initializing conditional questions...');
@@ -1355,7 +1240,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        // ✅ PERBAIKI: Handle scale changes
+        // ✅ PERBAIKAN: Handle scale changes
         document.querySelectorAll('.scale-radio').forEach(radio => {
             radio.addEventListener('change', function() {
                 const questionId = this.getAttribute('data-question-id');
@@ -1576,7 +1461,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ✅ INITIALIZE ALL FUNCTIONALITY
     console.log('Initializing all questionnaire functionality...');
-    initializeLocationQuestions();
     initializeConditionalQuestions();
     initializeScaleQuestions(); // ✅ TAMBAHAN PENTING
     
@@ -1855,7 +1739,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="flex items-start space-x-4">
                         <!-- Icon -->
                         <div class="flex-shrink-0">
-                            <div class="w                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            <div class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100">
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
                             </div>
                         </div>
 
@@ -1878,7 +1763,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                             <i class="fas fa-circle text-[0.35rem] text-red-400 mt-1.5 mr-2"></i>
                                             <span class="flex-1">${error}</span>
                                         </li>
-                                    `).join('')}
                                 </ul>
                             </div>
                         </div>
@@ -1993,6 +1877,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove existing feedback
         const existingFeedback = input.parentNode.querySelector('.numeric-feedback');
         if (existingFeedback) {
+
             existingFeedback.remove();
         }
         
@@ -2022,75 +1907,6 @@ document.addEventListener('DOMContentLoaded', function() {
             input.style.animation = '';
         }, 300);
     }
-
-    // Email validation for email type questions
-    document.addEventListener('input', function(e) {
-        if (e.target.classList.contains('email-validation')) {
-            const email = e.target.value;
-            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            
-            // Remove existing feedback
-            const existingFeedback = e.target.parentNode.querySelector('.email-feedback');
-            if (existingFeedback) {
-                existingFeedback.remove();
-            }
-            
-            // Validate email format
-            if (email && !emailRegex.test(email)) {
-                showEmailValidationFeedback(e.target);
-            } else {
-                // Remove error styling if email is valid
-                e.target.classList.remove('border-red-500');
-            }
-        }
-    });
-    
-    // Function to show email validation feedback
-    function showEmailValidationFeedback(input) {
-        // Add error styling
-        input.classList.add('border-red-500');
-        
-        // Create feedback element
-        const feedback = document.createElement('div');
-        feedback.className = 'email-feedback absolute top-full left-0 mt-1 px-2 py-1 bg-red-100 text-red-600 text-xs rounded shadow-sm border border-red-200 z-10';
-        feedback.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Format email tidak valid (harus ada @domain.com)';
-        
-        // Make parent relative if not already
-        if (getComputedStyle(input.parentNode).position === 'static') {
-            input.parentNode.style.position = 'relative';
-        }
-        
-        // Add feedback
-        input.parentNode.appendChild(feedback);
-        
-        // Auto remove after 3 seconds
-        setTimeout(() => {
-            if (feedback.parentNode) {
-                feedback.remove();
-            }
-        }, 3000);
-    }
-    
-    // Update validation for email questions
-    if (emailInput) {
-        const emailValue = emailInput.value.trim();
-        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        
-        if (emailValue === '') {
-            isAnswered = false;
-            errorMessage = 'Email harus diisi';
-        } else if (!emailRegex.test(emailValue)) {
-            isAnswered = false;
-            errorMessage = 'Format email tidak valid (harus mengandung @domain.com)';
-        } else {
-            isAnswered = true;
-        }
-    }
-    document.head.appendChild(styleSheet);
-
-    
 });
 </script>
-<!-- script JS  -->
-<script src="{{ asset('js/quesioner_fill.js') }}"></script>
 @endsection

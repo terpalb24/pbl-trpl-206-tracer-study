@@ -656,24 +656,51 @@ class QuestionnaireController extends Controller
                 break;
 
             case 'location':
-                $provinceId = $request->input("question_{$questionId}_province");
-                $provinceName = $request->input("question_{$questionId}_province_name");
-                $cityId = $request->input("question_{$questionId}_city");
-                $cityName = $request->input("question_{$questionId}_city_name");
-
-                if ($provinceId && $cityId) {
-                    $locationData = [
-                        'province_id' => $provinceId,
-                        'province_name' => $provinceName,
-                        'city_id' => $cityId,
-                        'city_name' => $cityName,
-                        'display' => $provinceName . ', ' . $cityName
-                    ];
-                    
-                    Tb_User_Answer_Item::create([
-                        'id_user_answer' => $userAnswer->id_user_answer,
-                        'id_question' => $questionId,
-                        'answer' => json_encode($locationData)
+                // ✅ PERBAIKAN: Handle location_combined format properly
+                $combinedLocationData = $request->input("location_combined.{$questionId}");
+    
+                if (!empty($combinedLocationData)) {
+                    try {
+                        // Parse location data to verify it's valid JSON
+                        $locationObject = json_decode($combinedLocationData, true);
+                        
+                        // Verify that we have the required location data
+                        if ($locationObject && 
+                            isset($locationObject['country']['code']) && 
+                            isset($locationObject['state']['name']) && 
+                            isset($locationObject['city']['name'])) {
+                            
+                            // Save the complete JSON data
+                            Tb_User_Answer_Item::create([
+                                'id_user_answer' => $userAnswer->id_user_answer,
+                                'id_question' => $questionId,
+                                'answer' => $combinedLocationData,
+                                'id_questions_options' => null,
+                                'other_answer' => null
+                            ]);
+                            
+                            \Log::info('Company location answer saved successfully', [
+                                'question_id' => $questionId,
+                                'user_answer_id' => $userAnswer->id_user_answer,
+                                'location_data' => $locationObject
+                            ]);
+                        } else {
+                            \Log::warning('Invalid location data structure', [
+                                'question_id' => $questionId,
+                                'raw_data' => $combinedLocationData
+                            ]);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Failed to save company location answer', [
+                            'question_id' => $questionId,
+                            'error' => $e->getMessage(),
+                            'raw_data' => $combinedLocationData
+                        ]);
+                    }
+                } else {
+                    \Log::info('No location data provided for question', [
+                        'question_id' => $questionId,
+                        'all_location_inputs' => $request->input('location_combined', [])
                     ]);
                 }
                 break;

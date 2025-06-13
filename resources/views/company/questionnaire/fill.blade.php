@@ -535,163 +535,262 @@ function handleConditionalQuestion(parentQuestionId, selectedValue) {
 }
 
 function initializeLocationQuestions() {
-    const locationQuestions = document.querySelectorAll('[data-question-type="location"]');
+    console.log('=== INITIALIZING LOCATION QUESTIONS ===');
     
-    locationQuestions.forEach(questionContainer => {
-        const questionId = questionContainer.querySelector('.province-select').dataset.questionId;
-        const provinceSelect = questionContainer.querySelector('.province-select');
-        const citySelect = questionContainer.querySelector('.city-select');
+    const locationQuestions = document.querySelectorAll('.location-question');
+    console.log('Found location questions:', locationQuestions.length);
+    
+    if (locationQuestions.length === 0) {
+        console.log('No location questions found');
+        return;
+    }
+    
+    locationQuestions.forEach((locationQuestion) => {
+        const questionId = locationQuestion.dataset.questionId;
+        console.log(`Setting up location question: ${questionId}`);
         
-        if (provinceSelect && citySelect) {
-            // Load provinces
-            loadProvinces(provinceSelect);
-            
-            // Handle province change
-            provinceSelect.addEventListener('change', function() {
-                const provinceId = this.value;
-                const provinceText = this.options[this.selectedIndex].text;
-                
-                // Update hidden field
-                const provinceNameInput = questionContainer.querySelector(`input[name="question_${questionId}_province_name"]`);
-                if (provinceNameInput) {
-                    provinceNameInput.value = provinceText !== '-- Pilih Provinsi --' ? provinceText : '';
+        const countrySelect = document.getElementById(`country-select-${questionId}`);
+        const stateSelect = document.getElementById(`state-select-${questionId}`);
+        const citySelect = document.getElementById(`city-select-${questionId}`);
+        const combinedInput = document.getElementById(`location-combined-${questionId}`);
+        const initialInput = document.getElementById(`location-initial-${questionId}`);
+        
+        if (!countrySelect || !stateSelect || !citySelect || !combinedInput) {
+            console.error('Location elements not found for question:', questionId);
+            return;
+        }
+        
+        // Load countries from JSON file
+        fetch('/js/location-data/countries.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+                return response.json();
+            })
+            .then(countries => {
+                console.log('Countries loaded:', countries.length);
                 
-                // Load cities
-                if (provinceId) {
-                    loadCities(provinceId, citySelect, questionId, questionContainer);
-                } else {
-                    citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-                    citySelect.disabled = true;
+                // Clear current options
+                countrySelect.innerHTML = '<option value="">-- Pilih Negara --</option>';
+                
+                // Populate countries dropdown
+                countries.forEach(country => {
+                    const option = document.createElement('option');
+                    option.value = country.code;
+                    option.textContent = country.name;
+                    countrySelect.appendChild(option);
+                });
+                
+                console.log('Countries populated for question:', questionId);
+                
+                // Load initial values if available after countries are loaded
+                if (initialInput && initialInput.value) {
+                    console.log('Loading initial location data for question:', questionId);
+                    loadInitialLocationData();
                 }
+            })
+            .catch(error => {
+                console.error('Error loading countries:', error);
+                countrySelect.innerHTML = '<option value="">-- Error loading countries --</option>';
             });
+        
+        // Country selection event
+        countrySelect.addEventListener('change', function() {
+            console.log('Country changed:', this.value);
             
-            // Handle city change
-            citySelect.addEventListener('change', function() {
-                const cityText = this.options[this.selectedIndex].text;
-                const cityNameInput = questionContainer.querySelector(`input[name="question_${questionId}_city_name"]`);
-                if (cityNameInput) {
-                    cityNameInput.value = cityText !== '-- Pilih Kota/Kabupaten --' ? cityText : '';
-                }
+            if (this.value) {
+                stateSelect.disabled = false;
+                stateSelect.innerHTML = '<option value="">-- Memuat Provinsi/State... --</option>';
+                citySelect.disabled = true;
+                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
                 
-                // Update location display
-                const selectedLocationDiv = questionContainer.querySelector(`#selected-location-${questionId}`);
-                const locationText = questionContainer.querySelector(`#location-text-${questionId}`);
+                // Load states from JSON file
+                fetch(`/js/location-data/${this.value}.json`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('States loaded for country:', this.value, data);
+                        
+                        // Clear current options
+                        stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+                        
+                        // Add new options
+                        if (data && data.states) {
+                            data.states.forEach(state => {
+                                const option = document.createElement('option');
+                                option.value = state.code;
+                                option.textContent = state.name;
+                                stateSelect.appendChild(option);
+                            });
+                            console.log('States populated:', data.states.length);
+                        }
+                        
+                        // Update combined value
+                        updateCombinedValue();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching states:', error);
+                        stateSelect.innerHTML = '<option value="">-- Error loading data --</option>';
+                    });
+            } else {
+                stateSelect.disabled = true;
+                citySelect.disabled = true;
+                stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                updateCombinedValue();
+            }
+        });
+        
+        // State selection event
+        stateSelect.addEventListener('change', function() {
+            console.log('State changed:', this.value);
+            
+            if (this.value) {
+                citySelect.disabled = false;
+                citySelect.innerHTML = '<option value="">-- Memuat Kota... --</option>';
                 
-                if (this.value && provinceSelect.value) {
-                    const provinceName = provinceNameInput.value;
-                    const displayText = `${provinceName}, ${cityText}`;
+                // Get the selected country and find the selected state
+                const countryCode = countrySelect.value;
+                
+                fetch(`/js/location-data/${countryCode}.json`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Find the selected state
+                        const selectedState = data.states.find(state => state.code === this.value);
+                        console.log('Selected state:', selectedState);
+                        
+                        // Clear current options
+                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                        
+                        // Add new options
+                        if (selectedState && selectedState.cities) {
+                            selectedState.cities.forEach(city => {
+                                const option = document.createElement('option');
+                                option.value = city.code;
+                                option.textContent = city.name;
+                                citySelect.appendChild(option);
+                            });
+                            console.log('Cities populated:', selectedState.cities.length);
+                        }
+                        
+                        // Update combined value
+                        updateCombinedValue();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching cities:', error);
+                        citySelect.innerHTML = '<option value="">-- Error loading data --</option>';
+                    });
+            } else {
+                citySelect.disabled = true;
+                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+                updateCombinedValue();
+            }
+        });
+        
+        // City selection event
+        citySelect.addEventListener('change', function() {
+            console.log('City changed:', this.value);
+            updateCombinedValue();
+        });
+        
+        // Function to update combined value
+        function updateCombinedValue() {
+            const countryValue = countrySelect.value;
+            const countryText = countrySelect.options[countrySelect.selectedIndex]?.text || '';
+            const stateValue = stateSelect.value;
+            const stateText = stateSelect.options[stateSelect.selectedIndex]?.text || '';
+            const cityValue = citySelect.value;
+            const cityText = citySelect.options[citySelect.selectedIndex]?.text || '';
+            
+            const combinedValue = {
+                country: {
+                    code: countryValue,
+                    name: countryText !== '-- Pilih Negara --' ? countryText : ''
+                },
+                state: {
+                    id: stateValue,
+                    name: stateText !== '-- Pilih Provinsi/State --' && !stateText.includes('Memuat') ? stateText : ''
+                },
+                city: {
+                    id: cityValue,
+                    name: cityText !== '-- Pilih Kota --' && !cityText.includes('Memuat') ? cityText : ''
+                },
+                display: [cityText, stateText, countryText].filter(text => 
+                    text && 
+                    !text.startsWith('--') && 
+                    !text.includes('Memuat') && 
+                    !text.includes('Error')
+                ).join(', ')
+            };
+            
+            combinedInput.value = JSON.stringify(combinedValue);
+            console.log(`Updated location data for question ${questionId}:`, combinedValue);
+        }
+        
+        // Function to load initial values if available
+        function loadInitialLocationData() {
+            if (initialInput && initialInput.value) {
+                try {
+                    const initialData = JSON.parse(initialInput.value);
+                    console.log('Initial location data to load:', initialData);
                     
-                    if (locationText) {
-                        locationText.textContent = displayText;
+                    if (initialData && initialData.country && initialData.country.code) {
+                        // Set country first
+                        countrySelect.value = initialData.country.code;
+                        console.log('Set country to:', initialData.country.code);
+                        
+                        // Trigger change event to load states
+                        const countryEvent = new Event('change');
+                        countrySelect.dispatchEvent(countryEvent);
+                        
+                        // Set state and city after states load
+                        setTimeout(() => {
+                            if (initialData.state && initialData.state.id) {
+                                stateSelect.value = initialData.state.id;
+                                console.log('Set state to:', initialData.state.id);
+                                
+                                // Trigger change event to load cities
+                                const stateEvent = new Event('change');
+                                stateSelect.dispatchEvent(stateEvent);
+                                
+                                // Set city after cities load
+                                setTimeout(() => {
+                                    if (initialData.city && initialData.city.id) {
+                                        citySelect.value = initialData.city.id;
+                                        console.log('Set city to:', initialData.city.id);
+                                        
+                                        // Trigger final update
+                                        const cityEvent = new Event('change');
+                                        citySelect.dispatchEvent(cityEvent);
+                                    }
+                                }, 1000); // Increase timeout for cities
+                            }
+                        }, 1000); // Increase timeout for states
                     }
-                    if (selectedLocationDiv) {
-                        selectedLocationDiv.classList.remove('hidden');
-                    }
-                } else {
-                    if (selectedLocationDiv) {
-                        selectedLocationDiv.classList.add('hidden');
-                    }
+                } catch (e) {
+                    console.error('Error parsing initial location data:', e);
                 }
-            });
+            }
         }
     });
-}
-
-async function loadProvinces(provinceSelect) {
-    try {
-        const response = await fetch(window.questionnaireData.routes.provinces);
-        const result = await response.json();
-        
-        if (result.success) {
-            provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
-            result.data.forEach(province => {
-                provinceSelect.innerHTML += `<option value="${province.id}">${province.name}</option>`;
-            });
-        }
-    } catch (error) {
-        console.error('Error loading provinces:', error);
-    }
-}
-
-async function loadCities(provinceId, citySelect, questionId, questionContainer) {
-    try {
-        citySelect.innerHTML = '<option value="">Loading...</option>';
-        citySelect.disabled = true;
-        
-        const url = window.questionnaireData.routes.cities.replace(':provinceId', provinceId);
-        const response = await fetch(url);
-        const result = await response.json();
-        
-        if (result.success) {
-            citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
-            result.data.forEach(city => {
-                citySelect.innerHTML += `<option value="${city.id}">${city.name}</option>`;
-            });
-            citySelect.disabled = false;
-        }
-    } catch (error) {
-        console.error('Error loading cities:', error);
-        citySelect.innerHTML = '<option value="">Error loading cities</option>';
-    }
-}
-
-// ✅ TAMBAHAN: Function untuk mengecek jawaban yang hilang
-function isQuestionAnswered(questionId, questionType, questionContainer) {
-    console.log(`Checking if question ${questionId} (${questionType}) is answered...`);
     
-    switch (questionType) {
-        case 'text':
-        case 'date':
-        case 'numeric':
-            const textInput = questionContainer.querySelector(`input[name="question_${questionId}"], textarea[name="question_${questionId}"]`);
-            const result = textInput && textInput.value.trim() !== '';
-            console.log(`Text question ${questionId}: input found=${!!textInput}, value="${textInput?.value}", result=${result}`);
-            return result;
-            
-        case 'email':
-            const emailInput = questionContainer.querySelector(`input[name="question_${questionId}"]`);
-            if (emailInput && emailInput.value.trim() !== '') {
-                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                const isValidEmail = emailRegex.test(emailInput.value.trim());
-                console.log(`Email question ${questionId}: input found=${!!emailInput}, value="${emailInput?.value}", isValid=${isValidEmail}`);
-                return isValidEmail;
-            }
-            console.log(`Email question ${questionId}: input not found or empty`);
-            return false;
-            
-        case 'option':
-        case 'rating':
-        case 'scale':
-            const radioInput = questionContainer.querySelector(`input[name="question_${questionId}"]:checked`);
-            const radioResult = radioInput !== null;
-            console.log(`Radio question ${questionId}: checked input found=${!!radioInput}, result=${radioResult}`);
-            return radioResult;
-            
-        case 'multiple':
-            const checkboxInputs = questionContainer.querySelectorAll(`input[name="question_${questionId}[]"]:checked`);
-            const checkboxResult = checkboxInputs.length > 0;
-            console.log(`Checkbox question ${questionId}: checked count=${checkboxInputs.length}, result=${checkboxResult}`);
-            return checkboxResult;
-            
-        case 'location':
-            const provinceSelect = questionContainer.querySelector(`select[name="question_${questionId}_province"]`);
-            const citySelect = questionContainer.querySelector(`select[name="question_${questionId}_city"]`);
-            const locationResult = provinceSelect && citySelect && provinceSelect.value && citySelect.value;
-            console.log(`Location question ${questionId}: province="${provinceSelect?.value}", city="${citySelect?.value}", result=${locationResult}`);
-            return locationResult;
-            
-        default:
-            console.warn(`Unknown question type for question ${questionId}: ${questionType}`);
-            return false;
-    }
+    console.log('✅ Location questions initialization complete');
 }
 
-// ✅ PERBAIKAN: Update validateRequired untuk semua pertanyaan jadi wajib + validasi email
+// Update the validation function to handle location_combined
 function validateRequired() {
     console.log('🔍 Starting validation check...');
     
-    // ✅ UBAH: Ambil semua pertanyaan yang visible, bukan hanya yang data-required="true"
     const allQuestions = document.querySelectorAll('.question-container');
     let isValid = true;
     let firstInvalidQuestion = null;
@@ -699,7 +798,6 @@ function validateRequired() {
     
     console.log(`Found ${allQuestions.length} questions to validate`);
     
-    // Jika tidak ada pertanyaan, langsung return true
     if (allQuestions.length === 0) {
         console.log('No questions found, validation passed');
         return true;
@@ -711,13 +809,12 @@ function validateRequired() {
         const questionElement = questionContainer.querySelector('h3');
         const questionText = questionElement ? questionElement.textContent.replace('*', '').trim() : `Pertanyaan ${index + 1}`;
         
-        // ✅ PENTING: Skip validation untuk pertanyaan conditional yang hidden
+        // Skip validation untuk pertanyaan conditional yang hidden
         if (questionContainer.style.display === 'none' || questionContainer.classList.contains('hidden')) {
             console.log(`Skipping validation for hidden conditional question ${questionId}`);
             return;
         }
         
-        // ✅ Skip juga jika questionContainer secara programmatically hidden
         const computedStyle = window.getComputedStyle(questionContainer);
         if (computedStyle.display === 'none') {
             console.log(`Skipping validation for computed hidden question ${questionId}`);
@@ -726,7 +823,6 @@ function validateRequired() {
         
         console.log(`Validating question ${questionId} (${questionType}): ${questionText}`);
         
-        // Detailed validation based on question type
         let isAnswered = false;
         let validationMessage = 'Pertanyaan ini wajib diisi!';
         
@@ -736,27 +832,16 @@ function validateRequired() {
             case 'numeric':
                 const textInput = questionContainer.querySelector(`input[name="question_${questionId}"], textarea[name="question_${questionId}"]`);
                 isAnswered = textInput && textInput.value.trim() !== '';
-                console.log(`Text/Date/Numeric validation: input found=${!!textInput}, value="${textInput?.value}", isAnswered=${isAnswered}`);
                 break;
                 
             case 'email':
                 const emailInput = questionContainer.querySelector(`input[name="question_${questionId}"]`);
                 if (emailInput && emailInput.value.trim() !== '') {
-                    // Email format validation
-                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                    const isValidEmail = emailRegex.test(emailInput.value.trim());
-                    
-                    if (!isValidEmail) {
-                        isAnswered = false;
-                        validationMessage = 'Format email tidak valid! Contoh: user@example.com';
-                    } else {
-                        isAnswered = true;
+                    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                    isAnswered = emailRegex.test(emailInput.value.trim());
+                    if (!isAnswered) {
+                        validationMessage = 'Format email tidak valid!';
                     }
-                    
-                    console.log(`Email validation: value="${emailInput.value}", isValidFormat=${isValidEmail}, isAnswered=${isAnswered}`);
-                } else {
-                    isAnswered = false;
-                    console.log(`Email validation: input found=${!!emailInput}, value="${emailInput?.value}", isAnswered=${isAnswered}`);
                 }
                 break;
                 
@@ -765,106 +850,68 @@ function validateRequired() {
             case 'scale':
                 const radioInput = questionContainer.querySelector(`input[name="question_${questionId}"]:checked`);
                 isAnswered = radioInput !== null;
-                console.log(`Radio validation: checked input found=${!!radioInput}, isAnswered=${isAnswered}`);
                 break;
                 
             case 'multiple':
                 const checkboxInputs = questionContainer.querySelectorAll(`input[name="question_${questionId}[]"]:checked`);
                 isAnswered = checkboxInputs.length > 0;
-                console.log(`Checkbox validation: checked inputs count=${checkboxInputs.length}, isAnswered=${isAnswered}`);
                 break;
                 
             case 'location':
-                const provinceSelect = questionContainer.querySelector(`select[name="question_${questionId}_province"]`);
-                const citySelect = questionContainer.querySelector(`select[name="question_${questionId}_city"]`);
-                isAnswered = provinceSelect && citySelect && provinceSelect.value && citySelect.value;
-                console.log(`Location validation: province="${provinceSelect?.value}", city="${citySelect?.value}", isAnswered=${isAnswered}`);
+                // Check for location_combined input instead of province/city selects
+                const locationCombinedInput = questionContainer.querySelector(`input[name="location_combined[${questionId}]"]`);
+                if (locationCombinedInput && locationCombinedInput.value) {
+                    try {
+                        const locationData = JSON.parse(locationCombinedInput.value);
+                        isAnswered = locationData && locationData.country && locationData.country.code && 
+                                   locationData.state && locationData.state.name && 
+                                   locationData.city && locationData.city.name;
+                    } catch (e) {
+                        isAnswered = false;
+                    }
+                }
+                validationMessage = 'Lokasi harus dipilih lengkap (negara, provinsi/state, dan kota)!';
                 break;
                 
             default:
                 console.warn(`Unknown question type: ${questionType}`);
                 isAnswered = false;
+                break;
         }
         
         if (!isAnswered) {
             console.log(`❌ Question ${questionId} is not answered or invalid`);
             isValid = false;
+            validationErrors.push(questionText);
             
-            // Add visual error indicators
+            // Visual feedback
             questionContainer.classList.add('border-red-300');
-            questionContainer.style.borderColor = '#fca5a5';
-            questionContainer.style.backgroundColor = '#fef2f2';
-            
-            // Show validation message
-            let validationMsg = questionContainer.querySelector('.validation-message');
-            if (!validationMsg) {
-                // Create validation message if it doesn't exist
-                validationMsg = document.createElement('div');
-                validationMsg.className = 'validation-message text-red-600 text-sm mt-2';
-                questionContainer.appendChild(validationMsg);
+            const validationMsg = questionContainer.querySelector('.validation-message');
+            if (validationMsg) {
+                validationMsg.textContent = validationMessage;
+                validationMsg.classList.remove('hidden');
             }
-            validationMsg.textContent = validationMessage;
-            validationMsg.classList.remove('hidden');
-            validationMsg.style.display = 'block';
             
-            // Store first invalid question for scrolling
             if (!firstInvalidQuestion) {
                 firstInvalidQuestion = questionContainer;
             }
-            
-            validationErrors.push(questionText);
         } else {
-            console.log(`✅ Question ${questionId} is answered and valid`);
-            
-            // Remove error indicators if present
+            // Clear validation styles
             questionContainer.classList.remove('border-red-300');
-            questionContainer.style.borderColor = '';
-            questionContainer.style.backgroundColor = '';
             const validationMsg = questionContainer.querySelector('.validation-message');
             if (validationMsg) {
                 validationMsg.classList.add('hidden');
-                validationMsg.style.display = 'none';
             }
         }
     });
     
     if (!isValid) {
         console.log(`❌ Validation failed. ${validationErrors.length} questions not answered or invalid:`, validationErrors);
-        
-        // Show validation alert
         showValidationAlert(`Ada ${validationErrors.length} pertanyaan yang belum diisi atau tidak valid!`);
         
-        // Scroll to first invalid question
         if (firstInvalidQuestion) {
-            firstInvalidQuestion.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-            });
-            
-            // Focus on first input in the question
-            const firstInput = firstInvalidQuestion.querySelector('input:not([type="hidden"]), select, textarea');
-            if (firstInput) {
-                setTimeout(() => {
-                    firstInput.focus();
-                    // Add pulse effect to highlight the field
-                    firstInput.style.animation = 'pulse 1s infinite';
-                    setTimeout(() => {
-                        firstInput.style.animation = '';
-                    }, 3000);
-                }, 500);
-            }
+            firstInvalidQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        
-        // Add shake effect to all invalid questions
-        allQuestions.forEach(questionContainer => {
-            if (questionContainer.classList.contains('border-red-300')) {
-                questionContainer.style.animation = 'shake 0.5s ease-in-out';
-                setTimeout(() => {
-                    questionContainer.style.animation = '';
-                }, 500);
-            }
-        });
-        
     } else {
         console.log('✅ All visible questions are answered and valid');
         hideValidationAlert();
@@ -873,260 +920,216 @@ function validateRequired() {
     return isValid;
 }
 
-// ✅ TAMBAHAN: Update isQuestionAnswered untuk validasi email
-function isQuestionAnswered(questionId, questionType, questionContainer) {
-    console.log(`Checking if question ${questionId} (${questionType}) is answered...`);
-    
-    switch (questionType) {
-        case 'text':
-        case 'date':
-        case 'numeric':
-            const textInput = questionContainer.querySelector(`input[name="question_${questionId}"], textarea[name="question_${questionId}"]`);
-            const result = textInput && textInput.value.trim() !== '';
-            console.log(`Text question ${questionId}: input found=${!!textInput}, value="${textInput?.value}", result=${result}`);
-            return result;
-            
-        case 'email':
-            const emailInput = questionContainer.querySelector(`input[name="question_${questionId}"]`);
-            if (emailInput && emailInput.value.trim() !== '') {
-                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                const isValidEmail = emailRegex.test(emailInput.value.trim());
-                console.log(`Email question ${questionId}: input found=${!!emailInput}, value="${emailInput?.value}", isValid=${isValidEmail}`);
-                return isValidEmail;
-            }
-            console.log(`Email question ${questionId}: input not found or empty`);
-            return false;
-            
-        case 'option':
-        case 'rating':
-        case 'scale':
-            const radioInput = questionContainer.querySelector(`input[name="question_${questionId}"]:checked`);
-            const radioResult = radioInput !== null;
-            console.log(`Radio question ${questionId}: checked input found=${!!radioInput}, result=${radioResult}`);
-            return radioResult;
-            
-        case 'multiple':
-            const checkboxInputs = questionContainer.querySelectorAll(`input[name="question_${questionId}[]"]:checked`);
-            const checkboxResult = checkboxInputs.length > 0;
-            console.log(`Checkbox question ${questionId}: checked count=${checkboxInputs.length}, result=${checkboxResult}`);
-            return checkboxResult;
-            
-        case 'location':
-            const provinceSelect = questionContainer.querySelector(`select[name="question_${questionId}_province"]`);
-            const citySelect = questionContainer.querySelector(`select[name="question_${questionId}_city"]`);
-            const locationResult = provinceSelect && citySelect && provinceSelect.value && citySelect.value;
-            console.log(`Location question ${questionId}: province="${provinceSelect?.value}", city="${citySelect?.value}", result=${locationResult}`);
-            return locationResult;
-            
-        default:
-            console.warn(`Unknown question type for question ${questionId}: ${questionType}`);
-            return false;
-    }
-}
-
-// ✅ TAMBAHAN: Real-time email validation
 function initializeFormValidation() {
+    console.log('🔧 Initializing form validation...');
+    
     const form = document.getElementById('questionnaire-form');
-    const nextButton = document.getElementById('next-category-btn');
-    const submitButton = document.getElementById('submit-final-btn');
-    
-    if (nextButton) {
-        nextButton.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            e.stopPropagation(); // Stop event bubbling
-            
-            console.log('🔄 Next category button clicked - starting validation...');
-            
-            // Add loading state
-            const originalText = this.innerHTML;
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memvalidasi...';
-            
-            // Run validation immediately
-            const validationResult = validateRequired();
-            console.log(`Validation result: ${validationResult}`);
-            
-            if (validationResult) {
-                console.log('✅ Validation passed, submitting form...');
-                
-                // Create and append action input
-                let actionInput = form.querySelector('input[name="action"]');
-                if (actionInput) {
-                    actionInput.remove();
-                }
-                
-                actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'next_category';
-                form.appendChild(actionInput);
-                
-                // Submit the form
-                form.submit();
-            } else {
-                console.log('❌ Validation failed, staying on current page');
-                
-                // Restore button state
-                this.disabled = false;
-                this.innerHTML = originalText;
-                
-                // Show error feedback
-                this.classList.add('shake');
-                setTimeout(() => {
-                    this.classList.remove('shake');
-                }, 600);
-            }
-        });
+    if (!form) {
+        console.error('Questionnaire form not found');
+        return;
     }
     
-    if (submitButton) {
-        submitButton.addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            e.stopPropagation(); // Stop event bubbling
+    // Add validation to form submission
+    form.addEventListener('submit', function(e) {
+        const submitButton = e.submitter;
+        const action = submitButton ? submitButton.value : '';
+        
+        console.log('Form submission triggered with action:', action);
+        
+        // Only validate for next_category and submit_final actions
+        if (action === 'next_category' || action === 'submit_final') {
+            console.log('Validating form before submission...');
             
-            console.log('🔄 Final submit button clicked - starting validation...');
-            
-            // Add loading state
-            const originalText = this.innerHTML;
-            this.disabled = true;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memvalidasi...';
-            
-            // Run validation immediately
-            const validationResult = validateRequired();
-            console.log(`Validation result: ${validationResult}`);
-            
-            if (validationResult) {
-                console.log('✅ Validation passed, showing confirmation modal...');
-                
-                // Restore button state before showing modal
-                this.disabled = false;
-                this.innerHTML = originalText;
-                
-                showConfirmationModal();
-            } else {
-                console.log('❌ Validation failed, staying on current page');
-                
-                // Restore button state
-                this.disabled = false;
-                this.innerHTML = originalText;
-                
-                // Show error feedback
-                this.classList.add('shake');
-                setTimeout(() => {
-                    this.classList.remove('shake');
-                }, 600);
-            }
-        });
-    }
-    
-    // Prevent form submission via Enter key on required fields
-    form.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            const target = e.target;
-            const isButton = target.type === 'button' || target.type === 'submit';
-            const isTextarea = target.tagName === 'TEXTAREA';
-            
-            // Only allow Enter in textareas and buttons
-            if (!isTextarea && !isButton) {
+            if (!validateRequired()) {
+                console.log('❌ Validation failed, preventing form submission');
                 e.preventDefault();
-                
-                // Move focus to next input field
-                const formElements = Array.from(form.querySelectorAll('input, select, textarea, button'));
-                const currentIndex = formElements.indexOf(target);
-                const nextElement = formElements[currentIndex + 1];
-                
-                if (nextElement) {
-                    nextElement.focus();
-                }
+                return false;
             }
+            
+            console.log('✅ Validation passed, allowing form submission');
+            
+            // Show confirmation modal for final submission
+            if (action === 'submit_final') {
+                e.preventDefault();
+                showConfirmationModal();
+                return false;
+            }
+        }
+        
+        // For save_draft and prev_category, don't validate
+        if (action === 'save_draft' || action === 'prev_category') {
+            console.log('Saving draft or going to previous category, skipping validation');
         }
     });
     
-    // ✅ UBAH: Add real-time validation feedback untuk SEMUA pertanyaan
-    const allQuestions = document.querySelectorAll('.question-container');
-    
-    allQuestions.forEach(questionContainer => {
-        const inputs = questionContainer.querySelectorAll('input, select, textarea');
+    // Handle numeric inputs
+    document.querySelectorAll('input[type="number"], .numeric-only').forEach(input => {
+        input.addEventListener('input', function(e) {
+            // Remove non-numeric characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
         
-        inputs.forEach(input => {
-            // Real-time email validation
-            if (input.type === 'email' || questionContainer.dataset.questionType === 'email') {
-                input.addEventListener('input', function() {
-                    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-                    const validationMsg = questionContainer.querySelector('.validation-message');
+        input.addEventListener('keypress', function(e) {
+            // Only allow numbers
+            if (!/[0-9]/.test(e.key) && !['Backspace', 'Delete', 'Tab', 'Enter'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+    });
+    
+    // Handle email validation
+    document.querySelectorAll('input[type="email"]').forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.value.trim()) {
+                // More comprehensive email regex pattern
+                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                
+                if (!emailRegex.test(this.value.trim())) {
+                    this.classList.add('border-red-300');
+                    this.style.backgroundColor = '#fef2f2';
                     
-                    if (this.value.trim() !== '' && !emailRegex.test(this.value.trim())) {
-                        // Show email format error
-                        questionContainer.classList.add('border-red-300');
-                        questionContainer.style.borderColor = '#fca5a5';
-                        questionContainer.style.backgroundColor = '#fef2f2';
-                        
-                        if (!validationMsg) {
-                            const newValidationMsg = document.createElement('div');
-                            newValidationMsg.className = 'validation-message text-red-600 text-sm mt-2';
-                            questionContainer.appendChild(newValidationMsg);
+                    // Show validation message
+                    const questionContainer = this.closest('.question-container');
+                    if (questionContainer) {
+                        const validationMsg = questionContainer.querySelector('.validation-message');
+                        if (validationMsg) {
+                            validationMsg.textContent = 'Format email tidak valid! Email harus mengandung @ dan domain (contoh: nama@domain.com)';
+                            validationMsg.classList.remove('hidden');
                         }
-                        const currentValidationMsg = questionContainer.querySelector('.validation-message');
-                        currentValidationMsg.textContent = 'Format email tidak valid! Contoh: user@example.com';
-                        currentValidationMsg.classList.remove('hidden');
-                        currentValidationMsg.style.display = 'block';
-                    } else if (this.value.trim() !== '' && emailRegex.test(this.value.trim())) {
-                        // Valid email format
-                        questionContainer.classList.remove('border-red-300');
-                        questionContainer.style.borderColor = '';
-                        questionContainer.style.backgroundColor = '';
+                    }
+                } else {
+                    this.classList.remove('border-red-300');
+                    this.style.backgroundColor = '';
+                    
+                    // Hide validation message
+                    const questionContainer = this.closest('.question-container');
+                    if (questionContainer) {
+                        const validationMsg = questionContainer.querySelector('.validation-message');
                         if (validationMsg) {
                             validationMsg.classList.add('hidden');
-                            validationMsg.style.display = 'none';
                         }
-                        
-                        // Show success indicator temporarily
-                        questionContainer.classList.add('border-green-300', 'bg-green-50');
-                        setTimeout(() => {
-                            questionContainer.classList.remove('border-green-300', 'bg-green-50');
-                        }, 1000);
                     }
-                });
-            }
-            
-            input.addEventListener('change', function() {
-                // Clear validation error when user starts answering (for non-email fields)
-                if (input.type !== 'email' && questionContainer.dataset.questionType !== 'email') {
-                    questionContainer.classList.remove('border-red-300');
-                    questionContainer.style.borderColor = '';
-                    questionContainer.style.backgroundColor = '';
+                }
+            } else {
+                // Clear validation styles when empty
+                this.classList.remove('border-red-300');
+                this.style.backgroundColor = '';
+                
+                const questionContainer = this.closest('.question-container');
+                if (questionContainer) {
                     const validationMsg = questionContainer.querySelector('.validation-message');
                     if (validationMsg) {
                         validationMsg.classList.add('hidden');
-                        validationMsg.style.display = 'none';
-                    }
-                    
-                    // Add success indicator if question is now answered
-                    const questionId = questionContainer.dataset.questionId;
-                    const questionType = questionContainer.dataset.questionType;
-                    
-                    if (isQuestionAnswered(questionId, questionType, questionContainer)) {
-                        questionContainer.classList.add('border-green-300', 'bg-green-50');
-                        setTimeout(() => {
-                            questionContainer.classList.remove('border-green-300', 'bg-green-50');
-                        }, 1000);
                     }
                 }
-            });
+            }
+        });
+        
+        // Also validate on input (real-time validation)
+        input.addEventListener('input', function() {
+            if (this.value.trim()) {
+                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+                
+                if (!emailRegex.test(this.value.trim())) {
+                    this.classList.add('border-red-300');
+                    this.style.backgroundColor = '#fef2f2';
+                } else {
+                    this.classList.remove('border-red-300');
+                    this.style.backgroundColor = '';
+                    
+                    // Hide validation message when valid
+                    const questionContainer = this.closest('.question-container');
+                    if (questionContainer) {
+                        const validationMsg = questionContainer.querySelector('.validation-message');
+                        if (validationMsg) {
+                            validationMsg.classList.add('hidden');
+                        }
+                    }
+                }
+            }
         });
     });
     
     console.log('✅ Form validation initialized');
 }
 
-// ✅ TAMBAHAN: Function untuk menampilkan alert validasi
-function showValidationAlert(message) {
-    const alertElement = document.getElementById('validation-alert');
-    const messageElement = document.getElementById('validation-message');
+function initializeConfirmationModal() {
+    console.log('🔧 Initializing confirmation modal...');
     
-    if (alertElement && messageElement) {
-        messageElement.textContent = message;
-        alertElement.classList.remove('hidden');
+    const modal = document.getElementById('confirmation-modal');
+    const cancelButton = document.getElementById('cancel-submit');
+    const confirmButton = document.getElementById('confirm-submit');
+    const form = document.getElementById('questionnaire-form');
+    
+    if (!modal || !cancelButton || !confirmButton || !form) {
+        console.error('Confirmation modal elements not found');
+        return;
+    }
+    
+    // Cancel button
+    cancelButton.addEventListener('click', function() {
+        hideConfirmationModal();
+    });
+    
+    // Confirm button
+    confirmButton.addEventListener('click', function() {
+        console.log('User confirmed final submission');
+        hideConfirmationModal();
+        
+        // Create hidden input for final submission
+        const actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'action';
+        actionInput.value = 'submit_final';
+        form.appendChild(actionInput);
+        
+        // Submit the form
+        form.submit();
+    });
+    
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            hideConfirmationModal();
+        }
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            hideConfirmationModal();
+        }
+    });
+    
+    console.log('✅ Confirmation modal initialized');
+}
+
+function showConfirmationModal() {
+    console.log('📋 Showing confirmation modal');
+    const modal = document.getElementById('confirmation-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideConfirmationModal() {
+    console.log('❌ Hiding confirmation modal');
+    const modal = document.getElementById('confirmation-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+}
+
+function showValidationAlert(message) {
+    console.log('⚠️ Showing validation alert:', message);
+    const alert = document.getElementById('validation-alert');
+    const messageSpan = document.getElementById('validation-message');
+    
+    if (alert && messageSpan) {
+        messageSpan.textContent = message;
+        alert.classList.remove('hidden');
         
         // Auto hide after 5 seconds
         setTimeout(() => {
@@ -1135,83 +1138,11 @@ function showValidationAlert(message) {
     }
 }
 
-// ✅ TAMBAHAN: Function untuk menyembunyikan alert validasi
 function hideValidationAlert() {
-    const alertElement = document.getElementById('validation-alert');
-    if (alertElement) {
-        alertElement.classList.add('hidden');
-    }
-}
-
-// ✅ TAMBAHAN: Function untuk inisialisasi modal konfirmasi
-function initializeConfirmationModal() {
-    console.log('🔧 Initializing confirmation modal...');
-    
-    const modal = document.getElementById('confirmation-modal');
-    const cancelButton = document.getElementById('cancel-submit');
-    const confirmButton = document.getElementById('confirm-submit');
-    
-    if (cancelButton) {
-        cancelButton.addEventListener('click', function() {
-            hideConfirmationModal();
-        });
-    }
-    
-    if (confirmButton) {
-        confirmButton.addEventListener('click', function() {
-            console.log('User confirmed final submission');
-            
-            const form = document.getElementById('questionnaire-form');
-            
-            // Create and append action input
-            let actionInput = form.querySelector('input[name="action"]');
-            if (actionInput) {
-                actionInput.remove();
-            }
-            
-            actionInput = document.createElement('input');
-            actionInput.type = 'hidden';
-            actionInput.name = 'action';
-            actionInput.value = 'submit_final';
-            form.appendChild(actionInput);
-            
-            // Hide modal and submit form
-            hideConfirmationModal();
-            form.submit();
-        });
-    }
-    
-    // Close modal when clicking outside
-    if (modal) {
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                hideConfirmationModal();
-            }
-        });
-    }
-    
-    console.log('✅ Confirmation modal initialized');
-}
-
-// ✅ TAMBAHAN: Function untuk menampilkan modal konfirmasi
-function showConfirmationModal() {
-    const modal = document.getElementById('confirmation-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        
-        // Focus on cancel button for accessibility
-        const cancelButton = document.getElementById('cancel-submit');
-        if (cancelButton) {
-            setTimeout(() => cancelButton.focus(), 100);
-        }
-    }
-}
-
-// ✅ TAMBAHAN: Function untuk menyembunyikan modal konfirmasi
-function hideConfirmationModal() {
-    const modal = document.getElementById('confirmation-modal');
-    if (modal) {
-        modal.classList.add('hidden');
+    console.log('✅ Hiding validation alert');
+    const alert = document.getElementById('validation-alert');
+    if (alert) {
+        alert.classList.add('hidden');
     }
 }
 </script>

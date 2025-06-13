@@ -475,17 +475,82 @@
                                                                 <div class="flex items-start">
                                                                     <i class="fas fa-map-marker-alt text-red-600 mr-3 mt-1"></i>
                                                                     <div class="flex-1">
-                                                                        <div class="bg-green-50 rounded-lg p-4 border border-green-100">
-                                                                            <div class="flex items-start">
-                                                                                <i class="fas fa-map-pin text-green-600 mr-2 mt-1 text-sm"></i>
-                                                                                <div class="flex-1">
-                                                                                    <p class="font-semibold text-green-800 text-lg leading-relaxed">{{ $qData['answer'] }}</p>
+                                                                        @if(isset($qData['locationData']))
+                                                                            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+                                                                                <div class="flex items-start">
+                                                                                    <i class="fas fa-map-pin text-green-600 mr-2 mt-1 text-lg"></i>
+                                                                                    <div class="flex-1">
+                                                                                        <p class="font-semibold text-green-800 text-lg leading-relaxed">{{ $qData['answer'] }}</p>
+                                                                                        
+                                                                                        <!-- Detail lokasi lengkap -->
+                                                                                        <div class="mt-3 grid grid-cols-3 gap-3 text-sm">
+                                                                                            @if(isset($qData['locationData']['country_name']))
+                                                                                                <div class="bg-white rounded-lg p-2 border border-green-200">
+                                                                                                    <p class="text-xs text-green-600 font-medium">Negara:</p>
+                                                                                                    <p class="font-medium text-gray-700">{{ $qData['locationData']['country_name'] }}</p>
+                                                                                                </div>
+                                                                                            @endif
+                                                                                            
+                                                                                            @if(isset($qData['locationData']['state_name']))
+                                                                                                <div class="bg-white rounded-lg p-2 border border-green-200">
+                                                                                                    <p class="text-xs text-green-600 font-medium">Provinsi/State:</p>
+                                                                                                    <p class="font-medium text-gray-700">{{ $qData['locationData']['state_name'] }}</p>
+                                                                                                </div>
+                                                                                            @endif
+                                                                                            
+                                                                                            @if(isset($qData['locationData']['city_name']))
+                                                                                                <div class="bg-white rounded-lg p-2 border border-green-200">
+                                                                                                    <p class="text-xs text-green-600 font-medium">Kota:</p>
+                                                                                                    <p class="font-medium text-gray-700">{{ $qData['locationData']['city_name'] }}</p>
+                                                                                                </div>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                        
+                                                                                        <!-- Kode lokasi (jika tersedia) -->
+                                                                                        <div class="mt-3 text-xs text-gray-500">
+                                                                                            @if(isset($qData['locationData']['country_code']))
+                                                                                                <span class="inline-block bg-gray-100 rounded-full px-3 py-1 mr-2 mb-2">
+                                                                                                    <i class="fas fa-globe-americas mr-1"></i>
+                                                                                                    Kode Negara: {{ $qData['locationData']['country_code'] }}
+                                                                                                </span>
+                                                                                            @endif
+                                                                                            
+                                                                                            @if(isset($qData['locationData']['state_code']))
+                                                                                                <span class="inline-block bg-gray-100 rounded-full px-3 py-1 mr-2 mb-2">
+                                                                                                    <i class="fas fa-map mr-1"></i>
+                                                                                                    Kode Provinsi: {{ $qData['locationData']['state_code'] }}
+                                                                                                </span>
+                                                                                            @endif
+                                                                                            
+                                                                                            @if(isset($qData['locationData']['city_code']))
+                                                                                                <span class="inline-block bg-gray-100 rounded-full px-3 py-1 mr-2 mb-2">
+                                                                                                    <i class="fas fa-city mr-1"></i>
+                                                                                                    Kode Kota: {{ $qData['locationData']['city_code'] }}
+                                                                                                </span>
+                                                                                            @endif
+                                                                                        </div>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
-                                                                        </div>
+                                                                        @else
+                                                                            <!-- Fallback jika tidak ada data lokasi terstruktur -->
+                                                                            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+                                                                                <div class="flex items-start">
+                                                                                    <i class="fas fa-map-pin text-green-600 mr-2 mt-1 text-sm"></i>
+                                                                                    <div class="flex-1">
+                                                                                        <p class="font-semibold text-green-800 text-lg leading-relaxed">{{ $qData['answer'] }}</p>
+                                                                                        <p class="text-xs text-gray-500 mt-2">
+                                                                                            <i class="fas fa-info-circle mr-1"></i>
+                                                                                            Data lokasi terperinci tidak tersedia
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        @endif
                                                                     </div>
                                                                 </div>
                                                             </div>
+
                                                         @elseif($qData['question']->type === 'option')
                                                             <!-- Single Option Answer -->
                                                             <div class="bg-white border border-green-200 rounded-md p-4">

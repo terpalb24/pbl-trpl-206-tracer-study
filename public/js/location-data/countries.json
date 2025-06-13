@@ -1,0 +1,50 @@
+[
+  {
+    "code": "ID",
+    "name": "Indonesia"
+  },
+  {
+    "code": "MY", 
+    "name": "Malaysia"
+  },
+  {
+    "code": "SG",
+    "name": "Singapura"
+  },
+  {
+    "code": "US",
+    "name": "Amerika Serikat"
+  },
+  {
+    "code": "AU",
+    "name": "Australia"
+  },
+  {
+    "code": "GB",
+    "name": "Britania Raya"
+  },
+  {
+    "code": "JP",
+    "name": "Jepang"
+  },
+  {
+    "code": "CN",
+    "name": "Tiongkok"
+  },
+  {
+    "code": "KR",
+    "name": "Korea Selatan"
+  },
+  {
+    "code": "TH",
+    "name": "Thailand"
+  },
+  {
+    "code": "VN",
+    "name": "Vietnam"
+  },
+  {
+    "code": "OTHER",
+    "name": "Lainnya"
+  }
+]

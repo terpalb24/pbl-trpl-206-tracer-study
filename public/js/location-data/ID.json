@@ -1,0 +1,70 @@
+{
+  "states": [
+    {
+      "code": "ID-AC",
+      "name": "Aceh",
+      "cities": [
+        {"code": "ID-AC-BTJ", "name": "Banda Aceh"},
+        {"code": "ID-AC-LHK", "name": "Lhokseumawe"},
+        {"code": "ID-AC-LSM", "name": "Langsa"},
+        {"code": "ID-AC-SBG", "name": "Sabang"},
+        {"code": "ID-AC-MEU", "name": "Meulaboh"}
+      ]
+    },
+    {
+      "code": "ID-SU",
+      "name": "Sumatera Utara",
+      "cities": [
+        {"code": "ID-SU-MES", "name": "Medan"},
+        {"code": "ID-SU-BTT", "name": "Binjai"},
+        {"code": "ID-SU-PSP", "name": "Padang Sidempuan"},
+        {"code": "ID-SU-TEB", "name": "Tebing Tinggi"},
+        {"code": "ID-SU-TJB", "name": "Tanjung Balai"}
+      ]
+    },
+    {
+      "code": "ID-JK",
+      "name": "Jakarta",
+      "cities": [
+        {"code": "ID-JK-JKT", "name": "Jakarta Pusat"},
+        {"code": "ID-JK-JKU", "name": "Jakarta Utara"},
+        {"code": "ID-JK-JKS", "name": "Jakarta Selatan"},
+        {"code": "ID-JK-JKB", "name": "Jakarta Barat"},
+        {"code": "ID-JK-JKT", "name": "Jakarta Timur"}
+      ]
+    },
+    {
+      "code": "ID-JB",
+      "name": "Jawa Barat",
+      "cities": [
+        {"code": "ID-JB-BDG", "name": "Bandung"},
+        {"code": "ID-JB-BGR", "name": "Bogor"},
+        {"code": "ID-JB-CBN", "name": "Cirebon"},
+        {"code": "ID-JB-BKS", "name": "Bekasi"},
+        {"code": "ID-JB-TSM", "name": "Tasikmalaya"}
+      ]
+    },
+    {
+      "code": "ID-JT",
+      "name": "Jawa Tengah",
+      "cities": [
+        {"code": "ID-JT-SMG", "name": "Semarang"},
+        {"code": "ID-JT-SLO", "name": "Solo"},
+        {"code": "ID-JT-SLT", "name": "Salatiga"},
+        {"code": "ID-JT-PWT", "name": "Purwokerto"},
+        {"code": "ID-JT-TGL", "name": "Tegal"}
+      ]
+    },
+    {
+      "code": "ID-JI",
+      "name": "Jawa Timur",
+      "cities": [
+        {"code": "ID-JI-SUB", "name": "Surabaya"},
+        {"code": "ID-JI-MLG", "name": "Malang"},
+        {"code": "ID-JI-KDR", "name": "Kediri"},
+        {"code": "ID-JI-JBR", "name": "Jember"},
+        {"code": "ID-JI-PSN", "name": "Pasuruan"}
+      ]
+    }
+  ]
+}
