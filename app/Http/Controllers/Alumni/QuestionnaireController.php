@@ -468,24 +468,31 @@ class QuestionnaireController extends Controller
                             'final_other_answer' => $otherAnswer
                         ]);
                         
-                        $saved = Tb_User_Answer_Item::updateOrCreate([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $questionId
-                        ], [
-                            'answer' => $finalAnswer,
-                            'id_questions_options' => $optionId,
-                            'other_answer' => !empty($otherAnswer) ? trim($otherAnswer) : null
-                        ]);
-                        
-                        \Log::info('Regular answer saved', [
-                            'question_id' => $questionId,
-                            'answer' => $finalAnswer,
-                            'option_id' => $optionId,
-                            'other_answer' => $otherAnswer,
-                            'id' => $saved->id_user_answer_item
-                        ]);
-                        
-                        $savedCount++;
+                        try {
+                            $saved = Tb_User_Answer_Item::updateOrCreate([
+                                'id_user_answer' => $userAnswer->id_user_answer,
+                                'id_question' => $questionId
+                            ], [
+                                'answer' => $finalAnswer,
+                                'id_questions_options' => $optionId,
+                                'other_answer' => !empty($otherAnswer) ? trim($otherAnswer) : null
+                            ]);
+                            \Log::info('Regular answer saved', [
+                                'question_id' => $questionId,
+                                'answer' => $finalAnswer,
+                                'option_id' => $optionId,
+                                'other_answer' => $otherAnswer,
+                                'id' => $saved->id_user_answer_item
+                            ]);
+                            $savedCount++;
+                        } catch (\Exception $e) {
+                            \Log::error('DB error on regular answer, skipped', [
+                                'question_id' => $questionId,
+                                'error' => $e->getMessage()
+                            ]);
+                            // skip error
+                            continue;
+                        }
                     } catch (\Exception $e) {
                         \Log::error('Failed to save regular answer', [
                             'question_id' => $questionId,
@@ -493,6 +500,8 @@ class QuestionnaireController extends Controller
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString()
                         ]);
+                        // skip error
+                        continue;
                     }
                 }
             }
@@ -520,29 +529,43 @@ class QuestionnaireController extends Controller
                                 ->first();
                                 
                             if ($answerItem) {
-                                $answerItem->update(['other_answer' => trim($otherAnswer)]);
-                                
-                                \Log::info('Other answer updated to existing', [
-                                    'source' => $sourceName,
-                                    'question_id' => $questionId,
-                                    'other_answer' => $otherAnswer,
-                                    'existing_answer_id' => $answerItem->id_user_answer_item
-                                ]);
+                                try {
+                                    $answerItem->update(['other_answer' => trim($otherAnswer)]);
+                                    \Log::info('Other answer updated to existing', [
+                                        'source' => $sourceName,
+                                        'question_id' => $questionId,
+                                        'other_answer' => $otherAnswer,
+                                        'existing_answer_id' => $answerItem->id_user_answer_item
+                                    ]);
+                                } catch (\Exception $e) {
+                                    \Log::error('DB error on update other_answer, skipped', [
+                                        'question_id' => $questionId,
+                                        'error' => $e->getMessage()
+                                    ]);
+                                    continue;
+                                }
                             } else {
                                 // Jika belum ada answer item, buat baru khusus untuk other_answer
-                                $newAnswerItem = Tb_User_Answer_Item::create([
-                                    'id_user_answer' => $userAnswer->id_user_answer,
-                                    'id_question' => $questionId,
-                                    'answer' => '', // Empty answer tapi ada other_answer
-                                    'other_answer' => trim($otherAnswer)
-                                ]);
-                                
-                                \Log::info('New answer item created for other_answer only', [
-                                    'source' => $sourceName,
-                                    'question_id' => $questionId,
-                                    'other_answer' => $otherAnswer,
-                                    'new_answer_id' => $newAnswerItem->id_user_answer_item
-                                ]);
+                                try {
+                                    $newAnswerItem = Tb_User_Answer_Item::create([
+                                        'id_user_answer' => $userAnswer->id_user_answer,
+                                        'id_question' => $questionId,
+                                        'answer' => '', // Empty answer tapi ada other_answer
+                                        'other_answer' => trim($otherAnswer)
+                                    ]);
+                                    \Log::info('New answer item created for other_answer only', [
+                                        'source' => $sourceName,
+                                        'question_id' => $questionId,
+                                        'other_answer' => $otherAnswer,
+                                        'new_answer_id' => $newAnswerItem->id_user_answer_item
+                                    ]);
+                                } catch (\Exception $e) {
+                                    \Log::error('DB error on create other_answer only, skipped', [
+                                        'question_id' => $questionId,
+                                        'error' => $e->getMessage()
+                                    ]);
+                                    continue;
+                                }
                             }
                         } catch (\Exception $e) {
                             \Log::error('Failed to update other answer', [
@@ -550,6 +573,8 @@ class QuestionnaireController extends Controller
                                 'question_id' => $questionId,
                                 'error' => $e->getMessage()
                             ]);
+                            // skip error
+                            continue;
                         }
                     }
                 }
@@ -569,9 +594,17 @@ class QuestionnaireController extends Controller
                         ]);
                         
                         // Delete existing answers for this question first
-                        Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
-                            ->where('id_question', $questionId)
-                            ->delete();
+                        try {
+                            Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+                                ->where('id_question', $questionId)
+                                ->delete();
+                        } catch (\Exception $e) {
+                            \Log::error('DB error on delete multiple choice, skipped', [
+                                'question_id' => $questionId,
+                                'error' => $e->getMessage()
+                            ]);
+                            // skip error
+                        }
                         
                         foreach ($selectedOptions as $optionId) {
                             if (!empty($optionId)) {
@@ -593,23 +626,30 @@ class QuestionnaireController extends Controller
                                         'is_other_option' => $option ? $option->is_other_option : false
                                     ]);
                                     
-                                    $saved = Tb_User_Answer_Item::create([
-                                        'id_user_answer' => $userAnswer->id_user_answer,
-                                        'id_question' => $questionId,
-                                        'answer' => $finalAnswer,
-                                        'id_questions_options' => is_numeric($optionId) ? $optionId : null,
-                                        'other_answer' => !empty($multipleOtherAnswer) ? trim($multipleOtherAnswer) : null
-                                    ]);
-                                    
-                                    \Log::info('Multiple choice answer saved', [
-                                        'question_id' => $questionId,
-                                        'option_id' => $optionId,
-                                        'answer' => $finalAnswer,
-                                        'other_answer' => $multipleOtherAnswer,
-                                        'id' => $saved->id_user_answer_item
-                                    ]);
-                                    
-                                    $savedCount++;
+                                    try {
+                                        $saved = Tb_User_Answer_Item::create([
+                                            'id_user_answer' => $userAnswer->id_user_answer,
+                                            'id_question' => $questionId,
+                                            'answer' => $finalAnswer,
+                                            'id_questions_options' => is_numeric($optionId) ? $optionId : null,
+                                            'other_answer' => !empty($multipleOtherAnswer) ? trim($multipleOtherAnswer) : null
+                                        ]);
+                                        \Log::info('Multiple choice answer saved', [
+                                            'question_id' => $questionId,
+                                            'option_id' => $optionId,
+                                            'answer' => $finalAnswer,
+                                            'other_answer' => $multipleOtherAnswer,
+                                            'id' => $saved->id_user_answer_item
+                                        ]);
+                                        $savedCount++;
+                                    } catch (\Exception $e) {
+                                        \Log::error('DB error on save multiple choice, skipped', [
+                                            'question_id' => $questionId,
+                                            'option_id' => $optionId,
+                                            'error' => $e->getMessage()
+                                        ]);
+                                        continue;
+                                    }
                                 }
                             }
                         }
@@ -618,6 +658,8 @@ class QuestionnaireController extends Controller
                             'question_id' => $questionId,
                             'error' => $e->getMessage()
                         ]);
+                        // skip error
+                        continue;
                     }
                 }
             }
@@ -643,21 +685,31 @@ class QuestionnaireController extends Controller
                                     ->first();
                                     
                                 if ($answerItem) {
-                                    $answerItem->update(['other_answer' => trim($otherAnswer)]);
-                                    
-                                    \Log::info('Multiple other answer updated', [
-                                        'question_id' => $questionId,
-                                        'option_id' => $optionId,
-                                        'other_answer' => $otherAnswer,
-                                        'existing_answer_id' => $answerItem->id_user_answer_item
-                                    ]);
+                                    try {
+                                        $answerItem->update(['other_answer' => trim($otherAnswer)]);
+                                        \Log::info('Multiple other answer updated', [
+                                            'question_id' => $questionId,
+                                            'option_id' => $optionId,
+                                            'other_answer' => $otherAnswer,
+                                            'existing_answer_id' => $answerItem->id_user_answer_item
+                                        ]);
+                                    } catch (\Exception $e) {
+                                        \Log::error('DB error on update multiple other answer, skipped', [
+                                            'question_id' => $questionId,
+                                            'option_id' => $optionId,
+                                            'error' => $e->getMessage()
+                                        ]);
+                                        continue;
+                                    }
                                 }
                             } catch (\Exception $e) {
                                 \Log::error('Failed to update multiple other answer', [
                                     'question_id' => $questionId,
                                     'option_id' => $optionId,
                                     'error' => $e->getMessage()
-                            ]);
+                                ]);
+                                // skip error
+                                continue;
                             }
                         }
                     }
@@ -674,27 +726,35 @@ class QuestionnaireController extends Controller
                         $locationObject = json_decode($locationData);
                         
                         // Simpan sebagai JSON di database
-                        $saved = Tb_User_Answer_Item::updateOrCreate([
-                            'id_user_answer' => $userAnswer->id_user_answer,
-                            'id_question' => $questionId
-                        ], [
-                            'answer' => $locationData, // Store as JSON string
-                            'id_questions_options' => null,
-                            'other_answer' => null
-                        ]);
-                        
-                        \Log::info('Location answer saved', [
-                            'question_id' => $questionId,
-                            'location_data' => $locationObject,
-                            'id' => $saved->id_user_answer_item
-                        ]);
-                        
-                        $savedCount++;
+                        try {
+                            $saved = Tb_User_Answer_Item::updateOrCreate([
+                                'id_user_answer' => $userAnswer->id_user_answer,
+                                'id_question' => $questionId
+                            ], [
+                                'answer' => $locationData, // Store as JSON string
+                                'id_questions_options' => null,
+                                'other_answer' => null
+                            ]);
+                            \Log::info('Location answer saved', [
+                                'question_id' => $questionId,
+                                'location_data' => $locationObject,
+                                'id' => $saved->id_user_answer_item
+                            ]);
+                            $savedCount++;
+                        } catch (\Exception $e) {
+                            \Log::error('DB error on save location answer, skipped', [
+                                'question_id' => $questionId,
+                                'error' => $e->getMessage()
+                            ]);
+                            continue;
+                        }
                     } catch (\Exception $e) {
                         \Log::error('Failed to save location answer', [
                             'question_id' => $questionId,
                             'error' => $e->getMessage()
                         ]);
+                        // skip error
+                        continue;
                     }
                 }
             }
