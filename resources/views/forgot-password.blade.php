@@ -26,6 +26,20 @@
                 {{ session('error') }}
             </div>
             @endif
+            @if(session('status'))
+            <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
+                {{ session('status') }}
+            </div>
+            @endif
+            @if ($errors->any())
+            <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
+              <ul>
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+            @endif
             <form method="POST" action="/forgot-password" class="space-y-5">
                 @csrf
                 <!-- Email Reset Password -->

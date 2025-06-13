@@ -42,6 +42,63 @@
         @endif
     </div>
 
+    <!-- Peringatan perusahaan tidak lengkap -->
+    @if(isset($incompleteCompanies) && $incompleteCompanies->count())
+        <div class="mx-6 mb-6">
+            <div class="p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
+                <strong>Perhatian:</strong> Berikut adalah perusahaan yang ditambahkan oleh alumni namun belum memiliki data lengkap.<br>
+                Mohon untuk melengkapi data perusahaan berikut.
+            </div>
+        </div>
+        <div class="mx-6 mb-8 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-4 border-b font-semibold text-yellow-800 bg-yellow-50">
+                Perusahaan Tidak Lengkap (Ditambahkan oleh Alumni)
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-center">
+                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">No</th>
+                            <th class="px-4 py-3">Nama Perusahaan</th>
+                            <th class="px-4 py-3">Ditambahkan Oleh Alumni</th>
+                            <th class="px-4 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        @foreach($incompleteCompanies as $index => $company)
+                            <tr class="border-t hover:bg-gray-50">
+                                <td class="px-4 py-3">{{ $index + 1 }}</td>
+                                <td class="px-4 py-3">{{ $company->company_name }}</td>
+                                <td class="px-4 py-3">
+                                    @php
+                                        $alumniList = [];
+                                        foreach($company->jobHistories as $jh) {
+                                            if ($jh->alumni) {
+                                                $alumniList[] = $jh->alumni->name . ' (NIM: ' . $jh->alumni->nim . ')';
+                                            }
+                                        }
+                                    @endphp
+                                    @if(count($alumniList))
+                                        {!! implode('<br>', $alumniList) !!}
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ route('admin.company.edit', $company->id_company) }}"
+                                       class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm flex items-center justify-center"
+                                       title="Lengkapi Data">
+                                       <i class="bi bi-pencil-square mr-1"></i>Lengkapi
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
     <!-- Data Table Section -->
     <div class="p-6">
         <div class="flex justify-between items-center mb-6">
@@ -127,60 +184,6 @@
             </div>
         </div>
     </div>
-    {{-- Peringatan dan daftar perusahaan tidak lengkap --}}
-    @if(isset($incompleteCompanies) && $incompleteCompanies->count())
-        <div class="mb-8 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded">
-            <strong>Perhatian:</strong> Berikut adalah perusahaan yang ditambahkan oleh alumni namun belum memiliki data lengkap.<br>
-            Mohon untuk melengkapi data perusahaan berikut.
-        </div>
-        <div class="mb-8 bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="p-4 border-b font-semibold text-yellow-800 bg-yellow-50">
-                Perusahaan Tidak Lengkap (Ditambahkan oleh Alumni)
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-center">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3">No</th>
-                            <th class="px-4 py-3">Nama Perusahaan</th>
-                            <th class="px-4 py-3">Ditambahkan Oleh Alumni</th>
-                            <th class="px-4 py-3">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        @foreach($incompleteCompanies as $index => $company)
-                            <tr class="border-t hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ $index + 1 }}</td>
-                                <td class="px-4 py-3">{{ $company->company_name }}</td>
-                                <td class="px-4 py-3">
-                                    @php
-                                        $alumniList = [];
-                                        foreach($company->jobHistories as $jh) {
-                                            if ($jh->alumni) {
-                                                $alumniList[] = $jh->alumni->name . ' (NIM: ' . $jh->alumni->nim . ')';
-                                            }
-                                        }
-                                    @endphp
-                                    @if(count($alumniList))
-                                        {!! implode('<br>', $alumniList) !!}
-                                    @else
-                                        <span class="text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3">
-                                    <a href="{{ route('admin.company.edit', $company->id_company) }}"
-                                       class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm flex items-center justify-center"
-                                       title="Lengkapi Data">
-                                       <i class="bi bi-pencil-square mr-1"></i>Lengkapi
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
    <!-- script JS  -->
            <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>

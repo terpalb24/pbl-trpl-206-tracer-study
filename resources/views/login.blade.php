@@ -31,6 +31,11 @@
                 {{ session('error') }}
             </div>
             @endif
+            @if(session('status'))
+            <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
+                {{ session('status') }}
+            </div>
+            @endif
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
                 <!-- Username -->
@@ -80,12 +85,6 @@
                     <li>{{ $error }}</li>
                     @endforeach
                   </ul>
-                </div>
-                @endif
-
-                @if (session('status'))
-                <div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-                  {{ session('status') }}
                 </div>
                 @endif
             </form>

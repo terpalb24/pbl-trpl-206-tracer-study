@@ -15,6 +15,20 @@
                 {{ session('error') }}
             </div>
             @endif
+            @if(session('status'))
+            <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
+                {{ session('status') }}
+            </div>
+            @endif
+            @if ($errors->any())
+            <div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
+              <ul>
+                @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+                @endforeach
+              </ul>
+            </div>
+            @endif
             <form method="POST" action="/reset-password-confirmation" class="space-y-5">
                 @csrf
                 <!-- Email -->
@@ -26,19 +40,25 @@
                     </div>
                 </div>
                 <!-- Password -->
-                 <div>
+                <div>
                     <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Masukkan Kata Sandi Baru</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-user"></i></span>
-                        <input id="password" name="password" type="password" required autofocus class="input-field" required placeholder="Masukkan Kata Sandi Baru">
+                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-lock"></i></span>
+                        <input id="password" name="password" type="password" required class="input-field" placeholder="Masukkan Kata Sandi Baru">
+                        <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-2.5 text-gray-500 focus:outline-none">
+                            <i class="fas fa-eye" id="toggleIcon-password"></i>
+                        </button>
                     </div>
                 </div>
                 <!-- Password Confirmation -->
-                 <div>
-                    <label for="password" class="block mb-1 text-sm font-medium text-gray-700">Konfirmasi Kata Sandi Baru</label>
+                <div>
+                    <label for="password_confirmation" class="block mb-1 text-sm font-medium text-gray-700">Konfirmasi Kata Sandi Baru</label>
                     <div class="relative">
-                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-user"></i></span>
-                        <input id="repassword" name="password_confirmation" type="password" required autofocus class="input-field" required placeholder="Konfirmasi Kata Sandi Baru">
+                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-lock"></i></span>
+                        <input id="password_confirmation" name="password_confirmation" type="password" required class="input-field" placeholder="Konfirmasi Kata Sandi Baru">
+                        <button type="button" onclick="togglePassword('password_confirmation')" class="absolute right-3 top-2.5 text-gray-500 focus:outline-none">
+                            <i class="fas fa-eye" id="toggleIcon-password_confirmation"></i>
+                        </button>
                     </div>
                 </div>
                 <!-- Hidden Token -->
@@ -46,16 +66,6 @@
                     <div class="relative">
                         <input id="token" name="token" type="hidden" value="{{ $token }}" required autofocus class="input-field">
                     </div>
-                    <!-- Alert untuk berhasil kirim email atau ngga -->
-    @if ($errors->any())
-<div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-  <ul>
-    @foreach ($errors->all() as $error)
-    <li>{{ $error }}</li>
-    @endforeach
-  </ul>
-</div>
-@endif
                 </div>
 
                 <!-- Buttons -->
