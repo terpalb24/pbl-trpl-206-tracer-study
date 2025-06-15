@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "KR-SE",
+      "name": "Seoul",
+      "cities": [
+        {"code": "KR-SE-SEO", "name": "Seoul"},
+        {"code": "KR-SE-GAN", "name": "Gangnam"},
+        {"code": "KR-SE-HON", "name": "Hongdae"},
+        {"code": "KR-SE-INS", "name": "Insadong"},
+        {"code": "KR-SE-JUN", "name": "Jung-gu"}
+      ]
+    },
+    {
+      "code": "KR-PU",
+      "name": "Busan",
+      "cities": [
+        {"code": "KR-PU-BUS", "name": "Busan"},
+        {"code": "KR-PU-HAE", "name": "Haeundae"},
+        {"code": "KR-PU-JUN", "name": "Jung-gu"},
+        {"code": "KR-PU-SAS", "name": "Sasang"}
+      ]
+    },
+    {
+      "code": "KR-IC",
+      "name": "Incheon",
+      "cities": [
+        {"code": "KR-IC-INC", "name": "Incheon"},
+        {"code": "KR-IC-YEO", "name": "Yeonsu"},
+        {"code": "KR-IC-NAM", "name": "Namdong"}
+      ]
+    },
+    {
+      "code": "KR-DG",
+      "name": "Daegu",
+      "cities": [
+        {"code": "KR-DG-DAE", "name": "Daegu"},
+        {"code": "KR-DG-JUN", "name": "Jung-gu"},
+        {"code": "KR-DG-SU", "name": "Suseong"}
+      ]
+    }
+  ]
+}

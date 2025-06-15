@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "BH-13",
+      "name": "Capital",
+      "cities": [
+        {"code": "BH-13-MAN", "name": "Manama"},
+        {"code": "BH-13-MUH", "name": "Muharraq"},
+        {"code": "BH-13-JID", "name": "Jidhafs"},
+        {"code": "BH-13-ADA", "name": "Adliya"}
+      ]
+    },
+    {
+      "code": "BH-14",
+      "name": "Muharraq",
+      "cities": [
+        {"code": "BH-14-AIR", "name": "Bahrain International Airport"},
+        {"code": "BH-14-HIR", "name": "Hidd"},
+        {"code": "BH-14-ARA", "name": "Arad"}
+      ]
+    },
+    {
+      "code": "BH-15",
+      "name": "Northern",
+      "cities": [
+        {"code": "BH-15-HAM", "name": "Hamad Town"},
+        {"code": "BH-15-ISA", "name": "Isa Town"},
+        {"code": "BH-15-BUD", "name": "Budaiya"}
+      ]
+    },
+    {
+      "code": "BH-17",
+      "name": "Southern",
+      "cities": [
+        {"code": "BH-17-ZAL", "name": "Zallaq"},
+        {"code": "BH-17-AWA", "name": "Awali"},
+        {"code": "BH-17-RIF", "name": "Riffa"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "states": [
+    {
+      "code": "UY-MO",
+      "name": "Montevideo",
+      "cities": [
+        {"code": "UY-MO-MON", "name": "Montevideo"}
+      ]
+    },
+    {
+      "code": "UY-CA",
+      "name": "Canelones",
+      "cities": [
+        {"code": "UY-CA-CAN", "name": "Canelones"},
+        {"code": "UY-CA-LPC", "name": "Las Piedras"},
+        {"code": "UY-CA-PAR", "name": "Pando"},
+        {"code": "UY-CA-SRA", "name": "Santa Lucía"}
+      ]
+    },
+    {
+      "code": "UY-MA",
+      "name": "Maldonado",
+      "cities": [
+        {"code": "UY-MA-MAL", "name": "Maldonado"},
+        {"code": "UY-MA-PDE", "name": "Punta del Este"},
+        {"code": "UY-MA-SCA", "name": "San Carlos"}
+      ]
+    },
+    {
+      "code": "UY-RV",
+      "name": "Rivera",
+      "cities": [
+        {"code": "UY-RV-RIV", "name": "Rivera"},
+        {"code": "UY-RV-TRA", "name": "Tranqueras"}
+      ]
+    }
+  ]
+}

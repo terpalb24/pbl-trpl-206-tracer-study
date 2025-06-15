@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "LB-BA",
+      "name": "Beirut",
+      "cities": [
+        {"code": "LB-BA-BEY", "name": "Beirut"},
+        {"code": "LB-BA-ACH", "name": "Achrafieh"},
+        {"code": "LB-BA-HAM", "name": "Hamra"},
+        {"code": "LB-BA-VER", "name": "Verdun"}
+      ]
+    },
+    {
+      "code": "LB-JL",
+      "name": "Mount Lebanon",
+      "cities": [
+        {"code": "LB-JL-JOU", "name": "Jounieh"},
+        {"code": "LB-JL-BAA", "name": "Baabda"},
+        {"code": "LB-JL-ZAH", "name": "Zahle"},
+        {"code": "LB-JL-BYB", "name": "Byblos"}
+      ]
+    },
+    {
+      "code": "LB-JA",
+      "name": "South Lebanon",
+      "cities": [
+        {"code": "LB-JA-SID", "name": "Sidon"},
+        {"code": "LB-JA-TYR", "name": "Tyre"},
+        {"code": "LB-JA-NAB", "name": "Nabatieh"},
+        {"code": "LB-JA-BEN", "name": "Bent Jbeil"}
+      ]
+    },
+    {
+      "code": "LB-AS",
+      "name": "North Lebanon",
+      "cities": [
+        {"code": "LB-AS-TRI", "name": "Tripoli"},
+        {"code": "LB-AS-MIN", "name": "Miniyeh"},
+        {"code": "LB-AS-ZGH", "name": "Zgharta"},
+        {"code": "LB-AS-BAT", "name": "Batroun"}
+      ]
+    }
+  ]
+}

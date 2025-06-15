@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "CL-RM",
+      "name": "Santiago Metropolitan",
+      "cities": [
+        {"code": "CL-RM-SAN", "name": "Santiago"},
+        {"code": "CL-RM-MAI", "name": "Maipú"},
+        {"code": "CL-RM-PUD", "name": "Puente Alto"},
+        {"code": "CL-RM-LAS", "name": "Las Condes"}
+      ]
+    },
+    {
+      "code": "CL-VS",
+      "name": "Valparaíso",
+      "cities": [
+        {"code": "CL-VS-VAL", "name": "Valparaíso"},
+        {"code": "CL-VS-VIN", "name": "Viña del Mar"},
+        {"code": "CL-VS-SAN", "name": "San Antonio"},
+        {"code": "CL-VS-QUI", "name": "Quilpué"}
+      ]
+    },
+    {
+      "code": "CL-BI",
+      "name": "Biobío",
+      "cities": [
+        {"code": "CL-BI-CON", "name": "Concepción"},
+        {"code": "CL-BI-TAL", "name": "Talcahuano"},
+        {"code": "CL-BI-CHI", "name": "Chillán"},
+        {"code": "CL-BI-LOS", "name": "Los Ángeles"}
+      ]
+    },
+    {
+      "code": "CL-AN",
+      "name": "Antofagasta",
+      "cities": [
+        {"code": "CL-AN-ANT", "name": "Antofagasta"},
+        {"code": "CL-AN-CAL", "name": "Calama"},
+        {"code": "CL-AN-MEJ", "name": "Mejillones"}
+      ]
+    }
+  ]
+}

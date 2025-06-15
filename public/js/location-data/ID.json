@@ -23,6 +23,94 @@
       ]
     },
     {
+      "code": "ID-SB",
+      "name": "Sumatera Barat",
+      "cities": [
+        {"code": "ID-SB-PDG", "name": "Padang"},
+        {"code": "ID-SB-BCK", "name": "Bukittinggi"},
+        {"code": "ID-SB-PYK", "name": "Payakumbuh"},
+        {"code": "ID-SB-SAW", "name": "Sawahlunto"},
+        {"code": "ID-SB-SOL", "name": "Solok"}
+      ]
+    },
+    {
+      "code": "ID-RI",
+      "name": "Riau",
+      "cities": [
+        {"code": "ID-RI-PKU", "name": "Pekanbaru"},
+        {"code": "ID-RI-DUM", "name": "Dumai"},
+        {"code": "ID-RI-BGL", "name": "Bengkalis"},
+        {"code": "ID-RI-SIK", "name": "Siak"},
+        {"code": "ID-RI-IND", "name": "Indragiri Hilir"}
+      ]
+    },
+    {
+      "code": "ID-KR",
+      "name": "Kepulauan Riau",
+      "cities": [
+        {"code": "ID-KR-TPN", "name": "Tanjung Pinang"},
+        {"code": "ID-KR-BTM", "name": "Batam"},
+        {"code": "ID-KR-BIN", "name": "Bintan"},
+        {"code": "ID-KR-KRM", "name": "Karimun"},
+        {"code": "ID-KR-LGA", "name": "Lingga"}
+      ]
+    },
+    {
+      "code": "ID-JA",
+      "name": "Jambi",
+      "cities": [
+        {"code": "ID-JA-JMB", "name": "Jambi"},
+        {"code": "ID-JA-SUN", "name": "Sungai Penuh"},
+        {"code": "ID-JA-MES", "name": "Merangin"},
+        {"code": "ID-JA-BUN", "name": "Bungo"},
+        {"code": "ID-JA-TEB", "name": "Tebo"}
+      ]
+    },
+    {
+      "code": "ID-SS",
+      "name": "Sumatera Selatan",
+      "cities": [
+        {"code": "ID-SS-PLG", "name": "Palembang"},
+        {"code": "ID-SS-PRB", "name": "Prabumulih"},
+        {"code": "ID-SS-LBL", "name": "Lubuk Linggau"},
+        {"code": "ID-SS-PGR", "name": "Pagar Alam"},
+        {"code": "ID-SS-MSI", "name": "Musi Rawas"}
+      ]
+    },
+    {
+      "code": "ID-BE",
+      "name": "Bengkulu",
+      "cities": [
+        {"code": "ID-BE-BKL", "name": "Bengkulu"},
+        {"code": "ID-BE-ARG", "name": "Argamakmur"},
+        {"code": "ID-BE-CRP", "name": "Curup"},
+        {"code": "ID-BE-MAN", "name": "Manna"},
+        {"code": "ID-BE-BEN", "name": "Benteng"}
+      ]
+    },
+    {
+      "code": "ID-LA",
+      "name": "Lampung",
+      "cities": [
+        {"code": "ID-LA-BDL", "name": "Bandar Lampung"},
+        {"code": "ID-LA-MET", "name": "Metro"},
+        {"code": "ID-LA-KOT", "name": "Kotabumi"},
+        {"code": "ID-LA-KRU", "name": "Krui"},
+        {"code": "ID-LA-LIP", "name": "Liwa"}
+      ]
+    },
+    {
+      "code": "ID-BB",
+      "name": "Bangka Belitung",
+      "cities": [
+        {"code": "ID-BB-PGP", "name": "Pangkal Pinang"},
+        {"code": "ID-BB-TOB", "name": "Toboali"},
+        {"code": "ID-BB-SUN", "name": "Sungai Liat"},
+        {"code": "ID-BB-MAN", "name": "Manggar"},
+        {"code": "ID-BB-MEN", "name": "Mentok"}
+      ]
+    },
+    {
       "code": "ID-JK",
       "name": "Jakarta",
       "cities": [
@@ -41,7 +129,21 @@
         {"code": "ID-JB-BGR", "name": "Bogor"},
         {"code": "ID-JB-CBN", "name": "Cirebon"},
         {"code": "ID-JB-BKS", "name": "Bekasi"},
-        {"code": "ID-JB-TSM", "name": "Tasikmalaya"}
+        {"code": "ID-JB-TSM", "name": "Tasikmalaya"},
+        {"code": "ID-JB-DPK", "name": "Depok"},
+        {"code": "ID-JB-SUK", "name": "Sukabumi"},
+        {"code": "ID-JB-CIM", "name": "Cimahi"}
+      ]
+    },
+    {
+      "code": "ID-BT",
+      "name": "Banten",
+      "cities": [
+        {"code": "ID-BT-SRG", "name": "Serang"},
+        {"code": "ID-BT-CIL", "name": "Cilegon"},
+        {"code": "ID-BT-TNG", "name": "Tangerang"},
+        {"code": "ID-BT-TSL", "name": "Tangerang Selatan"},
+        {"code": "ID-BT-LEB", "name": "Lebak"}
       ]
     },
     {
@@ -52,7 +154,20 @@
         {"code": "ID-JT-SLO", "name": "Solo"},
         {"code": "ID-JT-SLT", "name": "Salatiga"},
         {"code": "ID-JT-PWT", "name": "Purwokerto"},
-        {"code": "ID-JT-TGL", "name": "Tegal"}
+        {"code": "ID-JT-TGL", "name": "Tegal"},
+        {"code": "ID-JT-MGL", "name": "Magelang"},
+        {"code": "ID-JT-PKL", "name": "Pekalongan"}
+      ]
+    },
+    {
+      "code": "ID-YO",
+      "name": "Yogyakarta",
+      "cities": [
+        {"code": "ID-YO-YGY", "name": "Yogyakarta"},
+        {"code": "ID-YO-SLM", "name": "Sleman"},
+        {"code": "ID-YO-BTL", "name": "Bantul"},
+        {"code": "ID-YO-KLP", "name": "Kulon Progo"},
+        {"code": "ID-YO-GKH", "name": "Gunung Kidul"}
       ]
     },
     {
@@ -63,7 +178,212 @@
         {"code": "ID-JI-MLG", "name": "Malang"},
         {"code": "ID-JI-KDR", "name": "Kediri"},
         {"code": "ID-JI-JBR", "name": "Jember"},
-        {"code": "ID-JI-PSN", "name": "Pasuruan"}
+        {"code": "ID-JI-PSN", "name": "Pasuruan"},
+        {"code": "ID-JI-MJK", "name": "Mojokerto"},
+        {"code": "ID-JI-MDN", "name": "Madiun"},
+        {"code": "ID-JI-BLT", "name": "Blitar"}
+      ]
+    },
+    {
+      "code": "ID-BA",
+      "name": "Bali",
+      "cities": [
+        {"code": "ID-BA-DPS", "name": "Denpasar"},
+        {"code": "ID-BA-SIN", "name": "Singaraja"},
+        {"code": "ID-BA-TAB", "name": "Tabanan"},
+        {"code": "ID-BA-GIA", "name": "Gianyar"},
+        {"code": "ID-BA-KLU", "name": "Klungkung"},
+        {"code": "ID-BA-BAN", "name": "Bangli"},
+        {"code": "ID-BA-KAR", "name": "Karangasem"},
+        {"code": "ID-BA-JEM", "name": "Jembrana"}
+      ]
+    },
+    {
+      "code": "ID-NB",
+      "name": "Nusa Tenggara Barat",
+      "cities": [
+        {"code": "ID-NB-MTR", "name": "Mataram"},
+        {"code": "ID-NB-BIM", "name": "Bima"},
+        {"code": "ID-NB-LOM", "name": "Lombok Barat"},
+        {"code": "ID-NB-LTG", "name": "Lombok Tengah"},
+        {"code": "ID-NB-LTM", "name": "Lombok Timur"},
+        {"code": "ID-NB-SUB", "name": "Sumbawa"},
+        {"code": "ID-NB-DMB", "name": "Dompu"},
+        {"code": "ID-NB-KBD", "name": "Kabupaten Bima"}
+      ]
+    },
+    {
+      "code": "ID-NT",
+      "name": "Nusa Tenggara Timur",
+      "cities": [
+        {"code": "ID-NT-KPG", "name": "Kupang"},
+        {"code": "ID-NT-END", "name": "Ende"},
+        {"code": "ID-NT-LBJ", "name": "Labuan Bajo"},
+        {"code": "ID-NT-WAI", "name": "Waingapu"},
+        {"code": "ID-NT-KEF", "name": "Kefamenanu"},
+        {"code": "ID-NT-ATM", "name": "Atambua"},
+        {"code": "ID-NT-MAU", "name": "Maumere"}
+      ]
+    },
+    {
+      "code": "ID-KB",
+      "name": "Kalimantan Barat",
+      "cities": [
+        {"code": "ID-KB-PNK", "name": "Pontianak"},
+        {"code": "ID-KB-SIN", "name": "Singkawang"},
+        {"code": "ID-KB-KTG", "name": "Ketapang"},
+        {"code": "ID-KB-SKD", "name": "Sekadau"},
+        {"code": "ID-KB-SAM", "name": "Sambas"},
+        {"code": "ID-KB-SAN", "name": "Sanggau"}
+      ]
+    },
+    {
+      "code": "ID-KT",
+      "name": "Kalimantan Tengah",
+      "cities": [
+        {"code": "ID-KT-PLK", "name": "Palangka Raya"},
+        {"code": "ID-KT-SMT", "name": "Sampit"},
+        {"code": "ID-KT-KUA", "name": "Kuala Kapuas"},
+        {"code": "ID-KT-PWK", "name": "Puruk Cahu"},
+        {"code": "ID-KT-SUK", "name": "Sukamara"}
+      ]
+    },
+    {
+      "code": "ID-KS",
+      "name": "Kalimantan Selatan",
+      "cities": [
+        {"code": "ID-KS-BJM", "name": "Banjarmasin"},
+        {"code": "ID-KS-BRB", "name": "Banjarbaru"},
+        {"code": "ID-KS-KTB", "name": "Kotabaru"},
+        {"code": "ID-KS-AMT", "name": "Amuntai"},
+        {"code": "ID-KS-RNT", "name": "Rantau"}
+      ]
+    },
+    {
+      "code": "ID-KI",
+      "name": "Kalimantan Timur",
+      "cities": [
+        {"code": "ID-KI-SMD", "name": "Samarinda"},
+        {"code": "ID-KI-BLK", "name": "Balikpapan"},
+        {"code": "ID-KI-BGR", "name": "Bontang"},
+        {"code": "ID-KI-TNJ", "name": "Tanjung Redeb"},
+        {"code": "ID-KI-SGL", "name": "Sangatta"}
+      ]
+    },
+    {
+      "code": "ID-KU",
+      "name": "Kalimantan Utara",
+      "cities": [
+        {"code": "ID-KU-TRK", "name": "Tarakan"},
+        {"code": "ID-KU-BUL", "name": "Bulungan"},
+        {"code": "ID-KU-MAL", "name": "Malinau"},
+        {"code": "ID-KU-NUN", "name": "Nunukan"}
+      ]
+    },
+    {
+      "code": "ID-SW",
+      "name": "Sulawesi Barat",
+      "cities": [
+        {"code": "ID-SW-MAM", "name": "Mamuju"},
+        {"code": "ID-SW-MAJ", "name": "Majene"},
+        {"code": "ID-SW-POL", "name": "Polewali Mandar"},
+        {"code": "ID-SW-MAM", "name": "Mamasa"}
+      ]
+    },
+    {
+      "code": "ID-SN",
+      "name": "Sulawesi Selatan",
+      "cities": [
+        {"code": "ID-SN-MKS", "name": "Makassar"},
+        {"code": "ID-SN-PRE", "name": "Parepare"},
+        {"code": "ID-SN-PLO", "name": "Palopo"},
+        {"code": "ID-SN-WAT", "name": "Watampone"},
+        {"code": "ID-SN-SUN", "name": "Sunggu Minasa"},
+        {"code": "ID-SN-BLG", "name": "Bulukumba"}
+      ]
+    },
+    {
+      "code": "ID-ST",
+      "name": "Sulawesi Tengah",
+      "cities": [
+        {"code": "ID-ST-PAL", "name": "Palu"},
+        {"code": "ID-ST-LUW", "name": "Luwuk"},
+        {"code": "ID-ST-TOL", "name": "Toli-Toli"},
+        {"code": "ID-ST-DON", "name": "Donggala"},
+        {"code": "ID-ST-POS", "name": "Poso"}
+      ]
+    },
+    {
+      "code": "ID-SA",
+      "name": "Sulawesi Tenggara",
+      "cities": [
+        {"code": "ID-SA-KDI", "name": "Kendari"},
+        {"code": "ID-SA-BAU", "name": "Bau-Bau"},
+        {"code": "ID-SA-UNA", "name": "Unaaha"},
+        {"code": "ID-SA-RHA", "name": "Raha"}
+      ]
+    },
+    {
+      "code": "ID-SG",
+      "name": "Sulawesi Utara",
+      "cities": [
+        {"code": "ID-SG-MDO", "name": "Manado"},
+        {"code": "ID-SG-BIT", "name": "Bitung"},
+        {"code": "ID-SG-TMH", "name": "Tomohon"},
+        {"code": "ID-SG-KTM", "name": "Kotamobagu"},
+        {"code": "ID-SG-TND", "name": "Tondano"}
+      ]
+    },
+    {
+      "code": "ID-GO",
+      "name": "Gorontalo",
+      "cities": [
+        {"code": "ID-GO-GTL", "name": "Gorontalo"},
+        {"code": "ID-GO-MAR", "name": "Marisa"},
+        {"code": "ID-GO-TIM", "name": "Tilamuta"}
+      ]
+    },
+    {
+      "code": "ID-MA",
+      "name": "Maluku",
+      "cities": [
+        {"code": "ID-MA-AMQ", "name": "Ambon"},
+        {"code": "ID-MA-TUA", "name": "Tual"},
+        {"code": "ID-MA-NAM", "name": "Namlea"},
+        {"code": "ID-MA-DOB", "name": "Dobo"},
+        {"code": "ID-MA-SUA", "name": "Saumlaki"}
+      ]
+    },
+    {
+      "code": "ID-MU",
+      "name": "Maluku Utara",
+      "cities": [
+        {"code": "ID-MU-TTE", "name": "Ternate"},
+        {"code": "ID-MU-TDR", "name": "Tidore"},
+        {"code": "ID-MU-SOF", "name": "Sofifi"},
+        {"code": "ID-MU-LAB", "name": "Labuha"}
+      ]
+    },
+    {
+      "code": "ID-PB",
+      "name": "Papua Barat",
+      "cities": [
+        {"code": "ID-PB-MNK", "name": "Manokwari"},
+        {"code": "ID-PB-SOR", "name": "Sorong"},
+        {"code": "ID-PB-FAK", "name": "Fak-Fak"},
+        {"code": "ID-PB-KAI", "name": "Kaimana"}
+      ]
+    },
+    {
+      "code": "ID-PA",
+      "name": "Papua",
+      "cities": [
+        {"code": "ID-PA-JAY", "name": "Jayapura"},
+        {"code": "ID-PA-TIM", "name": "Timika"},
+        {"code": "ID-PA-MER", "name": "Merauke"},
+        {"code": "ID-PA-BIA", "name": "Biak"},
+        {"code": "ID-PA-SEN", "name": "Sentani"},
+        {"code": "ID-PA-WAM", "name": "Wamena"}
       ]
     }
   ]

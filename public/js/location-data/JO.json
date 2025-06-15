@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "JO-AM",
+      "name": "Amman",
+      "cities": [
+        {"code": "JO-AM-AMM", "name": "Amman"},
+        {"code": "JO-AM-ZAR", "name": "Zarqa"},
+        {"code": "JO-AM-RUS", "name": "Russeifa"},
+        {"code": "JO-AM-WDI", "name": "Wadi as-Sir"}
+      ]
+    },
+    {
+      "code": "JO-IR",
+      "name": "Irbid",
+      "cities": [
+        {"code": "JO-IR-IRB", "name": "Irbid"},
+        {"code": "JO-IR-RAM", "name": "Ramtha"},
+        {"code": "JO-IR-AJL", "name": "Ajloun"},
+        {"code": "JO-IR-JER", "name": "Jerash"}
+      ]
+    },
+    {
+      "code": "JO-AQ",
+      "name": "Aqaba",
+      "cities": [
+        {"code": "JO-AQ-AQA", "name": "Aqaba"},
+        {"code": "JO-AQ-WDI", "name": "Wadi Rum"},
+        {"code": "JO-AQ-QUW", "name": "Quweira"}
+      ]
+    },
+    {
+      "code": "JO-KA",
+      "name": "Karak",
+      "cities": [
+        {"code": "JO-KA-KAR", "name": "Karak"},
+        {"code": "JO-KA-TAF", "name": "Tafila"},
+        {"code": "JO-KA-QAD", "name": "Qadisiyah"}
+      ]
+    }
+  ]
+}

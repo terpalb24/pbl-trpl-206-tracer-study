@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "BT-TH",
+      "name": "Thimphu",
+      "cities": [
+        {"code": "BT-TH-THI", "name": "Thimphu"},
+        {"code": "BT-TH-PAR", "name": "Paro"},
+        {"code": "BT-TH-CHA", "name": "Chukha"}
+      ]
+    },
+    {
+      "code": "BT-33",
+      "name": "Bumthang",
+      "cities": [
+        {"code": "BT-33-JAK", "name": "Jakar"},
+        {"code": "BT-33-URA", "name": "Ura"},
+        {"code": "BT-33-CHU", "name": "Chumey"}
+      ]
+    },
+    {
+      "code": "BT-42",
+      "name": "Punakha",
+      "cities": [
+        {"code": "BT-42-PUN", "name": "Punakha"},
+        {"code": "BT-42-WAN", "name": "Wangdue"},
+        {"code": "BT-42-KHA", "name": "Khuruthang"}
+      ]
+    },
+    {
+      "code": "BT-TY",
+      "name": "Trashiyangtse",
+      "cities": [
+        {"code": "BT-TY-TRA", "name": "Trashiyangtse"},
+        {"code": "BT-TY-BUR", "name": "Bumdeling"},
+        {"code": "BT-TY-YAN", "name": "Yangtse"}
+      ]
+    }
+  ]
+}

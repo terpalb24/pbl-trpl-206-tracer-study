@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "QA-DA",
+      "name": "Doha",
+      "cities": [
+        {"code": "QA-DA-DOH", "name": "Doha"},
+        {"code": "QA-DA-WES", "name": "West Bay"},
+        {"code": "QA-DA-OLD", "name": "Old Doha"},
+        {"code": "QA-DA-PEA", "name": "The Pearl"}
+      ]
+    },
+    {
+      "code": "QA-RA",
+      "name": "Al Rayyan",
+      "cities": [
+        {"code": "QA-RA-RAY", "name": "Al Rayyan"},
+        {"code": "QA-RA-WAK", "name": "Al Wakrah"},
+        {"code": "QA-RA-LUS", "name": "Lusail"},
+        {"code": "QA-RA-DUH", "name": "Dukhan"}
+      ]
+    },
+    {
+      "code": "QA-KH",
+      "name": "Al Khor",
+      "cities": [
+        {"code": "QA-KH-KHO", "name": "Al Khor"},
+        {"code": "QA-KH-THI", "name": "Al Thakhira"},
+        {"code": "QA-KH-SHA", "name": "Al Shamal"}
+      ]
+    },
+    {
+      "code": "QA-MS",
+      "name": "Umm Salal",
+      "cities": [
+        {"code": "QA-MS-UMM", "name": "Umm Salal"},
+        {"code": "QA-MS-MOH", "name": "Umm Salal Mohammed"},
+        {"code": "QA-MS-ALI", "name": "Umm Salal Ali"}
+      ]
+    }
+  ]
+}

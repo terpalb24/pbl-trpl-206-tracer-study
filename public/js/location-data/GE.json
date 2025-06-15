@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "GE-TB",
+      "name": "Tbilisi",
+      "cities": [
+        {"code": "GE-TB-TBI", "name": "Tbilisi"},
+        {"code": "GE-TB-RUS", "name": "Rustavi"},
+        {"code": "GE-TB-MAR", "name": "Marneuli"},
+        {"code": "GE-TB-GAR", "name": "Gardabani"}
+      ]
+    },
+    {
+      "code": "GE-AJ",
+      "name": "Adjara",
+      "cities": [
+        {"code": "GE-AJ-BAT", "name": "Batumi"},
+        {"code": "GE-AJ-KOB", "name": "Kobuleti"},
+        {"code": "GE-AJ-KED", "name": "Keda"},
+        {"code": "GE-AJ-SHU", "name": "Shuakhevi"}
+      ]
+    },
+    {
+      "code": "GE-GU",
+      "name": "Guria",
+      "cities": [
+        {"code": "GE-GU-OZU", "name": "Ozurgeti"},
+        {"code": "GE-GU-LAN", "name": "Lanchkhuti"},
+        {"code": "GE-GU-CHO", "name": "Chokhatauri"}
+      ]
+    },
+    {
+      "code": "GE-IM",
+      "name": "Imereti",
+      "cities": [
+        {"code": "GE-IM-KUT", "name": "Kutaisi"},
+        {"code": "GE-IM-ZES", "name": "Zestaponi"},
+        {"code": "GE-IM-BAG", "name": "Baghdati"},
+        {"code": "GE-IM-TER", "name": "Terjola"}
+      ]
+    }
+  ]
+}

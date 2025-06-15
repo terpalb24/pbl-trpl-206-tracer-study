@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "BO-L",
+      "name": "La Paz",
+      "cities": [
+        {"code": "BO-L-LAP", "name": "La Paz"},
+        {"code": "BO-L-ELA", "name": "El Alto"},
+        {"code": "BO-L-VIA", "name": "Viacha"},
+        {"code": "BO-L-ACH", "name": "Achocalla"}
+      ]
+    },
+    {
+      "code": "BO-S",
+      "name": "Santa Cruz",
+      "cities": [
+        {"code": "BO-S-SCZ", "name": "Santa Cruz de la Sierra"},
+        {"code": "BO-S-MON", "name": "Montero"},
+        {"code": "BO-S-WAR", "name": "Warnes"},
+        {"code": "BO-S-COT", "name": "Cotoca"}
+      ]
+    },
+    {
+      "code": "BO-C",
+      "name": "Cochabamba",
+      "cities": [
+        {"code": "BO-C-COC", "name": "Cochabamba"},
+        {"code": "BO-C-QUI", "name": "Quillacollo"},
+        {"code": "BO-C-SAC", "name": "Sacaba"},
+        {"code": "BO-C-COL", "name": "Colcapirhua"}
+      ]
+    },
+    {
+      "code": "BO-H",
+      "name": "Chuquisaca",
+      "cities": [
+        {"code": "BO-H-SUC", "name": "Sucre"},
+        {"code": "BO-H-YOT", "name": "Yotala"},
+        {"code": "BO-H-POO", "name": "Poroma"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "YE-SA",
+      "name": "Sana'a",
+      "cities": [
+        {"code": "YE-SA-SAN", "name": "Sana'a"},
+        {"code": "YE-SA-DAR", "name": "Dar Sad"},
+        {"code": "YE-SA-SHU", "name": "Shu'aub"},
+        {"code": "YE-SA-AZA", "name": "Azal"}
+      ]
+    },
+    {
+      "code": "YE-AD",
+      "name": "Aden",
+      "cities": [
+        {"code": "YE-AD-ADE", "name": "Aden"},
+        {"code": "YE-AD-CRA", "name": "Crater"},
+        {"code": "YE-AD-KHO", "name": "Khormaksar"},
+        {"code": "YE-AD-SHE", "name": "Sheikh Othman"}
+      ]
+    },
+    {
+      "code": "YE-TA",
+      "name": "Taiz",
+      "cities": [
+        {"code": "YE-TA-TAI", "name": "Taiz"},
+        {"code": "YE-TA-TUR", "name": "Turbah"},
+        {"code": "YE-TA-SMA", "name": "Sama"},
+        {"code": "YE-TA-SIL", "name": "Silw"}
+      ]
+    },
+    {
+      "code": "YE-HD",
+      "name": "Hadramaut",
+      "cities": [
+        {"code": "YE-HD-MUK", "name": "Mukalla"},
+        {"code": "YE-HD-SAY", "name": "Sayun"},
+        {"code": "YE-HD-SHI", "name": "Shibam"},
+        {"code": "YE-HD-TAR", "name": "Tarim"}
+      ]
+    }
+  ]
+}

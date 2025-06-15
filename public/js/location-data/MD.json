@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "MD-CU",
+      "name": "Chisinau",
+      "cities": [
+        {"code": "MD-CU-CHI", "name": "Chisinau"},
+        {"code": "MD-CU-DUR", "name": "Durlesti"},
+        {"code": "MD-CU-COD", "name": "Codru"},
+        {"code": "MD-CU-STR", "name": "Straseni"}
+      ]
+    },
+    {
+      "code": "MD-BA",
+      "name": "Balti",
+      "cities": [
+        {"code": "MD-BA-BAL", "name": "Balti"},
+        {"code": "MD-BA-FAL", "name": "Falesti"},
+        {"code": "MD-BA-SAN", "name": "Sangerei"}
+      ]
+    },
+    {
+      "code": "MD-CA",
+      "name": "Cahul",
+      "cities": [
+        {"code": "MD-CA-CAH", "name": "Cahul"},
+        {"code": "MD-CA-CAN", "name": "Cantemir"},
+        {"code": "MD-CA-LEO", "name": "Leova"}
+      ]
+    },
+    {
+      "code": "MD-OR",
+      "name": "Orhei",
+      "cities": [
+        {"code": "MD-OR-ORH", "name": "Orhei"},
+        {"code": "MD-OR-TEL", "name": "Telenesti"},
+        {"code": "MD-OR-REZ", "name": "Rezina"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "states": [
+    {
+      "code": "PG-NCD",
+      "name": "National Capital District",
+      "cities": [
+        {"code": "PG-NCD-POM", "name": "Port Moresby"},
+        {"code": "PG-NCD-LON", "name": "Lae"}
+      ]
+    },
+    {
+      "code": "PG-WPD",
+      "name": "Western Province",
+      "cities": [
+        {"code": "PG-WPD-DAR", "name": "Daru"},
+        {"code": "PG-WPD-KIU", "name": "Kiunga"}
+      ]
+    },
+    {
+      "code": "PG-WHM",
+      "name": "Western Highlands",
+      "cities": [
+        {"code": "PG-WHM-MOU", "name": "Mount Hagen"},
+        {"code": "PG-WHM-WAN", "name": "Wanda"}
+      ]
+    },
+    {
+      "code": "PG-EHG",
+      "name": "Eastern Highlands",
+      "cities": [
+        {"code": "PG-EHG-GOR", "name": "Goroka"},
+        {"code": "PG-EHG-KAI", "name": "Kainantu"}
+      ]
+    }
+  ]
+}

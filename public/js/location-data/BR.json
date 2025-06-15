@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "BR-SP",
+      "name": "São Paulo",
+      "cities": [
+        {"code": "BR-SP-SAO", "name": "São Paulo"},
+        {"code": "BR-SP-CAM", "name": "Campinas"},
+        {"code": "BR-SP-SAN", "name": "Santos"},
+        {"code": "BR-SP-RIB", "name": "Ribeirão Preto"}
+      ]
+    },
+    {
+      "code": "BR-RJ",
+      "name": "Rio de Janeiro",
+      "cities": [
+        {"code": "BR-RJ-RIO", "name": "Rio de Janeiro"},
+        {"code": "BR-RJ-NIT", "name": "Niterói"},
+        {"code": "BR-RJ-NOV", "name": "Nova Iguaçu"},
+        {"code": "BR-RJ-PET", "name": "Petrópolis"}
+      ]
+    },
+    {
+      "code": "BR-DF",
+      "name": "Distrito Federal",
+      "cities": [
+        {"code": "BR-DF-BSB", "name": "Brasília"}
+      ]
+    },
+    {
+      "code": "BR-BA",
+      "name": "Bahia",
+      "cities": [
+        {"code": "BR-BA-SAL", "name": "Salvador"},
+        {"code": "BR-BA-FAI", "name": "Feira de Santana"},
+        {"code": "BR-BA-VIT", "name": "Vitória da Conquista"}
+      ]
+    }
+  ]
+}

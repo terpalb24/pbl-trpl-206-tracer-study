@@ -1,0 +1,39 @@
+{
+  "states": [
+    {
+      "code": "SB-GU",
+      "name": "Guadalcanal",
+      "cities": [
+        {"code": "SB-GU-HON", "name": "Honiara"},
+        {"code": "SB-GU-HEN", "name": "Henderson"},
+        {"code": "SB-GU-LUN", "name": "Lungga"}
+      ]
+    },
+    {
+      "code": "SB-WE",
+      "name": "Western",
+      "cities": [
+        {"code": "SB-WE-GIZ", "name": "Gizo"},
+        {"code": "SB-WE-MUN", "name": "Munda"},
+        {"code": "SB-WE-TUL", "name": "Tulu"}
+      ]
+    },
+    {
+      "code": "SB-MA",
+      "name": "Malaita",
+      "cities": [
+        {"code": "SB-MA-AUK", "name": "Auki"},
+        {"code": "SB-MA-KIR", "name": "Kirakira"},
+        {"code": "SB-MA-LAG", "name": "Langa Langa"}
+      ]
+    },
+    {
+      "code": "SB-CE",
+      "name": "Central",
+      "cities": [
+        {"code": "SB-CE-TUL", "name": "Tulagi"},
+        {"code": "SB-CE-YAN", "name": "Yandina"}
+      ]
+    }
+  ]
+}

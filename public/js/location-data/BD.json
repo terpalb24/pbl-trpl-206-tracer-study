@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "BD-13",
+      "name": "Dhaka",
+      "cities": [
+        {"code": "BD-13-DHA", "name": "Dhaka"},
+        {"code": "BD-13-GAZ", "name": "Gazipur"},
+        {"code": "BD-13-NAR", "name": "Narayanganj"},
+        {"code": "BD-13-MAN", "name": "Manikganj"}
+      ]
+    },
+    {
+      "code": "BD-03",
+      "name": "Chittagong",
+      "cities": [
+        {"code": "BD-03-CTG", "name": "Chittagong"},
+        {"code": "BD-03-COX", "name": "Cox's Bazar"},
+        {"code": "BD-03-RAN", "name": "Rangamati"},
+        {"code": "BD-03-BAN", "name": "Bandarban"}
+      ]
+    },
+    {
+      "code": "BD-55",
+      "name": "Sylhet",
+      "cities": [
+        {"code": "BD-55-SYL", "name": "Sylhet"},
+        {"code": "BD-55-MOU", "name": "Moulvibazar"},
+        {"code": "BD-55-HAB", "name": "Habiganj"},
+        {"code": "BD-55-SUN", "name": "Sunamganj"}
+      ]
+    },
+    {
+      "code": "BD-27",
+      "name": "Khulna",
+      "cities": [
+        {"code": "BD-27-KHU", "name": "Khulna"},
+        {"code": "BD-27-JES", "name": "Jessore"},
+        {"code": "BD-27-KUS", "name": "Kushtia"},
+        {"code": "BD-27-SAT", "name": "Satkhira"}
+      ]
+    }
+  ]
+}

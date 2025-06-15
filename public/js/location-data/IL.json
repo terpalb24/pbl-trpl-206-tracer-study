@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "IL-JM",
+      "name": "Jerusalem",
+      "cities": [
+        {"code": "IL-JM-JER", "name": "Jerusalem"},
+        {"code": "IL-JM-BET", "name": "Bethlehem"},
+        {"code": "IL-JM-MAA", "name": "Ma'ale Adumim"},
+        {"code": "IL-JM-ABU", "name": "Abu Dis"}
+      ]
+    },
+    {
+      "code": "IL-TA",
+      "name": "Tel Aviv",
+      "cities": [
+        {"code": "IL-TA-TLV", "name": "Tel Aviv"},
+        {"code": "IL-TA-JAF", "name": "Jaffa"},
+        {"code": "IL-TA-RAY", "name": "Ramat Gan"},
+        {"code": "IL-TA-PET", "name": "Petah Tikva"}
+      ]
+    },
+    {
+      "code": "IL-HA",
+      "name": "Haifa",
+      "cities": [
+        {"code": "IL-HA-HAI", "name": "Haifa"},
+        {"code": "IL-HA-NAZ", "name": "Nazareth"},
+        {"code": "IL-HA-TIB", "name": "Tiberias"},
+        {"code": "IL-HA-AKK", "name": "Akko"}
+      ]
+    },
+    {
+      "code": "IL-M",
+      "name": "Central",
+      "cities": [
+        {"code": "IL-M-LOD", "name": "Lod"},
+        {"code": "IL-M-RIS", "name": "Rishon LeZion"},
+        {"code": "IL-M-ASH", "name": "Ashdod"},
+        {"code": "IL-M-REH", "name": "Rehovot"}
+      ]
+    }
+  ]
+}

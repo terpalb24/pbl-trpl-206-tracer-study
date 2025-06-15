@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "LV-RIX",
+      "name": "Riga",
+      "cities": [
+        {"code": "LV-RIX-RIG", "name": "Riga"},
+        {"code": "LV-RIX-JUR", "name": "Jurmala"},
+        {"code": "LV-RIX-OGR", "name": "Ogre"}
+      ]
+    },
+    {
+      "code": "LV-LPX",
+      "name": "Liepaja",
+      "cities": [
+        {"code": "LV-LPX-LIE", "name": "Liepaja"},
+        {"code": "LV-LPX-GRO", "name": "Grobina"},
+        {"code": "LV-LPX-AIZ", "name": "Aizpute"}
+      ]
+    },
+    {
+      "code": "LV-DGV",
+      "name": "Daugavpils",
+      "cities": [
+        {"code": "LV-DGV-DAU", "name": "Daugavpils"},
+        {"code": "LV-DGV-KRA", "name": "Kraslava"},
+        {"code": "LV-DGV-ILU", "name": "Ilukste"}
+      ]
+    },
+    {
+      "code": "LV-JEL",
+      "name": "Jelgava",
+      "cities": [
+        {"code": "LV-JEL-JEL", "name": "Jelgava"},
+        {"code": "LV-JEL-BAU", "name": "Bauska"},
+        {"code": "LV-JEL-DOB", "name": "Dobele"}
+      ]
+    }
+  ]
+}

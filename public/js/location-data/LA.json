@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "LA-VT",
+      "name": "Vientiane",
+      "cities": [
+        {"code": "LA-VT-VTE", "name": "Vientiane"},
+        {"code": "LA-VT-CHN", "name": "Chanthabuly"},
+        {"code": "LA-VT-SIS", "name": "Sikhottabong"}
+      ]
+    },
+    {
+      "code": "LA-LP",
+      "name": "Luang Prabang",
+      "cities": [
+        {"code": "LA-LP-LPQ", "name": "Luang Prabang"},
+        {"code": "LA-LP-PAK", "name": "Pak Ou"},
+        {"code": "LA-LP-XIE", "name": "Xieng Ngeun"}
+      ]
+    },
+    {
+      "code": "LA-CH",
+      "name": "Champasak",
+      "cities": [
+        {"code": "LA-CH-PAK", "name": "Pakse"},
+        {"code": "LA-CH-CHA", "name": "Champasak"},
+        {"code": "LA-CH-DON", "name": "Don Khong"}
+      ]
+    },
+    {
+      "code": "LA-SV",
+      "name": "Savannakhet",
+      "cities": [
+        {"code": "LA-SV-SAV", "name": "Savannakhet"},
+        {"code": "LA-SV-KAY", "name": "Kaysone Phomvihane"},
+        {"code": "LA-SV-OUT", "name": "Outhoumphone"}
+      ]
+    }
+  ]
+}

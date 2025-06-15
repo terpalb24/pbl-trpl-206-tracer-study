@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "AZ-BA",
+      "name": "Baku",
+      "cities": [
+        {"code": "AZ-BA-BAK", "name": "Baku"},
+        {"code": "AZ-BA-SUM", "name": "Sumgayit"},
+        {"code": "AZ-BA-KHI", "name": "Khirdalan"},
+        {"code": "AZ-BA-BIN", "name": "Binagadi"}
+      ]
+    },
+    {
+      "code": "AZ-GA",
+      "name": "Ganja",
+      "cities": [
+        {"code": "AZ-GA-GAN", "name": "Ganja"},
+        {"code": "AZ-GA-MIN", "name": "Mingachevir"},
+        {"code": "AZ-GA-SAM", "name": "Samukh"},
+        {"code": "AZ-GA-GAR", "name": "Garagorgan"}
+      ]
+    },
+    {
+      "code": "AZ-LAN",
+      "name": "Lankaran",
+      "cities": [
+        {"code": "AZ-LAN-LAN", "name": "Lankaran"},
+        {"code": "AZ-LAN-AST", "name": "Astara"},
+        {"code": "AZ-LAN-LEI", "name": "Lerik"},
+        {"code": "AZ-LAN-MAS", "name": "Masalli"}
+      ]
+    },
+    {
+      "code": "AZ-NAK",
+      "name": "Nakhchivan",
+      "cities": [
+        {"code": "AZ-NAK-NAK", "name": "Nakhchivan"},
+        {"code": "AZ-NAK-JUL", "name": "Julfa"},
+        {"code": "AZ-NAK-ORD", "name": "Ordubad"},
+        {"code": "AZ-NAK-SHA", "name": "Shahbuz"}
+      ]
+    }
+  ]
+}

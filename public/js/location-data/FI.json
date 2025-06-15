@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "FI-01",
+      "name": "Uusimaa",
+      "cities": [
+        {"code": "FI-01-HEL", "name": "Helsinki"},
+        {"code": "FI-01-ESP", "name": "Espoo"},
+        {"code": "FI-01-VAN", "name": "Vantaa"},
+        {"code": "FI-01-KER", "name": "Kerava"}
+      ]
+    },
+    {
+      "code": "FI-02",
+      "name": "Southwest Finland",
+      "cities": [
+        {"code": "FI-02-TUR", "name": "Turku"},
+        {"code": "FI-02-NAA", "name": "Naantali"},
+        {"code": "FI-02-RAI", "name": "Raisio"}
+      ]
+    },
+    {
+      "code": "FI-08",
+      "name": "Pirkanmaa",
+      "cities": [
+        {"code": "FI-08-TAM", "name": "Tampere"},
+        {"code": "FI-08-NOK", "name": "Nokia"},
+        {"code": "FI-08-YLO", "name": "Ylöjärvi"}
+      ]
+    },
+    {
+      "code": "FI-13",
+      "name": "North Ostrobothnia",
+      "cities": [
+        {"code": "FI-13-OUL", "name": "Oulu"},
+        {"code": "FI-13-KAJ", "name": "Kajaani"},
+        {"code": "FI-13-RAA", "name": "Raahe"}
+      ]
+    }
+  ]
+}

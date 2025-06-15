@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "SK-BL",
+      "name": "Bratislava",
+      "cities": [
+        {"code": "SK-BL-BRA", "name": "Bratislava"},
+        {"code": "SK-BL-PEZ", "name": "Pezinok"},
+        {"code": "SK-BL-SEN", "name": "Senec"}
+      ]
+    },
+    {
+      "code": "SK-KI",
+      "name": "Košice",
+      "cities": [
+        {"code": "SK-KI-KOS", "name": "Košice"},
+        {"code": "SK-KI-MIC", "name": "Michalovce"},
+        {"code": "SK-KI-SPJ", "name": "Spišská Nová Ves"}
+      ]
+    },
+    {
+      "code": "SK-PV",
+      "name": "Prešov",
+      "cities": [
+        {"code": "SK-PV-PRE", "name": "Prešov"},
+        {"code": "SK-PV-HUM", "name": "Humenné"},
+        {"code": "SK-PV-BAR", "name": "Bardejov"}
+      ]
+    },
+    {
+      "code": "SK-ZI",
+      "name": "Žilina",
+      "cities": [
+        {"code": "SK-ZI-ZIL", "name": "Žilina"},
+        {"code": "SK-ZI-MAR", "name": "Martin"},
+        {"code": "SK-ZI-LIP", "name": "Liptovský Mikuláš"}
+      ]
+    }
+  ]
+}

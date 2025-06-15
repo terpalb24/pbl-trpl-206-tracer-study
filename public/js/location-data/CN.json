@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "CN-BJ",
+      "name": "Beijing",
+      "cities": [
+        {"code": "CN-BJ-BEI", "name": "Beijing"},
+        {"code": "CN-BJ-CHA", "name": "Chaoyang"},
+        {"code": "CN-BJ-HAI", "name": "Haidian"},
+        {"code": "CN-BJ-XIC", "name": "Xicheng"}
+      ]
+    },
+    {
+      "code": "CN-SH",
+      "name": "Shanghai",
+      "cities": [
+        {"code": "CN-SH-SHA", "name": "Shanghai"},
+        {"code": "CN-SH-PUD", "name": "Pudong"},
+        {"code": "CN-SH-HUA", "name": "Huangpu"},
+        {"code": "CN-SH-XUH", "name": "Xuhui"}
+      ]
+    },
+    {
+      "code": "CN-GD",
+      "name": "Guangdong",
+      "cities": [
+        {"code": "CN-GD-GUA", "name": "Guangzhou"},
+        {"code": "CN-GD-SHE", "name": "Shenzhen"},
+        {"code": "CN-GD-DON", "name": "Dongguan"},
+        {"code": "CN-GD-FOS", "name": "Foshan"}
+      ]
+    },
+    {
+      "code": "CN-ZJ",
+      "name": "Zhejiang",
+      "cities": [
+        {"code": "CN-ZJ-HAN", "name": "Hangzhou"},
+        {"code": "CN-ZJ-NIN", "name": "Ningbo"},
+        {"code": "CN-ZJ-WEN", "name": "Wenzhou"},
+        {"code": "CN-ZJ-JIA", "name": "Jiaxing"}
+      ]
+    }
+  ]
+}

@@ -264,30 +264,35 @@ class QuestionnaireController extends Controller
                     $prevMultipleAnswers[$item->id_question][] = $item->answer;
                     
                     if ($item->other_answer) {
-                        if (!isset($prevMultipleOtherAnswers[$item->id_question])) {
-                            $prevMultipleOtherAnswers[$item->id_question] = [];
-                        }
-                        $prevMultipleOtherAnswers[$item->id_question][$item->answer] = $item->other_answer;
+                        $prevMultipleOtherAnswers[$item->answer] = $item->other_answer;
                     }
                 } elseif ($question && $question->type === 'location') {
+                    // ✅ PERBAIKAN: Properly parse and structure location data
                     try {
-                        $locationData = json_decode($item->answer, true);
-                        if (is_array($locationData)) {
-                            $prevLocationAnswers[$item->id_question] = [
-                                'province_id' => $locationData['province_id'] ?? '',
-                                'province_name' => $locationData['province_name'] ?? '',
-                                'city_id' => $locationData['city_id'] ?? '',
-                                'city_name' => $locationData['city_name'] ?? ''
-                            ];
+                        if (!empty($item->answer)) {
+                            $locationData = json_decode($item->answer, true);
+                            
+                            if ($locationData && is_array($locationData)) {
+                                // Store the complete location data for JavaScript to use
+                                $prevLocationAnswers[$item->id_question] = $locationData;
+                                
+                                \Log::info('Location answer loaded from database', [
+                                    'question_id' => $item->id_question,
+                                    'location_data' => $locationData
+                                ]);
+                            } else {
+                                \Log::warning('Invalid location data format in database', [
+                                    'question_id' => $item->id_question,
+                                    'raw_answer' => $item->answer
+                                ]);
+                            }
                         }
                     } catch (\Exception $e) {
-                        // Fallback jika bukan JSON
-                        $prevLocationAnswers[$item->id_question] = [
-                            'province_id' => '',
-                            'province_name' => '',
-                            'city_id' => '',
-                            'city_name' => $item->answer
-                        ];
+                        \Log::error('Failed to parse location answer from database', [
+                            'question_id' => $item->id_question,
+                            'error' => $e->getMessage(),
+                            'raw_answer' => $item->answer
+                        ]);
                     }
                 } else {
                     $prevAnswers[$item->id_question] = $item->answer;
@@ -554,38 +559,6 @@ class QuestionnaireController extends Controller
         }
         
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
-    }
-
-    public function getProvinces()
-    {
-        try {
-            $response = file_get_contents('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-            return response()->json([
-                'success' => true,
-                'data' => json_decode($response, true)
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch provinces'
-            ], 500);
-        }
-    }
-
-    public function getCities($provinceId)
-    {
-        try {
-            $response = file_get_contents("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinceId}.json");
-            return response()->json([
-                'success' => true,
-                'data' => json_decode($response, true)
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to fetch cities'
-            ], 500);
-        }
     }
 
     /**

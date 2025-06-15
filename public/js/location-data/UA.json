@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "UA-30",
+      "name": "Kyiv",
+      "cities": [
+        {"code": "UA-30-KYI", "name": "Kyiv"},
+        {"code": "UA-30-BUC", "name": "Bucha"},
+        {"code": "UA-30-IRG", "name": "Irpin"}
+      ]
+    },
+    {
+      "code": "UA-65",
+      "name": "Kharkiv",
+      "cities": [
+        {"code": "UA-65-KHA", "name": "Kharkiv"},
+        {"code": "UA-65-CHU", "name": "Chuhuiv"},
+        {"code": "UA-65-IZY", "name": "Izyum"}
+      ]
+    },
+    {
+      "code": "UA-51",
+      "name": "Odesa",
+      "cities": [
+        {"code": "UA-51-ODE", "name": "Odesa"},
+        {"code": "UA-51-IZM", "name": "Izmail"},
+        {"code": "UA-51-BIL", "name": "Bilhorod-Dnistrovskyi"}
+      ]
+    },
+    {
+      "code": "UA-12",
+      "name": "Dnipropetrovsk",
+      "cities": [
+        {"code": "UA-12-DNI", "name": "Dnipro"},
+        {"code": "UA-12-KRY", "name": "Kryvyi Rih"},
+        {"code": "UA-12-KAM", "name": "Kamianske"}
+      ]
+    }
+  ]
+}

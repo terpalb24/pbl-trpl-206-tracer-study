@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "KZ-71",
+      "name": "Astana",
+      "cities": [
+        {"code": "KZ-71-NUR", "name": "Nur-Sultan"},
+        {"code": "KZ-71-AKM", "name": "Akmol"},
+        {"code": "KZ-71-KOR", "name": "Korgalzhyn"},
+        {"code": "KZ-71-TSE", "name": "Tselinograd"}
+      ]
+    },
+    {
+      "code": "KZ-75",
+      "name": "Almaty",
+      "cities": [
+        {"code": "KZ-75-ALA", "name": "Almaty"},
+        {"code": "KZ-75-TAL", "name": "Talgar"},
+        {"code": "KZ-75-KAP", "name": "Kapchagai"},
+        {"code": "KZ-75-ILI", "name": "Ili"}
+      ]
+    },
+    {
+      "code": "KZ-35",
+      "name": "Karaganda",
+      "cities": [
+        {"code": "KZ-35-KAR", "name": "Karaganda"},
+        {"code": "KZ-35-TEM", "name": "Temirtau"},
+        {"code": "KZ-35-BAL", "name": "Balkhash"},
+        {"code": "KZ-35-SAT", "name": "Satpayev"}
+      ]
+    },
+    {
+      "code": "KZ-61",
+      "name": "Shymkent",
+      "cities": [
+        {"code": "KZ-61-SHY", "name": "Shymkent"},
+        {"code": "KZ-61-TUR", "name": "Turkestan"},
+        {"code": "KZ-61-KEN", "name": "Kentau"},
+        {"code": "KZ-61-ARA", "name": "Arys"}
+      ]
+    }
+  ]
+}

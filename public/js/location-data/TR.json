@@ -1,0 +1,45 @@
+{
+  "states": [
+    {
+      "code": "TR-34",
+      "name": "Istanbul",
+      "cities": [
+        {"code": "TR-34-IST", "name": "Istanbul"},
+        {"code": "TR-34-BEY", "name": "Beyoğlu"},
+        {"code": "TR-34-KAD", "name": "Kadıköy"},
+        {"code": "TR-34-SIS", "name": "Şişli"},
+        {"code": "TR-34-BES", "name": "Beşiktaş"}
+      ]
+    },
+    {
+      "code": "TR-06",
+      "name": "Ankara",
+      "cities": [
+        {"code": "TR-06-ANK", "name": "Ankara"},
+        {"code": "TR-06-CAN", "name": "Çankaya"},
+        {"code": "TR-06-KEC", "name": "Keçiören"},
+        {"code": "TR-06-YEN", "name": "Yenimahalle"}
+      ]
+    },
+    {
+      "code": "TR-35",
+      "name": "Izmir",
+      "cities": [
+        {"code": "TR-35-IZM", "name": "Izmir"},
+        {"code": "TR-35-KAR", "name": "Karşıyaka"},
+        {"code": "TR-35-BOR", "name": "Bornova"},
+        {"code": "TR-35-BAY", "name": "Bayraklı"}
+      ]
+    },
+    {
+      "code": "TR-01",
+      "name": "Adana",
+      "cities": [
+        {"code": "TR-01-ADA", "name": "Adana"},
+        {"code": "TR-01-SEY", "name": "Seyhan"},
+        {"code": "TR-01-YUR", "name": "Yüreğir"},
+        {"code": "TR-01-SAR", "name": "Sarıçam"}
+      ]
+    }
+  ]
+}

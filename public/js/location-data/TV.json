@@ -1,0 +1,32 @@
+{
+  "states": [
+    {
+      "code": "TV-FUN",
+      "name": "Funafuti",
+      "cities": [
+        {"code": "TV-FUN-FUN", "name": "Funafuti"}
+      ]
+    },
+    {
+      "code": "TV-NAN",
+      "name": "Nanumea",
+      "cities": [
+        {"code": "TV-NAN-NAN", "name": "Nanumea"}
+      ]
+    },
+    {
+      "code": "TV-NMA",
+      "name": "Nanumanga",
+      "cities": [
+        {"code": "TV-NMA-NMA", "name": "Nanumanga"}
+      ]
+    },
+    {
+      "code": "TV-NIT",
+      "name": "Niutao",
+      "cities": [
+        {"code": "TV-NIT-NIT", "name": "Niutao"}
+      ]
+    }
+  ]
+}

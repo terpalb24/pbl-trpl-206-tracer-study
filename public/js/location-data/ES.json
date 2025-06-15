@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "ES-M",
+      "name": "Madrid",
+      "cities": [
+        {"code": "ES-M-MAD", "name": "Madrid"},
+        {"code": "ES-M-ALC", "name": "Alcalá de Henares"},
+        {"code": "ES-M-GET", "name": "Getafe"},
+        {"code": "ES-M-LEG", "name": "Leganés"}
+      ]
+    },
+    {
+      "code": "ES-CT",
+      "name": "Catalonia",
+      "cities": [
+        {"code": "ES-CT-BCN", "name": "Barcelona"},
+        {"code": "ES-CT-TAR", "name": "Tarragona"},
+        {"code": "ES-CT-GIR", "name": "Girona"},
+        {"code": "ES-CT-LLE", "name": "Lleida"}
+      ]
+    },
+    {
+      "code": "ES-AN",
+      "name": "Andalusia",
+      "cities": [
+        {"code": "ES-AN-SEV", "name": "Seville"},
+        {"code": "ES-AN-MAL", "name": "Málaga"},
+        {"code": "ES-AN-COR", "name": "Córdoba"},
+        {"code": "ES-AN-GRA", "name": "Granada"}
+      ]
+    },
+    {
+      "code": "ES-VC",
+      "name": "Valencia",
+      "cities": [
+        {"code": "ES-VC-VAL", "name": "Valencia"},
+        {"code": "ES-VC-ALI", "name": "Alicante"},
+        {"code": "ES-VC-CAS", "name": "Castellón"},
+        {"code": "ES-VC-ELC", "name": "Elche"}
+      ]
+    }
+  ]
+}

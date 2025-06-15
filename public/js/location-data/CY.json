@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "CY-01",
+      "name": "Nicosia",
+      "cities": [
+        {"code": "CY-01-NIC", "name": "Nicosia"},
+        {"code": "CY-01-STR", "name": "Strovolos"},
+        {"code": "CY-01-LAK", "name": "Lakatamia"},
+        {"code": "CY-01-ENG", "name": "Engomi"}
+      ]
+    },
+    {
+      "code": "CY-02",
+      "name": "Limassol",
+      "cities": [
+        {"code": "CY-02-LIM", "name": "Limassol"},
+        {"code": "CY-02-GER", "name": "Germasogeia"},
+        {"code": "CY-02-AKR", "name": "Akrotiri"},
+        {"code": "CY-02-EPF", "name": "Episkopi"}
+      ]
+    },
+    {
+      "code": "CY-03",
+      "name": "Larnaca",
+      "cities": [
+        {"code": "CY-03-LAR", "name": "Larnaca"},
+        {"code": "CY-03-ARA", "name": "Aradippou"},
+        {"code": "CY-03-LIV", "name": "Livadia"},
+        {"code": "CY-03-DEK", "name": "Dekleia"}
+      ]
+    },
+    {
+      "code": "CY-04",
+      "name": "Paphos",
+      "cities": [
+        {"code": "CY-04-PAP", "name": "Paphos"},
+        {"code": "CY-04-GER", "name": "Geroskipou"},
+        {"code": "CY-04-PEY", "name": "Peyia"},
+        {"code": "CY-04-POL", "name": "Polis"}
+      ]
+    }
+  ]
+}

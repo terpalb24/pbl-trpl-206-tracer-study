@@ -1,0 +1,49 @@
+{
+  "states": [
+    {
+      "code": "GB-ENG",
+      "name": "England",
+      "cities": [
+        {"code": "GB-ENG-LON", "name": "London"},
+        {"code": "GB-ENG-MAN", "name": "Manchester"},
+        {"code": "GB-ENG-BIR", "name": "Birmingham"},
+        {"code": "GB-ENG-LIV", "name": "Liverpool"},
+        {"code": "GB-ENG-NEW", "name": "Newcastle"},
+        {"code": "GB-ENG-BRI", "name": "Bristol"},
+        {"code": "GB-ENG-LEE", "name": "Leeds"},
+        {"code": "GB-ENG-SHE", "name": "Sheffield"}
+      ]
+    },
+    {
+      "code": "GB-SCT",
+      "name": "Scotland",
+      "cities": [
+        {"code": "GB-SCT-EDI", "name": "Edinburgh"},
+        {"code": "GB-SCT-GLA", "name": "Glasgow"},
+        {"code": "GB-SCT-ABE", "name": "Aberdeen"},
+        {"code": "GB-SCT-DUN", "name": "Dundee"},
+        {"code": "GB-SCT-STI", "name": "Stirling"}
+      ]
+    },
+    {
+      "code": "GB-WLS",
+      "name": "Wales",
+      "cities": [
+        {"code": "GB-WLS-CAR", "name": "Cardiff"},
+        {"code": "GB-WLS-SWA", "name": "Swansea"},
+        {"code": "GB-WLS-NEW", "name": "Newport"},
+        {"code": "GB-WLS-WRE", "name": "Wrexham"}
+      ]
+    },
+    {
+      "code": "GB-NIR",
+      "name": "Northern Ireland",
+      "cities": [
+        {"code": "GB-NIR-BEL", "name": "Belfast"},
+        {"code": "GB-NIR-LON", "name": "Londonderry"},
+        {"code": "GB-NIR-LIS", "name": "Lisburn"},
+        {"code": "GB-NIR-NEW", "name": "Newtownabbey"}
+      ]
+    }
+  ]
+}

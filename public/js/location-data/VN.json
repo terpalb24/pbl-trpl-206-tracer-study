@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "VN-HN",
+      "name": "Hanoi",
+      "cities": [
+        {"code": "VN-HN-HAN", "name": "Hanoi"},
+        {"code": "VN-HN-BAC", "name": "Bac Tu Liem"},
+        {"code": "VN-HN-NAM", "name": "Nam Tu Liem"},
+        {"code": "VN-HN-HAD", "name": "Ha Dong"}
+      ]
+    },
+    {
+      "code": "VN-SG",
+      "name": "Ho Chi Minh City",
+      "cities": [
+        {"code": "VN-SG-SGN", "name": "Ho Chi Minh City"},
+        {"code": "VN-SG-THU", "name": "Thu Duc"},
+        {"code": "VN-SG-BIN", "name": "Binh Thanh"},
+        {"code": "VN-SG-GOV", "name": "Go Vap"}
+      ]
+    },
+    {
+      "code": "VN-HP",
+      "name": "Hai Phong",
+      "cities": [
+        {"code": "VN-HP-HAI", "name": "Hai Phong"},
+        {"code": "VN-HP-HON", "name": "Hong Bang"},
+        {"code": "VN-HP-NGO", "name": "Ngo Quyen"}
+      ]
+    },
+    {
+      "code": "VN-DN",
+      "name": "Da Nang",
+      "cities": [
+        {"code": "VN-DN-DAN", "name": "Da Nang"},
+        {"code": "VN-DN-HAI", "name": "Hai Chau"},
+        {"code": "VN-DN-THN", "name": "Thanh Khe"}
+      ]
+    }
+  ]
+}

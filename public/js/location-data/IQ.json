@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "IQ-BG",
+      "name": "Baghdad",
+      "cities": [
+        {"code": "IQ-BG-BAG", "name": "Baghdad"},
+        {"code": "IQ-BG-ABU", "name": "Abu Ghraib"},
+        {"code": "IQ-BG-MAH", "name": "Mahmudiyah"},
+        {"code": "IQ-BG-TAR", "name": "Tarmiyah"}
+      ]
+    },
+    {
+      "code": "IQ-NI",
+      "name": "Ninawa",
+      "cities": [
+        {"code": "IQ-NI-MOS", "name": "Mosul"},
+        {"code": "IQ-NI-TEL", "name": "Tel Afar"},
+        {"code": "IQ-NI-SIN", "name": "Sinjar"},
+        {"code": "IQ-NI-HAM", "name": "Hamdaniya"}
+      ]
+    },
+    {
+      "code": "IQ-BA",
+      "name": "Basra",
+      "cities": [
+        {"code": "IQ-BA-BAS", "name": "Basra"},
+        {"code": "IQ-BA-UMM", "name": "Umm Qasr"},
+        {"code": "IQ-BA-ZUB", "name": "Zubair"},
+        {"code": "IQ-BA-ABU", "name": "Abu Al-Khaseeb"}
+      ]
+    },
+    {
+      "code": "IQ-ER",
+      "name": "Erbil",
+      "cities": [
+        {"code": "IQ-ER-ERB", "name": "Erbil"},
+        {"code": "IQ-ER-SHA", "name": "Shaqlawa"},
+        {"code": "IQ-ER-KOY", "name": "Koya"},
+        {"code": "IQ-ER-SOR", "name": "Soran"}
+      ]
+    }
+  ]
+}

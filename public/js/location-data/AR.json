@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "AR-C",
+      "name": "Buenos Aires",
+      "cities": [
+        {"code": "AR-C-BUE", "name": "Buenos Aires"},
+        {"code": "AR-C-LAP", "name": "La Plata"},
+        {"code": "AR-C-MAR", "name": "Mar del Plata"},
+        {"code": "AR-C-BAH", "name": "Bahía Blanca"}
+      ]
+    },
+    {
+      "code": "AR-X",
+      "name": "Córdoba",
+      "cities": [
+        {"code": "AR-X-COR", "name": "Córdoba"},
+        {"code": "AR-X-RIO", "name": "Río Cuarto"},
+        {"code": "AR-X-VIL", "name": "Villa María"}
+      ]
+    },
+    {
+      "code": "AR-S",
+      "name": "Santa Fe",
+      "cities": [
+        {"code": "AR-S-ROS", "name": "Rosario"},
+        {"code": "AR-S-SAN", "name": "Santa Fe"},
+        {"code": "AR-S-RAF", "name": "Rafaela"}
+      ]
+    },
+    {
+      "code": "AR-M",
+      "name": "Mendoza",
+      "cities": [
+        {"code": "AR-M-MEN", "name": "Mendoza"},
+        {"code": "AR-M-SAN", "name": "San Rafael"},
+        {"code": "AR-M-GOD", "name": "Godoy Cruz"}
+      ]
+    }
+  ]
+}

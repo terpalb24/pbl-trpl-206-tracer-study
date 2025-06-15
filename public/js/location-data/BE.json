@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "BE-BRU",
+      "name": "Brussels",
+      "cities": [
+        {"code": "BE-BRU-BRU", "name": "Brussels"},
+        {"code": "BE-BRU-UCC", "name": "Uccle"},
+        {"code": "BE-BRU-IXE", "name": "Ixelles"},
+        {"code": "BE-BRU-SCH", "name": "Schaerbeek"}
+      ]
+    },
+    {
+      "code": "BE-VAN",
+      "name": "Antwerp",
+      "cities": [
+        {"code": "BE-VAN-ANR", "name": "Antwerp"},
+        {"code": "BE-VAN-MEC", "name": "Mechelen"},
+        {"code": "BE-VAN-TUR", "name": "Turnhout"},
+        {"code": "BE-VAN-LIE", "name": "Lier"}
+      ]
+    },
+    {
+      "code": "BE-VBR",
+      "name": "Flemish Brabant",
+      "cities": [
+        {"code": "BE-VBR-LEU", "name": "Leuven"},
+        {"code": "BE-VBR-VIL", "name": "Vilvoorde"},
+        {"code": "BE-VBR-AAL", "name": "Aalst"},
+        {"code": "BE-VBR-HAL", "name": "Halle"}
+      ]
+    },
+    {
+      "code": "BE-WLG",
+      "name": "Liège",
+      "cities": [
+        {"code": "BE-WLG-LIE", "name": "Liège"},
+        {"code": "BE-WLG-VER", "name": "Verviers"},
+        {"code": "BE-WLG-SER", "name": "Seraing"},
+        {"code": "BE-WLG-HUY", "name": "Huy"}
+      ]
+    }
+  ]
+}

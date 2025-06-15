@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "CZ-10",
+      "name": "Prague",
+      "cities": [
+        {"code": "CZ-10-PRA", "name": "Prague"}
+      ]
+    },
+    {
+      "code": "CZ-64",
+      "name": "South Moravian",
+      "cities": [
+        {"code": "CZ-64-BRN", "name": "Brno"},
+        {"code": "CZ-64-ZNO", "name": "Znojmo"},
+        {"code": "CZ-64-HOD", "name": "Hodonín"},
+        {"code": "CZ-64-BLA", "name": "Blansko"}
+      ]
+    },
+    {
+      "code": "CZ-41",
+      "name": "Moravian-Silesian",
+      "cities": [
+        {"code": "CZ-41-OST", "name": "Ostrava"},
+        {"code": "CZ-41-HAV", "name": "Havířov"},
+        {"code": "CZ-41-KAR", "name": "Karviná"},
+        {"code": "CZ-41-FRY", "name": "Frýdek-Místek"}
+      ]
+    },
+    {
+      "code": "CZ-42",
+      "name": "Olomouc",
+      "cities": [
+        {"code": "CZ-42-OLO", "name": "Olomouc"},
+        {"code": "CZ-42-PRE", "name": "Přerov"},
+        {"code": "CZ-42-PRS", "name": "Prostějov"}
+      ]
+    }
+  ]
+}

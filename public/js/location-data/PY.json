@@ -1,0 +1,39 @@
+{
+  "states": [
+    {
+      "code": "PY-ASU",
+      "name": "Asunción",
+      "cities": [
+        {"code": "PY-ASU-ASU", "name": "Asunción"}
+      ]
+    },
+    {
+      "code": "PY-CEN",
+      "name": "Central",
+      "cities": [
+        {"code": "PY-CEN-SLO", "name": "San Lorenzo"},
+        {"code": "PY-CEN-LUQ", "name": "Luque"},
+        {"code": "PY-CEN-CAP", "name": "Capiatá"},
+        {"code": "PY-CEN-LAM", "name": "Lambaré"}
+      ]
+    },
+    {
+      "code": "PY-AAL",
+      "name": "Alto Paraná",
+      "cities": [
+        {"code": "PY-AAL-CDE", "name": "Ciudad del Este"},
+        {"code": "PY-AAL-HER", "name": "Hernandarias"},
+        {"code": "PY-AAL-PRE", "name": "Presidente Franco"}
+      ]
+    },
+    {
+      "code": "PY-ITA",
+      "name": "Itapúa",
+      "cities": [
+        {"code": "PY-ITA-ENC", "name": "Encarnación"},
+        {"code": "PY-ITA-CAP", "name": "Capitán Miranda"},
+        {"code": "PY-ITA-CAM", "name": "Cambyretá"}
+      ]
+    }
+  ]
+}

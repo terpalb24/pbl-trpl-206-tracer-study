@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "BN-BM",
+      "name": "Brunei-Muara",
+      "cities": [
+        {"code": "BN-BM-BSB", "name": "Bandar Seri Begawan"},
+        {"code": "BN-BM-GAD", "name": "Gadong"},
+        {"code": "BN-BM-KIA", "name": "Kiarong"},
+        {"code": "BN-BM-JER", "name": "Jerudong"}
+      ]
+    },
+    {
+      "code": "BN-KB",
+      "name": "Kuala Belait",
+      "cities": [
+        {"code": "BN-KB-KUA", "name": "Kuala Belait"},
+        {"code": "BN-KB-SER", "name": "Seria"},
+        {"code": "BN-KB-LUM", "name": "Lumut"}
+      ]
+    },
+    {
+      "code": "BN-TE",
+      "name": "Tutong",
+      "cities": [
+        {"code": "BN-TE-TUT", "name": "Tutong"},
+        {"code": "BN-TE-LAM", "name": "Lamunin"},
+        {"code": "BN-TE-RIS", "name": "Risik"}
+      ]
+    },
+    {
+      "code": "BN-TE",
+      "name": "Temburong",
+      "cities": [
+        {"code": "BN-TE-BAN", "name": "Bangar"},
+        {"code": "BN-TE-LAB", "name": "Labu"},
+        {"code": "BN-TE-BAT", "name": "Batang Duri"}
+      ]
+    }
+  ]
+}

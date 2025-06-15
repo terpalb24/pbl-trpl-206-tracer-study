@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "LK-1",
+      "name": "Western",
+      "cities": [
+        {"code": "LK-1-CMB", "name": "Colombo"},
+        {"code": "LK-1-GAM", "name": "Gampaha"},
+        {"code": "LK-1-KAL", "name": "Kalutara"},
+        {"code": "LK-1-NEG", "name": "Negombo"}
+      ]
+    },
+    {
+      "code": "LK-2",
+      "name": "Central",
+      "cities": [
+        {"code": "LK-2-KDY", "name": "Kandy"},
+        {"code": "LK-2-MAT", "name": "Matale"},
+        {"code": "LK-2-NUW", "name": "Nuwara Eliya"},
+        {"code": "LK-2-HAT", "name": "Hatton"}
+      ]
+    },
+    {
+      "code": "LK-3",
+      "name": "Southern",
+      "cities": [
+        {"code": "LK-3-GAL", "name": "Galle"},
+        {"code": "LK-3-MAT", "name": "Matara"},
+        {"code": "LK-3-HAM", "name": "Hambantota"},
+        {"code": "LK-3-TAN", "name": "Tangalle"}
+      ]
+    },
+    {
+      "code": "LK-4",
+      "name": "Northern",
+      "cities": [
+        {"code": "LK-4-JAF", "name": "Jaffna"},
+        {"code": "LK-4-KIL", "name": "Kilinochchi"},
+        {"code": "LK-4-MAN", "name": "Mannar"},
+        {"code": "LK-4-VAV", "name": "Vavuniya"}
+      ]
+    }
+  ]
+}

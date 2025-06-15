@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "ZA-GT",
+      "name": "Gauteng",
+      "cities": [
+        {"code": "ZA-GT-JOH", "name": "Johannesburg"},
+        {"code": "ZA-GT-PTA", "name": "Pretoria"},
+        {"code": "ZA-GT-SOW", "name": "Soweto"},
+        {"code": "ZA-GT-SAN", "name": "Sandton"}
+      ]
+    },
+    {
+      "code": "ZA-WC",
+      "name": "Western Cape",
+      "cities": [
+        {"code": "ZA-WC-CPT", "name": "Cape Town"},
+        {"code": "ZA-WC-STE", "name": "Stellenbosch"},
+        {"code": "ZA-WC-PAA", "name": "Paarl"},
+        {"code": "ZA-WC-GEO", "name": "George"}
+      ]
+    },
+    {
+      "code": "ZA-KZN",
+      "name": "KwaZulu-Natal",
+      "cities": [
+        {"code": "ZA-KZN-DUR", "name": "Durban"},
+        {"code": "ZA-KZN-PMB", "name": "Pietermaritzburg"},
+        {"code": "ZA-KZN-NEW", "name": "Newcastle"},
+        {"code": "ZA-KZN-RIC", "name": "Richards Bay"}
+      ]
+    },
+    {
+      "code": "ZA-EC",
+      "name": "Eastern Cape",
+      "cities": [
+        {"code": "ZA-EC-PLZ", "name": "Port Elizabeth"},
+        {"code": "ZA-EC-ELO", "name": "East London"},
+        {"code": "ZA-EC-GRA", "name": "Grahamstown"},
+        {"code": "ZA-EC-UIT", "name": "Uitenhage"}
+      ]
+    }
+  ]
+}

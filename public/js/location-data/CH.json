@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "CH-ZH",
+      "name": "Zurich",
+      "cities": [
+        {"code": "CH-ZH-ZUR", "name": "Zurich"},
+        {"code": "CH-ZH-WIN", "name": "Winterthur"},
+        {"code": "CH-ZH-UST", "name": "Uster"},
+        {"code": "CH-ZH-DUB", "name": "Dübendorf"}
+      ]
+    },
+    {
+      "code": "CH-BE",
+      "name": "Bern",
+      "cities": [
+        {"code": "CH-BE-BER", "name": "Bern"},
+        {"code": "CH-BE-BIE", "name": "Biel"},
+        {"code": "CH-BE-THU", "name": "Thun"},
+        {"code": "CH-BE-INT", "name": "Interlaken"}
+      ]
+    },
+    {
+      "code": "CH-GE",
+      "name": "Geneva",
+      "cities": [
+        {"code": "CH-GE-GEN", "name": "Geneva"},
+        {"code": "CH-GE-CAR", "name": "Carouge"},
+        {"code": "CH-GE-VER", "name": "Vernier"},
+        {"code": "CH-GE-LAR", "name": "Lancy"}
+      ]
+    },
+    {
+      "code": "CH-BS",
+      "name": "Basel-Stadt",
+      "cities": [
+        {"code": "CH-BS-BAS", "name": "Basel"},
+        {"code": "CH-BS-RIE", "name": "Riehen"},
+        {"code": "CH-BS-BET", "name": "Bettingen"}
+      ]
+    }
+  ]
+}

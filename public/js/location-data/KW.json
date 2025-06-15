@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "KW-KU",
+      "name": "Kuwait City",
+      "cities": [
+        {"code": "KW-KU-KWI", "name": "Kuwait City"},
+        {"code": "KW-KU-SAL", "name": "Salmiya"},
+        {"code": "KW-KU-HAW", "name": "Hawalli"},
+        {"code": "KW-KU-FAR", "name": "Farwaniya"}
+      ]
+    },
+    {
+      "code": "KW-AH",
+      "name": "Al Ahmadi",
+      "cities": [
+        {"code": "KW-AH-AHM", "name": "Al Ahmadi"},
+        {"code": "KW-AH-FIN", "name": "Fintas"},
+        {"code": "KW-AH-MAN", "name": "Mangaf"},
+        {"code": "KW-AH-FAH", "name": "Fahaheel"}
+      ]
+    },
+    {
+      "code": "KW-JA",
+      "name": "Al Jahra",
+      "cities": [
+        {"code": "KW-JA-JAH", "name": "Al Jahra"},
+        {"code": "KW-JA-SUL", "name": "Al Sulaibiya"},
+        {"code": "KW-JA-ABD", "name": "Abdali"}
+      ]
+    },
+    {
+      "code": "KW-MU",
+      "name": "Mubarak Al-Kabeer",
+      "cities": [
+        {"code": "KW-MU-MUB", "name": "Mubarak Al-Kabeer"},
+        {"code": "KW-MU-QUS", "name": "Al Qusor"},
+        {"code": "KW-MU-ADA", "name": "Adan"}
+      ]
+    }
+  ]
+}

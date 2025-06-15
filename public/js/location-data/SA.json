@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "SA-01",
+      "name": "Riyadh",
+      "cities": [
+        {"code": "SA-01-RUH", "name": "Riyadh"},
+        {"code": "SA-01-KHA", "name": "Al Kharj"},
+        {"code": "SA-01-DAW", "name": "Ad Dawadimi"},
+        {"code": "SA-01-MAJ", "name": "Al Majma'ah"}
+      ]
+    },
+    {
+      "code": "SA-02",
+      "name": "Makkah",
+      "cities": [
+        {"code": "SA-02-MEC", "name": "Mecca"},
+        {"code": "SA-02-JED", "name": "Jeddah"},
+        {"code": "SA-02-TAI", "name": "Taif"},
+        {"code": "SA-02-MED", "name": "Medina"}
+      ]
+    },
+    {
+      "code": "SA-03",
+      "name": "Eastern Province",
+      "cities": [
+        {"code": "SA-03-DAM", "name": "Dammam"},
+        {"code": "SA-03-DHR", "name": "Dhahran"},
+        {"code": "SA-03-KHO", "name": "Al Khobar"},
+        {"code": "SA-03-JUB", "name": "Jubail"}
+      ]
+    },
+    {
+      "code": "SA-05",
+      "name": "Asir",
+      "cities": [
+        {"code": "SA-05-AHB", "name": "Abha"},
+        {"code": "SA-05-KHA", "name": "Khamis Mushait"},
+        {"code": "SA-05-NAJ", "name": "Najran"},
+        {"code": "SA-05-BIS", "name": "Bisha"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "BY-HM",
+      "name": "Minsk",
+      "cities": [
+        {"code": "BY-HM-MIN", "name": "Minsk"},
+        {"code": "BY-HM-DZE", "name": "Dzerzhinsk"},
+        {"code": "BY-HM-SOL", "name": "Soligorsk"},
+        {"code": "BY-HM-MOL", "name": "Molodechno"}
+      ]
+    },
+    {
+      "code": "BY-BR",
+      "name": "Brest",
+      "cities": [
+        {"code": "BY-BR-BRE", "name": "Brest"},
+        {"code": "BY-BR-BAR", "name": "Baranovichi"},
+        {"code": "BY-BR-PIN", "name": "Pinsk"},
+        {"code": "BY-BR-KOB", "name": "Kobrin"}
+      ]
+    },
+    {
+      "code": "BY-HO",
+      "name": "Gomel",
+      "cities": [
+        {"code": "BY-HO-GOM", "name": "Gomel"},
+        {"code": "BY-HO-MOZ", "name": "Mozyr"},
+        {"code": "BY-HO-ZHI", "name": "Zhitkovichi"},
+        {"code": "BY-HO-REC", "name": "Rechitsa"}
+      ]
+    },
+    {
+      "code": "BY-HR",
+      "name": "Grodno",
+      "cities": [
+        {"code": "BY-HR-GRO", "name": "Grodno"},
+        {"code": "BY-HR-LID", "name": "Lida"},
+        {"code": "BY-HR-SLO", "name": "Slonim"},
+        {"code": "BY-HR-VOL", "name": "Volkovysk"}
+      ]
+    }
+  ]
+}

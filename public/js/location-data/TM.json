@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "TM-S",
+      "name": "Ashgabat",
+      "cities": [
+        {"code": "TM-S-ASH", "name": "Ashgabat"},
+        {"code": "TM-S-GEO", "name": "Geok-Tepe"},
+        {"code": "TM-S-BAB", "name": "Babadayhan"},
+        {"code": "TM-S-ABB", "name": "Abadan"}
+      ]
+    },
+    {
+      "code": "TM-A",
+      "name": "Ahal",
+      "cities": [
+        {"code": "TM-A-TEJ", "name": "Tejen"},
+        {"code": "TM-A-ANN", "name": "Anau"},
+        {"code": "TM-A-BAH", "name": "Baharly"},
+        {"code": "TM-A-KAK", "name": "Kaka"}
+      ]
+    },
+    {
+      "code": "TM-B",
+      "name": "Balkan",
+      "cities": [
+        {"code": "TM-B-BAL", "name": "Balkanabat"},
+        {"code": "TM-B-TUR", "name": "Turkmenbashi"},
+        {"code": "TM-B-KAZ", "name": "Kazandzhik"},
+        {"code": "TM-B-HAZ", "name": "Hazar"}
+      ]
+    },
+    {
+      "code": "TM-D",
+      "name": "Dashoguz",
+      "cities": [
+        {"code": "TM-D-DAS", "name": "Dashoguz"},
+        {"code": "TM-D-KON", "name": "Koneurgench"},
+        {"code": "TM-D-AKD", "name": "Akdepe"},
+        {"code": "TM-D-BOL", "name": "Boldumsaz"}
+      ]
+    }
+  ]
+}

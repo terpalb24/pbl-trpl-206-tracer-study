@@ -1,0 +1,83 @@
+{
+  "states": [
+    {
+      "code": "AU-NSW",
+      "name": "New South Wales",
+      "cities": [
+        {"code": "AU-NSW-SYD", "name": "Sydney"},
+        {"code": "AU-NSW-NEW", "name": "Newcastle"},
+        {"code": "AU-NSW-WOL", "name": "Wollongong"},
+        {"code": "AU-NSW-TWD", "name": "Tweed Heads"},
+        {"code": "AU-NSW-ALB", "name": "Albury"}
+      ]
+    },
+    {
+      "code": "AU-VIC",
+      "name": "Victoria",
+      "cities": [
+        {"code": "AU-VIC-MEL", "name": "Melbourne"},
+        {"code": "AU-VIC-GEE", "name": "Geelong"},
+        {"code": "AU-VIC-BAL", "name": "Ballarat"},
+        {"code": "AU-VIC-BEN", "name": "Bendigo"},
+        {"code": "AU-VIC-LAT", "name": "Latrobe"}
+      ]
+    },
+    {
+      "code": "AU-QLD",
+      "name": "Queensland",
+      "cities": [
+        {"code": "AU-QLD-BRI", "name": "Brisbane"},
+        {"code": "AU-QLD-GLD", "name": "Gold Coast"},
+        {"code": "AU-QLD-CNS", "name": "Cairns"},
+        {"code": "AU-QLD-TOW", "name": "Townsville"},
+        {"code": "AU-QLD-ROC", "name": "Rockhampton"}
+      ]
+    },
+    {
+      "code": "AU-WA",
+      "name": "Western Australia",
+      "cities": [
+        {"code": "AU-WA-PER", "name": "Perth"},
+        {"code": "AU-WA-FRE", "name": "Fremantle"},
+        {"code": "AU-WA-KAL", "name": "Kalgoorlie"},
+        {"code": "AU-WA-GER", "name": "Geraldton"},
+        {"code": "AU-WA-BUN", "name": "Bunbury"}
+      ]
+    },
+    {
+      "code": "AU-SA",
+      "name": "South Australia",
+      "cities": [
+        {"code": "AU-SA-ADL", "name": "Adelaide"},
+        {"code": "AU-SA-MGB", "name": "Mount Gambier"},
+        {"code": "AU-SA-WHY", "name": "Whyalla"},
+        {"code": "AU-SA-PTA", "name": "Port Augusta"}
+      ]
+    },
+    {
+      "code": "AU-TAS",
+      "name": "Tasmania",
+      "cities": [
+        {"code": "AU-TAS-HOB", "name": "Hobart"},
+        {"code": "AU-TAS-LAU", "name": "Launceston"},
+        {"code": "AU-TAS-DEV", "name": "Devonport"}
+      ]
+    },
+    {
+      "code": "AU-NT",
+      "name": "Northern Territory",
+      "cities": [
+        {"code": "AU-NT-DAR", "name": "Darwin"},
+        {"code": "AU-NT-ALI", "name": "Alice Springs"},
+        {"code": "AU-NT-KAT", "name": "Katherine"}
+      ]
+    },
+    {
+      "code": "AU-ACT",
+      "name": "Australian Capital Territory",
+      "cities": [
+        {"code": "AU-ACT-CAN", "name": "Canberra"}
+      ]
+    }
+  ]
+}

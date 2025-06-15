@@ -1,0 +1,34 @@
+{
+  "states": [
+    {
+      "code": "LU-L",
+      "name": "Luxembourg",
+      "cities": [
+        {"code": "LU-L-LUX", "name": "Luxembourg City"},
+        {"code": "LU-L-HES", "name": "Hesperange"},
+        {"code": "LU-L-STR", "name": "Strassen"},
+        {"code": "LU-L-BER", "name": "Bertrange"}
+      ]
+    },
+    {
+      "code": "LU-D",
+      "name": "Diekirch",
+      "cities": [
+        {"code": "LU-D-DIE", "name": "Diekirch"},
+        {"code": "LU-D-ETT", "name": "Ettelbruck"},
+        {"code": "LU-D-WIL", "name": "Wiltz"},
+        {"code": "LU-D-VIA", "name": "Vianden"}
+      ]
+    },
+    {
+      "code": "LU-G",
+      "name": "Grevenmacher",
+      "cities": [
+        {"code": "LU-G-GRE", "name": "Grevenmacher"},
+        {"code": "LU-G-ECH", "name": "Echternach"},
+        {"code": "LU-G-REM", "name": "Remich"},
+        {"code": "LU-G-WAS", "name": "Wasserbillig"}
+      ]
+    }
+  ]
+}

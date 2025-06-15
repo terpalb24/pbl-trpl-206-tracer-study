@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "IS-1",
+      "name": "Capital Region",
+      "cities": [
+        {"code": "IS-1-REY", "name": "Reykjavik"},
+        {"code": "IS-1-COP", "name": "Kópavogur"},
+        {"code": "IS-1-HAF", "name": "Hafnarfjörður"},
+        {"code": "IS-1-GAR", "name": "Garðabær"}
+      ]
+    },
+    {
+      "code": "IS-7",
+      "name": "Eastern Region",
+      "cities": [
+        {"code": "IS-7-EGI", "name": "Egilsstaðir"},
+        {"code": "IS-7-HÖF", "name": "Höfn"},
+        {"code": "IS-7-SEY", "name": "Seyðisfjörður"}
+      ]
+    },
+    {
+      "code": "IS-2",
+      "name": "Southern Peninsula",
+      "cities": [
+        {"code": "IS-2-KEF", "name": "Keflavík"},
+        {"code": "IS-2-GRI", "name": "Grindavík"},
+        {"code": "IS-2-SAN", "name": "Sandgerði"}
+      ]
+    },
+    {
+      "code": "IS-8",
+      "name": "Southern Region",
+      "cities": [
+        {"code": "IS-8-SEL", "name": "Selfoss"},
+        {"code": "IS-8-HVO", "name": "Hvolsvöllur"},
+        {"code": "IS-8-VES", "name": "Vestmannaeyjar"}
+      ]
+    }
+  ]
+}

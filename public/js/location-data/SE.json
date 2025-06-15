@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "SE-AB",
+      "name": "Stockholm",
+      "cities": [
+        {"code": "SE-AB-STO", "name": "Stockholm"},
+        {"code": "SE-AB-SOD", "name": "Södertälje"},
+        {"code": "SE-AB-NOR", "name": "Norrtälje"},
+        {"code": "SE-AB-NYK", "name": "Nyköping"}
+      ]
+    },
+    {
+      "code": "SE-O",
+      "name": "Västra Götaland",
+      "cities": [
+        {"code": "SE-O-GOT", "name": "Göteborg"},
+        {"code": "SE-O-BOR", "name": "Borås"},
+        {"code": "SE-O-SKO", "name": "Skövde"},
+        {"code": "SE-O-TRO", "name": "Trollhättan"}
+      ]
+    },
+    {
+      "code": "SE-M",
+      "name": "Skåne",
+      "cities": [
+        {"code": "SE-M-MAL", "name": "Malmö"},
+        {"code": "SE-M-LUN", "name": "Lund"},
+        {"code": "SE-M-HEL", "name": "Helsingborg"},
+        {"code": "SE-M-KRI", "name": "Kristianstad"}
+      ]
+    },
+    {
+      "code": "SE-BD",
+      "name": "Norrbotten",
+      "cities": [
+        {"code": "SE-BD-LUL", "name": "Luleå"},
+        {"code": "SE-BD-KIR", "name": "Kiruna"},
+        {"code": "SE-BD-BOD", "name": "Boden"}
+      ]
+    }
+  ]
+}

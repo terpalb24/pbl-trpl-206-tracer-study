@@ -1,0 +1,35 @@
+{
+  "states": [
+    {
+      "code": "MH-MAJ",
+      "name": "Majuro Atoll",
+      "cities": [
+        {"code": "MH-MAJ-MAJ", "name": "Majuro"},
+        {"code": "MH-MAJ-DAL", "name": "Dalap"},
+        {"code": "MH-MAJ-ULI", "name": "Uliga"}
+      ]
+    },
+    {
+      "code": "MH-KWA",
+      "name": "Kwajalein Atoll",
+      "cities": [
+        {"code": "MH-KWA-EBE", "name": "Ebeye"},
+        {"code": "MH-KWA-KWA", "name": "Kwajalein"}
+      ]
+    },
+    {
+      "code": "MH-JAL",
+      "name": "Jaluit Atoll",
+      "cities": [
+        {"code": "MH-JAL-JAL", "name": "Jaluit"}
+      ]
+    },
+    {
+      "code": "MH-WOT",
+      "name": "Wotje Atoll",
+      "cities": [
+        {"code": "MH-WOT-WOT", "name": "Wotje"}
+      ]
+    }
+  ]
+}

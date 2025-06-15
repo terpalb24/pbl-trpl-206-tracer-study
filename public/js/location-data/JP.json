@@ -1,0 +1,53 @@
+{
+  "states": [
+    {
+      "code": "JP-TK",
+      "name": "Tokyo",
+      "cities": [
+        {"code": "JP-TK-SHI", "name": "Shibuya"},
+        {"code": "JP-TK-SHI", "name": "Shinjuku"},
+        {"code": "JP-TK-GIN", "name": "Ginza"},
+        {"code": "JP-TK-HAR", "name": "Harajuku"},
+        {"code": "JP-TK-AKI", "name": "Akihabara"}
+      ]
+    },
+    {
+      "code": "JP-OS",
+      "name": "Osaka",
+      "cities": [
+        {"code": "JP-OS-OSA", "name": "Osaka"},
+        {"code": "JP-OS-NAM", "name": "Namba"},
+        {"code": "JP-OS-SHI", "name": "Shinsekai"},
+        {"code": "JP-OS-UME", "name": "Umeda"}
+      ]
+    },
+    {
+      "code": "JP-KY",
+      "name": "Kyoto",
+      "cities": [
+        {"code": "JP-KY-KYO", "name": "Kyoto"},
+        {"code": "JP-KY-GIO", "name": "Gion"},
+        {"code": "JP-KY-ARA", "name": "Arashiyama"},
+        {"code": "JP-KY-FUS", "name": "Fushimi"}
+      ]
+    },
+    {
+      "code": "JP-YO",
+      "name": "Yokohama",
+      "cities": [
+        {"code": "JP-YO-YOK", "name": "Yokohama"},
+        {"code": "JP-YO-MIN", "name": "Minato Mirai"},
+        {"code": "JP-YO-CHI", "name": "Chinatown"}
+      ]
+    },
+    {
+      "code": "JP-NA",
+      "name": "Nagoya",
+      "cities": [
+        {"code": "JP-NA-NAG", "name": "Nagoya"},
+        {"code": "JP-NA-SAK", "name": "Sakae"},
+        {"code": "JP-NA-NAK", "name": "Nakamura"}
+      ]
+    }
+  ]
+}

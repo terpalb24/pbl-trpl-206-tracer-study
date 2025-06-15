@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "PK-PB",
+      "name": "Punjab",
+      "cities": [
+        {"code": "PK-PB-LHE", "name": "Lahore"},
+        {"code": "PK-PB-FSD", "name": "Faisalabad"},
+        {"code": "PK-PB-RWP", "name": "Rawalpindi"},
+        {"code": "PK-PB-GUJ", "name": "Gujranwala"},
+        {"code": "PK-PB-MLT", "name": "Multan"}
+      ]
+    },
+    {
+      "code": "PK-SD",
+      "name": "Sindh",
+      "cities": [
+        {"code": "PK-SD-KHI", "name": "Karachi"},
+        {"code": "PK-SD-HYD", "name": "Hyderabad"},
+        {"code": "PK-SD-SUK", "name": "Sukkur"},
+        {"code": "PK-SD-LAR", "name": "Larkana"}
+      ]
+    },
+    {
+      "code": "PK-KP",
+      "name": "Khyber Pakhtunkhwa",
+      "cities": [
+        {"code": "PK-KP-PEW", "name": "Peshawar"},
+        {"code": "PK-KP-MRD", "name": "Mardan"},
+        {"code": "PK-KP-KOH", "name": "Kohat"},
+        {"code": "PK-KP-ABT", "name": "Abbottabad"}
+      ]
+    },
+    {
+      "code": "PK-IS",
+      "name": "Islamabad",
+      "cities": [
+        {"code": "PK-IS-ISB", "name": "Islamabad"}
+      ]
+    }
+  ]
+}

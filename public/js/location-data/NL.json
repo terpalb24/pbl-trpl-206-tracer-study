@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "NL-NH",
+      "name": "North Holland",
+      "cities": [
+        {"code": "NL-NH-AMS", "name": "Amsterdam"},
+        {"code": "NL-NH-HAA", "name": "The Hague"},
+        {"code": "NL-NH-HAR", "name": "Haarlem"},
+        {"code": "NL-NH-ZAA", "name": "Zaandam"}
+      ]
+    },
+    {
+      "code": "NL-ZH",
+      "name": "South Holland",
+      "cities": [
+        {"code": "NL-ZH-ROT", "name": "Rotterdam"},
+        {"code": "NL-ZH-LEI", "name": "Leiden"},
+        {"code": "NL-ZH-DEL", "name": "Delft"},
+        {"code": "NL-ZH-DOR", "name": "Dordrecht"}
+      ]
+    },
+    {
+      "code": "NL-UT",
+      "name": "Utrecht",
+      "cities": [
+        {"code": "NL-UT-UTR", "name": "Utrecht"},
+        {"code": "NL-UT-AME", "name": "Amersfoort"},
+        {"code": "NL-UT-NIE", "name": "Nieuwegein"},
+        {"code": "NL-UT-VEE", "name": "Veenendaal"}
+      ]
+    },
+    {
+      "code": "NL-NB",
+      "name": "North Brabant",
+      "cities": [
+        {"code": "NL-NB-EIN", "name": "Eindhoven"},
+        {"code": "NL-NB-TIL", "name": "Tilburg"},
+        {"code": "NL-NB-BRE", "name": "Breda"},
+        {"code": "NL-NB-BOI", "name": "'s-Hertogenbosch"}
+      ]
+    }
+  ]
+}

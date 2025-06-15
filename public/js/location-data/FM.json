@@ -1,0 +1,37 @@
+{
+  "states": [
+    {
+      "code": "FM-PNI",
+      "name": "Pohnpei",
+      "cities": [
+        {"code": "FM-PNI-PAL", "name": "Palikir"},
+        {"code": "FM-PNI-KOL", "name": "Kolonia"},
+        {"code": "FM-PNI-NET", "name": "Nett"}
+      ]
+    },
+    {
+      "code": "FM-KSA",
+      "name": "Kosrae",
+      "cities": [
+        {"code": "FM-KSA-TOR", "name": "Tofol"},
+        {"code": "FM-KSA-LEL", "name": "Lelu"}
+      ]
+    },
+    {
+      "code": "FM-TRK",
+      "name": "Chuuk",
+      "cities": [
+        {"code": "FM-TRK-WEN", "name": "Weno"},
+        {"code": "FM-TRK-TON", "name": "Tonoas"}
+      ]
+    },
+    {
+      "code": "FM-YAP",
+      "name": "Yap",
+      "cities": [
+        {"code": "FM-YAP-COL", "name": "Colonia"},
+        {"code": "FM-YAP-FAL", "name": "Falalop"}
+      ]
+    }
+  ]
+}

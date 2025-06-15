@@ -1,0 +1,39 @@
+{
+  "states": [
+    {
+      "code": "NR-01",
+      "name": "Aiwo",
+      "cities": [
+        {"code": "NR-01-AIW", "name": "Aiwo"}
+      ]
+    },
+    {
+      "code": "NR-02",
+      "name": "Anabar",
+      "cities": [
+        {"code": "NR-02-ANA", "name": "Anabar"}
+      ]
+    },
+    {
+      "code": "NR-03",
+      "name": "Anetan",
+      "cities": [
+        {"code": "NR-03-ANE", "name": "Anetan"}
+      ]
+    },
+    {
+      "code": "NR-04",
+      "name": "Anibare",
+      "cities": [
+        {"code": "NR-04-ANI", "name": "Anibare"}
+      ]
+    },
+    {
+      "code": "NR-05",
+      "name": "Yaren",
+      "cities": [
+        {"code": "NR-05-YAR", "name": "Yaren"}
+      ]
+    }
+  ]
+}

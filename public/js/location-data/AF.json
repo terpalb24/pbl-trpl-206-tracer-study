@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "AF-KAB",
+      "name": "Kabul",
+      "cities": [
+        {"code": "AF-KAB-KAB", "name": "Kabul"},
+        {"code": "AF-KAB-BAG", "name": "Bagram"},
+        {"code": "AF-KAB-CHA", "name": "Charikar"},
+        {"code": "AF-KAB-PAG", "name": "Paghman"}
+      ]
+    },
+    {
+      "code": "AF-HER",
+      "name": "Herat",
+      "cities": [
+        {"code": "AF-HER-HER", "name": "Herat"},
+        {"code": "AF-HER-SHI", "name": "Shindand"},
+        {"code": "AF-HER-GHO", "name": "Ghorian"}
+      ]
+    },
+    {
+      "code": "AF-KAN",
+      "name": "Kandahar",
+      "cities": [
+        {"code": "AF-KAN-KAN", "name": "Kandahar"},
+        {"code": "AF-KAN-SPI", "name": "Spin Boldak"},
+        {"code": "AF-KAN-ARG", "name": "Arghandab"}
+      ]
+    },
+    {
+      "code": "AF-BAL",
+      "name": "Balkh",
+      "cities": [
+        {"code": "AF-BAL-MAZ", "name": "Mazar-i-Sharif"},
+        {"code": "AF-BAL-BAL", "name": "Balkh"},
+        {"code": "AF-BAL-SHO", "name": "Sholgareh"}
+      ]
+    }
+  ]
+}

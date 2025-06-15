@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "KE-110",
+      "name": "Nairobi",
+      "cities": [
+        {"code": "KE-110-NAI", "name": "Nairobi"},
+        {"code": "KE-110-KAR", "name": "Karen"},
+        {"code": "KE-110-WES", "name": "Westlands"}
+      ]
+    },
+    {
+      "code": "KE-200",
+      "name": "Central",
+      "cities": [
+        {"code": "KE-200-NYE", "name": "Nyeri"},
+        {"code": "KE-200-THI", "name": "Thika"},
+        {"code": "KE-200-NAK", "name": "Nakuru"}
+      ]
+    },
+    {
+      "code": "KE-300",
+      "name": "Coast",
+      "cities": [
+        {"code": "KE-300-MOM", "name": "Mombasa"},
+        {"code": "KE-300-MAL", "name": "Malindi"},
+        {"code": "KE-300-KIL", "name": "Kilifi"}
+      ]
+    },
+    {
+      "code": "KE-400",
+      "name": "Eastern",
+      "cities": [
+        {"code": "KE-400-MAC", "name": "Machakos"},
+        {"code": "KE-400-KIT", "name": "Kitui"},
+        {"code": "KE-400-MER", "name": "Meru"}
+      ]
+    }
+  ]
+}

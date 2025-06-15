@@ -1,0 +1,38 @@
+{
+  "states": [
+    {
+      "code": "BG-22",
+      "name": "Sofia City",
+      "cities": [
+        {"code": "BG-22-SOF", "name": "Sofia"}
+      ]
+    },
+    {
+      "code": "BG-02",
+      "name": "Burgas",
+      "cities": [
+        {"code": "BG-02-BUR", "name": "Burgas"},
+        {"code": "BG-02-SUN", "name": "Sunny Beach"},
+        {"code": "BG-02-NES", "name": "Nesebar"}
+      ]
+    },
+    {
+      "code": "BG-26",
+      "name": "Varna",
+      "cities": [
+        {"code": "BG-26-VAR", "name": "Varna"},
+        {"code": "BG-26-DEV", "name": "Devnya"},
+        {"code": "BG-26-PRO", "name": "Provadiya"}
+      ]
+    },
+    {
+      "code": "BG-18",
+      "name": "Plovdiv",
+      "cities": [
+        {"code": "BG-18-PLO", "name": "Plovdiv"},
+        {"code": "BG-18-ASS", "name": "Asenovgrad"},
+        {"code": "BG-18-KAR", "name": "Karlovo"}
+      ]
+    }
+  ]
+}

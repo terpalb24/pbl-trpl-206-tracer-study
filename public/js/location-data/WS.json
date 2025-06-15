@@ -1,0 +1,37 @@
+{
+  "states": [
+    {
+      "code": "WS-TU",
+      "name": "Tuamasaga",
+      "cities": [
+        {"code": "WS-TU-API", "name": "Apia"},
+        {"code": "WS-TU-VAN", "name": "Vaitele"},
+        {"code": "WS-TU-FAL", "name": "Faleolo"}
+      ]
+    },
+    {
+      "code": "WS-AA",
+      "name": "A'ana",
+      "cities": [
+        {"code": "WS-AA-LEU", "name": "Leulumoega"},
+        {"code": "WS-AA-FAS", "name": "Fasito'o"}
+      ]
+    },
+    {
+      "code": "WS-AT",
+      "name": "Atua",
+      "cities": [
+        {"code": "WS-AT-LUF", "name": "Lufilufi"},
+        {"code": "WS-AT-SOL", "name": "Solosolo"}
+      ]
+    },
+    {
+      "code": "WS-FA",
+      "name": "Fa'asaleleaga",
+      "cities": [
+        {"code": "WS-FA-SAF", "name": "Safotulafai"},
+        {"code": "WS-FA-ASA", "name": "Asau"}
+      ]
+    }
+  ]
+}

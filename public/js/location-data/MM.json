@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "MM-11",
+      "name": "Yangon",
+      "cities": [
+        {"code": "MM-11-RGN", "name": "Yangon"},
+        {"code": "MM-11-THA", "name": "Thanlyin"},
+        {"code": "MM-11-SHW", "name": "Shwepyitha"}
+      ]
+    },
+    {
+      "code": "MM-04",
+      "name": "Mandalay",
+      "cities": [
+        {"code": "MM-04-MDL", "name": "Mandalay"},
+        {"code": "MM-04-PYI", "name": "Pyin Oo Lwin"},
+        {"code": "MM-04-AMA", "name": "Amarapura"}
+      ]
+    },
+    {
+      "code": "MM-18",
+      "name": "Naypyidaw",
+      "cities": [
+        {"code": "MM-18-NYT", "name": "Naypyidaw"},
+        {"code": "MM-18-OTT", "name": "Ottarathiri"},
+        {"code": "MM-18-ZAB", "name": "Zabuthiri"}
+      ]
+    },
+    {
+      "code": "MM-16",
+      "name": "Shan",
+      "cities": [
+        {"code": "MM-16-TAU", "name": "Taunggyi"},
+        {"code": "MM-16-LAI", "name": "Lashio"},
+        {"code": "MM-16-KEN", "name": "Kengtung"}
+      ]
+    }
+  ]
+}

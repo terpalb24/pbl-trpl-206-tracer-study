@@ -1,0 +1,38 @@
+{
+  "states": [
+    {
+      "code": "RO-B",
+      "name": "Bucharest",
+      "cities": [
+        {"code": "RO-B-BUC", "name": "Bucharest"}
+      ]
+    },
+    {
+      "code": "RO-CJ",
+      "name": "Cluj",
+      "cities": [
+        {"code": "RO-CJ-CLU", "name": "Cluj-Napoca"},
+        {"code": "RO-CJ-DEJ", "name": "Dej"},
+        {"code": "RO-CJ-TUR", "name": "Turda"}
+      ]
+    },
+    {
+      "code": "RO-TM",
+      "name": "Timiș",
+      "cities": [
+        {"code": "RO-TM-TIM", "name": "Timișoara"},
+        {"code": "RO-TM-LUG", "name": "Lugoj"},
+        {"code": "RO-TM-SAN", "name": "Sânnicolau Mare"}
+      ]
+    },
+    {
+      "code": "RO-IS",
+      "name": "Iași",
+      "cities": [
+        {"code": "RO-IS-IAS", "name": "Iași"},
+        {"code": "RO-IS-PAS", "name": "Pașcani"},
+        {"code": "RO-IS-HIR", "name": "Hîrlău"}
+      ]
+    }
+  ]
+}

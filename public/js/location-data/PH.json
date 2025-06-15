@@ -1,0 +1,35 @@
+{
+  "states": [
+    {
+      "code": "PH-NCR",
+      "name": "National Capital Region",
+      "cities": [
+        {"code": "PH-NCR-MNL", "name": "Manila"},
+        {"code": "PH-NCR-QZN", "name": "Quezon City"},
+        {"code": "PH-NCR-MAK", "name": "Makati"},
+        {"code": "PH-NCR-BGC", "name": "Taguig"},
+        {"code": "PH-NCR-PAS", "name": "Pasig"}
+      ]
+    },
+    {
+      "code": "PH-CEB",
+      "name": "Cebu",
+      "cities": [
+        {"code": "PH-CEB-CEB", "name": "Cebu City"},
+        {"code": "PH-CEB-LAP", "name": "Lapu-Lapu"},
+        {"code": "PH-CEB-MAN", "name": "Mandaue"},
+        {"code": "PH-CEB-TOL", "name": "Toledo"}
+      ]
+    },
+    {
+      "code": "PH-DAV",
+      "name": "Davao",
+      "cities": [
+        {"code": "PH-DAV-DAV", "name": "Davao City"},
+        {"code": "PH-DAV-TAG", "name": "Tagum"},
+        {"code": "PH-DAV-DIJ", "name": "Digos"},
+        {"code": "PH-DAV-PAN", "name": "Panabo"}
+      ]
+    }
+  ]
+}

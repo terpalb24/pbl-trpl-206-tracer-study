@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "HR-21",
+      "name": "Zagreb",
+      "cities": [
+        {"code": "HR-21-ZAG", "name": "Zagreb"},
+        {"code": "HR-21-ZAP", "name": "Zaprešić"},
+        {"code": "HR-21-SAM", "name": "Samobor"}
+      ]
+    },
+    {
+      "code": "HR-17",
+      "name": "Split-Dalmatia",
+      "cities": [
+        {"code": "HR-17-SPL", "name": "Split"},
+        {"code": "HR-17-TRO", "name": "Trogir"},
+        {"code": "HR-17-SIN", "name": "Sinj"},
+        {"code": "HR-17-OMI", "name": "Omiš"}
+      ]
+    },
+    {
+      "code": "HR-20",
+      "name": "Dubrovnik-Neretva",
+      "cities": [
+        {"code": "HR-20-DUB", "name": "Dubrovnik"},
+        {"code": "HR-20-MET", "name": "Metković"},
+        {"code": "HR-20-KOR", "name": "Korčula"}
+      ]
+    },
+    {
+      "code": "HR-18",
+      "name": "Istria",
+      "cities": [
+        {"code": "HR-18-PUL", "name": "Pula"},
+        {"code": "HR-18-ROV", "name": "Rovinj"},
+        {"code": "HR-18-POR", "name": "Poreč"}
+      ]
+    }
+  ]
+}

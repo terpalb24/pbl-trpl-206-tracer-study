@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "IE-D",
+      "name": "Dublin",
+      "cities": [
+        {"code": "IE-D-DUB", "name": "Dublin"},
+        {"code": "IE-D-DUN", "name": "Dún Laoghaire"},
+        {"code": "IE-D-TAL", "name": "Tallaght"},
+        {"code": "IE-D-BLA", "name": "Blanchardstown"}
+      ]
+    },
+    {
+      "code": "IE-C",
+      "name": "Cork",
+      "cities": [
+        {"code": "IE-C-COR", "name": "Cork"},
+        {"code": "IE-C-COB", "name": "Cobh"},
+        {"code": "IE-C-MAL", "name": "Mallow"},
+        {"code": "IE-C-SKI", "name": "Skibbereen"}
+      ]
+    },
+    {
+      "code": "IE-G",
+      "name": "Galway",
+      "cities": [
+        {"code": "IE-G-GAL", "name": "Galway"},
+        {"code": "IE-G-TUA", "name": "Tuam"},
+        {"code": "IE-G-BAL", "name": "Ballinasloe"}
+      ]
+    },
+    {
+      "code": "IE-L",
+      "name": "Limerick",
+      "cities": [
+        {"code": "IE-L-LIM", "name": "Limerick"},
+        {"code": "IE-L-NEW", "name": "Newcastle West"},
+        {"code": "IE-L-KIL", "name": "Kilmallock"}
+      ]
+    }
+  ]
+}

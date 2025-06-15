@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "FJ-C",
+      "name": "Central",
+      "cities": [
+        {"code": "FJ-C-SUV", "name": "Suva"},
+        {"code": "FJ-C-NAS", "name": "Nausori"},
+        {"code": "FJ-C-NAV", "name": "Navua"},
+        {"code": "FJ-C-DEU", "name": "Deuba"}
+      ]
+    },
+    {
+      "code": "FJ-W",
+      "name": "Western",
+      "cities": [
+        {"code": "FJ-W-LAU", "name": "Lautoka"},
+        {"code": "FJ-W-NAD", "name": "Nadi"},
+        {"code": "FJ-W-BA", "name": "Ba"},
+        {"code": "FJ-W-SIG", "name": "Sigatoka"}
+      ]
+    },
+    {
+      "code": "FJ-N",
+      "name": "Northern",
+      "cities": [
+        {"code": "FJ-N-LAB", "name": "Labasa"},
+        {"code": "FJ-N-SAV", "name": "Savusavu"},
+        {"code": "FJ-N-SEQ", "name": "Seqaqa"}
+      ]
+    },
+    {
+      "code": "FJ-E",
+      "name": "Eastern",
+      "cities": [
+        {"code": "FJ-E-LEV", "name": "Levuka"},
+        {"code": "FJ-E-OVA", "name": "Ovalau"}
+      ]
+    }
+  ]
+}

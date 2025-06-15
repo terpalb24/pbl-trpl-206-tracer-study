@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "DK-84",
+      "name": "Capital Region",
+      "cities": [
+        {"code": "DK-84-COP", "name": "Copenhagen"},
+        {"code": "DK-84-FRE", "name": "Frederiksberg"},
+        {"code": "DK-84-GEN", "name": "Gentofte"},
+        {"code": "DK-84-HEL", "name": "Helsingør"}
+      ]
+    },
+    {
+      "code": "DK-82",
+      "name": "Central Jutland",
+      "cities": [
+        {"code": "DK-82-AAR", "name": "Aarhus"},
+        {"code": "DK-82-VIB", "name": "Viborg"},
+        {"code": "DK-82-RAN", "name": "Randers"},
+        {"code": "DK-82-HER", "name": "Herning"}
+      ]
+    },
+    {
+      "code": "DK-83",
+      "name": "Southern Denmark",
+      "cities": [
+        {"code": "DK-83-ODE", "name": "Odense"},
+        {"code": "DK-83-ESB", "name": "Esbjerg"},
+        {"code": "DK-83-KOL", "name": "Kolding"},
+        {"code": "DK-83-VEJ", "name": "Vejle"}
+      ]
+    },
+    {
+      "code": "DK-81",
+      "name": "North Jutland",
+      "cities": [
+        {"code": "DK-81-AAL", "name": "Aalborg"},
+        {"code": "DK-81-HIR", "name": "Hjørring"},
+        {"code": "DK-81-FRE", "name": "Frederikshavn"}
+      ]
+    }
+  ]
+}

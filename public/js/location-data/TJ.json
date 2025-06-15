@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "TJ-DU",
+      "name": "Dushanbe",
+      "cities": [
+        {"code": "TJ-DU-DUS", "name": "Dushanbe"},
+        {"code": "TJ-DU-HIS", "name": "Hisor"},
+        {"code": "TJ-DU-VAH", "name": "Vahdat"},
+        {"code": "TJ-DU-RUD", "name": "Rudaki"}
+      ]
+    },
+    {
+      "code": "TJ-KT",
+      "name": "Khatlon",
+      "cities": [
+        {"code": "TJ-KT-QUR", "name": "Qurghonteppa"},
+        {"code": "TJ-KT-KUL", "name": "Kulob"},
+        {"code": "TJ-KT-BOH", "name": "Bokhtar"},
+        {"code": "TJ-KT-SHA", "name": "Shahrtuz"}
+      ]
+    },
+    {
+      "code": "TJ-SU",
+      "name": "Sughd",
+      "cities": [
+        {"code": "TJ-SU-KHU", "name": "Khujand"},
+        {"code": "TJ-SU-IST", "name": "Istaravshan"},
+        {"code": "TJ-SU-KAN", "name": "Kanibadam"},
+        {"code": "TJ-SU-PAN", "name": "Panjakent"}
+      ]
+    },
+    {
+      "code": "TJ-GB",
+      "name": "Gorno-Badakhshan",
+      "cities": [
+        {"code": "TJ-GB-KHO", "name": "Khorog"},
+        {"code": "TJ-GB-ISH", "name": "Ishkashim"},
+        {"code": "TJ-GB-MUR", "name": "Murghab"},
+        {"code": "TJ-GB-VAN", "name": "Vanj"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "NZ-AUK",
+      "name": "Auckland",
+      "cities": [
+        {"code": "NZ-AUK-AUK", "name": "Auckland"},
+        {"code": "NZ-AUK-MAN", "name": "Manukau"},
+        {"code": "NZ-AUK-NOR", "name": "North Shore"},
+        {"code": "NZ-AUK-WAI", "name": "Waitakere"}
+      ]
+    },
+    {
+      "code": "NZ-WGN",
+      "name": "Wellington",
+      "cities": [
+        {"code": "NZ-WGN-WEL", "name": "Wellington"},
+        {"code": "NZ-WGN-LOW", "name": "Lower Hutt"},
+        {"code": "NZ-WGN-UPP", "name": "Upper Hutt"},
+        {"code": "NZ-WGN-POR", "name": "Porirua"}
+      ]
+    },
+    {
+      "code": "NZ-CAN",
+      "name": "Canterbury",
+      "cities": [
+        {"code": "NZ-CAN-CHR", "name": "Christchurch"},
+        {"code": "NZ-CAN-TIM", "name": "Timaru"},
+        {"code": "NZ-CAN-ASH", "name": "Ashburton"}
+      ]
+    },
+    {
+      "code": "NZ-OTA",
+      "name": "Otago",
+      "cities": [
+        {"code": "NZ-OTA-DUN", "name": "Dunedin"},
+        {"code": "NZ-OTA-QUE", "name": "Queenstown"},
+        {"code": "NZ-OTA-OAM", "name": "Oamaru"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "FR-75",
+      "name": "Paris",
+      "cities": [
+        {"code": "FR-75-PAR", "name": "Paris"},
+        {"code": "FR-75-VER", "name": "Versailles"},
+        {"code": "FR-75-BOI", "name": "Bois de Boulogne"},
+        {"code": "FR-75-MON", "name": "Montmartre"}
+      ]
+    },
+    {
+      "code": "FR-13",
+      "name": "Provence-Alpes-Côte d'Azur",
+      "cities": [
+        {"code": "FR-13-MAR", "name": "Marseille"},
+        {"code": "FR-13-NIC", "name": "Nice"},
+        {"code": "FR-13-TOU", "name": "Toulon"},
+        {"code": "FR-13-CAN", "name": "Cannes"}
+      ]
+    },
+    {
+      "code": "FR-69",
+      "name": "Auvergne-Rhône-Alpes",
+      "cities": [
+        {"code": "FR-69-LYO", "name": "Lyon"},
+        {"code": "FR-69-GRE", "name": "Grenoble"},
+        {"code": "FR-69-SAI", "name": "Saint-Étienne"},
+        {"code": "FR-69-CHA", "name": "Chambéry"}
+      ]
+    },
+    {
+      "code": "FR-31",
+      "name": "Occitanie",
+      "cities": [
+        {"code": "FR-31-TOU", "name": "Toulouse"},
+        {"code": "FR-31-MON", "name": "Montpellier"},
+        {"code": "FR-31-NIM", "name": "Nîmes"},
+        {"code": "FR-31-PER", "name": "Perpignan"}
+      ]
+    }
+  ]
+}

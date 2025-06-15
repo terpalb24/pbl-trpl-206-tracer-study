@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "PL-MZ",
+      "name": "Mazowieckie",
+      "cities": [
+        {"code": "PL-MZ-WAR", "name": "Warsaw"},
+        {"code": "PL-MZ-RAD", "name": "Radom"},
+        {"code": "PL-MZ-PLO", "name": "Płock"},
+        {"code": "PL-MZ-SIE", "name": "Siedlce"}
+      ]
+    },
+    {
+      "code": "PL-SL",
+      "name": "Śląskie",
+      "cities": [
+        {"code": "PL-SL-KAT", "name": "Katowice"},
+        {"code": "PL-SL-CZE", "name": "Częstochowa"},
+        {"code": "PL-SL-SOS", "name": "Sosnowiec"},
+        {"code": "PL-SL-GLI", "name": "Gliwice"}
+      ]
+    },
+    {
+      "code": "PL-MA",
+      "name": "Małopolskie",
+      "cities": [
+        {"code": "PL-MA-KRA", "name": "Kraków"},
+        {"code": "PL-MA-TAR", "name": "Tarnów"},
+        {"code": "PL-MA-NOW", "name": "Nowy Sącz"},
+        {"code": "PL-MA-OSW", "name": "Oświęcim"}
+      ]
+    },
+    {
+      "code": "PL-WP",
+      "name": "Wielkopolskie",
+      "cities": [
+        {"code": "PL-WP-POZ", "name": "Poznań"},
+        {"code": "PL-WP-KAL", "name": "Kalisz"},
+        {"code": "PL-WP-KON", "name": "Konin"},
+        {"code": "PL-WP-PIL", "name": "Piła"}
+      ]
+    }
+  ]
+}

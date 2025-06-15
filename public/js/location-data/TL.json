@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "TL-DI",
+      "name": "Dili",
+      "cities": [
+        {"code": "TL-DI-DIL", "name": "Dili"},
+        {"code": "TL-DI-MET", "name": "Metinaro"},
+        {"code": "TL-DI-COM", "name": "Comoro"}
+      ]
+    },
+    {
+      "code": "TL-BA",
+      "name": "Baucau",
+      "cities": [
+        {"code": "TL-BA-BAU", "name": "Baucau"},
+        {"code": "TL-BA-VEN", "name": "Venilale"},
+        {"code": "TL-BA-QUE", "name": "Quelicai"}
+      ]
+    },
+    {
+      "code": "TL-ER",
+      "name": "Ermera",
+      "cities": [
+        {"code": "TL-ER-GLE", "name": "Gleno"},
+        {"code": "TL-ER-ATU", "name": "Atsabe"},
+        {"code": "TL-ER-HAT", "name": "Hatulia"}
+      ]
+    },
+    {
+      "code": "TL-OE",
+      "name": "Oecusse",
+      "cities": [
+        {"code": "TL-OE-PAN", "name": "Pante Macassar"},
+        {"code": "TL-OE-PAS", "name": "Passabe"},
+        {"code": "TL-OE-COS", "name": "Costa"}
+      ]
+    }
+  ]
+}

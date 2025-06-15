@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "OM-MA",
+      "name": "Muscat",
+      "cities": [
+        {"code": "OM-MA-MCT", "name": "Muscat"},
+        {"code": "OM-MA-RUW", "name": "Ruwi"},
+        {"code": "OM-MA-MUT", "name": "Muttrah"},
+        {"code": "OM-MA-QUR", "name": "Qurm"}
+      ]
+    },
+    {
+      "code": "OM-SH",
+      "name": "Ash Sharqiyah",
+      "cities": [
+        {"code": "OM-SH-SUR", "name": "Sur"},
+        {"code": "OM-SH-IBA", "name": "Ibra"},
+        {"code": "OM-SH-QUR", "name": "Al Qabil"},
+        {"code": "OM-SH-BID", "name": "Bidiyah"}
+      ]
+    },
+    {
+      "code": "OM-DA",
+      "name": "Ad Dakhiliyah",
+      "cities": [
+        {"code": "OM-DA-NIZ", "name": "Nizwa"},
+        {"code": "OM-DA-BAH", "name": "Bahla"},
+        {"code": "OM-DA-SAM", "name": "Samail"},
+        {"code": "OM-DA-IZK", "name": "Izki"}
+      ]
+    },
+    {
+      "code": "OM-ZA",
+      "name": "Az Zahirah",
+      "cities": [
+        {"code": "OM-ZA-IBR", "name": "Ibri"},
+        {"code": "OM-ZA-YAN", "name": "Yanqul"},
+        {"code": "OM-ZA-DHN", "name": "Dank"}
+      ]
+    }
+  ]
+}

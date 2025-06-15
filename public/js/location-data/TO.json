@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "TO-01",
+      "name": "Tongatapu",
+      "cities": [
+        {"code": "TO-01-NUK", "name": "Nuku'alofa"},
+        {"code": "TO-01-MUA", "name": "Mu'a"},
+        {"code": "TO-01-VAI", "name": "Vaini"},
+        {"code": "TO-01-KAN", "name": "Kanokupolu"}
+      ]
+    },
+    {
+      "code": "TO-02",
+      "name": "Ha'apai",
+      "cities": [
+        {"code": "TO-02-PAN", "name": "Pangai"},
+        {"code": "TO-02-HAF", "name": "Ha'afeva"},
+        {"code": "TO-02-NOO", "name": "Nomuka"}
+      ]
+    },
+    {
+      "code": "TO-03",
+      "name": "Vava'u",
+      "cities": [
+        {"code": "TO-03-NEI", "name": "Neiafu"},
+        {"code": "TO-03-TU", "name": "Tu'anekivale"},
+        {"code": "TO-03-HOL", "name": "Holonga"}
+      ]
+    },
+    {
+      "code": "TO-04",
+      "name": "Eua",
+      "cities": [
+        {"code": "TO-04-OHO", "name": "Ohonua"},
+        {"code": "TO-04-NAF", "name": "Nafanua"}
+      ]
+    }
+  ]
+}

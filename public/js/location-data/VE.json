@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "VE-DC",
+      "name": "Distrito Capital",
+      "cities": [
+        {"code": "VE-DC-CAR", "name": "Caracas"}
+      ]
+    },
+    {
+      "code": "VE-MI",
+      "name": "Miranda",
+      "cities": [
+        {"code": "VE-MI-LOS", "name": "Los Teques"},
+        {"code": "VE-MI-PET", "name": "Petare"},
+        {"code": "VE-MI-BAR", "name": "Baruta"},
+        {"code": "VE-MI-CHA", "name": "Chacao"}
+      ]
+    },
+    {
+      "code": "VE-ZU",
+      "name": "Zulia",
+      "cities": [
+        {"code": "VE-ZU-MAR", "name": "Maracaibo"},
+        {"code": "VE-ZU-CAB", "name": "Cabimas"},
+        {"code": "VE-ZU-COL", "name": "Colón"},
+        {"code": "VE-ZU-LAG", "name": "Lagunillas"}
+      ]
+    },
+    {
+      "code": "VE-CA",
+      "name": "Carabobo",
+      "cities": [
+        {"code": "VE-CA-VAL", "name": "Valencia"},
+        {"code": "VE-CA-PTO", "name": "Puerto Cabello"},
+        {"code": "VE-CA-SAN", "name": "San Diego"},
+        {"code": "VE-CA-NAG", "name": "Naguanagua"}
+      ]
+    }
+  ]
+}

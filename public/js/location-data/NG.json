@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "NG-LA",
+      "name": "Lagos",
+      "cities": [
+        {"code": "NG-LA-LAG", "name": "Lagos"},
+        {"code": "NG-LA-IKE", "name": "Ikeja"},
+        {"code": "NG-LA-EPA", "name": "Epe"},
+        {"code": "NG-LA-BAD", "name": "Badagry"}
+      ]
+    },
+    {
+      "code": "NG-FC",
+      "name": "Federal Capital Territory",
+      "cities": [
+        {"code": "NG-FC-ABU", "name": "Abuja"},
+        {"code": "NG-FC-GWA", "name": "Gwagwalada"},
+        {"code": "NG-FC-KUJ", "name": "Kuje"}
+      ]
+    },
+    {
+      "code": "NG-KA",
+      "name": "Kaduna",
+      "cities": [
+        {"code": "NG-KA-KAD", "name": "Kaduna"},
+        {"code": "NG-KA-ZAR", "name": "Zaria"},
+        {"code": "NG-KA-KAF", "name": "Kafanchan"}
+      ]
+    },
+    {
+      "code": "NG-KN",
+      "name": "Kano",
+      "cities": [
+        {"code": "NG-KN-KAN", "name": "Kano"},
+        {"code": "NG-KN-WAD", "name": "Wudil"},
+        {"code": "NG-KN-GWA", "name": "Gwarzo"}
+      ]
+    }
+  ]
+}

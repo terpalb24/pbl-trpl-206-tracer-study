@@ -1,0 +1,38 @@
+{
+  "states": [
+    {
+      "code": "HU-BU",
+      "name": "Budapest",
+      "cities": [
+        {"code": "HU-BU-BUD", "name": "Budapest"}
+      ]
+    },
+    {
+      "code": "HU-HE",
+      "name": "Heves",
+      "cities": [
+        {"code": "HU-HE-EGE", "name": "Eger"},
+        {"code": "HU-HE-HAT", "name": "Hatvan"},
+        {"code": "HU-HE-GYO", "name": "Gyöngyös"}
+      ]
+    },
+    {
+      "code": "HU-GS",
+      "name": "Győr-Moson-Sopron",
+      "cities": [
+        {"code": "HU-GS-GYO", "name": "Győr"},
+        {"code": "HU-GS-SOP", "name": "Sopron"},
+        {"code": "HU-GS-MOS", "name": "Mosonmagyaróvár"}
+      ]
+    },
+    {
+      "code": "HU-PE",
+      "name": "Pest",
+      "cities": [
+        {"code": "HU-PE-SZE", "name": "Szentendre"},
+        {"code": "HU-PE-VAC", "name": "Vác"},
+        {"code": "HU-PE-GOD", "name": "Gödöllő"}
+      ]
+    }
+  ]
+}

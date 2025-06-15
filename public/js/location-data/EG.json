@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "EG-C",
+      "name": "Cairo",
+      "cities": [
+        {"code": "EG-C-CAI", "name": "Cairo"},
+        {"code": "EG-C-GIZ", "name": "Giza"},
+        {"code": "EG-C-SHU", "name": "Shubra El Kheima"},
+        {"code": "EG-C-6OC", "name": "6th of October"}
+      ]
+    },
+    {
+      "code": "EG-ALX",
+      "name": "Alexandria",
+      "cities": [
+        {"code": "EG-ALX-ALE", "name": "Alexandria"},
+        {"code": "EG-ALX-BOR", "name": "Borg El Arab"},
+        {"code": "EG-ALX-ABU", "name": "Abu Qir"}
+      ]
+    },
+    {
+      "code": "EG-LX",
+      "name": "Luxor",
+      "cities": [
+        {"code": "EG-LX-LUX", "name": "Luxor"},
+        {"code": "EG-LX-ESN", "name": "Esna"},
+        {"code": "EG-LX-ARM", "name": "Armant"}
+      ]
+    },
+    {
+      "code": "EG-ASN",
+      "name": "Aswan",
+      "cities": [
+        {"code": "EG-ASN-ASW", "name": "Aswan"},
+        {"code": "EG-ASN-KOM", "name": "Kom Ombo"},
+        {"code": "EG-ASN-EDK", "name": "Edfu"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "states": [
+    {
+      "code": "SG-01",
+      "name": "Central Singapore",
+      "cities": [
+        {"code": "SG-01-CBD", "name": "Central Business District"},
+        {"code": "SG-01-ORC", "name": "Orchard"},
+        {"code": "SG-01-BGS", "name": "Bugis"},
+        {"code": "SG-01-CWT", "name": "Chinatown"},
+        {"code": "SG-01-LIT", "name": "Little India"}
+      ]
+    },
+    {
+      "code": "SG-02",
+      "name": "North Singapore",
+      "cities": [
+        {"code": "SG-02-WDL", "name": "Woodlands"},
+        {"code": "SG-02-YSH", "name": "Yishun"},
+        {"code": "SG-02-SBW", "name": "Sembawang"},
+        {"code": "SG-02-AMK", "name": "Ang Mo Kio"}
+      ]
+    },
+    {
+      "code": "SG-03",
+      "name": "East Singapore",
+      "cities": [
+        {"code": "SG-03-TPY", "name": "Tampines"},
+        {"code": "SG-03-PSR", "name": "Pasir Ris"},
+        {"code": "SG-03-BDK", "name": "Bedok"},
+        {"code": "SG-03-CPG", "name": "Changi"}
+      ]
+    },
+    {
+      "code": "SG-04",
+      "name": "West Singapore",
+      "cities": [
+        {"code": "SG-04-JRW", "name": "Jurong West"},
+        {"code": "SG-04-JRE", "name": "Jurong East"},
+        {"code": "SG-04-CCK", "name": "Choa Chu Kang"},
+        {"code": "SG-04-BSH", "name": "Bukit Batok"}
+      ]
+    },
+    {
+      "code": "SG-05",
+      "name": "South Singapore",
+      "cities": [
+        {"code": "SG-05-HBF", "name": "HarbourFront"},
+        {"code": "SG-05-SEN", "name": "Sentosa"},
+        {"code": "SG-05-BTM", "name": "Bukit Merah"}
+      ]
+    }
+  ]
+}

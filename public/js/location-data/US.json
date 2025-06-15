@@ -7,8 +7,8 @@
         {"code": "US-CA-LAX", "name": "Los Angeles"},
         {"code": "US-CA-SFO", "name": "San Francisco"},
         {"code": "US-CA-SAN", "name": "San Diego"},
-        {"code": "US-CA-SJC", "name": "San Jose"},
-        {"code": "US-CA-SAC", "name": "Sacramento"}
+        {"code": "US-CA-SAC", "name": "Sacramento"},
+        {"code": "US-CA-SJO", "name": "San Jose"}
       ]
     },
     {
@@ -16,10 +16,10 @@
       "name": "New York",
       "cities": [
         {"code": "US-NY-NYC", "name": "New York City"},
+        {"code": "US-NY-ALB", "name": "Albany"},
         {"code": "US-NY-BUF", "name": "Buffalo"},
         {"code": "US-NY-ROC", "name": "Rochester"},
-        {"code": "US-NY-SYR", "name": "Syracuse"},
-        {"code": "US-NY-ALB", "name": "Albany"}
+        {"code": "US-NY-SYR", "name": "Syracuse"}
       ]
     },
     {
@@ -29,8 +29,8 @@
         {"code": "US-TX-HOU", "name": "Houston"},
         {"code": "US-TX-DAL", "name": "Dallas"},
         {"code": "US-TX-AUS", "name": "Austin"},
-        {"code": "US-TX-SAT", "name": "San Antonio"},
-        {"code": "US-TX-ELP", "name": "El Paso"}
+        {"code": "US-TX-SAN", "name": "San Antonio"},
+        {"code": "US-TX-FTW", "name": "Fort Worth"}
       ]
     },
     {
@@ -39,9 +39,9 @@
       "cities": [
         {"code": "US-FL-MIA", "name": "Miami"},
         {"code": "US-FL-ORL", "name": "Orlando"},
-        {"code": "US-FL-TPA", "name": "Tampa"},
+        {"code": "US-FL-TAM", "name": "Tampa"},
         {"code": "US-FL-JAX", "name": "Jacksonville"},
-        {"code": "US-FL-TLH", "name": "Tallahassee"}
+        {"code": "US-FL-TAL", "name": "Tallahassee"}
       ]
     }
   ]

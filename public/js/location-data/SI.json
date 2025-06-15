@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "SI-061",
+      "name": "Ljubljana",
+      "cities": [
+        {"code": "SI-061-LJU", "name": "Ljubljana"},
+        {"code": "SI-061-KAM", "name": "Kamnik"},
+        {"code": "SI-061-DOM", "name": "Domžale"}
+      ]
+    },
+    {
+      "code": "SI-085",
+      "name": "Maribor",
+      "cities": [
+        {"code": "SI-085-MAR", "name": "Maribor"},
+        {"code": "SI-085-SLO", "name": "Slovenska Bistrica"},
+        {"code": "SI-085-RUS", "name": "Ruše"}
+      ]
+    },
+    {
+      "code": "SI-031",
+      "name": "Celje",
+      "cities": [
+        {"code": "SI-031-CEL", "name": "Celje"},
+        {"code": "SI-031-LAŠ", "name": "Laško"},
+        {"code": "SI-031-ŽAL", "name": "Žalec"}
+      ]
+    },
+    {
+      "code": "SI-050",
+      "name": "Koper",
+      "cities": [
+        {"code": "SI-050-KOP", "name": "Koper"},
+        {"code": "SI-050-PIR", "name": "Piran"},
+        {"code": "SI-050-IZO", "name": "Izola"}
+      ]
+    }
+  ]
+}

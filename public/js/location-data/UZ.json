@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "UZ-TK",
+      "name": "Tashkent",
+      "cities": [
+        {"code": "UZ-TK-TAS", "name": "Tashkent"},
+        {"code": "UZ-TK-CHI", "name": "Chirchik"},
+        {"code": "UZ-TK-ANG", "name": "Angren"},
+        {"code": "UZ-TK-OLM", "name": "Olmaliq"}
+      ]
+    },
+    {
+      "code": "UZ-SA",
+      "name": "Samarkand",
+      "cities": [
+        {"code": "UZ-SA-SAM", "name": "Samarkand"},
+        {"code": "UZ-SA-KAT", "name": "Kattakurgan"},
+        {"code": "UZ-SA-NAV", "name": "Navbakhor"},
+        {"code": "UZ-SA-ISH", "name": "Ishtikhan"}
+      ]
+    },
+    {
+      "code": "UZ-BU",
+      "name": "Bukhara",
+      "cities": [
+        {"code": "UZ-BU-BUK", "name": "Bukhara"},
+        {"code": "UZ-BU-GAL", "name": "Galaosiyo"},
+        {"code": "UZ-BU-KAG", "name": "Kaganat"},
+        {"code": "UZ-BU-ROM", "name": "Romitan"}
+      ]
+    },
+    {
+      "code": "UZ-AN",
+      "name": "Andijan",
+      "cities": [
+        {"code": "UZ-AN-AND", "name": "Andijan"},
+        {"code": "UZ-AN-ASA", "name": "Asaka"},
+        {"code": "UZ-AN-SHA", "name": "Shahrikhan"},
+        {"code": "UZ-AN-MAR", "name": "Marhamat"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "states": [
+    {
+      "code": "CA-ON",
+      "name": "Ontario",
+      "cities": [
+        {"code": "CA-ON-TOR", "name": "Toronto"},
+        {"code": "CA-ON-OTT", "name": "Ottawa"},
+        {"code": "CA-ON-HAM", "name": "Hamilton"},
+        {"code": "CA-ON-LON", "name": "London"},
+        {"code": "CA-ON-WIN", "name": "Windsor"}
+      ]
+    },
+    {
+      "code": "CA-QC",
+      "name": "Quebec",
+      "cities": [
+        {"code": "CA-QC-MON", "name": "Montreal"},
+        {"code": "CA-QC-QUE", "name": "Quebec City"},
+        {"code": "CA-QC-GAT", "name": "Gatineau"},
+        {"code": "CA-QC-SHE", "name": "Sherbrooke"}
+      ]
+    },
+    {
+      "code": "CA-BC",
+      "name": "British Columbia",
+      "cities": [
+        {"code": "CA-BC-VAN", "name": "Vancouver"},
+        {"code": "CA-BC-VIC", "name": "Victoria"},
+        {"code": "CA-BC-BUR", "name": "Burnaby"},
+        {"code": "CA-BC-RIC", "name": "Richmond"}
+      ]
+    },
+    {
+      "code": "CA-AB",
+      "name": "Alberta",
+      "cities": [
+        {"code": "CA-AB-CAL", "name": "Calgary"},
+        {"code": "CA-AB-EDM", "name": "Edmonton"},
+        {"code": "CA-AB-RED", "name": "Red Deer"},
+        {"code": "CA-AB-LET", "name": "Lethbridge"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "AM-ER",
+      "name": "Yerevan",
+      "cities": [
+        {"code": "AM-ER-YER", "name": "Yerevan"},
+        {"code": "AM-ER-ERE", "name": "Erebuni"},
+        {"code": "AM-ER-SHE", "name": "Shengavit"},
+        {"code": "AM-ER-AJA", "name": "Ajapnyak"}
+      ]
+    },
+    {
+      "code": "AM-KT",
+      "name": "Kotayk",
+      "cities": [
+        {"code": "AM-KT-HRA", "name": "Hrazdan"},
+        {"code": "AM-KT-ABA", "name": "Abovyan"},
+        {"code": "AM-KT-CHA", "name": "Charentsavan"},
+        {"code": "AM-KT-YEG", "name": "Yeghvard"}
+      ]
+    },
+    {
+      "code": "AM-SH",
+      "name": "Shirak",
+      "cities": [
+        {"code": "AM-SH-GYU", "name": "Gyumri"},
+        {"code": "AM-SH-ART", "name": "Artik"},
+        {"code": "AM-SH-MAR", "name": "Maralik"},
+        {"code": "AM-SH-AKH", "name": "Akhuryan"}
+      ]
+    },
+    {
+      "code": "AM-LO",
+      "name": "Lori",
+      "cities": [
+        {"code": "AM-LO-VAN", "name": "Vanadzor"},
+        {"code": "AM-LO-ALA", "name": "Alaverdi"},
+        {"code": "AM-LO-TAH", "name": "Tashir"},
+        {"code": "AM-LO-TUM", "name": "Tumanyan"}
+      ]
+    }
+  ]
+}

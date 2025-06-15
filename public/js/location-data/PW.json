@@ -1,0 +1,34 @@
+{
+  "states": [
+    {
+      "code": "PW-002",
+      "name": "Airai",
+      "cities": [
+        {"code": "PW-002-AIR", "name": "Airai"},
+        {"code": "PW-002-BAB", "name": "Babeldaob"}
+      ]
+    },
+    {
+      "code": "PW-004",
+      "name": "Koror",
+      "cities": [
+        {"code": "PW-004-KOR", "name": "Koror"},
+        {"code": "PW-004-MOE", "name": "Meyuns"}
+      ]
+    },
+    {
+      "code": "PW-010",
+      "name": "Ngerulmud",
+      "cities": [
+        {"code": "PW-010-NGE", "name": "Ngerulmud"}
+      ]
+    },
+    {
+      "code": "PW-050",
+      "name": "Hatohobei",
+      "cities": [
+        {"code": "PW-050-HAT", "name": "Hatohobei"}
+      ]
+    }
+  ]
+}

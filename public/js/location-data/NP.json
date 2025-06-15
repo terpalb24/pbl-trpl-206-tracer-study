@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "NP-BA",
+      "name": "Bagmati",
+      "cities": [
+        {"code": "NP-BA-KTM", "name": "Kathmandu"},
+        {"code": "NP-BA-LAL", "name": "Lalitpur"},
+        {"code": "NP-BA-BHA", "name": "Bhaktapur"},
+        {"code": "NP-BA-KIR", "name": "Kirtipur"}
+      ]
+    },
+    {
+      "code": "NP-LU",
+      "name": "Lumbini",
+      "cities": [
+        {"code": "NP-LU-BUT", "name": "Butwal"},
+        {"code": "NP-LU-LUM", "name": "Lumbini"},
+        {"code": "NP-LU-BHA", "name": "Bhairahawa"},
+        {"code": "NP-LU-TUL", "name": "Taulihawa"}
+      ]
+    },
+    {
+      "code": "NP-GA",
+      "name": "Gandaki",
+      "cities": [
+        {"code": "NP-GA-POK", "name": "Pokhara"},
+        {"code": "NP-GA-GOR", "name": "Gorkha"},
+        {"code": "NP-GA-BAG", "name": "Baglung"},
+        {"code": "NP-GA-SYA", "name": "Syangja"}
+      ]
+    },
+    {
+      "code": "NP-P1",
+      "name": "Province No. 1",
+      "cities": [
+        {"code": "NP-P1-BIR", "name": "Biratnagar"},
+        {"code": "NP-P1-DHA", "name": "Dharan"},
+        {"code": "NP-P1-ITA", "name": "Itahari"},
+        {"code": "NP-P1-DAM", "name": "Damak"}
+      ]
+    }
+  ]
+}

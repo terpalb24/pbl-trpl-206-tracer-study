@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "LT-VL",
+      "name": "Vilnius",
+      "cities": [
+        {"code": "LT-VL-VIL", "name": "Vilnius"},
+        {"code": "LT-VL-ELE", "name": "Elektrėnai"},
+        {"code": "LT-VL-TRA", "name": "Trakai"}
+      ]
+    },
+    {
+      "code": "LT-KU",
+      "name": "Kaunas",
+      "cities": [
+        {"code": "LT-KU-KAU", "name": "Kaunas"},
+        {"code": "LT-KU-JON", "name": "Jonava"},
+        {"code": "LT-KU-KAI", "name": "Kaisiadori"}
+      ]
+    },
+    {
+      "code": "LT-KL",
+      "name": "Klaipeda",
+      "cities": [
+        {"code": "LT-KL-KLA", "name": "Klaipeda"},
+        {"code": "LT-KL-PAL", "name": "Palanga"},
+        {"code": "LT-KL-SIL", "name": "Silute"}
+      ]
+    },
+    {
+      "code": "LT-SA",
+      "name": "Siauliai",
+      "cities": [
+        {"code": "LT-SA-SIA", "name": "Siauliai"},
+        {"code": "LT-SA-KEL", "name": "Kelme"},
+        {"code": "LT-SA-RAD", "name": "Radviliskis"}
+      ]
+    }
+  ]
+}

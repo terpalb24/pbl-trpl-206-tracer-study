@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "EE-37",
+      "name": "Harju",
+      "cities": [
+        {"code": "EE-37-TAL", "name": "Tallinn"},
+        {"code": "EE-37-MAR", "name": "Maardu"},
+        {"code": "EE-37-SAU", "name": "Saue"},
+        {"code": "EE-37-KEI", "name": "Keila"}
+      ]
+    },
+    {
+      "code": "EE-51",
+      "name": "Tartu",
+      "cities": [
+        {"code": "EE-51-TAR", "name": "Tartu"},
+        {"code": "EE-51-ELV", "name": "Elva"},
+        {"code": "EE-51-KAL", "name": "Kallaste"}
+      ]
+    },
+    {
+      "code": "EE-57",
+      "name": "Parnu",
+      "cities": [
+        {"code": "EE-57-PAR", "name": "Parnu"},
+        {"code": "EE-57-SIN", "name": "Sindi"},
+        {"code": "EE-57-TOS", "name": "Tostamaa"}
+      ]
+    },
+    {
+      "code": "EE-74",
+      "name": "Ida-Viru",
+      "cities": [
+        {"code": "EE-74-NAR", "name": "Narva"},
+        {"code": "EE-74-KOH", "name": "Kohtla-Jarve"},
+        {"code": "EE-74-SIL", "name": "Sillamae"}
+      ]
+    }
+  ]
+}

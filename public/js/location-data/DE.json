@@ -1,0 +1,51 @@
+{
+  "states": [
+    {
+      "code": "DE-BE",
+      "name": "Berlin",
+      "cities": [
+        {"code": "DE-BE-BER", "name": "Berlin"},
+        {"code": "DE-BE-MIT", "name": "Mitte"},
+        {"code": "DE-BE-CHA", "name": "Charlottenburg"},
+        {"code": "DE-BE-KRE", "name": "Kreuzberg"}
+      ]
+    },
+    {
+      "code": "DE-BY",
+      "name": "Bavaria",
+      "cities": [
+        {"code": "DE-BY-MUN", "name": "Munich"},
+        {"code": "DE-BY-NUR", "name": "Nuremberg"},
+        {"code": "DE-BY-AUG", "name": "Augsburg"},
+        {"code": "DE-BY-REG", "name": "Regensburg"}
+      ]
+    },
+    {
+      "code": "DE-NW",
+      "name": "North Rhine-Westphalia",
+      "cities": [
+        {"code": "DE-NW-COL", "name": "Cologne"},
+        {"code": "DE-NW-DUS", "name": "Düsseldorf"},
+        {"code": "DE-NW-DOR", "name": "Dortmund"},
+        {"code": "DE-NW-ESS", "name": "Essen"}
+      ]
+    },
+    {
+      "code": "DE-HH",
+      "name": "Hamburg",
+      "cities": [
+        {"code": "DE-HH-HAM", "name": "Hamburg"}
+      ]
+    },
+    {
+      "code": "DE-BW",
+      "name": "Baden-Württemberg",
+      "cities": [
+        {"code": "DE-BW-STU", "name": "Stuttgart"},
+        {"code": "DE-BW-MAN", "name": "Mannheim"},
+        {"code": "DE-BW-KAR", "name": "Karlsruhe"},
+        {"code": "DE-BW-FRE", "name": "Freiburg"}
+      ]
+    }
+  ]
+}

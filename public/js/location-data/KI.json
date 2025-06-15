@@ -1,0 +1,31 @@
+{
+  "states": [
+    {
+      "code": "KI-G",
+      "name": "Gilbert Islands",
+      "cities": [
+        {"code": "KI-G-TAR", "name": "Tarawa"},
+        {"code": "KI-G-BUT", "name": "Butaritari"},
+        {"code": "KI-G-MAK", "name": "Makin"},
+        {"code": "KI-G-ABE", "name": "Abemama"}
+      ]
+    },
+    {
+      "code": "KI-P",
+      "name": "Phoenix Islands",
+      "cities": [
+        {"code": "KI-P-KAN", "name": "Kanton"},
+        {"code": "KI-P-END", "name": "Enderbury"}
+      ]
+    },
+    {
+      "code": "KI-L",
+      "name": "Line Islands",
+      "cities": [
+        {"code": "KI-L-KIR", "name": "Kiritimati"},
+        {"code": "KI-L-TAB", "name": "Tabuaeran"},
+        {"code": "KI-L-TER", "name": "Teraina"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "AT-9",
+      "name": "Vienna",
+      "cities": [
+        {"code": "AT-9-VIE", "name": "Vienna"},
+        {"code": "AT-9-INN", "name": "Innere Stadt"},
+        {"code": "AT-9-LEO", "name": "Leopoldstadt"},
+        {"code": "AT-9-LAN", "name": "Landstraße"}
+      ]
+    },
+    {
+      "code": "AT-4",
+      "name": "Upper Austria",
+      "cities": [
+        {"code": "AT-4-LIN", "name": "Linz"},
+        {"code": "AT-4-STE", "name": "Steyr"},
+        {"code": "AT-4-WEL", "name": "Wels"},
+        {"code": "AT-4-VOC", "name": "Vöcklabruck"}
+      ]
+    },
+    {
+      "code": "AT-6",
+      "name": "Styria",
+      "cities": [
+        {"code": "AT-6-GRA", "name": "Graz"},
+        {"code": "AT-6-LEO", "name": "Leoben"},
+        {"code": "AT-6-KAP", "name": "Kapfenberg"},
+        {"code": "AT-6-BRU", "name": "Bruck an der Mur"}
+      ]
+    },
+    {
+      "code": "AT-7",
+      "name": "Tyrol",
+      "cities": [
+        {"code": "AT-7-INN", "name": "Innsbruck"},
+        {"code": "AT-7-KUF", "name": "Kufstein"},
+        {"code": "AT-7-TEL", "name": "Telfs"},
+        {"code": "AT-7-HAL", "name": "Hall in Tirol"}
+      ]
+    }
+  ]
+}

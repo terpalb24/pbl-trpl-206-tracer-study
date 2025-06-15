@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "IT-62",
+      "name": "Lazio",
+      "cities": [
+        {"code": "IT-62-ROM", "name": "Rome"},
+        {"code": "IT-62-LAT", "name": "Latina"},
+        {"code": "IT-62-VIT", "name": "Viterbo"},
+        {"code": "IT-62-FRO", "name": "Frosinone"}
+      ]
+    },
+    {
+      "code": "IT-25",
+      "name": "Lombardy",
+      "cities": [
+        {"code": "IT-25-MIL", "name": "Milan"},
+        {"code": "IT-25-BER", "name": "Bergamo"},
+        {"code": "IT-25-BRE", "name": "Brescia"},
+        {"code": "IT-25-PAV", "name": "Pavia"}
+      ]
+    },
+    {
+      "code": "IT-72",
+      "name": "Campania",
+      "cities": [
+        {"code": "IT-72-NAP", "name": "Naples"},
+        {"code": "IT-72-SAL", "name": "Salerno"},
+        {"code": "IT-72-CAS", "name": "Caserta"},
+        {"code": "IT-72-AVE", "name": "Avellino"}
+      ]
+    },
+    {
+      "code": "IT-82",
+      "name": "Sicily",
+      "cities": [
+        {"code": "IT-82-PAL", "name": "Palermo"},
+        {"code": "IT-82-CAT", "name": "Catania"},
+        {"code": "IT-82-MES", "name": "Messina"},
+        {"code": "IT-82-SYR", "name": "Syracuse"}
+      ]
+    }
+  ]
+}

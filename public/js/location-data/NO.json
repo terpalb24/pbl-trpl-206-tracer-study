@@ -1,0 +1,45 @@
+{
+  "states": [
+    {
+      "code": "NO-03",
+      "name": "Oslo",
+      "cities": [
+        {"code": "NO-03-OSL", "name": "Oslo"}
+      ]
+    },
+    {
+      "code": "NO-46",
+      "name": "Vestland",
+      "cities": [
+        {"code": "NO-46-BER", "name": "Bergen"},
+        {"code": "NO-46-STA", "name": "Stavanger"},
+        {"code": "NO-46-HAU", "name": "Haugesund"}
+      ]
+    },
+    {
+      "code": "NO-30",
+      "name": "Viken",
+      "cities": [
+        {"code": "NO-30-DRA", "name": "Drammen"},
+        {"code": "NO-30-FRE", "name": "Fredrikstad"},
+        {"code": "NO-30-SAR", "name": "Sarpsborg"}
+      ]
+    },
+    {
+      "code": "NO-50",
+      "name": "Trøndelag",
+      "cities": [
+        {"code": "NO-50-TRO", "name": "Trondheim"},
+        {"code": "NO-50-STE", "name": "Steinkjer"}
+      ]
+    },
+    {
+      "code": "NO-18",
+      "name": "Nordland",
+      "cities": [
+        {"code": "NO-18-BOD", "name": "Bodø"},
+        {"code": "NO-18-NAR", "name": "Narvik"}
+      ]
+    }
+  ]
+}

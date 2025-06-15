@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "IR-07",
+      "name": "Tehran",
+      "cities": [
+        {"code": "IR-07-TEH", "name": "Tehran"},
+        {"code": "IR-07-KAR", "name": "Karaj"},
+        {"code": "IR-07-RAY", "name": "Ray"},
+        {"code": "IR-07-SHA", "name": "Shahr-e Qods"}
+      ]
+    },
+    {
+      "code": "IR-04",
+      "name": "Isfahan",
+      "cities": [
+        {"code": "IR-04-ISF", "name": "Isfahan"},
+        {"code": "IR-04-KHA", "name": "Khomeini Shahr"},
+        {"code": "IR-04-NAJ", "name": "Najafabad"},
+        {"code": "IR-04-SHA", "name": "Shahin Shahr"}
+      ]
+    },
+    {
+      "code": "IR-06",
+      "name": "Khuzestan",
+      "cities": [
+        {"code": "IR-06-AHV", "name": "Ahvaz"},
+        {"code": "IR-06-ABD", "name": "Abadan"},
+        {"code": "IR-06-KHO", "name": "Khorramshahr"},
+        {"code": "IR-06-DES", "name": "Dezful"}
+      ]
+    },
+    {
+      "code": "IR-15",
+      "name": "Fars",
+      "cities": [
+        {"code": "IR-15-SHI", "name": "Shiraz"},
+        {"code": "IR-15-MAR", "name": "Marvdasht"},
+        {"code": "IR-15-KAZ", "name": "Kazerun"},
+        {"code": "IR-15-FIR", "name": "Firouzabad"}
+      ]
+    }
+  ]
+}

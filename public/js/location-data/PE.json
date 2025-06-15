@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "PE-LIM",
+      "name": "Lima",
+      "cities": [
+        {"code": "PE-LIM-LIM", "name": "Lima"},
+        {"code": "PE-LIM-CAL", "name": "Callao"},
+        {"code": "PE-LIM-SAN", "name": "San Juan de Lurigancho"},
+        {"code": "PE-LIM-ATE", "name": "Ate"}
+      ]
+    },
+    {
+      "code": "PE-ARE",
+      "name": "Arequipa",
+      "cities": [
+        {"code": "PE-ARE-ARE", "name": "Arequipa"},
+        {"code": "PE-ARE-CAM", "name": "Camaná"},
+        {"code": "PE-ARE-MOL", "name": "Mollendo"}
+      ]
+    },
+    {
+      "code": "PE-CUS",
+      "name": "Cusco",
+      "cities": [
+        {"code": "PE-CUS-CUS", "name": "Cusco"},
+        {"code": "PE-CUS-SIC", "name": "Sicuani"},
+        {"code": "PE-CUS-MAC", "name": "Machu Picchu"}
+      ]
+    },
+    {
+      "code": "PE-LAL",
+      "name": "La Libertad",
+      "cities": [
+        {"code": "PE-LAL-TRU", "name": "Trujillo"},
+        {"code": "PE-LAL-CHI", "name": "Chimbote"},
+        {"code": "PE-LAL-PAC", "name": "Pacasmayo"}
+      ]
+    }
+  ]
+}

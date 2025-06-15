@@ -1,0 +1,26 @@
+{
+  "states": [
+    {
+      "code": "PS-WB",
+      "name": "West Bank",
+      "cities": [
+        {"code": "PS-WB-RAM", "name": "Ramallah"},
+        {"code": "PS-WB-HEB", "name": "Hebron"},
+        {"code": "PS-WB-NAB", "name": "Nablus"},
+        {"code": "PS-WB-JEN", "name": "Jenin"},
+        {"code": "PS-WB-BET", "name": "Bethlehem"}
+      ]
+    },
+    {
+      "code": "PS-GZ",
+      "name": "Gaza Strip",
+      "cities": [
+        {"code": "PS-GZ-GAZ", "name": "Gaza"},
+        {"code": "PS-GZ-KHA", "name": "Khan Yunis"},
+        {"code": "PS-GZ-JAB", "name": "Jabalia"},
+        {"code": "PS-GZ-RAF", "name": "Rafah"},
+        {"code": "PS-GZ-DEI", "name": "Deir al-Balah"}
+      ]
+    }
+  ]
+}

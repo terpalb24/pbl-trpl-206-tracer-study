@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "MX-DIF",
+      "name": "Mexico City",
+      "cities": [
+        {"code": "MX-DIF-MEX", "name": "Mexico City"},
+        {"code": "MX-DIF-TLA", "name": "Tlalnepantla"},
+        {"code": "MX-DIF-NEZ", "name": "Nezahualcóyotl"}
+      ]
+    },
+    {
+      "code": "MX-JAL",
+      "name": "Jalisco",
+      "cities": [
+        {"code": "MX-JAL-GUA", "name": "Guadalajara"},
+        {"code": "MX-JAL-ZAP", "name": "Zapopan"},
+        {"code": "MX-JAL-TLA", "name": "Tlaquepaque"},
+        {"code": "MX-JAL-PUE", "name": "Puerto Vallarta"}
+      ]
+    },
+    {
+      "code": "MX-NLE",
+      "name": "Nuevo León",
+      "cities": [
+        {"code": "MX-NLE-MON", "name": "Monterrey"},
+        {"code": "MX-NLE-GAR", "name": "García"},
+        {"code": "MX-NLE-SAN", "name": "San Nicolás de los Garza"}
+      ]
+    },
+    {
+      "code": "MX-PUE",
+      "name": "Puebla",
+      "cities": [
+        {"code": "MX-PUE-PUE", "name": "Puebla"},
+        {"code": "MX-PUE-TEH", "name": "Tehuacán"},
+        {"code": "MX-PUE-SAN", "name": "San Martín Texmelucan"}
+      ]
+    }
+  ]
+}

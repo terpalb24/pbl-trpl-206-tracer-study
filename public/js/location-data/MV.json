@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "MV-MLE",
+      "name": "Malé",
+      "cities": [
+        {"code": "MV-MLE-MAL", "name": "Malé"},
+        {"code": "MV-MLE-VIL", "name": "Vilimalé"},
+        {"code": "MV-MLE-HUL", "name": "Hulhumalé"}
+      ]
+    },
+    {
+      "code": "MV-01",
+      "name": "Haa Alif",
+      "cities": [
+        {"code": "MV-01-DHI", "name": "Dhidhdhoo"},
+        {"code": "MV-01-KEL", "name": "Kelaa"},
+        {"code": "MV-01-HOA", "name": "Hoarafushi"}
+      ]
+    },
+    {
+      "code": "MV-02",
+      "name": "Haa Dhaalu",
+      "cities": [
+        {"code": "MV-02-KUL", "name": "Kulhudhuffushi"},
+        {"code": "MV-02-HIR", "name": "Hirilandhoo"},
+        {"code": "MV-02-KUM", "name": "Kumundhoo"}
+      ]
+    },
+    {
+      "code": "MV-26",
+      "name": "Seenu",
+      "cities": [
+        {"code": "MV-26-HIT", "name": "Hithadhoo"},
+        {"code": "MV-26-MAR", "name": "Maradhoo"},
+        {"code": "MV-26-FEY", "name": "Feydhoo"}
+      ]
+    }
+  ]
+}

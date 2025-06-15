@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "TH-10",
+      "name": "Bangkok",
+      "cities": [
+        {"code": "TH-10-BKK", "name": "Bangkok"},
+        {"code": "TH-10-NON", "name": "Nonthaburi"},
+        {"code": "TH-10-PAT", "name": "Pathum Thani"},
+        {"code": "TH-10-SAM", "name": "Samut Prakan"}
+      ]
+    },
+    {
+      "code": "TH-50",
+      "name": "Chiang Mai",
+      "cities": [
+        {"code": "TH-50-CNX", "name": "Chiang Mai"},
+        {"code": "TH-50-DOI", "name": "Doi Saket"},
+        {"code": "TH-50-SAN", "name": "San Kamphaeng"}
+      ]
+    },
+    {
+      "code": "TH-83",
+      "name": "Phuket",
+      "cities": [
+        {"code": "TH-83-HKT", "name": "Phuket City"},
+        {"code": "TH-83-KAT", "name": "Kathu"},
+        {"code": "TH-83-THA", "name": "Thalang"}
+      ]
+    },
+    {
+      "code": "TH-20",
+      "name": "Chonburi",
+      "cities": [
+        {"code": "TH-20-PAT", "name": "Pattaya"},
+        {"code": "TH-20-CHO", "name": "Chonburi"},
+        {"code": "TH-20-SRI", "name": "Si Racha"}
+      ]
+    }
+  ]
+}

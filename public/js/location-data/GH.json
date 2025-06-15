@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "GH-AA",
+      "name": "Greater Accra",
+      "cities": [
+        {"code": "GH-AA-ACC", "name": "Accra"},
+        {"code": "GH-AA-TEM", "name": "Tema"},
+        {"code": "GH-AA-MAN", "name": "Madina"},
+        {"code": "GH-AA-KAS", "name": "Kasoa"}
+      ]
+    },
+    {
+      "code": "GH-AH",
+      "name": "Ashanti",
+      "cities": [
+        {"code": "GH-AH-KUM", "name": "Kumasi"},
+        {"code": "GH-AH-OBU", "name": "Obuasi"},
+        {"code": "GH-AH-SUY", "name": "Sunyani"},
+        {"code": "GH-AH-TAK", "name": "Takoradi"}
+      ]
+    },
+    {
+      "code": "GH-NP",
+      "name": "Northern",
+      "cities": [
+        {"code": "GH-NP-TAM", "name": "Tamale"},
+        {"code": "GH-NP-YEN", "name": "Yendi"},
+        {"code": "GH-NP-SAV", "name": "Savelugu"}
+      ]
+    },
+    {
+      "code": "GH-WP",
+      "name": "Western",
+      "cities": [
+        {"code": "GH-WP-SEK", "name": "Sekondi-Takoradi"},
+        {"code": "GH-WP-TAR", "name": "Tarkwa"},
+        {"code": "GH-WP-AXI", "name": "Axim"}
+      ]
+    }
+  ]
+}

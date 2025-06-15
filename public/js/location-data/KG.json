@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "KG-GB",
+      "name": "Bishkek",
+      "cities": [
+        {"code": "KG-GB-BIS", "name": "Bishkek"},
+        {"code": "KG-GB-KAN", "name": "Kant"},
+        {"code": "KG-GB-TOK", "name": "Tokmok"},
+        {"code": "KG-GB-KEL", "name": "Kemin"}
+      ]
+    },
+    {
+      "code": "KG-O",
+      "name": "Osh",
+      "cities": [
+        {"code": "KG-O-OSH", "name": "Osh"},
+        {"code": "KG-O-UZG", "name": "Uzgen"},
+        {"code": "KG-O-ARA", "name": "Aravan"},
+        {"code": "KG-O-KAR", "name": "Kara-Suu"}
+      ]
+    },
+    {
+      "code": "KG-J",
+      "name": "Jalal-Abad",
+      "cities": [
+        {"code": "KG-J-JAL", "name": "Jalal-Abad"},
+        {"code": "KG-J-KER", "name": "Kerben"},
+        {"code": "KG-J-SUZ", "name": "Suzak"},
+        {"code": "KG-J-BAZ", "name": "Bazar-Korgon"}
+      ]
+    },
+    {
+      "code": "KG-N",
+      "name": "Naryn",
+      "cities": [
+        {"code": "KG-N-NAR", "name": "Naryn"},
+        {"code": "KG-N-AT", "name": "At-Bashy"},
+        {"code": "KG-N-KOC", "name": "Kochkor"},
+        {"code": "KG-N-JUM", "name": "Jumgal"}
+      ]
+    }
+  ]
+}

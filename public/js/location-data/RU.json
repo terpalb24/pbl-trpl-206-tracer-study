@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "RU-MOW",
+      "name": "Moscow",
+      "cities": [
+        {"code": "RU-MOW-MOS", "name": "Moscow"},
+        {"code": "RU-MOW-PUS", "name": "Pushkino"},
+        {"code": "RU-MOW-LYU", "name": "Lyubertsy"},
+        {"code": "RU-MOW-POD", "name": "Podolsk"}
+      ]
+    },
+    {
+      "code": "RU-SPE",
+      "name": "Saint Petersburg",
+      "cities": [
+        {"code": "RU-SPE-SPB", "name": "Saint Petersburg"},
+        {"code": "RU-SPE-KOL", "name": "Kolpino"},
+        {"code": "RU-SPE-PUS", "name": "Pushkin"}
+      ]
+    },
+    {
+      "code": "RU-SVE",
+      "name": "Sverdlovsk Oblast",
+      "cities": [
+        {"code": "RU-SVE-EKA", "name": "Yekaterinburg"},
+        {"code": "RU-SVE-NIZ", "name": "Nizhny Tagil"},
+        {"code": "RU-SVE-KAM", "name": "Kamensk-Uralsky"}
+      ]
+    },
+    {
+      "code": "RU-NVS",
+      "name": "Novosibirsk Oblast",
+      "cities": [
+        {"code": "RU-NVS-NOV", "name": "Novosibirsk"},
+        {"code": "RU-NVS-BER", "name": "Berdsk"},
+        {"code": "RU-NVS-ISK", "name": "Iskitim"}
+      ]
+    }
+  ]
+}

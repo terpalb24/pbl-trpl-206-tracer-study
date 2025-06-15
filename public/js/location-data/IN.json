@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "IN-DL",
+      "name": "Delhi",
+      "cities": [
+        {"code": "IN-DL-NEW", "name": "New Delhi"},
+        {"code": "IN-DL-OLD", "name": "Old Delhi"},
+        {"code": "IN-DL-GUR", "name": "Gurgaon"},
+        {"code": "IN-DL-NOI", "name": "Noida"}
+      ]
+    },
+    {
+      "code": "IN-MH",
+      "name": "Maharashtra",
+      "cities": [
+        {"code": "IN-MH-MUM", "name": "Mumbai"},
+        {"code": "IN-MH-PUN", "name": "Pune"},
+        {"code": "IN-MH-NAG", "name": "Nagpur"},
+        {"code": "IN-MH-NAS", "name": "Nashik"}
+      ]
+    },
+    {
+      "code": "IN-KA",
+      "name": "Karnataka",
+      "cities": [
+        {"code": "IN-KA-BLR", "name": "Bangalore"},
+        {"code": "IN-KA-MYS", "name": "Mysore"},
+        {"code": "IN-KA-HUB", "name": "Hubli"},
+        {"code": "IN-KA-MAN", "name": "Mangalore"}
+      ]
+    },
+    {
+      "code": "IN-TN",
+      "name": "Tamil Nadu",
+      "cities": [
+        {"code": "IN-TN-CHE", "name": "Chennai"},
+        {"code": "IN-TN-COI", "name": "Coimbatore"},
+        {"code": "IN-TN-MAD", "name": "Madurai"},
+        {"code": "IN-TN-TRI", "name": "Trichy"}
+      ]
+    }
+  ]
+}

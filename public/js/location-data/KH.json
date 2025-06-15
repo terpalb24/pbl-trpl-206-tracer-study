@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "KH-12",
+      "name": "Phnom Penh",
+      "cities": [
+        {"code": "KH-12-PNH", "name": "Phnom Penh"},
+        {"code": "KH-12-CHA", "name": "Chamkar Mon"},
+        {"code": "KH-12-TUO", "name": "Tuol Kork"}
+      ]
+    },
+    {
+      "code": "KH-2",
+      "name": "Battambang",
+      "cities": [
+        {"code": "KH-2-BAT", "name": "Battambang"},
+        {"code": "KH-2-BAV", "name": "Bavel"},
+        {"code": "KH-2-EKR", "name": "Ek Phnom"}
+      ]
+    },
+    {
+      "code": "KH-18",
+      "name": "Siem Reap",
+      "cities": [
+        {"code": "KH-18-REP", "name": "Siem Reap"},
+        {"code": "KH-18-ANG", "name": "Angkor"},
+        {"code": "KH-18-BAN", "name": "Banteay Srei"}
+      ]
+    },
+    {
+      "code": "KH-9",
+      "name": "Kandal",
+      "cities": [
+        {"code": "KH-9-TAK", "name": "Ta Khmau"},
+        {"code": "KH-9-KAN", "name": "Kandal Stueng"},
+        {"code": "KH-9-KIE", "name": "Kien Svay"}
+      ]
+    }
+  ]
+}

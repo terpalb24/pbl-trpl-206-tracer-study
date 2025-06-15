@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "SY-DI",
+      "name": "Damascus",
+      "cities": [
+        {"code": "SY-DI-DAM", "name": "Damascus"},
+        {"code": "SY-DI-JAR", "name": "Jaramana"},
+        {"code": "SY-DI-DOL", "name": "Douma"},
+        {"code": "SY-DI-SAH", "name": "Sahnaya"}
+      ]
+    },
+    {
+      "code": "SY-HL",
+      "name": "Aleppo",
+      "cities": [
+        {"code": "SY-HL-ALE", "name": "Aleppo"},
+        {"code": "SY-HL-AZA", "name": "Azaz"},
+        {"code": "SY-HL-AFR", "name": "Afrin"},
+        {"code": "SY-HL-ALB", "name": "Al-Bab"}
+      ]
+    },
+    {
+      "code": "SY-HO",
+      "name": "Homs",
+      "cities": [
+        {"code": "SY-HO-HOM", "name": "Homs"},
+        {"code": "SY-HO-TAL", "name": "Talkalakh"},
+        {"code": "SY-HO-QUS", "name": "Al-Qusayr"},
+        {"code": "SY-HO-RAB", "name": "Rastan"}
+      ]
+    },
+    {
+      "code": "SY-LA",
+      "name": "Latakia",
+      "cities": [
+        {"code": "SY-LA-LAT", "name": "Latakia"},
+        {"code": "SY-LA-JAB", "name": "Jableh"},
+        {"code": "SY-LA-QAR", "name": "Qardaha"},
+        {"code": "SY-LA-BAN", "name": "Banias"}
+      ]
+    }
+  ]
+}

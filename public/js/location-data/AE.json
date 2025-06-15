@@ -1,0 +1,43 @@
+{
+  "states": [
+    {
+      "code": "AE-DU",
+      "name": "Dubai",
+      "cities": [
+        {"code": "AE-DU-DXB", "name": "Dubai"},
+        {"code": "AE-DU-DEI", "name": "Deira"},
+        {"code": "AE-DU-BUR", "name": "Bur Dubai"},
+        {"code": "AE-DU-JUM", "name": "Jumeirah"}
+      ]
+    },
+    {
+      "code": "AE-AZ",
+      "name": "Abu Dhabi",
+      "cities": [
+        {"code": "AE-AZ-AUH", "name": "Abu Dhabi"},
+        {"code": "AE-AZ-AIN", "name": "Al Ain"},
+        {"code": "AE-AZ-ZAY", "name": "Zayed City"},
+        {"code": "AE-AZ-MAS", "name": "Masdar City"}
+      ]
+    },
+    {
+      "code": "AE-SH",
+      "name": "Sharjah",
+      "cities": [
+        {"code": "AE-SH-SHJ", "name": "Sharjah"},
+        {"code": "AE-SH-KHO", "name": "Khor Fakkan"},
+        {"code": "AE-SH-DHA", "name": "Dhaid"},
+        {"code": "AE-SH-KAL", "name": "Kalba"}
+      ]
+    },
+    {
+      "code": "AE-AJ",
+      "name": "Ajman",
+      "cities": [
+        {"code": "AE-AJ-AJM", "name": "Ajman"},
+        {"code": "AE-AJ-MAN", "name": "Manama"},
+        {"code": "AE-AJ-MAA", "name": "Maafkhar"}
+      ]
+    }
+  ]
+}

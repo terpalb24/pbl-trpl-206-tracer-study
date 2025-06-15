@@ -1,0 +1,41 @@
+{
+  "states": [
+    {
+      "code": "MN-1",
+      "name": "Ulaanbaatar",
+      "cities": [
+        {"code": "MN-1-ULA", "name": "Ulaanbaatar"},
+        {"code": "MN-1-NAL", "name": "Nalaikh"},
+        {"code": "MN-1-BAG", "name": "Baganuur"},
+        {"code": "MN-1-ZUN", "name": "Zuunmod"}
+      ]
+    },
+    {
+      "code": "MN-035",
+      "name": "Orkhon",
+      "cities": [
+        {"code": "MN-035-ERD", "name": "Erdenet"},
+        {"code": "MN-035-BAY", "name": "Bayan"},
+        {"code": "MN-035-JAN", "name": "Jargalant"}
+      ]
+    },
+    {
+      "code": "MN-037",
+      "name": "Darkhan-Uul",
+      "cities": [
+        {"code": "MN-037-DAR", "name": "Darkhan"},
+        {"code": "MN-037-KHA", "name": "Khongor"},
+        {"code": "MN-037-SHA", "name": "Sharyngol"}
+      ]
+    },
+    {
+      "code": "MN-041",
+      "name": "Khövsgöl",
+      "cities": [
+        {"code": "MN-041-MUR", "name": "Murun"},
+        {"code": "KH-041-KHA", "name": "Khatgal"},
+        {"code": "MN-041-TSA", "name": "Tsetserleg"}
+      ]
+    }
+  ]
+}

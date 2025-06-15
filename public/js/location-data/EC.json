@@ -1,0 +1,42 @@
+{
+  "states": [
+    {
+      "code": "EC-P",
+      "name": "Pichincha",
+      "cities": [
+        {"code": "EC-P-QUI", "name": "Quito"},
+        {"code": "EC-P-CAY", "name": "Cayambe"},
+        {"code": "EC-P-MEJ", "name": "Mejía"},
+        {"code": "EC-P-RUM", "name": "Rumiñahui"}
+      ]
+    },
+    {
+      "code": "EC-G",
+      "name": "Guayas",
+      "cities": [
+        {"code": "EC-G-GUA", "name": "Guayaquil"},
+        {"code": "EC-G-DUR", "name": "Durán"},
+        {"code": "EC-G-MIL", "name": "Milagro"},
+        {"code": "EC-G-DAU", "name": "Daule"}
+      ]
+    },
+    {
+      "code": "EC-A",
+      "name": "Azuay",
+      "cities": [
+        {"code": "EC-A-CUE", "name": "Cuenca"},
+        {"code": "EC-A-GIR", "name": "Girón"},
+        {"code": "EC-A-PAU", "name": "Paute"}
+      ]
+    },
+    {
+      "code": "EC-T",
+      "name": "Tungurahua",
+      "cities": [
+        {"code": "EC-T-AMB", "name": "Ambato"},
+        {"code": "EC-T-BAN", "name": "Baños"},
+        {"code": "EC-T-PEL", "name": "Pelileo"}
+      ]
+    }
+  ]
+}

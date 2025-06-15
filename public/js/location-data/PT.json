@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "PT-11",
+      "name": "Lisbon",
+      "cities": [
+        {"code": "PT-11-LIS", "name": "Lisbon"},
+        {"code": "PT-11-SIN", "name": "Sintra"},
+        {"code": "PT-11-CAS", "name": "Cascais"},
+        {"code": "PT-11-OEI", "name": "Oeiras"}
+      ]
+    },
+    {
+      "code": "PT-13",
+      "name": "Porto",
+      "cities": [
+        {"code": "PT-13-OPO", "name": "Porto"},
+        {"code": "PT-13-VNG", "name": "Vila Nova de Gaia"},
+        {"code": "PT-13-MAT", "name": "Matosinhos"},
+        {"code": "PT-13-GON", "name": "Gondomar"}
+      ]
+    },
+    {
+      "code": "PT-03",
+      "name": "Coimbra",
+      "cities": [
+        {"code": "PT-03-COI", "name": "Coimbra"},
+        {"code": "PT-03-FIG", "name": "Figueira da Foz"},
+        {"code": "PT-03-AVE", "name": "Aveiro"},
+        {"code": "PT-03-VIS", "name": "Viseu"}
+      ]
+    },
+    {
+      "code": "PT-02",
+      "name": "Azores",
+      "cities": [
+        {"code": "PT-02-PDL", "name": "Ponta Delgada"},
+        {"code": "PT-02-ANG", "name": "Angra do Heroísmo"},
+        {"code": "PT-02-HOR", "name": "Horta"},
+        {"code": "PT-02-SMA", "name": "Santa Maria"}
+      ]
+    }
+  ]
+}

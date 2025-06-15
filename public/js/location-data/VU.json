@@ -1,0 +1,37 @@
+{
+  "states": [
+    {
+      "code": "VU-MAP",
+      "name": "Malampa",
+      "cities": [
+        {"code": "VU-MAP-LAK", "name": "Lakatoro"},
+        {"code": "VU-MAP-NOR", "name": "Norsup"},
+        {"code": "VU-MAP-SAR", "name": "Saratamata"}
+      ]
+    },
+    {
+      "code": "VU-PAM",
+      "name": "Penama",
+      "cities": [
+        {"code": "VU-PAM-SAR", "name": "Saratamata"},
+        {"code": "VU-PAM-LON", "name": "Longana"}
+      ]
+    },
+    {
+      "code": "VU-SAM",
+      "name": "Sanma",
+      "cities": [
+        {"code": "VU-SAM-LUG", "name": "Luganville"},
+        {"code": "VU-SAM-POR", "name": "Port Olry"}
+      ]
+    },
+    {
+      "code": "VU-SHE",
+      "name": "Shefa",
+      "cities": [
+        {"code": "VU-SHE-POR", "name": "Port Vila"},
+        {"code": "VU-SHE-FOR", "name": "Forari"}
+      ]
+    }
+  ]
+}

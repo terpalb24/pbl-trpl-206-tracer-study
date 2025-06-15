@@ -1,0 +1,40 @@
+{
+  "states": [
+    {
+      "code": "DZ-16",
+      "name": "Algiers",
+      "cities": [
+        {"code": "DZ-16-ALG", "name": "Algiers"},
+        {"code": "DZ-16-BOU", "name": "Boumerdes"},
+        {"code": "DZ-16-TIP", "name": "Tipaza"}
+      ]
+    },
+    {
+      "code": "DZ-31",
+      "name": "Oran",
+      "cities": [
+        {"code": "DZ-31-ORA", "name": "Oran"},
+        {"code": "DZ-31-AIN", "name": "Ain Temouchent"},
+        {"code": "DZ-31-MOS", "name": "Mostaganem"}
+      ]
+    },
+    {
+      "code": "DZ-25",
+      "name": "Constantine",
+      "cities": [
+        {"code": "DZ-25-CON", "name": "Constantine"},
+        {"code": "DZ-25-MIL", "name": "Mila"},
+        {"code": "DZ-25-ANN", "name": "Annaba"}
+      ]
+    },
+    {
+      "code": "DZ-02",
+      "name": "Chlef",
+      "cities": [
+        {"code": "DZ-02-CHL", "name": "Chlef"},
+        {"code": "DZ-02-TEN", "name": "Tenes"},
+        {"code": "DZ-02-ELK", "name": "El Karimia"}
+      ]
+    }
+  ]
+}

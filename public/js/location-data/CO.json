@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "code": "CO-DC",
+      "name": "Bogotá",
+      "cities": [
+        {"code": "CO-DC-BOG", "name": "Bogotá"},
+        {"code": "CO-DC-SOA", "name": "Soacha"},
+        {"code": "CO-DC-CHI", "name": "Chía"},
+        {"code": "CO-DC-ZIP", "name": "Zipaquirá"}
+      ]
+    },
+    {
+      "code": "CO-ANT",
+      "name": "Antioquia",
+      "cities": [
+        {"code": "CO-ANT-MED", "name": "Medellín"},
+        {"code": "CO-ANT-BEL", "name": "Bello"},
+        {"code": "CO-ANT-ITA", "name": "Itagüí"},
+        {"code": "CO-ANT-ENV", "name": "Envigado"}
+      ]
+    },
+    {
+      "code": "CO-VAC",
+      "name": "Valle del Cauca",
+      "cities": [
+        {"code": "CO-VAC-CAL", "name": "Cali"},
+        {"code": "CO-VAC-PAL", "name": "Palmira"},
+        {"code": "CO-VAC-BUE", "name": "Buenaventura"},
+        {"code": "CO-VAC-TUL", "name": "Tuluá"}
+      ]
+    },
+    {
+      "code": "CO-ATL",
+      "name": "Atlántico",
+      "cities": [
+        {"code": "CO-ATL-BAR", "name": "Barranquilla"},
+        {"code": "CO-ATL-SOL", "name": "Soledad"},
+        {"code": "CO-ATL-MAL", "name": "Malambo"},
+        {"code": "CO-ATL-GAL", "name": "Galapa"}
+      ]
+    }
+  ]
+}
