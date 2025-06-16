@@ -205,6 +205,8 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/questionnaires/import', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'import'])->name('admin.questionnaires.import');
     Route::get('/admin/questionnaires/export', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'export'])->name('admin.questionnaires.export');
     Route::get('/admin/questionnaires/download-template', [\App\Http\Controllers\Admin\QuestionnaireImportExportController::class, 'downloadTemplate'])->name('admin.questionnaires.download-template');
+    Route::post('/admin/questionnaire/{id_periode}/complete-drafts', [QuestionnaireController::class, 'completeDraftAnswers'])
+    ->name('admin.questionnaire.complete-drafts');
 });
 // Route for mailtrap
 Route::get('/send-forgot-password', function () {

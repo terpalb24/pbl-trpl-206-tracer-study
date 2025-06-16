@@ -8,12 +8,27 @@ use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 class Kernel extends ConsoleKernel
 {
     /**
+     * The application's command schedule.
+     *
+     * @var array
+     */
+    protected $commands = [
+        // ...existing commands...
+        \App\Console\Commands\UpdatePeriodeStatus::class,
+    ];
+
+    /**
      * Define the application's command schedule.
      */
     protected function schedule(Schedule $schedule): void
     {
         // Run daily at midnight to update all questionnaire statuses
         $schedule->command('questionnaire:update-statuses')->daily();
+
+        // Update periode status setiap jam
+        $schedule->command('periode:update-status')
+                 ->hourly()
+                 ->withoutOverlapping();
     }
 
     /**

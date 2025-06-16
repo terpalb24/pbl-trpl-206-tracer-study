@@ -28,8 +28,9 @@ class UpdateQuestionnaireStatuses extends Command
     {
         $this->info('Updating questionnaire statuses...');
         
+        $periodes = \App\Models\Tb_Periode::all();
         $count = 0;
-        $periodes = Tb_Periode::all();
+        $autoCompletedCount = 0;
         
         foreach ($periodes as $periode) {
             $oldStatus = $periode->status;
@@ -41,10 +42,24 @@ class UpdateQuestionnaireStatuses extends Command
                 $count++;
                 
                 $this->info("Updated period #{$periode->id_periode}: {$oldStatus} -> {$newStatus}");
+                
+                // Auto-complete draft answers when periode becomes expired
+                if ($newStatus === 'expired' && $oldStatus !== 'expired') {
+                    $completed = $periode->autoCompleteDraftAnswers();
+                    $autoCompletedCount += $completed;
+                    
+                    if ($completed > 0) {
+                        $this->info("  └─ Auto-completed {$completed} draft answers");
+                    }
+                }
             }
         }
         
         $this->info("Completed! Updated {$count} period statuses.");
+        
+        if ($autoCompletedCount > 0) {
+            $this->info("Auto-completed {$autoCompletedCount} draft answers total.");
+        }
         
         return Command::SUCCESS;
     }

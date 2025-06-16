@@ -1378,68 +1378,6 @@ class QuestionnaireController extends Controller
     }
 
     /**
-     * Get provinces from external API
-     */
-    public function getProvinces()
-    {
-        try {
-            $response = file_get_contents('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-            $provinces = json_decode($response, true);
-            
-            if ($provinces) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $provinces
-                ]);
-            }
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data provinsi'
-            ], 500);
-            
-        } catch (\Exception $e) {
-            Log::error('Error fetching provinces: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data provinsi'
-            ], 500);
-        }
-    }
-
-    /**
-     * Get cities/regencies by province ID from external API
-     */
-    public function getCities($provinceId)
-    {
-        try {
-            $response = file_get_contents("https://www.emsifa.com/api-wilayah-indonesia/api/regencies/{$provinceId}.json");
-            $cities = json_decode($response, true);
-            
-            if ($cities) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $cities
-                ]);
-            }
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Data kota/kabupaten tidak ditemukan'
-            ], 404);
-            
-        } catch (\Exception $e) {
-            Log::error('Error fetching cities: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data kota/kabupaten'
-            ], 500);
-        }
-    }
-
-    /**
      * Send reminder to user to fill the questionnaire.
      */
     public function remindUserToFill($id_periode, $id_user_answer)
@@ -1510,5 +1448,36 @@ class QuestionnaireController extends Controller
         }
 
         return redirect()->back()->with('success', "Notifikasi pengingat berhasil dikirim ke $sent user (alumni & perusahaan) untuk periode ini.");
+    }
+
+    /**
+     * Manually complete all draft answers for expired periode
+     */
+    public function completeDraftAnswers($id_periode)
+    {
+        try {
+            $periode = Tb_Periode::findOrFail($id_periode);
+            
+            // Check if periode is expired
+            if ($periode->status !== 'expired') {
+                return redirect()->back()->with('error', 'Periode belum expired. Auto-complete hanya dapat dilakukan pada periode yang sudah berakhir.');
+            }
+            
+            $completedCount = $periode->autoCompleteDraftAnswers();
+            
+            if ($completedCount > 0) {
+                return redirect()->back()->with('success', "Berhasil menyelesaikan {$completedCount} jawaban draft yang belum selesai.");
+            } else {
+                return redirect()->back()->with('info', 'Tidak ada jawaban draft yang perlu diselesaikan.');
+            }
+            
+        } catch (\Exception $e) {
+            \Log::error('Error completing draft answers', [
+                'periode_id' => $id_periode,
+                'error' => $e->getMessage()
+            ]);
+            
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat menyelesaikan jawaban draft.');
+        }
     }
 }

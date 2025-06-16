@@ -32,14 +32,37 @@ class Tb_Periode extends Model
         'years_ago_list' => 'array'
     ];
 
+    // Static variable untuk menyimpan old status sementara
+    private static $tempOldStatuses = [];
+
     /**
      * The "booted" method of the model.
      */
     protected static function booted()
     {
-        // Update status before saving
+        // Update status before saving and handle auto-complete
         static::saving(function ($periode) {
-            $periode->status = $periode->calculateStatus();
+            $oldStatus = $periode->getOriginal('status');
+            $newStatus = $periode->calculateStatus();
+            
+            $periode->status = $newStatus;
+            
+            // Store old status in static variable using model's primary key
+            self::$tempOldStatuses[$periode->id_periode] = $oldStatus;
+        });
+        
+        // Handle auto-complete after saving
+        static::saved(function ($periode) {
+            $oldStatus = self::$tempOldStatuses[$periode->id_periode] ?? null;
+            $newStatus = $periode->status;
+            
+            // Auto-complete draft answers when periode becomes expired
+            if ($newStatus === 'expired' && $oldStatus !== 'expired' && $oldStatus !== null) {
+                $periode->autoCompleteDraftAnswers();
+            }
+            
+            // Clean up temporary storage
+            unset(self::$tempOldStatuses[$periode->id_periode]);
         });
     }
 
@@ -67,13 +90,57 @@ class Tb_Periode extends Model
         $periodes = self::all();
         
         foreach ($periodes as $periode) {
+            $oldStatus = $periode->status;
             $newStatus = $periode->calculateStatus();
             
-            if ($periode->status !== $newStatus) {
+            if ($oldStatus !== $newStatus) {
                 $periode->status = $newStatus;
                 $periode->save();
+                
+                // Auto-complete draft answers when periode becomes expired
+                if ($newStatus === 'expired' && $oldStatus !== 'expired') {
+                    $periode->autoCompleteDraftAnswers();
+                }
             }
         }
+    }
+
+    /**
+     * Auto-complete all draft answers when periode expires
+     */
+    public function autoCompleteDraftAnswers()
+    {
+        $draftAnswers = Tb_User_Answers::where('id_periode', $this->id_periode)
+            ->where('status', 'draft')
+            ->get();
+        
+        $completedCount = 0;
+        
+        foreach ($draftAnswers as $userAnswer) {
+            // Update status to completed with current timestamp
+            $userAnswer->update([
+                'status' => 'completed',
+                'updated_at' => now()
+            ]);
+            
+            $completedCount++;
+            
+            \Log::info('Auto-completed draft answer due to periode expiry', [
+                'user_answer_id' => $userAnswer->id_user_answer,
+                'periode_id' => $this->id_periode,
+                'user_id' => $userAnswer->id_user,
+                'nim' => $userAnswer->nim ?? 'N/A'
+            ]);
+        }
+        
+        if ($completedCount > 0) {
+            \Log::info("Auto-completed {$completedCount} draft answers for expired periode", [
+                'periode_id' => $this->id_periode,
+                'periode_name' => $this->periode_name ?? "Periode #{$this->id_periode}"
+            ]);
+        }
+        
+        return $completedCount;
     }
 
     /**
