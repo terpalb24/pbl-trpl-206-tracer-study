@@ -20,7 +20,15 @@
         </div>
 
         <div class="mb-6">
-            <x-admin.statistic-chart :statisticData="$statisticData" />
+            <x-admin.statistic-chart 
+                :statisticData="$statisticData"
+                :graduationYearStatisticData="$graduationYearStatisticData"
+                :studyPrograms="$studyPrograms"
+                :respondedPerStudy="$respondedPerStudy"
+                :salaryPerStudy="$salaryPerStudy"
+                :allGraduationYears="$allGraduationYears"
+                :filterGraduationYear="$filterGraduationYear"
+            />
         </div>
     </div>
 

@@ -14,41 +14,86 @@ use App\Models\Tb_Company;
 
 class AdminController extends Controller
 {
-    public function dashboard()
-{
-    $result = DB::select("
-        SELECT 
-            (SELECT COUNT(*) FROM tb_alumni) AS alumni_count,
-            (SELECT COUNT(*) FROM tb_company) AS company_count,
-            (SELECT COUNT(*) FROM tb_user_answers WHERE `status` = 'completed') AS answer_count
-    ");
+    public function dashboard(Request $request)
+    {
+        $result = DB::select("
+            SELECT 
+                (SELECT COUNT(*) FROM tb_alumni) AS alumni_count,
+                (SELECT COUNT(*) FROM tb_company) AS company_count,
+                (SELECT COUNT(*) FROM tb_user_answers WHERE `status` = 'completed') AS answer_count
+        ");
 
-    // $result adalah array objek, ambil elemen pertama
-    $data = $result[0];
+        $data = $result[0];
+        $alumniCount = $data->alumni_count;
+        $companyCount = $data->company_count;
+        $answerCount = $data->answer_count;
 
-    $alumniCount = $data->alumni_count;
-    $companyCount = $data->company_count;
-    $answerCount = $data->answer_count;
+        // Statistik status alumni
+        $statusCounts = Tb_Alumni::select('status', DB::raw('count(*) as total'))
+            ->whereIn('status', [
+                'bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'
+            ])
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
 
-    // Statistik status alumni
-    $statusCounts = Tb_Alumni::select('status', DB::raw('count(*) as total'))
-        ->whereIn('status', [
+        $allStatuses = [
             'bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'
-        ])
-        ->groupBy('status')
-        ->pluck('total', 'status')
-        ->toArray();
+        ];
+        $statisticData = [];
+        foreach ($allStatuses as $status) {
+            $statisticData[$status] = $statusCounts[$status] ?? 0;
+        }
 
-    $allStatuses = [
-        'bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'
-    ];
-    $statisticData = [];
-    foreach ($allStatuses as $status) {
-        $statisticData[$status] = $statusCounts[$status] ?? 0;
+        // Ambil tahun lulus dari request untuk filter
+        $filterGraduationYear = $request->input('graduation_year_filter');
+
+        // Pie Chart: Distribusi Tahun Lulus Alumni (dapat difilter)
+        if ($filterGraduationYear) {
+            $graduationYearStatisticData = Tb_Alumni::select('graduation_year', DB::raw('count(*) as total'))
+                ->where('graduation_year', $filterGraduationYear)
+                ->groupBy('graduation_year')
+                ->orderBy('graduation_year', 'asc')
+                ->pluck('total', 'graduation_year')
+                ->toArray();
+        } else {
+            $graduationYearStatisticData = Tb_Alumni::select('graduation_year', DB::raw('count(*) as total'))
+                ->groupBy('graduation_year')
+                ->orderBy('graduation_year', 'asc')
+                ->pluck('total', 'graduation_year')
+                ->toArray();
+        }
+
+        // Untuk dropdown filter tahun lulus
+        $allGraduationYears = Tb_Alumni::select('graduation_year')->distinct()->orderBy('graduation_year', 'asc')->pluck('graduation_year')->toArray();
+
+        // Untuk filter dan statistik kuesioner & pendapatan
+        $studyPrograms = Tb_study_program::orderBy('study_program')->get();
+
+        // Jumlah alumni mengisi kuesioner per prodi (join by id_user, lebih robust)
+        $respondedPerStudy = Tb_Alumni::select('id_study', DB::raw('COUNT(DISTINCT tb_alumni.nim) as total'))
+            ->join('tb_user_answers', function($join) {
+                $join->on('tb_alumni.id_user', '=', 'tb_user_answers.id_user')
+                     ->where('tb_user_answers.status', '=', 'completed');
+            })
+            ->groupBy('id_study')
+            ->pluck('total', 'id_study')
+            ->toArray();
+
+        // Rata-rata pendapatan per prodi (alumni status bekerja)
+        $salaryPerStudy = Tb_Alumni::select('tb_alumni.id_study', DB::raw('AVG(CAST(tb_jobhistory.salary AS UNSIGNED)) as avg_salary'))
+            ->join('tb_jobhistory', 'tb_alumni.nim', '=', 'tb_jobhistory.nim')
+            ->where('tb_alumni.status', 'bekerja')
+            ->groupBy('tb_alumni.id_study')
+            ->pluck('avg_salary', 'id_study')
+            ->toArray();
+
+        return view('admin.dashboard', compact(
+            'alumniCount', 'companyCount', 'answerCount', 'statisticData',
+            'graduationYearStatisticData', 'studyPrograms', 'respondedPerStudy', 'salaryPerStudy',
+            'allGraduationYears', 'filterGraduationYear'
+        ));
     }
-
-    return view('admin.dashboard', compact('alumniCount', 'companyCount', 'answerCount', 'statisticData'));
-}
     // Tampilkan semua alumni
 // Tampilkan semua alumni
 public function alumniIndex(Request $request)
