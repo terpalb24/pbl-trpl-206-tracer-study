@@ -592,6 +592,26 @@
                                                 </div>
                                                 <div class="grid gap-3">
                                                     @foreach($question->options as $option)
+                                                        @php
+                                                            // Tentukan jumlah bintang berdasarkan text rating
+                                                            $ratingText = strtolower($option->option);
+                                                            $starCount = 1; // default
+                                                            
+                                                            if (str_contains($ratingText, 'kurang')) {
+                                                                $starCount = 1;
+                                                            } elseif (str_contains($ratingText, 'cukup')) {
+                                                                $starCount = 2;
+                                                            } elseif (str_contains($ratingText, 'baik sekali') || str_contains($ratingText, 'sangat baik')) {
+                                                                $starCount = 5;
+                                                            } elseif (str_contains($ratingText, 'baik')) {
+                                                                $starCount = 3;
+                                                            }
+                                                            
+                                                            // Jika menggunakan angka sebagai rating
+                                                            if (is_numeric($option->option)) {
+                                                                $starCount = min(5, max(1, (int)$option->option));
+                                                            }
+                                                        @endphp
                                                         <div class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors duration-200">
                                                             <input type="radio" 
                                                                    name="answers[{{ $question->id_question }}]" 
@@ -602,7 +622,16 @@
                                                                    {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $option->id_questions_options ? 'checked' : '' }}>
                                                             <label for="rating_{{ $option->id_questions_options }}" class="cursor-pointer flex items-center flex-grow">
                                                                 <span class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $option->id_questions_options ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300' : 'bg-gray-100 text-gray-700 border-2 border-gray-300' }} hover:bg-yellow-50 transition-colors duration-200">
-                                                                    <i class="fas fa-star mr-1"></i>
+                                                                    {{-- Tampilkan bintang sesuai rating --}}
+                                                                    <span class="flex items-center mr-2">
+                                                                        @for($i = 1; $i <= 5; $i++)
+                                                                            @if($i <= $starCount)
+                                                                                <i class="fas fa-star text-yellow-500"></i>
+                                                                            @else
+                                                                                <i class="far fa-star text-gray-300"></i>
+                                                                            @endif
+                                                                        @endfor
+                                                                    </span>
                                                                     {{ $option->option }}
                                                                 </span>
                                                             </label>

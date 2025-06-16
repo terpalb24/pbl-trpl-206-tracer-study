@@ -407,24 +407,27 @@ class QuestionnaireController extends Controller
                     $nextCategory = $allCategories[$currentIndex + 1];
                     return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $nextCategory->id_category]);
                 } else {
+                    session(['company_current_periode_id' => $id_periode]);
                     // Last category, mark as completed
                     $userAnswer->update([
                         'status' => 'completed',
                         'created_at' => now()
                     ]);
                     
-                    return redirect()->route('company.questionnaire.thank-you')
-                        ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
+                    return redirect()->route('company.questionnaire.thank-you', ['id_periode' => $id_periode])
+                     ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
                 }
             } elseif ($action === 'submit_final') {
+                // Store periode ID in session
+                session(['company_current_periode_id' => $id_periode]);
                 // Mark as completed
                 $userAnswer->update([
                     'status' => 'completed', 
                     'created_at' => now()
                 ]);
                 
-                return redirect()->route('company.questionnaire.thank-you')
-                    ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
+                return redirect()->route('company.questionnaire.thank-you', ['id_periode' => $id_periode])
+                 ->with('success', 'Kuesioner berhasil diselesaikan untuk alumni: ' . $nim);
             }
 
             return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $categoryId]);
@@ -440,7 +443,10 @@ class QuestionnaireController extends Controller
     // Method lainnya tetap sama...
     public function thankYou()
     {
-        return view('company.questionnaire.thank-you');
+        // Ambil periode ID dari session atau request sebelumnya
+        $id_periode = session('company_current_periode_id') ?? request()->get('id_periode');
+        
+        return view('company.questionnaire.thank-you', compact('id_periode'));
     }
 
     public function results()
