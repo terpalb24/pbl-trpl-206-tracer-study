@@ -97,12 +97,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label for="text_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
-                                <input type="text" id="text_before" name="before_text" value="{{ old('before_text') }}" 
+                                <input type="text" id="text_before" name="text_before_text" value="{{ old('text_before_text') }}" 
                                        placeholder="Contoh: Saya bekerja di" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                             <div>
                                 <label for="text_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
-                                <input type="text" id="text_after" name="after_text" value="{{ old('after_text') }}" 
+                                <input type="text" id="text_after" name="text_after_text" value="{{ old('text_after_text') }}" 
                                        placeholder="Contoh: sebagai posisi" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -123,6 +123,7 @@
                             <strong>Contoh penggunaan:</strong> "Saya bekerja di [input field] sebagai posisi [input field]"
                         </div>
                     </div>
+
                     <!-- Email input configuration section -->
                     <div id="email-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'email' ? '' : 'hidden' }}">
                         <h4 class="text-lg font-medium mb-3">Konfigurasi Input Email</h4>
@@ -137,12 +138,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label for="email_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
-                                <input type="text" id="email_before" name="before_text" value="{{ old('before_text') }}" 
+                                <input type="text" id="email_before" name="email_before_text" value="{{ old('email_before_text') }}" 
                                        placeholder="Contoh: Email aktif saya adalah" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                             <div>
                                 <label for="email_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
-                                <input type="text" id="email_after" name="after_text" value="{{ old('after_text') }}" 
+                                <input type="text" id="email_after" name="email_after_text" value="{{ old('email_after_text') }}" 
                                        placeholder="Contoh: yang bisa dihubungi" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -173,6 +174,7 @@
                             </ul>
                         </div>
                     </div>
+
                     <!-- Numeric input configuration section -->
                     <div id="numeric-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'numeric' ? '' : 'hidden' }}">
                         <h4 class="text-lg font-medium mb-3">Konfigurasi Input Numerik</h4>
@@ -187,12 +189,12 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                             <div>
                                 <label for="numeric_before" class="block text-sm font-medium text-gray-700 mb-2">Teks sebelum input (opsional):</label>
-                                <input type="text" id="numeric_before" name="before_text" value="{{ old('before_text') }}" 
+                                <input type="text" id="numeric_before" name="numeric_before_text" value="{{ old('numeric_before_text') }}" 
                                        placeholder="Contoh: Gaji saya sebesar Rp" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                             <div>
                                 <label for="numeric_after" class="block text-sm font-medium text-gray-700 mb-2">Teks setelah input (opsional):</label>
-                                <input type="text" id="numeric_after" name="after_text" value="{{ old('after_text') }}" 
+                                <input type="text" id="numeric_after" name="numeric_after_text" value="{{ old('numeric_after_text') }}" 
                                        placeholder="Contoh: per bulan" class="w-full px-3 py-2 border border-gray-300 rounded-md">
                             </div>
                         </div>
@@ -213,6 +215,11 @@
                             <strong>Contoh penggunaan:</strong> "Gaji saya sebesar Rp [input numerik] per bulan"
                         </div>
                     </div>
+
+                    <!-- Hidden fields to handle before/after text based on question type -->
+                    <input type="hidden" id="final_before_text" name="before_text" value="{{ old('before_text') }}">
+                    <input type="hidden" id="final_after_text" name="after_text" value="{{ old('after_text') }}">
+
                     <!-- Rating options section -->
                     <div id="rating-options-section" class="mb-4 border p-4 rounded-md {{ old('question_type') == 'rating' ? '' : 'hidden' }}">
                         <h4 class="text-lg font-medium mb-3">Konfigurasi Rating</h4>
@@ -1155,5 +1162,174 @@ if (form) {
         return true;
     });
 }
+
+// ✅ PERBAIKAN: Enhanced form handling with before/after text
+document.addEventListener('DOMContentLoaded', function() {
+    const questionTypeSelect = document.getElementById('question_type');
+    
+    // Function to update hidden fields with correct before/after text
+    function updateHiddenFields(questionType) {
+        const finalBeforeText = document.getElementById('final_before_text');
+        const finalAfterText = document.getElementById('final_after_text');
+        
+        let beforeValue = '';
+        let afterValue = '';
+        
+        switch(questionType) {
+            case 'text':
+                beforeValue = document.getElementById('text_before').value || '';
+                afterValue = document.getElementById('text_after').value || '';
+                break;
+            case 'email':
+                beforeValue = document.getElementById('email_before').value || '';
+                afterValue = document.getElementById('email_after').value || '';
+                break;
+            case 'numeric':
+                beforeValue = document.getElementById('numeric_before').value || '';
+                afterValue = document.getElementById('numeric_after').value || '';
+                break;
+        }
+        
+        finalBeforeText.value = beforeValue;
+        finalAfterText.value = afterValue;
+        
+        console.log('Updated hidden fields for', questionType, ':', {
+            before: beforeValue,
+            after: afterValue
+        });
+    }
+
+    // Handle question type change
+    if (questionTypeSelect) {
+        questionTypeSelect.addEventListener('change', function() {
+            // Toggle sections based on question type
+            // Get all sections - use safe access
+            const sections = {
+                options: document.getElementById('options-section'),
+                rating: document.getElementById('rating-options-section'),
+                scale: document.getElementById('scale-options-section'),
+                text: document.getElementById('text-options-section'),
+                numeric: document.getElementById('numeric-options-section'),
+                email: document.getElementById('email-options-section'),
+                location: document.getElementById('location-options-section'),
+            };
+            
+            // Hide all sections first
+            Object.values(sections).forEach(section => {
+                if (section) section.classList.add('hidden');
+            });
+            
+            // Show appropriate section based on type
+            if (this.value === 'option' || this.value === 'multiple') {
+                if (sections.options) {
+                    sections.options.classList.remove('hidden');
+                    // Set required attribute for visible option inputs only
+                    const visibleInputs = sections.options.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
+                    visibleInputs.forEach(input => input.setAttribute('required', 'required'));
+                }
+            } else if (this.value === 'rating') {
+                if (sections.rating) {
+                    sections.rating.classList.remove('hidden');
+                    console.log('Rating section shown');
+                }
+            } else if (this.value === 'scale') {
+                if (sections.scale) {
+                    sections.scale.classList.remove('hidden');
+                    console.log('Scale section shown');
+                }
+            } else if (this.value === 'text') {
+                if (sections.text) {
+                    sections.text.classList.remove('hidden');
+                }
+            } else if (this.value === 'numeric') {
+                if (sections.numeric) {
+                    sections.numeric.classList.remove('hidden');
+                }
+            } else if (this.value === 'email') {
+                if (sections.email) {
+                    sections.email.classList.remove('hidden');
+                }
+            } else if (this.value === 'location') {
+                if (sections.location) {
+                    sections.location.classList.remove('hidden');
+                }
+            }
+
+            // Remove required from option inputs when not option/multiple type
+            if (this.value !== 'option' && this.value !== 'multiple' && sections.options) {
+                const visibleInputs = sections.options.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
+                visibleInputs.forEach(input => input.removeAttribute('required'));
+            }
+            
+            // Update hidden fields when question type changes
+            updateHiddenFields(this.value);
+            
+            console.log('Question type changed to:', this.value);
+        });
+    }
+    
+    // Handle input changes for before/after text fields
+    ['text_before', 'text_after', 'email_before', 'email_after', 'numeric_before', 'numeric_after'].forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', function() {
+                updateHiddenFields(questionTypeSelect.value);
+                updatePreview();
+            });
+        }
+    });
+
+    // Update preview text
+    function updatePreview() {
+        // Text preview
+        const textBefore = document.getElementById('text_before');
+        const textAfter = document.getElementById('text_after');
+        const textBeforePreview = document.getElementById('text-before-preview');
+        const textAfterPreview = document.getElementById('text-after-preview');
+        
+        if (textBefore && textAfter && textBeforePreview && textAfterPreview) {
+            textBeforePreview.textContent = textBefore.value || '';
+            textAfterPreview.textContent = textAfter.value || '';
+        }
+        
+        // Email preview  
+        const emailBefore = document.getElementById('email_before');
+        const emailAfter = document.getElementById('email_after');
+        const emailBeforePreview = document.getElementById('email-before-preview');
+        const emailAfterPreview = document.getElementById('email-after-preview');
+        
+        if (emailBefore && emailAfter && emailBeforePreview && emailAfterPreview) {
+            emailBeforePreview.textContent = emailBefore.value || '';
+            emailAfterPreview.textContent = emailAfter.value || '';
+        }
+        
+        // Numeric preview
+        const numericBefore = document.getElementById('numeric_before');
+        const numericAfter = document.getElementById('numeric_after');
+        const numericBeforePreview = document.getElementById('numeric-before-preview');
+        const numericAfterPreview = document.getElementById('numeric-after-preview');
+        
+        if (numericBefore && numericAfter && numericBeforePreview && numericAfterPreview) {
+            numericBeforePreview.textContent = numericBefore.value || '';
+            numericAfterPreview.textContent = numericAfter.value || '';
+        }
+    }
+
+    // Initialize on page load
+    if (questionTypeSelect.value) {
+        updateHiddenFields(questionTypeSelect.value);
+        updatePreview();
+    }
+
+    // Handle form submission to ensure hidden fields are updated
+    document.querySelector('form').addEventListener('submit', function() {
+        updateHiddenFields(questionTypeSelect.value);
+        console.log('Form submitting with before/after text:', {
+            question_type: questionTypeSelect.value,
+            before_text: document.getElementById('final_before_text').value,
+            after_text: document.getElementById('final_after_text').value
+        });
+    });
+});
 </script>
 @endsection

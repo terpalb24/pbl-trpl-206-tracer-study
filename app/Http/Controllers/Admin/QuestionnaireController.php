@@ -466,6 +466,7 @@ class QuestionnaireController extends Controller
      */
     public function storeQuestion(Request $request, $id_periode, $id_category)
     {
+        // dd('Store Question called', $request->all());
         try {
             $questionType = $request->input('question_type');
             
