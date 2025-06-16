@@ -189,19 +189,20 @@
                                 </button>
                             @endif
                             
-                            <button type="submit" name="action" value="save_draft"
-                                    class="inline-flex items-center px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors duration-200">
-                                <i class="fas fa-save mr-2"></i>
-                                Simpan Draft
-                            </button>
-                        </div>
-
-                        <div class="flex gap-3">
                             <a href="{{ route('company.questionnaire.select-alumni', $periode->id_periode) }}" 
                                class="inline-flex items-center px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Kembali ke Pilih Alumni
                             </a>
+                        </div>
+
+                        <div class="flex gap-3">
+                            
+                            <button type="submit" name="action" value="save_draft"
+                                    class="inline-flex items-center px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-save mr-2"></i>
+                                Simpan Draft
+                            </button>
 
                             @if($nextCategory)
                                 <button type="submit" name="action" value="next_category" id="next-category-btn"

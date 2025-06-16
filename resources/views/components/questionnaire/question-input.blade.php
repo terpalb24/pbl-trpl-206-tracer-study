@@ -54,7 +54,7 @@
         
         <div class="mt-2 text-xs text-gray-500 flex items-center">
             <i class="fas fa-info-circle mr-1"></i>
-            Hanya dapat memasukkan angka (0-9), maksimal 9 digit
+            Hanya dapat memasukkan angka (0-9)
         </div>
     </div>
 
