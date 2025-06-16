@@ -1865,6 +1865,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Modal confirmation handlers
+    document.getElementById('modal-confirm')?.addEventListener('click', function() {
+        console.log('Modal confirmed - submitting final');
+        const actionInput = document.querySelector('input[name="action"]');
+        if (actionInput) {
+            actionInput.value = 'submit_final';
+        }
+        
+        // Hide modal and submit form
+        document.getElementById('confirmation-modal').classList.add('hidden');
+        form.submit();
+    });
+
+    document.getElementById('modal-cancel')?.addEventListener('click', function() {
+        console.log('Modal cancelled');
+        // Just hide the modal
+        document.getElementById('confirmation-modal').classList.add('hidden');
+    });
+
+    // Also handle clicking outside modal to close it
+    document.getElementById('confirmation-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            console.log('Modal closed by clicking outside');
+            this.classList.add('hidden');
+        }
+    });
+
+    // Handle escape key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('confirmation-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                console.log('Modal closed by escape key');
+                modal.classList.add('hidden');
+            }
+        }
+    });
+
     // ✅ TAMBAHKAN FUNCTION VALIDASI LENGKAP
     function validateCurrentCategory() {
         console.log('=== VALIDATING CURRENT CATEGORY ===');
