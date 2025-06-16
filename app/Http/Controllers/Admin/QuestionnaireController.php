@@ -350,16 +350,31 @@ class QuestionnaireController extends Controller
             'category_name' => 'required|string|max:255',
             'order' => 'required|integer|min:1',
             'for_type' => 'required|in:alumni,company,both',
+            'is_status_dependent' => 'boolean',
+            'required_alumni_status' => 'nullable|array',
+            'required_alumni_status.*' => 'string|in:bekerja,tidak bekerja,melanjutkan studi,berwiraswasta,sedang mencari kerja',
         ]);
 
         $periode = Tb_Periode::findOrFail($id_periode);
         
-        $category = Tb_Category::create([
+        // Prepare data for category creation
+        $categoryData = [
             'id_periode' => $id_periode,
             'category_name' => $request->category_name,
             'order' => $request->order,
             'for_type' => $request->for_type,
-        ]);
+            'is_status_dependent' => $request->boolean('is_status_dependent'),
+            'required_alumni_status' => null
+        ];
+
+        // Only set required_alumni_status if category is for alumni and is status dependent
+        if ($request->boolean('is_status_dependent') && 
+            ($request->for_type === 'alumni' || $request->for_type === 'both') &&
+            !empty($request->required_alumni_status)) {
+            $categoryData['required_alumni_status'] = $request->required_alumni_status;
+        }
+
+        $category = Tb_Category::create($categoryData);
 
         return redirect()->route('admin.questionnaire.show', $id_periode)
             ->with('success', 'Kategori berhasil ditambahkan.');
@@ -385,14 +400,29 @@ class QuestionnaireController extends Controller
             'category_name' => 'required|string|max:255',
             'order' => 'required|integer|min:1',
             'for_type' => 'required|in:alumni,company,both',
+            'is_status_dependent' => 'boolean',
+            'required_alumni_status' => 'nullable|array',
+            'required_alumni_status.*' => 'string|in:bekerja,tidak bekerja,melanjutkan studi,berwiraswasta,sedang mencari kerja',
         ]);
 
         $category = Tb_Category::findOrFail($id_category);
-        $category->update([
+        
+        $updateData = [
             'category_name' => $request->category_name,
             'order' => $request->order,
             'for_type' => $request->for_type,
-        ]);
+            'is_status_dependent' => $request->boolean('is_status_dependent'),
+            'required_alumni_status' => null
+        ];
+
+        // Only set required_alumni_status if category is for alumni and is status dependent
+        if ($request->boolean('is_status_dependent') && 
+            ($request->for_type === 'alumni' || $request->for_type === 'both') &&
+            !empty($request->required_alumni_status)) {
+            $updateData['required_alumni_status'] = $request->required_alumni_status;
+        }
+
+        $category->update($updateData);
 
         return redirect()->route('admin.questionnaire.show', $id_periode)
             ->with('success', 'Kategori berhasil diperbarui.');

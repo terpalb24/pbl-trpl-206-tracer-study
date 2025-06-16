@@ -90,6 +90,37 @@
                         @enderror
                     </div>
 
+                    <!-- Status Dependency Section -->
+                    <div class="mb-4" id="status-dependency-section">
+                        <div class="flex items-center mb-3">
+                            <input type="checkbox" name="is_status_dependent" id="is_status_dependent" 
+                                   value="1" {{ old('is_status_dependent', $category->is_status_dependent) ? 'checked' : '' }}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="is_status_dependent" class="ml-2 text-sm font-medium text-gray-700">
+                                Kategori bergantung pada status alumni
+                            </label>
+                        </div>
+
+                        <div id="alumni-status-options" class="mt-3 {{ old('is_status_dependent', $category->is_status_dependent) ? '' : 'hidden' }}">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Pilih Status Alumni yang Dapat Mengakses Kategori Ini:
+                            </label>
+                            <div class="space-y-2">
+                                @foreach(\App\Models\Tb_Category::getAlumniStatusOptions() as $value => $label)
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="required_alumni_status[]" 
+                                               id="status_{{ $value }}" value="{{ $value }}"
+                                               {{ in_array($value, old('required_alumni_status', $category->required_alumni_status ?? [])) ? 'checked' : '' }}
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="status_{{ $value }}" class="ml-2 text-sm text-gray-700">
+                                            {{ $label }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="flex justify-end space-x-2">
                         <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
                             Batal
@@ -141,6 +172,23 @@
         form.appendChild(csrfTokenInput);
         document.body.appendChild(form);
         form.submit();
+    });
+
+    // JavaScript to handle the status dependency section
+    document.getElementById('is_status_dependent').addEventListener('change', function() {
+        const isChecked = this.checked;
+        const alumniStatusOptions = document.getElementById('alumni-status-options');
+        
+        if (isChecked) {
+            alumniStatusOptions.classList.remove('hidden');
+        } else {
+            alumniStatusOptions.classList.add('hidden');
+            // Uncheck all options if the checkbox is unchecked
+            const checkboxes = alumniStatusOptions.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
     });
 </script>
 @endsection

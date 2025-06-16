@@ -44,7 +44,7 @@ class QuestionnaireController extends Controller
         ]);
     }
 
-    public function fill($periodeId)
+    public function fill(Request $request, $periodeId)
     {
         $alumni = auth()->user()->alumni;
         
@@ -83,18 +83,25 @@ class QuestionnaireController extends Controller
             ])->with('info', 'Anda sudah menyelesaikan kuesioner ini.');
         }
 
-        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI SAJA
+        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI SAJA DAN STATUS DEPENDENCY
+        $alumni = auth()->user()->alumni;
+        
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
                       ->orWhere('for_type', 'both');
             })
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(function($category) use ($alumni) {
+                // Filter berdasarkan status dependency
+                return $category->isAccessibleByAlumni($alumni);
+            })
+            ->values(); // Reset array keys
 
         if ($categories->isEmpty()) {
             return redirect()->route('alumni.questionnaire.index')
-                ->with('error', 'Tidak ada kategori yang tersedia untuk alumni pada kuesioner ini.');
+                ->with('error', 'Tidak ada kategori yang tersedia untuk alumni dengan status Anda pada kuesioner ini.');
         }
 
         // Calculate total categories and other variables

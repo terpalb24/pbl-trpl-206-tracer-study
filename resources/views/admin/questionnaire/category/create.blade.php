@@ -75,7 +75,7 @@
                         @enderror
                     </div>
 
-                    <!-- Add for_type field to the form -->
+                    <!-- For Type -->
                     <div class="mb-4">
                         <label for="for_type" class="block text-sm font-medium text-gray-700 mb-1">Untuk</label>
                         <select name="for_type" id="for_type" required
@@ -87,6 +87,40 @@
                         @error('for_type')
                             <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
                         @enderror
+                    </div>
+
+                    <!-- Status Dependency Section -->
+                    <div class="mb-4" id="status-dependency-section">
+                        <div class="flex items-center mb-3">
+                            <input type="checkbox" name="is_status_dependent" id="is_status_dependent" 
+                                   value="1" {{ old('is_status_dependent') ? 'checked' : '' }}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                            <label for="is_status_dependent" class="ml-2 text-sm font-medium text-gray-700">
+                                Kategori bergantung pada status alumni
+                            </label>
+                        </div>
+
+                        <div id="alumni-status-options" class="mt-3 {{ old('is_status_dependent') ? '' : 'hidden' }}">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Pilih Status Alumni yang Dapat Mengakses Kategori Ini:
+                            </label>
+                            <div class="space-y-2">
+                                @foreach(\App\Models\Tb_Category::getAlumniStatusOptions() as $value => $label)
+                                    <div class="flex items-center">
+                                        <input type="checkbox" name="required_alumni_status[]" 
+                                               id="status_{{ $value }}" value="{{ $value }}"
+                                               {{ in_array($value, old('required_alumni_status', [])) ? 'checked' : '' }}
+                                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                                        <label for="status_{{ $value }}" class="ml-2 text-sm text-gray-700">
+                                            {{ $label }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            @error('required_alumni_status')
+                                <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="flex justify-end space-x-2">
@@ -140,6 +174,47 @@
         form.appendChild(csrfTokenInput);
         document.body.appendChild(form);
         form.submit();
+    });
+
+    // Toggle status dependency options
+    document.getElementById('is_status_dependent').addEventListener('change', function() {
+        const statusOptions = document.getElementById('alumni-status-options');
+        const forType = document.getElementById('for_type').value;
+        
+        if (this.checked && (forType === 'alumni' || forType === 'both')) {
+            statusOptions.classList.remove('hidden');
+        } else {
+            statusOptions.classList.add('hidden');
+        }
+    });
+
+    // Hide/show status dependency based on for_type
+    document.getElementById('for_type').addEventListener('change', function() {
+        const statusDependencySection = document.getElementById('status-dependency-section');
+        const statusDependencyCheckbox = document.getElementById('is_status_dependent');
+        const statusOptions = document.getElementById('alumni-status-options');
+        
+        if (this.value === 'company') {
+            statusDependencySection.classList.add('hidden');
+            statusDependencyCheckbox.checked = false;
+            statusOptions.classList.add('hidden');
+        } else {
+            statusDependencySection.classList.remove('hidden');
+        }
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const forType = document.getElementById('for_type').value;
+        const isStatusDependent = document.getElementById('is_status_dependent').checked;
+        
+        if (forType === 'company') {
+            document.getElementById('status-dependency-section').classList.add('hidden');
+        }
+        
+        if (isStatusDependent && (forType === 'alumni' || forType === 'both')) {
+            document.getElementById('alumni-status-options').classList.remove('hidden');
+        }
     });
 </script>
 @endsection
