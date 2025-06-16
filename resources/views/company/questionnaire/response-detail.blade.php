@@ -402,7 +402,7 @@
                                                                                             @endif
                                                                                             
                                                                                             <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-lg font-mono">
-                                                                                                {{ $qData['answer'] }}
+                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
                                                                                             </span>
                                                                                             
                                                                                             @if(!empty($qData['question']->after_text))
@@ -418,7 +418,7 @@
                                                                                         <div class="mb-2">
                                                                                             <span class="text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
                                                                                             <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-2xl font-mono">
-                                                                                                {{ $qData['answer'] }}
+                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
                                                                                             </span>
                                                                                         </div>
                                                                                         

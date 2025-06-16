@@ -500,6 +500,84 @@
                                                                             </div>
                                                                         </div>
                                                                     </div>
+                                                                @elseif($qData['question']->type === 'numeric')
+                                                                    <!-- Enhanced Numeric Answer Display -->
+                                                                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
+                                                                        <div class="flex items-center">
+                                                                            <i class="fas fa-calculator text-green-600 mr-3 text-xl"></i>
+                                                                            <div class="flex-1">
+                                                                                @if($qData['question']->before_text || $qData['question']->after_text)
+                                                                                    <div class="flex items-center flex-wrap mb-2">
+                                                                                        @if($qData['question']->before_text)
+                                                                                            <span class="text-green-700 font-medium mr-2">{{ $qData['question']->before_text }}</span>
+                                                                                        @endif
+                                                                                        
+                                                                                        <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-lg font-mono">
+                                                                                            {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                        </span>
+                                                                                        
+                                                                                        @if($qData['question']->after_text)
+                                                                                            <span class="text-green-700 font-medium ml-2">{{ $qData['question']->after_text }}</span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                    
+                                                                                    <div class="text-xs text-green-600 flex items-center">
+                                                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                                                        Format: "{{ $qData['question']->before_text ?? '' }} [angka] {{ $qData['question']->after_text ?? '' }}"
+                                                                                    </div>
+                                                                                @else
+                                                                                    <div class="mb-2">
+                                                                                        <span class="text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
+                                                                                        <span class="bg-white border border-green-300 rounded-md px-4 py-2 font-bold text-green-900 text-2xl font-mono">
+                                                                                            {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    
+                                                                                    <div class="text-xs text-green-600 flex items-center">
+                                                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                                                        Input numerik ({{ strlen(str_replace([',', '.'], '', $qData['answer'])) }} digit)
+                                                                                    </div>
+                                                                                @endif
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+
+                                                                @elseif($qData['question']->type === 'email')
+                                                                    <!-- Enhanced Email Answer Display -->
+                                                                    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+                                                                        <div class="flex items-center">
+                                                                            <i class="fas fa-envelope text-blue-600 mr-3 text-xl"></i>
+                                                                            <div class="flex-1">
+                                                                                @if($qData['question']->before_text || $qData['question']->after_text)
+                                                                                    <div class="flex items-center flex-wrap mb-2">
+                                                                                        @if($qData['question']->before_text)
+                                                                                            <span class="text-blue-700 font-medium mr-2">{{ $qData['question']->before_text }}</span>
+                                                                                        @endif
+                                                                                        
+                                                                                        <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-4 py-2 font-bold text-blue-900 text-lg hover:bg-blue-50 transition-colors">
+                                                                                            {{ $qData['answer'] }}
+                                                                                        </a>
+                                                                                        
+                                                                                        @if($qData['question']->after_text)
+                                                                                            <span class="text-blue-700 font-medium ml-2">{{ $qData['question']->after_text }}</span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                @else
+                                                                                    <div class="mb-2">
+                                                                                        <span class="text-sm text-blue-600 font-medium block mb-1">Email yang diinput:</span>
+                                                                                        <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-4 py-2 font-bold text-blue-900 text-xl hover:bg-blue-50 transition-colors inline-block">
+                                                                                            {{ $qData['answer'] }}
+                                                                                        </a>
+                                                                                    </div>
+                                                                                @endif
+                                                                                
+                                                                                <div class="text-xs text-blue-600 flex items-center mt-2">
+                                                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                                                    Email terverifikasi • Klik untuk mengirim email
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 @elseif($qData['question']->type === 'scale')
                                                                     <!-- Enhanced Scale Answer -->
                                                                     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
