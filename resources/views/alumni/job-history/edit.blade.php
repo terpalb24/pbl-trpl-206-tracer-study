@@ -19,6 +19,25 @@
             <div class="bg-white rounded-lg shadow-lg p-6 max-w-8xl mx-auto">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Edit Riwayat Kerja</h2>
 
+                <!-- ✅ TAMBAHAN: Notifikasi status alumni -->
+                @if($alumni->status !== 'bekerja')
+                    <div class="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-amber-600 mr-3 mt-1"></i>
+                            <div>
+                                <h4 class="text-sm font-semibold text-amber-800 mb-1">Perhatian Status Profil</h4>
+                                <p class="text-sm text-amber-700 mb-2">
+                                    Status profil Anda saat ini: <strong>"{{ ucfirst($alumni->status) }}"</strong>
+                                </p>
+                                <p class="text-sm text-amber-700">
+                                    Jika Anda mencentang "Saya saat ini sedang bekerja di peran ini", 
+                                    status profil akan otomatis diperbarui menjadi <strong>"Bekerja"</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form action="{{ route('alumni.job-history.update', $jobHistory->id_jobhistory) }}" method="POST">
                     @csrf
                     @method('PUT')
@@ -38,11 +57,21 @@
                             </select>
                         </div>
 
-                        <!-- Checkbox Saat Ini Bekerja -->
+                        <!-- ✅ MODIFIKASI: Checkbox Saat Ini Bekerja dengan notifikasi -->
                         <div>
-                            <input type="checkbox" id="is_current" name="is_current"
-                                {{ old('is_current', !$jobHistory->end_date) ? 'checked' : '' }}>
-                            <label for="is_current" class="text-base font-medium ml-2">Saya saat ini sedang bekerja di peran ini</label>
+                            <div class="flex items-start">
+                                <input type="checkbox" id="is_current" name="is_current"
+                                    {{ old('is_current', !$jobHistory->end_date) ? 'checked' : '' }}>
+                                <div class="ml-2">
+                                    <label for="is_current" class="text-base font-medium">Saya saat ini sedang bekerja di peran ini</label>
+                                    @if($alumni->status !== 'bekerja')
+                                        <p class="text-sm text-amber-600 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Mencentang opsi ini akan mengubah status profil Anda menjadi "Bekerja"
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Mulai Bekerja -->
@@ -131,17 +160,19 @@
                                 class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
                                 required>
                                 <option value="">Pilih range gaji...</option>
-                                <option value="0-3000000" {{ old('salary', $jobHistory->salary) == '0-3000000' ? 'selected' : '' }}>0 - 3.000.000</option>
-                                <option value="3000000-4500000" {{ old('salary', $jobHistory->salary) == '3000000-4500000' ? 'selected' : '' }}>3.000.000 - 4.500.000</option>
-                                <option value="4500000-5000000" {{ old('salary', $jobHistory->salary) == '4500000-5000000' ? 'selected' : '' }}>4.500.000 - 5.000.000</option>
-                                <option value="5000000-5500000" {{ old('salary', $jobHistory->salary) == '5000000-5500000' ? 'selected' : '' }}>5.000.000 - 5.500.000</option>
-                                <option value="6000000-6500000" {{ old('salary', $jobHistory->salary) == '6000000-6500000' ? 'selected' : '' }}>6.000.000 - 6.500.000</option>
-                                <option value="6500000-7000000" {{ old('salary', $jobHistory->salary) == '6500000-7000000' ? 'selected' : '' }}>6.500.000 - 7.000.000</option>
-                                <option value="7000000-8000000" {{ old('salary', $jobHistory->salary) == '7000000-8000000' ? 'selected' : '' }}>7.000.000 - 8.000.000</option>
-                                <option value="8000000-9000000" {{ old('salary', $jobHistory->salary) == '8000000-9000000' ? 'selected' : '' }}>8.000.000 - 9.000.000</option>
-                                <option value="9000000-10000000" {{ old('salary', $jobHistory->salary) == '9000000-10000000' ? 'selected' : '' }}>9.000.000 - 10.000.000</option>
-                                <option value="10000000-15000000" {{ old('salary', $jobHistory->salary) == '10000000-15000000' ? 'selected' : '' }}>10.000.000 - 15.000.000</option>
-                                <option value="15000000+" {{ old('salary', $jobHistory->salary) == '15000000+' ? 'selected' : '' }}>> 15.000.000</option>
+                                <option value="0" {{ old('salary', $jobHistory->salary) == '0' ? 'selected' : '' }}>0 - 3.000.000</option>
+                                <option value="3000000" {{ old('salary', $jobHistory->salary) == '3000000' ? 'selected' : '' }}>3.000.000 - 4.500.000</option>
+                                <option value="4500000" {{ old('salary', $jobHistory->salary) == '4500000' ? 'selected' : '' }}>4.500.000 - 5.000.000</option>
+                                <option value="5000000" {{ old('salary', $jobHistory->salary) == '5000000' ? 'selected' : '' }}>5.000.000 - 5.500.000</option>
+                                <option value="6000000" {{ old('salary', $jobHistory->salary) == '6000000' ? 'selected' : '' }}>6.000.000 - 6.500.000</option>
+                                <option value="6500000" {{ old('salary', $jobHistory->salary) == '6500000' ? 'selected' : '' }}>6.500.000 - 7.000.000</option>
+                                <option value="7000000" {{ old('salary', $jobHistory->salary) == '7000000' ? 'selected' : '' }}>7.000.000 - 8.000.000</option>
+                                <option value="8000000" {{ old('salary', $jobHistory->salary) == '8000000' ? 'selected' : '' }}>8.000.000 - 9.000.000</option>
+                                <option value="9000000" {{ old('salary', $jobHistory->salary) == '9000000' ? 'selected' : '' }}>9.000.000 - 10.000.000</option>
+                                <option value="10000000" {{ old('salary', $jobHistory->salary) == '10000000' ? 'selected' : '' }}>10.000.000 - 12.000.000</option>
+                                <option value="12000000" {{ old('salary', $jobHistory->salary) == '12000000' ? 'selected' : '' }}>12.000.000 - 15.000.000</option>
+                                <option value="15000000" {{ old('salary', $jobHistory->salary) == '15000000' ? 'selected' : '' }}>15.000.000 - 20.000.000</option>
+                                <option value="20000000" {{ old('salary', $jobHistory->salary) == '20000000' ? 'selected' : '' }}>> 20.000.000</option>
                             </select>
                         </div>
 
@@ -160,29 +191,47 @@
     </main>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const isCurrentCheckbox = document.getElementById('is_current');
-        const endDateSection = document.getElementById('end_date_section');
+<!-- Select2 CDN -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-        function toggleEndDateSection() {
-            if (isCurrentCheckbox.checked) {
-                endDateSection.style.display = 'none';
-                // Optionally clear end date selects
-                document.getElementById('end_month').value = '';
-                document.getElementById('end_year').value = '';
-            } else {
-                endDateSection.style.display = 'block';
+<!-- ✅ TAMBAHAN: JavaScript dengan konfirmasi -->
+<script>
+$(document).ready(function() {
+    // Initialize Select2
+    $('#id_company').select2({
+        placeholder: "Pilih atau ketik nama perusahaan...",
+        allowClear: true
+    });
+
+    const isCurrent = document.getElementById('is_current');
+    const endDateSection = document.getElementById('end_date_section');
+    const alumniStatus = '{{ $alumni->status }}';
+
+    function toggleEndDate() {
+        endDateSection.style.display = isCurrent.checked ? 'none' : '';
+    }
+
+    isCurrent.addEventListener('change', function() {
+        toggleEndDate();
+        
+        // Show confirmation if status is not "bekerja"
+        if (this.checked && alumniStatus !== 'bekerja') {
+            const confirm = window.confirm(
+                'Dengan mencentang opsi ini, status profil Anda akan otomatis diperbarui dari "' + 
+                '{{ ucfirst($alumni->status) }}' + '" menjadi "Bekerja". Apakah Anda setuju?'
+            );
+            
+            if (!confirm) {
+                this.checked = false;
+                toggleEndDate();
             }
         }
-
-        isCurrentCheckbox.addEventListener('change', toggleEndDateSection);
-
-        // Initialize on page load
-        toggleEndDateSection();
-        
     });
-    
+
+    toggleEndDate();
+});
 </script>
 
 @endsection

@@ -13,6 +13,35 @@
             <div class="bg-white rounded-lg shadow-lg p-6 max-w-8xl mx-auto">
                 <h2 class="text-xl font-semibold mb-4 text-gray-800">Form Tambah Riwayat Kerja</h2>
 
+                <!-- ✅ TAMBAHAN: Notifikasi status alumni -->
+                @if($alumni->status !== 'bekerja')
+                    <div class="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-exclamation-triangle text-amber-600 mr-3 mt-1"></i>
+                            <div>
+                                <h4 class="text-sm font-semibold text-amber-800 mb-1">Perhatian Status Profil</h4>
+                                <p class="text-sm text-amber-700 mb-2">
+                                    Status profil Anda saat ini: <strong>"{{ ucfirst($alumni->status) }}"</strong>
+                                </p>
+                                <p class="text-sm text-amber-700">
+                                    Jika Anda mencentang "Saya saat ini sedang bekerja di peran ini", 
+                                    status profil akan otomatis diperbarui menjadi <strong>"Bekerja"</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+                        <ul class="list-disc list-inside">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ route('alumni.job-history.store') }}" method="POST" id="job-history-form">
                     @csrf
                     <input type="hidden" name="start_date" id="start_date">
@@ -30,15 +59,26 @@
                                 <option value="__other">Perusahaan tidak ada di daftar</option>
                             </select>
                         </div>
+                        
                         <div class="mb-4" id="new-company-input" style="display:none;">
                             <label for="new_company_name" class="block text-gray-700 font-semibold mb-2">Nama Perusahaan Baru</label>
                             <input type="text" name="new_company_name" id="new_company_name" class="input-field" placeholder="Masukkan nama perusahaan">
                         </div>
 
-                        <!-- Sedang Bekerja -->
+                        <!-- ✅ MODIFIKASI: Sedang Bekerja dengan notifikasi -->
                         <div>
-                            <input type="checkbox" id="is_current" name="is_current" {{ old('is_current') ? 'checked' : '' }}>
-                            <label for="is_current" class="text-base font-medium ml-2">Saya saat ini sedang bekerja di peran ini</label>
+                            <div class="flex items-start">
+                                <input type="checkbox" id="is_current" name="is_current" {{ old('is_current') ? 'checked' : '' }} class="mt-1">
+                                <div class="ml-2">
+                                    <label for="is_current" class="text-base font-medium">Saya saat ini sedang bekerja di peran ini</label>
+                                    @if($alumni->status !== 'bekerja')
+                                        <p class="text-sm text-amber-600 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Mencentang opsi ini akan mengubah status profil Anda menjadi "Bekerja"
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Mulai Bekerja -->
@@ -132,15 +172,6 @@
                         <button type="submit" class="px-4 py-2 bg-blue-900 text-white rounded hover:bg-blue-800">Simpan</button>
                     </div>
                 </form>
-                @if ($errors->any())
-    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-        <ul class="list-disc list-inside">
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
             </div>
         </div>
     </main>
@@ -152,7 +183,6 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    
     $(document).ready(function () {
         $('#id_company').select2({
             placeholder: "Pilih atau ketik nama perusahaan...",
@@ -166,7 +196,26 @@
             endDateSection.style.display = isCurrent.checked ? 'none' : '';
         }
 
-        isCurrent.addEventListener('change', toggleEndDate);
+        // ✅ TAMBAHAN: Konfirmasi jika status akan berubah
+        const alumniStatus = '{{ $alumni->status }}';
+        
+        isCurrent.addEventListener('change', function() {
+            toggleEndDate();
+            
+            // Show confirmation if status is not "bekerja"
+            if (this.checked && alumniStatus !== 'bekerja') {
+                const confirm = window.confirm(
+                    'Dengan mencentang opsi ini, status profil Anda akan otomatis diperbarui dari "' + 
+                    '{{ ucfirst($alumni->status) }}' + '" menjadi "Bekerja". Apakah Anda setuju?'
+                );
+                
+                if (!confirm) {
+                    this.checked = false;
+                    toggleEndDate();
+                }
+            }
+        });
+        
         toggleEndDate();
 
         // Set final date format on submit
@@ -184,18 +233,17 @@
                 document.getElementById('end_date').value = '';
             }
         });
-        
     });
     
     function toggleNewCompanyInput(select) {
-    var input = document.getElementById('new-company-input');
-    if (select.value === '__other') {
-        input.style.display = 'block';
-        document.getElementById('id_company').value = '';
-    } else {
-        input.style.display = 'none';
-        document.getElementById('new_company_name').value = '';
+        var input = document.getElementById('new-company-input');
+        if (select.value === '__other') {
+            input.style.display = 'block';
+            document.getElementById('id_company').value = '';
+        } else {
+            input.style.display = 'none';
+            document.getElementById('new_company_name').value = '';
+        }
     }
-}
 </script>
 @endsection

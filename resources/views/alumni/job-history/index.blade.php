@@ -27,11 +27,24 @@
                         {{ session('success') }}
                     </div>
                 @endif
-        
-       
+
+                <!-- ✅ TAMBAHAN: Alert khusus untuk perubahan status -->
+                @if(session('status_updated'))
+                    <div class="mb-4 p-4 bg-blue-100 border border-blue-400 rounded">
+                        <div class="flex items-center">
+                            <i class="fas fa-check-circle text-blue-600 mr-3"></i>
+                            <div>
+                                <h4 class="text-blue-800 font-semibold">Status Profil Diperbarui</h4>
+                                <p class="text-blue-700">
+                                    Status profil Anda telah otomatis diperbarui menjadi "Bekerja" 
+                                    karena Anda sedang bekerja di posisi ini.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @endif
 
                 <x-alumni.job-history-table :jobHistories="$jobHistories" />
-                
             </div>
         </div>
     </main>

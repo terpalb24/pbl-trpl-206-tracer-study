@@ -49,6 +49,17 @@ public function store(Request $request)
         'end_date' => 'nullable|date',
     ]);
 
+    $alumni = auth()->user()->alumni;
+    
+    // ✅ VALIDASI BARU: Cek jika mencentang "sedang bekerja" tapi status bukan "bekerja"
+    if ($request->has('is_current') && $alumni->status !== 'bekerja') {
+        // Auto-update status alumni ke "bekerja" jika mencentang sedang bekerja
+        $alumni->update(['status' => 'bekerja']);
+        
+        session()->flash('status_updated', true);
+        session()->flash('old_status', $alumni->status);
+    }
+
     $id_company = $request->id_company;
     // Jika alumni mengisi nama perusahaan baru
     if (!$id_company && $request->filled('new_company_name')) {
@@ -88,9 +99,17 @@ public function store(Request $request)
         'duration' => $duration,
     ]);
 
+    $message = 'Riwayat kerja berhasil ditambahkan.';
+    
+    // ✅ TAMBAHAN: Notifikasi jika status berubah otomatis
+    if (session('status_updated')) {
+        $message .= ' Status profil Anda telah diperbarui otomatis menjadi "Bekerja" karena Anda sedang bekerja.';
+    }
+
     return redirect()->route('alumni.job-history.index')
-        ->with('success', 'Riwayat kerja berhasil ditambahkan.');
+        ->with('success', $message);
 }
+
     public function edit($id)
     {
         $jobHistory = JobHistory::findOrFail($id);
@@ -112,6 +131,17 @@ public function update(Request $request, JobHistory $jobHistory)
         'end_month' => 'nullable',
         'end_year' => 'nullable',
     ]);
+
+    $alumni = auth()->user()->alumni;
+    
+    // ✅ VALIDASI BARU: Cek jika mencentang "sedang bekerja" tapi status bukan "bekerja"
+    if ($request->has('is_current') && $alumni->status !== 'bekerja') {
+        // Auto-update status alumni ke "bekerja" jika mencentang sedang bekerja
+        $alumni->update(['status' => 'bekerja']);
+        
+        session()->flash('status_updated', true);
+        session()->flash('old_status', $alumni->status);
+    }
 
     // Gabungkan bulan dan tahun jadi tanggal awal
     $start = Carbon::createFromDate($request->start_year, $request->start_month, 1);
@@ -141,7 +171,15 @@ public function update(Request $request, JobHistory $jobHistory)
         'duration' => $duration,
     ]);
 
-    return redirect()->route('alumni.job-history.index')->with('success', 'Riwayat kerja berhasil diperbarui');
+    $message = 'Riwayat kerja berhasil diperbarui.';
+    
+    // ✅ TAMBAHAN: Notifikasi jika status berubah otomatis
+    if (session('status_updated')) {
+        $message .= ' Status profil Anda telah diperbarui otomatis menjadi "Bekerja" karena Anda sedang bekerja.';
+    }
+
+    return redirect()->route('alumni.job-history.index')
+        ->with('success', $message);
 }
 
 
