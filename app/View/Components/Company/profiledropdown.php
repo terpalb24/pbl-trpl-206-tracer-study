@@ -6,7 +6,7 @@ use Closure;
 use Illuminate\Contracts\View\View;
 use Illuminate\View\Component;
 
-class profile-dropdown extends Component
+class profiledropdown extends Component
 {
     /**
      * Create a new component instance.

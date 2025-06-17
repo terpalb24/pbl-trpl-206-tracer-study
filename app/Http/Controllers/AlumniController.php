@@ -11,6 +11,7 @@ use App\Notifications\EmailVerificationNotification;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Carbon;
+use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
 
 
 class AlumniController extends Controller
@@ -175,7 +176,6 @@ public function update(Request $request)
     $alumni = Tb_Alumni::where('nim', $nim)->first(); 
 
     if (!$alumni) {
-        return back()->with('error', 'Data alumni tidak ditemukan');
     }
 
     // Update data alumni

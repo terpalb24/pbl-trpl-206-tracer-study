@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use App\Models\Tb_Company;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class AdminController extends Controller
 {
@@ -249,135 +250,248 @@ public function alumniDestroy($id_user)
 public function import(Request $request)
 {
     $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls,csv',
+        'file' => 'required|file|mimes:xlsx,xls'
     ]);
-
-    $file = $request->file('file');
-    $path = $file->getRealPath();
-
-    $spreadsheet = IOFactory::load($path);
-    $sheet = $spreadsheet->getActiveSheet();
-    $rows = $sheet->toArray();
 
     DB::beginTransaction();
 
     try {
-        for ($i = 1; $i < count($rows); $i++) {
-            $row = $rows[$i];
+        $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
 
-            if (empty($row[0])) continue; // skip jika nim kosong
+        // Skip header row
+        array_shift($rows);
 
-            $nim = $row[0];
-            $nik = $row[1];
-            $name = $row[2];
-            $gender = $row[3];
-            $date_of_birth = $row[4];
-            $email = $row[5];
-            $phone_number = $row[6];
-            $ipk = $row[7];
-            $address = $row[8];
-            $batch = $row[9];
-            $graduation_year = $row[10];
-            $programStudyName = $row[11]; // nama program studi dari Excel
+        foreach ($rows as $index => $row) {
+            if (empty($row[0])) continue; // Skip empty rows
 
-            // Cari id_study berdasarkan nama program studi yang mirip
-            $studyProgram = Tb_study_program::whereRaw(
-                'LOWER(study_program) LIKE ?', 
-                ['%' . strtolower($programStudyName) . '%']
-            )->first();
+            // Validate status
+            $status = strtolower(trim($row[12] ?? ''));
+            $validStatuses = ['bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'];
+            
+            if (!in_array($status, $validStatuses)) {
+                throw new \Exception("Baris ke-" . ($index + 2) . ": Status harus salah satu dari: " . implode(', ', $validStatuses));
+            }
 
+            // Validate gender
+            $gender = strtolower(trim($row[3]));
+            if (!in_array($gender, ['laki-laki', 'perempuan'])) {
+                throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'laki-laki' atau 'perempuan'");
+            }
+
+            // Validate study program using case-insensitive LIKE
+            $studyProgramName = trim($row[11]);
+            $studyProgram = Tb_study_program::whereRaw('LOWER(study_program) LIKE ?', ['%' . strtolower($studyProgramName) . '%'])->first();
+            
             if (!$studyProgram) {
-                throw new \Exception("Program Studi '$programStudyName' tidak ditemukan pada baris ke-" . ($i + 1));
+                throw new \Exception("Baris ke-" . ($index + 2) . ": Program Studi '" . $studyProgramName . "' tidak ditemukan");
             }
 
-            $id_study = $studyProgram->id_study;
-
-            // Cek apakah user sudah ada berdasarkan username (nim)
-            $user = Tb_User::where('username', $nim)->first();
-
-            if (!$user) {
-                $user = Tb_User::create([
-                    'username' => $nim,
-                    'password' => bcrypt($nim),
-                    'role' => 2, // Alumni role
-                ]);
-            }
-
-            Tb_Alumni::updateOrCreate(
-                ['nim' => $nim],
+            // Create/update user
+            $user = Tb_User::updateOrCreate(
+                ['username' => $row[0]],
                 [
-                    'nik' => $nik,
-                    'name' => $name,
-                    'gender' => $gender,
-                    'date_of_birth' => $date_of_birth,
-                    'email' => $email,
-                    'phone_number' => $phone_number,
-                    'status' => 'tidak bekerja', // status default
-                    'ipk' => $ipk,
-                    'address' => $address,
-                    'batch' => $batch,
-                    'graduation_year' => $graduation_year,
-                    'id_study' => $id_study,
+                    'password' => bcrypt($row[0]),
+                    'role' => 2
+                ]
+            );
+
+            // Create/update alumni
+            Tb_Alumni::updateOrCreate(
+                ['nim' => $row[0]],
+                [
                     'id_user' => $user->id_user,
+                    'nik' => $row[1],
+                    'name' => $row[2],
+                    'gender' => $gender,
+                    'date_of_birth' => $row[4],
+                    'email' => $row[5],
+                    'phone_number' => $row[6],
+                    'ipk' => $row[7],
+                    'address' => $row[8],
+                    'batch' => $row[9],
+                    'graduation_year' => $row[10],
+                    'id_study' => $studyProgram->id_study,
+                    'status' => $status
                 ]
             );
         }
 
         DB::commit();
+        return redirect()->back()->with('success', 'Data alumni berhasil diimport!');
     } catch (\Exception $e) {
         DB::rollBack();
-        return redirect()->back()->with('error', 'Import gagal: ' . $e->getMessage());
+        return redirect()->back()->with('error', $e->getMessage());
     }
-
-    return redirect()->back()->with('success', 'Data alumni berhasil diimport!');
 }
+
 public function export()
 {
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
 
-    // Header kolom
-    $sheet->fromArray([
-        'NIM', 'NIK', 'Nama', 'Gender', 'Tanggal Lahir', 'Email', 'Nomor HP',
-        'IPK', 'Alamat', 'Angkatan', 'Tahun Lulus', 'Program Studi'
-    ], null, 'A1');
+    // Set headers
+    $headers = [
+        'NIM',
+        'NIK',
+        'Nama Lengkap',
+        'Jenis Kelamin',
+        'Tanggal Lahir',
+        'Email',
+        'Nomor Telepon',
+        'IPK',
+        'Alamat',
+        'Angkatan',
+        'Tahun Lulus',
+        'Program Studi',
+        'Status'
+    ];
 
-    // Ambil data alumni
-    $alumniData = Tb_Alumni::with('studyProgram')->get();
-
-    $rowNum = 2; // Mulai dari baris ke-2 (setelah header)
-    foreach ($alumniData as $alumni) {
-        $sheet->fromArray([
-            $alumni->nim,
-            $alumni->nik,
-            $alumni->name,
-            $alumni->gender,
-            $alumni->date_of_birth,
-            $alumni->email,
-            $alumni->phone_number,
-            $alumni->ipk,
-            $alumni->address,
-            $alumni->batch,
-            $alumni->graduation_year,
-            $alumni->studyProgram->study_program ?? '', // Nama program studi
-        ], null, 'A' . $rowNum);
-
-        $rowNum++;
+    // Apply headers with styling
+    foreach ($headers as $index => $header) {
+        $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+        $sheet->setCellValue($column . '1', $header);
     }
 
-    $writer = new Xlsx($spreadsheet);
+    // Style headers
+    $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+    $sheet->getStyle($headerRange)->applyFromArray([
+        'font' => ['bold' => true],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'CCCCCC']
+        ]
+    ]);
 
-    // Simpan sementara ke file
-    $fileName = 'data_alumni.xlsx';
+    // Add data
+    $row = 2;
+    Tb_Alumni::with('studyProgram')->chunk(100, function($alumni) use ($sheet, &$row) {
+        foreach ($alumni as $data) {
+            $sheet->fromArray([
+                $data->nim,
+                $data->nik,
+                $data->name,
+                $data->gender,
+                $data->date_of_birth,
+                $data->email,
+                $data->phone_number,
+                $data->ipk,
+                $data->address,
+                $data->batch,
+                $data->graduation_year,
+                $data->studyProgram ? $data->studyProgram->study_program : '',
+                $data->status
+            ], null, 'A' . $row);
+            $row++;
+        }
+    });
+
+    // Auto-size columns
+    foreach (range('A', 'M') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    // Create file
+    $writer = new Xlsx($spreadsheet);
+    $fileName = 'data_alumni_' . date('Y-m-d_H-i-s') . '.xlsx';
     $tempFile = tempnam(sys_get_temp_dir(), $fileName);
     $writer->save($tempFile);
 
-    // Kembalikan response download
     return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
 }
 
+public function alumniTemplate()
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
 
-//company index
+    // Set headers
+    $headers = [
+        'NIM',
+        'NIK',
+        'Nama Lengkap',
+        'Jenis Kelamin',
+        'Tanggal Lahir',
+        'Email',
+        'Nomor Telepon',
+        'IPK',
+        'Alamat',
+        'Angkatan',
+        'Tahun Lulus',
+        'Program Studi',
+        'Status'
+    ];
+
+    // Apply headers with styling
+    foreach ($headers as $index => $header) {
+        $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+        $sheet->setCellValue($column . '1', $header);
+    }
+
+    // Style headers
+    $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+    $sheet->getStyle($headerRange)->applyFromArray([
+        'font' => ['bold' => true],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'CCCCCC']
+        ]
+    ]);
+
+    // Add example data
+    $exampleData = [
+        '12345678',              // NIM
+        '1234567890123456',      // NIK
+        'John Doe',              // Nama
+        'laki-laki',            // Jenis Kelamin
+        '2000-01-01',           // Tanggal Lahir
+        'john.doe@email.com',    // Email
+        '081234567890',         // No. Telepon
+        '3.50',                 // IPK
+        'Jl. Contoh No. 123',   // Alamat
+        '2019',                 // Angkatan
+        '2023',                 // Tahun Lulus
+        'Teknik Informatika',   // Program Studi
+        'bekerja'               // Status
+    ];
+
+    // Add example row with styling
+    $sheet->fromArray([$exampleData], null, 'A2');
+    $sheet->getStyle('A2:M2')->getFont()->setItalic(true);
+
+    // Add notes
+    $notes = [
+        'Catatan:',
+        '- NIM wajib diisi dan harus unik',
+        '- Jenis Kelamin harus diisi dengan: laki-laki atau perempuan',
+        '- Tanggal Lahir format: YYYY-MM-DD (contoh: 2000-01-01)',
+        '- Status harus diisi dengan salah satu dari: bekerja, tidak bekerja, melanjutkan studi, berwiraswasta, atau sedang mencari kerja',
+        '- Program Studi harus sesuai dengan yang ada di sistem',
+        '- Email harus unik untuk setiap alumni',
+        '- IPK menggunakan format desimal dengan titik (contoh: 3.50)'
+    ];
+
+    $row = 4;
+    foreach ($notes as $note) {
+        $sheet->setCellValue('A' . $row, $note);
+        $sheet->mergeCells('A' . $row . ':M' . $row);
+        $row++;
+    }
+
+    // Auto-size columns
+    foreach (range('A', 'M') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    // Create file
+    $writer = new Xlsx($spreadsheet);
+    $fileName = 'template_alumni.xlsx';
+    $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+    $writer->save($tempFile);
+
+    return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+}
 public function companyIndex(Request $request)
 {
     $query = Tb_company::query();
@@ -501,53 +615,42 @@ public function companyDestroy($id_user)
  public function companyImport(Request $request)
 {
     $request->validate([
-        'file' => 'required|file|mimes:xlsx,xls,csv',
+        'file' => 'required|file|mimes:xlsx,xls'
     ]);
-
-    $file = $request->file('file');
-    $path = $file->getRealPath();
 
     DB::beginTransaction();
 
     try {
-        $spreadsheet = IOFactory::load($path);
-        $sheet = $spreadsheet->getActiveSheet();
-        $rows = $sheet->toArray();
+        $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
+        $rows = $spreadsheet->getActiveSheet()->toArray();
+        array_shift($rows); // Remove header row
 
-        for ($i = 1; $i < count($rows); $i++) {
-            $row = $rows[$i];
+        foreach ($rows as $index => $row) {
+            if (empty($row[0]) || empty($row[1])) continue; // Skip if name or email empty
 
-            if (empty($row[0])) continue; // skip jika nama perusahaan kosong
-
-            $companyName = $row[0];
-            $address = $row[1] ?? null;
-            $email = $row[2] ?? null;
-            $phoneNumber = $row[3] ?? null;
-
-            $userId = null;
-
-            if (!empty($email)) {
-                $existingUser = Tb_User::where('username', $email)->first();
-
-                if (!$existingUser) {
-                    $newUser = Tb_User::create([
-                        'username' => $email,
-                        'password' => bcrypt($email),
-                        'role' => 3, // role perusahaan
-                    ]);
-                    $userId = $newUser->id_user;
-                } else {
-                    $userId = $existingUser->id_user;
-                }
+            // Validate email
+            if (!filter_var($row[1], FILTER_VALIDATE_EMAIL)) {
+                throw new \Exception("Baris ke-" . ($index + 2) . ": Format email tidak valid");
             }
 
-            Tb_Company::updateOrCreate(
-                ['company_name' => $companyName],
+            // Create/update user
+            $user = Tb_User::updateOrCreate(
+                ['username' => $row[1]], // company_email as username
                 [
-                    'company_address' => $address,
-                    'company_email' => $email,
-                    'company_phone_number' => $phoneNumber,
-                    'id_user' => $userId, // Assign id_user dari Tb_User
+                    'password' => bcrypt($row[1]), // company_email as password
+                    'role' => 3
+                ]
+            );
+
+            // Create/update company
+            Tb_Company::updateOrCreate(
+                ['company_email' => $row[1]], // company_email as unique identifier
+                [
+                    'id_user' => $user->id_user,
+                    'company_name' => $row[0],
+                    'company_email' => $row[1],
+                    'company_address' => $row[2],
+                    'company_phone_number' => $row[3]
                 ]
             );
         }
@@ -555,90 +658,133 @@ public function companyDestroy($id_user)
         DB::commit();
         return redirect()->back()->with('success', 'Data perusahaan berhasil diimport!');
     } catch (\Exception $e) {
-        DB::rollback();
-        return redirect()->back()->with('error', 'Import gagal: ' . $e->getMessage());
+        DB::rollBack();
+        return redirect()->back()->with('error', $e->getMessage());
     }
 }
 
+public function companyExport()
+{
+    $spreadsheet = new Spreadsheet();
+    $sheet = $spreadsheet->getActiveSheet();
 
-    public function companyExport()
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+    // Set headers
+    $headers = [
+        'Nama Perusahaan',
+        'Email',
+        'Alamat',
+        'Nomor Telepon'
+    ];
 
-        // Header kolom
-        $sheet->fromArray([
-            'Nama Perusahaan', 'Alamat', 'Email', 'Nomor Telepon'
-        ], null, 'A1');
-
-        // Ambil data perusahaan
-        $companies = Tb_Company::all();
-
-        $rowNum = 2;
-        foreach ($companies as $company) {
-            $sheet->fromArray([
-                $company->company_name,
-                $company->company_address,
-                $company->company_email,
-                $company->company_phone_number,
-            ], null, 'A' . $rowNum);
-
-            $rowNum++;
-        }
-
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'data_perusahaan.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
-        $writer->save($tempFile);
-
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    // Apply headers with styling
+    foreach ($headers as $index => $header) {
+        $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+        $sheet->setCellValue($column . '1', $header);
     }
 
-    // Download template alumni (Excel)
-public function alumniTemplate()
-{
-    $spreadsheet = new spreadsheet();
-    $sheet = $spreadsheet->getActiveSheet();
-    // Header
-    $sheet->fromArray([
-        'NIM', 'NIK', 'Nama', 'Gender', 'Tanggal Lahir', 'Email', 'Nomor HP',
-        'IPK', 'Alamat', 'Angkatan', 'Tahun Lulus', 'Program Studi'
-    ], null, 'A1');
-    // Contoh data
-    $sheet->fromArray([
-        '12345678', '3201010101010001', 'Budi Santoso', 'pria', '1999-01-01', 'budi@email.com', '08123456789',
-        '3.50', 'Jl. Merdeka No.1', '2017', '2021', 'Teknik Informatika'
-    ], null, 'A2');
+    // Style headers
+    $sheet->getStyle('A1:D1')->applyFromArray([
+        'font' => ['bold' => true],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'CCCCCC']
+        ]
+    ]);
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-    $fileName = 'template_alumni.xlsx';
+    // Add data
+    $row = 2;
+    Tb_Company::select('company_name', 'company_email', 'company_address', 'company_phone_number')
+        ->chunk(100, function($companies) use ($sheet, &$row) {
+            foreach ($companies as $company) {
+                $sheet->fromArray([
+                    $company->company_name,
+                    $company->company_email,
+                    $company->company_address,
+                    $company->company_phone_number
+                ], null, 'A' . $row);
+                $row++;
+            }
+        });
+
+    // Auto-size columns
+    foreach (range('A', 'D') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $fileName = 'data_perusahaan_' . date('Y-m-d_H-i-s') . '.xlsx';
     $tempFile = tempnam(sys_get_temp_dir(), $fileName);
     $writer->save($tempFile);
 
     return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
 }
 
-// Download template company (Excel)
 public function companyTemplate()
 {
-    $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+    $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
-    // Header
-    $sheet->fromArray([
-        'Nama Perusahaan', 'Alamat', 'Email', 'Nomor Telepon'
-    ], null, 'A1');
-    // Contoh data
-    $sheet->fromArray([
-        'PT Maju Jaya', 'Jl. Sudirman No.10', 'majujaya@email.com', '0211234567'
-    ], null, 'A2');
 
-    $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-    $fileName = 'template_company.xlsx';
+    // Set headers
+    $headers = [
+        'Nama Perusahaan',
+        'Email',
+        'Alamat',
+        'Nomor Telepon'
+    ];
+
+    // Apply headers with styling
+    foreach ($headers as $index => $header) {
+        $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+        $sheet->setCellValue($column . '1', $header);
+    }
+
+    // Style headers
+    $sheet->getStyle('A1:D1')->applyFromArray([
+        'font' => ['bold' => true],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'CCCCCC']
+        ]
+    ]);
+
+    // Add example data
+    $exampleData = [
+        'PT Example Company',
+        'company@example.com',
+        'Jl. Example No. 123, Jakarta',
+        '021-1234567'
+    ];
+
+    // Add example row with styling
+    $sheet->fromArray([$exampleData], null, 'A2');
+    $sheet->getStyle('A2:D2')->getFont()->setItalic(true);
+
+    // Add notes
+    $notes = [
+        'Catatan:',
+        '- Email perusahaan wajib diisi dan harus unik',
+        '- Email akan digunakan sebagai username dan password untuk login',
+        '- Format email harus valid (contoh: company@example.com)',
+        '- Format nomor telepon: 021-1234567 atau 0812-3456-7890'
+    ];
+
+    $row = 4;
+    foreach ($notes as $note) {
+        $sheet->setCellValue('A' . $row, $note);
+        $sheet->mergeCells("A{$row}:D{$row}");
+        $row++;
+    }
+
+    // Auto-size columns
+    foreach (range('A', 'D') as $column) {
+        $sheet->getColumnDimension($column)->setAutoSize(true);
+    }
+
+    $writer = new Xlsx($spreadsheet);
+    $fileName = 'template_perusahaan.xlsx';
     $tempFile = tempnam(sys_get_temp_dir(), $fileName);
     $writer->save($tempFile);
 
     return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
 }
-
-    //
 }
