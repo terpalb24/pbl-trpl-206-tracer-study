@@ -30,6 +30,22 @@
                 :filterGraduationYear="$filterGraduationYear"
             />
         </div>
+
+        <!-- ✅ TAMBAHAN: Questionnaire Statistics -->
+        <div class="mb-6">
+            <x-admin.questionnaire-statistic-chart 
+                :availablePeriodes="$availablePeriodes"
+                :availableCategories="$availableCategories"
+                :availableQuestions="$availableQuestions"
+                :selectedPeriode="$selectedPeriode"
+                :selectedUserType="$selectedUserType"
+                :selectedCategory="$selectedCategory"
+                :selectedQuestion="$selectedQuestion"
+                :questionnaireChartData="$questionnaireChartData"
+                :questionnaireLabels="$questionnaireLabels"
+                :questionnaireValues="$questionnaireValues"
+            />
+        </div>
     </div>
 
     <script src="{{ asset('js/script.js') }}"></script>

@@ -75,6 +75,32 @@ class Tb_User_Answers extends Model
         return $query->where('status', 'draft');
     }
 
+    /**
+     * ✅ TAMBAHAN: Scope untuk filter berdasarkan user type
+     */
+    public function scopeByUserType($query, $userType)
+    {
+        if ($userType === 'alumni') {
+            return $query->whereHas('user.alumni');
+        } elseif ($userType === 'company') {
+            return $query->whereHas('user.company');
+        }
+        
+        return $query; // Return all if 'all' or invalid type
+    }
+
+    /**
+     * ✅ TAMBAHAN: Get questionnaire statistics
+     */
+    public static function getQuestionnaireStatistics($questionId, $userType = 'all')
+    {
+        $query = static::join('tb_user_answer_items', 'tb_user_answers.id_user_answer', '=', 'tb_user_answer_items.id_user_answer')
+            ->where('tb_user_answer_items.id_question', $questionId)
+            ->where('tb_user_answers.status', 'completed');
+        
+        return $query->byUserType($userType)->get();
+    }
+
     // TAMBAHAN: Accessor untuk format tanggal yang user-friendly
     public function getFormattedCreatedAtAttribute()
     {

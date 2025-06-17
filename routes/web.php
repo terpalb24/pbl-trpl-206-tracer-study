@@ -212,3 +212,13 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
 Route::get('/send-forgot-password', function () {
 Mail::to('sigma@gmail.com')->send(new ForgotPassword());
 });
+
+// Tambahkan route ini di routes/web.php untuk debugging
+Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompanyAnswers'])
+    ->middleware(['auth']) // Hapus 'admin' middleware jika tidak ada
+    ->name('admin.debug.company-answers');
+
+// Atau jika Anda memiliki middleware custom untuk admin, gunakan yang benar
+// Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompanyAnswers'])
+//     ->middleware(['auth', 'admin.check']) // Ganti dengan nama middleware yang benar
+//     ->name('admin.debug.company-answers');
