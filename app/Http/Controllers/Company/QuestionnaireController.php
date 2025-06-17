@@ -76,9 +76,22 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data perusahaan tidak ditemukan.');
         }
 
-        // Ambil semua alumni yang pernah bekerja di perusahaan ini
-        $allAlumniFromJobHistory = Tb_jobhistory::with('alumni')
+        // ✅ SOLUSI BARU: Filter berdasarkan target alumni periode
+        $eligibleGraduationYears = $this->getEligibleGraduationYears($periode);
+
+        // ✅ SOLUSI: Ambil hanya alumni yang MASIH AKTIF bekerja di perusahaan ini DAN sesuai target periode
+        $activeAlumniFromJobHistory = Tb_jobhistory::with('alumni')
             ->where('id_company', $idCompany)
+            ->where(function ($query) {
+                $query->where('duration', 'Masih bekerja')
+                      ->orWhereNull('end_date');
+            })
+            ->whereHas('alumni', function($query) use ($eligibleGraduationYears) {
+                // ✅ FILTER TAMBAHAN: Hanya alumni dengan tahun lulus yang sesuai target periode
+                if (!empty($eligibleGraduationYears)) {
+                    $query->whereIn('graduation_year', $eligibleGraduationYears);
+                }
+            })
             ->get()
             ->filter(function($jobHistory) {
                 return $jobHistory->alumni !== null;
@@ -93,23 +106,62 @@ class QuestionnaireController extends Controller
             ->pluck('nim')
             ->toArray();
 
-        // Filter alumni yang belum dinilai
-        $availableAlumni = $allAlumniFromJobHistory->filter(function($jobHistory) use ($completedNims) {
+        // Filter alumni aktif yang belum dinilai
+        $availableAlumni = $activeAlumniFromJobHistory->filter(function($jobHistory) use ($completedNims) {
             return !in_array($jobHistory->nim, $completedNims);
         });
 
-        // Get alumni yang sedang dalam proses (draft)
+        // Get alumni yang sedang dalam proses (draft) - hanya yang masih aktif DAN sesuai target
         $draftNims = Tb_User_Answers::where('id_user', Auth::id())
             ->where('id_periode', $id_periode)
             ->where('status', 'draft')
             ->pluck('nim')
             ->toArray();
 
+        // ✅ TAMBAHAN: Filter draft alumni untuk memastikan mereka masih aktif DAN sesuai target periode
+        $draftNims = array_filter($draftNims, function($nim) use ($idCompany, $eligibleGraduationYears) {
+            $isActive = Tb_jobhistory::where('id_company', $idCompany)
+                ->where('nim', $nim)
+                ->where(function ($query) {
+                    $query->where('duration', 'Masih bekerja')
+                          ->orWhereNull('end_date');
+                })
+                ->exists();
+                
+            // ✅ FILTER TAMBAHAN: Cek juga tahun lulus alumni
+            if ($isActive && !empty($eligibleGraduationYears)) {
+                $alumni = Tb_Alumni::where('nim', $nim)->first();
+                return $alumni && in_array($alumni->graduation_year, $eligibleGraduationYears);
+            }
+            
+            return $isActive;
+        });
+
+        // ✅ TAMBAHAN: Log informasi untuk debugging
+        Log::info('Company selectAlumni - Target filtering', [
+            'periode_id' => $id_periode,
+            'periode_target_type' => $periode->target_type,
+            'eligible_graduation_years' => $eligibleGraduationYears,
+            'total_active_alumni_before_filter' => Tb_jobhistory::where('id_company', $idCompany)
+                ->where(function ($query) {
+                    $query->where('duration', 'Masih bekerja')
+                          ->orWhereNull('end_date');
+                })
+                ->whereHas('alumni')
+                ->distinct('nim')
+                ->count(),
+            'total_active_alumni_after_filter' => $activeAlumniFromJobHistory->count(),
+            'available_alumni_count' => $availableAlumni->count(),
+            'completed_alumni_count' => count($completedNims),
+            'draft_alumni_count' => count($draftNims)
+        ]);
+
         return view('company.questionnaire.select-alumni', compact(
             'periode', 
             'availableAlumni', 
             'completedNims', 
-            'draftNims'
+            'draftNims',
+            'eligibleGraduationYears' // ✅ TAMBAHAN: Kirim ke view untuk informasi
         ));
     }
     
@@ -118,14 +170,34 @@ class QuestionnaireController extends Controller
         $periode = Tb_Periode::findOrFail($id_periode);
         $idCompany = Auth::user()->company->id_company ?? null;
 
-        // Verify that this alumni worked for this company
-        $jobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
+        // ✅ SOLUSI BARU: Validasi target alumni periode
+        $eligibleGraduationYears = $this->getEligibleGraduationYears($periode);
+        
+        // Get alumni data first untuk validasi
+        $alumni = Tb_Alumni::where('nim', $nim)->first();
+        if (!$alumni) {
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Data alumni tidak ditemukan.');
+        }
+
+        // ✅ VALIDASI BARU: Cek apakah alumni sesuai target periode
+        if (!empty($eligibleGraduationYears) && !in_array($alumni->graduation_year, $eligibleGraduationYears)) {
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Alumni ini tidak termasuk dalam target periode kuesioner ini (tahun lulus: ' . $alumni->graduation_year . ').');
+        }
+
+        // ✅ SOLUSI: Verify that this alumni is CURRENTLY working for this company
+        $activeJobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
             ->where('nim', $nim)
+            ->where(function ($query) {
+                $query->where('duration', 'Masih bekerja')
+                      ->orWhereNull('end_date');
+            })
             ->exists();
 
-        if (!$jobHistoryExists) {
+        if (!$activeJobHistoryExists) {
             return redirect()->route('company.questionnaire.select-alumni', $id_periode)
-                ->with('error', 'Alumni ini tidak pernah bekerja di perusahaan Anda.');
+                ->with('error', 'Alumni ini tidak lagi bekerja di perusahaan Anda atau data pekerjaan sudah tidak aktif.');
         }
 
         // Check if this alumni has already been evaluated
@@ -140,12 +212,15 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Alumni ini sudah pernah dinilai pada periode ini.');
         }
 
-        // Get alumni data
-        $alumni = Tb_Alumni::where('nim', $nim)->first();
-        if (!$alumni) {
-            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
-                ->with('error', 'Data alumni tidak ditemukan.');
-        }
+        // ✅ TAMBAHAN: Get active job history untuk informasi tambahan
+        $activeJobHistory = Tb_jobhistory::where('id_company', $idCompany)
+            ->where('nim', $nim)
+            ->where(function ($query) {
+                $query->where('duration', 'Masih bekerja')
+                      ->orWhereNull('end_date');
+            })
+            ->orderBy('start_date', 'desc')
+            ->first();
 
         // Check if period is active
         if ($periode->status !== 'active') {
@@ -159,11 +234,15 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get();
 
-        // DEBUGGING: Log categories
+        // DEBUGGING: Log categories dengan info target
         Log::info('Categories found for company', [
             'periode_id' => $id_periode,
             'company_id' => $idCompany,
             'categories_count' => $allCategories->count(),
+            'alumni_nim' => $nim,
+            'alumni_graduation_year' => $alumni->graduation_year,
+            'eligible_graduation_years' => $eligibleGraduationYears,
+            'alumni_active_job_position' => $activeJobHistory ? $activeJobHistory->position : null,
             'categories' => $allCategories->map(function($cat) {
                 return [
                     'id' => $cat->id_category,
@@ -239,19 +318,19 @@ class QuestionnaireController extends Controller
         // Calculate progress
         $totalCategories = $allCategories->count();
         $progressPercentage = $totalCategories > 0 ? round((($currentCategoryIndex + 1) / $totalCategories) * 100) : 0;
-    
+
         // Get previously saved answers if any
         $prevAnswers = [];
         $prevOtherAnswers = [];
         $prevMultipleAnswers = [];
         $prevMultipleOtherAnswers = [];
         $prevLocationAnswers = [];
-    
+
         $userAnswer = Tb_User_Answers::where('id_user', Auth::id())
             ->where('id_periode', $id_periode)
             ->where('nim', $nim)
             ->first();
-    
+
         if ($userAnswer) {
             $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)->get();
             
@@ -320,7 +399,9 @@ class QuestionnaireController extends Controller
             'prevOtherAnswers',
             'prevMultipleAnswers',
             'prevMultipleOtherAnswers',
-            'prevLocationAnswers'
+            'prevLocationAnswers',
+            'activeJobHistory', // ✅ TAMBAHAN: Data pekerjaan aktif
+            'eligibleGraduationYears' // ✅ TAMBAHAN: Info target periode
         ));
     }
 
@@ -329,18 +410,36 @@ class QuestionnaireController extends Controller
         try {
             $userId = Auth::id();
             $idCompany = Auth::user()->company->id_company ?? null;
+            $periode = Tb_Periode::findOrFail($id_periode);
 
-            // Verify that this alumni worked for this company
-            $jobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
-                ->where('nim', $nim)
-                ->exists();
-
-            if (!$jobHistoryExists) {
+            // ✅ VALIDASI BARU: Cek target alumni periode
+            $eligibleGraduationYears = $this->getEligibleGraduationYears($periode);
+            $alumni = Tb_Alumni::where('nim', $nim)->first();
+            
+            if (!$alumni) {
                 return redirect()->route('company.questionnaire.select-alumni', $id_periode)
-                    ->with('error', 'Alumni ini tidak pernah bekerja di perusahaan Anda.');
+                    ->with('error', 'Data alumni tidak ditemukan.');
             }
 
-            $periode = Tb_Periode::findOrFail($id_periode);
+            if (!empty($eligibleGraduationYears) && !in_array($alumni->graduation_year, $eligibleGraduationYears)) {
+                return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                    ->with('error', 'Alumni ini tidak termasuk dalam target periode kuesioner ini.');
+            }
+
+            // ✅ SOLUSI: Verify that this alumni is CURRENTLY working for this company
+            $activeJobHistoryExists = Tb_jobhistory::where('id_company', $idCompany)
+                ->where('nim', $nim)
+                ->where(function ($query) {
+                    $query->where('duration', 'Masih bekerja')
+                          ->orWhereNull('end_date');
+                })
+                ->exists();
+
+            if (!$activeJobHistoryExists) {
+                return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                    ->with('error', 'Alumni ini tidak lagi bekerja di perusahaan Anda atau data pekerjaan sudah tidak aktif.');
+            }
+
             $categoryId = $request->input('id_category');
             $action = $request->input('action', 'save_draft');
 
@@ -850,5 +949,87 @@ class QuestionnaireController extends Controller
         }
 
         return $result;
+    }
+
+    /**
+     * ✅ TAMBAHAN: Helper method untuk validasi alumni aktif
+     */
+    private function validateActiveAlumni($companyId, $nim)
+    {
+        return Tb_jobhistory::where('id_company', $companyId)
+            ->where('nim', $nim)
+            ->where(function ($query) {
+                $query->where('duration', 'Masih bekerja')
+                      ->orWhereNull('end_date');
+            })
+            ->exists();
+    }
+
+    /**
+     * ✅ TAMBAHAN: Get active job information for alumni
+     */
+    private function getActiveJobInfo($companyId, $nim)
+    {
+        return Tb_jobhistory::where('id_company', $companyId)
+            ->where('nim', $nim)
+            ->where(function ($query) {
+                $query->where('duration', 'Masih bekerja')
+                      ->orWhereNull('end_date');
+            })
+            ->orderBy('start_date', 'desc')
+            ->first();
+    }
+
+    /**
+     * ✅ TAMBAHAN: Helper method untuk mendapatkan tahun lulus yang memenuhi syarat berdasarkan target periode
+     */
+    private function getEligibleGraduationYears($periode)
+    {
+        // Jika semua alumni bisa akses
+        if ($periode->all_alumni || $periode->target_type === 'all') {
+            return []; // Empty array berarti semua tahun lulus bisa
+        }
+
+        $currentYear = now()->year;
+
+        // Jika target berdasarkan tahun lalu (years ago)
+        if ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
+            return collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                return (string)($currentYear - $yearsAgo);
+            })->toArray();
+        }
+
+        // Jika target berdasarkan tahun spesifik
+        if ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
+            return collect($periode->target_graduation_years)->map(function($year) {
+                return (string)$year;
+            })->toArray();
+        }
+
+        return []; // Default: semua tahun lulus bisa jika tidak ada target spesifik
+    }
+
+    /**
+     * ✅ TAMBAHAN: Helper method untuk validasi alumni aktif dengan filter target periode
+     */
+    private function validateActiveAlumniWithTarget($companyId, $nim, $periode)
+    {
+        // Cek apakah masih aktif bekerja
+        $isActive = $this->validateActiveAlumni($companyId, $nim);
+        
+        if (!$isActive) {
+            return false;
+        }
+        
+        // Cek apakah sesuai target periode
+        $eligibleYears = $this->getEligibleGraduationYears($periode);
+        
+        if (empty($eligibleYears)) {
+            return true; // Semua tahun lulus diperbolehkan
+        }
+        
+        $alumni = Tb_Alumni::where('nim', $nim)->first();
+        
+        return $alumni && in_array($alumni->graduation_year, $eligibleYears);
     }
 }

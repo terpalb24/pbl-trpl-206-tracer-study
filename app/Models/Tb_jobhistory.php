@@ -10,7 +10,6 @@ class Tb_jobhistory extends Model
     use HasFactory;
 
     protected $table = 'tb_jobhistory';
-
     protected $primaryKey = 'id_jobhistory';
 
     protected $fillable = [
@@ -18,12 +17,26 @@ class Tb_jobhistory extends Model
     ];
 
     protected $casts = [
-    'salary' => 'string',
-    'start_date' => 'date',
-    'end_date' => 'date',
-];
+        'salary' => 'string',
+        'start_date' => 'date',
+        'end_date' => 'date',
+    ];
 
- 
+    // Scope untuk job history yang masih aktif
+    public function scopeActive($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('duration', 'Masih bekerja')
+              ->orWhereNull('end_date');
+        });
+    }
+
+    // Scope untuk job history yang sudah selesai
+    public function scopeInactive($query)
+    {
+        return $query->where('duration', '!=', 'Masih bekerja')
+                     ->whereNotNull('end_date');
+    }
 
     public function alumni()
     {
@@ -33,6 +46,12 @@ class Tb_jobhistory extends Model
     public function company()
     {
         return $this->belongsTo(Tb_Company::class, 'id_company', 'id_company');
+    }
+
+    // Method untuk mengecek apakah job masih aktif
+    public function isActive()
+    {
+        return $this->duration === 'Masih bekerja' || is_null($this->end_date);
     }
 }
 

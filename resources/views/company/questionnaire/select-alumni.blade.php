@@ -67,62 +67,73 @@
                 </div>
             </div>
 
+            <!-- Target Alumni Information -->
+            @if(!empty($eligibleGraduationYears))
+                <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle text-blue-500 mr-3"></i>
+                        <div>
+                            <p class="text-blue-800 font-medium">Target Alumni untuk Periode Ini</p>
+                            <p class="text-blue-700 text-sm">
+                                Hanya alumni dengan tahun lulus: <strong>{{ implode(', ', $eligibleGraduationYears) }}</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Alumni yang Tersedia untuk Dinilai -->
             @if($availableAlumni->isNotEmpty())
                 <div class="bg-white rounded-xl shadow-md p-6 mb-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-xl font-semibold text-gray-700">ALUMNI YANG DAPAT DINILAI</h2>
                         <div class="flex items-center text-sm text-gray-500">
-                            <i class="fas fa-user-graduate mr-2"></i>
+                            <i class="fas fa-users mr-2"></i>
                             {{ $availableAlumni->count() }} Alumni Tersedia
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        @foreach($availableAlumni as $jobHistory)
-                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow duration-200">
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex-grow">
-                                        <h3 class="font-semibold text-gray-900">{{ $jobHistory->alumni->name }}</h3>
-                                        <p class="text-sm text-gray-600">NIM: {{ $jobHistory->nim }}</p>
-                                        @if($jobHistory->alumni->graduation_year)
-                                            <p class="text-xs text-gray-500">Lulus: {{ $jobHistory->alumni->graduation_year }}</p>
-                                        @endif
-                                    </div>
-                                    @if(in_array($jobHistory->nim, $draftNims))
-                                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            Draft
-                                        </span>
-                                    @endif
-                                </div>
-                                
-                                <!-- Job History Info -->
-                                <div class="bg-white rounded p-3 mb-3 text-sm">
-                                    <p class="font-medium text-gray-700">Riwayat Kerja:</p>
-                                    <p class="text-gray-600">{{ $jobHistory->position }}</p>
-                                    <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                        <span>{{ \Carbon\Carbon::parse($jobHistory->start_date)->format('M Y') }} - 
-                                              {{ $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('M Y') : 'Sekarang' }}</span>
-                                        @if($jobHistory->duration)
-                                            <span>{{ $jobHistory->duration }}</span>
-                                        @endif
-                                    </div>
-                                </div>
 
-                                <!-- Action Button -->
-                                <div class="text-center">
-                                    @if(in_array($jobHistory->nim, $draftNims))
-                                        <a href="{{ route('company.questionnaire.fill', [$periode->id_periode, $jobHistory->nim]) }}" 
-                                           class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition-colors duration-200 w-full justify-center">
-                                            <i class="fas fa-edit mr-2"></i>
-                                            Lanjutkan Penilaian
-                                        </a>
-                                    @else
-                                        <a href="{{ route('company.questionnaire.fill', [$periode->id_periode, $jobHistory->nim]) }}" 
-                                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200 w-full justify-center">
-                                            <i class="fas fa-clipboard-check mr-2"></i>
-                                            Mulai Penilaian
-                                        </a>
-                                    @endif
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        @foreach($availableAlumni as $jobHistory)
+                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                                <div class="flex flex-col h-full">
+                                    <div class="flex-grow">
+                                        <h3 class="font-semibold text-gray-800 mb-2">{{ $jobHistory->alumni->name }}</h3>
+                                        <div class="space-y-1 text-sm text-gray-600">
+                                            <div class="flex items-center">
+                                                <i class="fas fa-id-card text-gray-400 mr-2 w-4"></i>
+                                                <span>{{ $jobHistory->nim }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-graduation-cap text-gray-400 mr-2 w-4"></i>
+                                                <span>Lulus {{ $jobHistory->alumni->graduation_year }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-briefcase text-gray-400 mr-2 w-4"></i>
+                                                <span>{{ $jobHistory->position ?? 'Posisi tidak disebutkan' }}</span>
+                                            </div>
+                                            <div class="flex items-center">
+                                                <i class="fas fa-calendar text-gray-400 mr-2 w-4"></i>
+                                                <span>{{ $jobHistory->duration }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 pt-3 border-t border-gray-100">
+                                        @if(in_array($jobHistory->nim, $draftNims))
+                                            <a href="{{ route('company.questionnaire.fill', [$periode->id_periode, $jobHistory->nim]) }}"
+                                               class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-md transition-colors duration-200 w-full justify-center">
+                                                <i class="fas fa-edit mr-2"></i>
+                                                Lanjutkan Draft
+                                            </a>
+                                        @else
+                                            <a href="{{ route('company.questionnaire.fill', [$periode->id_periode, $jobHistory->nim]) }}"
+                                               class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200 w-full justify-center">
+                                                <i class="fas fa-clipboard-check mr-2"></i>
+                                                Mulai Penilaian
+                                            </a>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -164,15 +175,18 @@
                     <h2 class="text-2xl font-bold mb-2">Tidak Ada Alumni yang Dapat Dinilai</h2>
                     @if(count($completedNims) > 0)
                         <p class="text-gray-600 mb-4">
-                            Semua alumni yang pernah bekerja di perusahaan Anda sudah dinilai pada periode ini.
+                            Semua alumni yang memenuhi kriteria sudah dinilai pada periode ini.
                         </p>
                     @else
                         <p class="text-gray-600 mb-4">
-                            Tidak ada alumni yang tercatat pernah bekerja di perusahaan Anda.
+                            Tidak ada alumni yang memenuhi kriteria untuk periode ini:
                         </p>
-                        <p class="text-gray-600">
-                            Pastikan data riwayat kerja alumni sudah diperbarui.
-                        </p>
+                        <ul class="text-gray-600 text-sm space-y-1 mb-4">
+                            <li>• Alumni harus masih aktif bekerja di perusahaan Anda</li>
+                            @if(!empty($eligibleGraduationYears))
+                                <li>• Alumni harus lulus pada tahun: {{ implode(', ', $eligibleGraduationYears) }}</li>
+                            @endif
+                        </ul>
                     @endif
                     <a href="{{ route('company.questionnaire.index') }}" 
                        class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-md transition-colors duration-200 mt-4">
