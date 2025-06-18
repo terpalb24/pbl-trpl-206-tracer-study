@@ -151,7 +151,7 @@
                         </div>
                         
                         <!-- Questions Grid dalam Kategori -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
                             @foreach($categoryQuestions as $index => $qData)
                                 @php
                                     $globalIndex = $groupedQuestions->flatten(1)->search($qData);
@@ -207,11 +207,29 @@
                                                     <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
                                                         Jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
                                                     </summary>
-                                                    <div class="mt-1 max-h-20 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
+                                                    <div class="mt-2 max-h-24 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
                                                         @foreach($qData['other_answers'] as $optionId => $answers)
                                                             @if(count($answers) > 0)
+                                                                @php
+                                                                    $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
+                                                                @endphp
+                                                                
+                                                                <div class="text-blue-800 font-medium">
+                                                                    {{ $option->option ?? 'Unknown' }}:
+                                                                </div>
+                                                                
                                                                 @foreach($answers as $answer)
-                                                                    <div class="text-blue-700 text-xs">• {{ Str::limit($answer, 40) }}</div>
+                                                                    <div class="ml-2 text-blue-700">
+                                                                        @if($option && !empty($option->other_before_text))
+                                                                            <span class="text-gray-600 text-xs">{{ $option->other_before_text }}</span>
+                                                                        @endif
+                                                                        
+                                                                        <span class="font-medium">{{ $answer }}</span>
+                                                                        
+                                                                        @if($option && !empty($option->other_after_text))
+                                                                            <span class="text-gray-600 text-xs">{{ $option->other_after_text }}</span>
+                                                                        @endif
+                                                                    </div>
                                                                 @endforeach
                                                             @endif
                                                         @endforeach
@@ -339,27 +357,42 @@
                                     @endif
                                     
                                     @if(isset($qData['other_answers']) && count($qData['other_answers']) > 0)
-                                        <div class="mt-2">
-                                            <details class="text-xs">
-                                                <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
-                                                    Lihat jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
-                                                </summary>
-                                                <div class="mt-2 max-h-24 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
-                                                    @foreach($qData['other_answers'] as $optionId => $answers)
-                                                        @if(count($answers) > 0)
-                                                            @php
-                                                                $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
-                                                            @endphp
-                                                            <div class="text-blue-800 font-medium">{{ $option->option ?? 'Unknown' }}:</div>
-                                                            @foreach($answers as $answer)
-                                                                <div class="ml-2 text-blue-700">• {{ $answer }}</div>
-                                                            @endforeach
-                                                        @endif
-                                                    @endforeach
-                                                </div>
-                                            </details>
-                                        </div>
-                                    @endif
+                                    <div class="mt-2">
+                                        <details class="text-xs">
+                                            <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
+                                                Lihat jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
+                                            </summary>
+                                            <div class="mt-2 max-h-24 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
+                                                @foreach($qData['other_answers'] as $optionId => $answers)
+                                                    @if(count($answers) > 0)
+                                                        @php
+                                                            $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
+                                                        @endphp
+                                                        
+                                                        <div class="text-blue-800 font-medium">{{ $option->option ?? 'Unknown' }}:</div>
+                                                        
+                                                        @foreach($answers as $answer)
+                                                            <div class="ml-2 text-blue-700">
+                                                                {{-- ✅ TAMBAHAN: Before text --}}
+                                                                @if($option && !empty($option->other_before_text))
+                                                                    <span class="text-gray-600 text-xs">{{ $option->other_before_text }}</span>
+                                                                @endif
+                                                                
+                                                                {{-- ✅ TAMBAHAN: Answer dengan styling yang lebih jelas --}}
+                                                                <span class="font-medium">{{ $answer }}</span>
+                                                                
+                                                                {{-- ✅ TAMBAHAN: After text --}}
+                                                                @if($option && !empty($option->other_after_text))
+                                                                    <span class="text-gray-600 text-xs">{{ $option->other_after_text }}</span>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    </div>
+                                @endif
                                 </div>
                             @else
                                 <div class="text-center py-4">
@@ -459,10 +492,23 @@
                                                                 Lihat {{ count($questionnaireChartData['other_answers'][$optionId]) }} jawaban
                                                             </summary>
                                                             <div class="mt-2 max-h-32 overflow-y-auto bg-gray-50 rounded p-2 text-xs">
+                                                                @php
+                                                                    $option = $questionnaireChartData['question']->options->where('id_questions_options', $optionId)->first();
+                                                                @endphp
+                                                                
                                                                 @foreach($questionnaireChartData['other_answers'][$optionId] as $index => $otherAnswer)
-                                                                    <div class="mb-1 p-1 bg-white rounded border">
+                                                                    <div class="mb-1 p-2 bg-white rounded border">
                                                                         <span class="text-gray-600">{{ $index + 1 }}.</span>
-                                                                        <span class="text-gray-800">{{ $otherAnswer }}</span>
+                                                                        
+                                                                        @if($option && !empty($option->other_before_text))
+                                                                            <span class="text-gray-500 italic">{{ $option->other_before_text }}</span>
+                                                                        @endif
+                                                                        
+                                                                        <span class="text-gray-800 font-medium">{{ $otherAnswer }}</span>
+                                                                        
+                                                                        @if($option && !empty($option->other_after_text))
+                                                                            <span class="text-gray-500 italic">{{ $option->other_after_text }}</span>
+                                                                        @endif
                                                                     </div>
                                                                 @endforeach
                                                             </div>
