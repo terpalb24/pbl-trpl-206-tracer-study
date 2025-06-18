@@ -285,11 +285,11 @@ class AdminController extends Controller
 
                 // Validate gender
                 $gender = strtolower(trim($row[3]));
-                if (!in_array($gender, ['laki-laki', 'perempuan'])) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'laki-laki' atau 'perempuan'");
+                if (!in_array($gender, ['pria', 'wanita'])) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'pria' atau 'wanita'");
                 }
 
-                // Validate study program using case-insensitive LIKE
+                // Validate study program using case-insensitive LIKE 
                 $studyProgramName = trim($row[11]);
                 $studyProgram = Tb_study_program::whereRaw('LOWER(study_program) LIKE ?', ['%' . strtolower($studyProgramName) . '%'])->first();
                 
@@ -453,7 +453,7 @@ class AdminController extends Controller
             '12345678',              // NIM
             '1234567890123456',      // NIK
             'John Doe',              // Nama
-            'laki-laki',            // Jenis Kelamin
+            'pria',            // Jenis Kelamin
             '2000-01-01',           // Tanggal Lahir
             'john.doe@email.com',    // Email
             '081234567890',         // No. Telepon

@@ -592,26 +592,6 @@
                                                 </div>
                                                 <div class="grid gap-3">
                                                     @foreach($question->options as $option)
-                                                        @php
-                                                            // Tentukan jumlah bintang berdasarkan text rating
-                                                            $ratingText = strtolower($option->option);
-                                                            $starCount = 1; // default
-                                                            
-                                                            if (str_contains($ratingText, 'kurang')) {
-                                                                $starCount = 1;
-                                                            } elseif (str_contains($ratingText, 'cukup')) {
-                                                                $starCount = 2;
-                                                            } elseif (str_contains($ratingText, 'baik sekali') || str_contains($ratingText, 'sangat baik')) {
-                                                                $starCount = 5;
-                                                            } elseif (str_contains($ratingText, 'baik')) {
-                                                                $starCount = 3;
-                                                            }
-                                                            
-                                                            // Jika menggunakan angka sebagai rating
-                                                            if (is_numeric($option->option)) {
-                                                                $starCount = min(5, max(1, (int)$option->option));
-                                                            }
-                                                        @endphp
                                                         <div class="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors duration-200">
                                                             <input type="radio" 
                                                                    name="answers[{{ $question->id_question }}]" 
@@ -622,16 +602,7 @@
                                                                    {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $option->id_questions_options ? 'checked' : '' }}>
                                                             <label for="rating_{{ $option->id_questions_options }}" class="cursor-pointer flex items-center flex-grow">
                                                                 <span class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium {{ isset($prevAnswers[$question->id_question]) && $prevAnswers[$question->id_question] == $option->id_questions_options ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300' : 'bg-gray-100 text-gray-700 border-2 border-gray-300' }} hover:bg-yellow-50 transition-colors duration-200">
-                                                                    {{-- Tampilkan bintang sesuai rating --}}
-                                                                    <span class="flex items-center mr-2">
-                                                                        @for($i = 1; $i <= 5; $i++)
-                                                                            @if($i <= $starCount)
-                                                                                <i class="fas fa-star text-yellow-500"></i>
-                                                                            @else
-                                                                                <i class="far fa-star text-gray-300"></i>
-                                                                            @endif
-                                                                        @endfor
-                                                                    </span>
+                                                                    <i class="fas fa-star mr-1"></i>
                                                                     {{ $option->option }}
                                                                 </span>
                                                             </label>
@@ -1114,6 +1085,112 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    function loadProvincesFromAPI(questionId) {
+        console.log('Loading provinces from API for question:', questionId);
+        
+        const provinceSelect = document.getElementById(`province-${questionId}`);
+        if (!provinceSelect) {
+            console.error('Province select not found for question:', questionId);
+            return;
+        }
+        
+        provinceSelect.innerHTML = '<option value="">-- Memuat provinsi... --</option>';
+        
+        fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json')
+            .then(response => {
+                console.log('Province API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(provinces => {
+                console.log('Provinces received:', provinces.length);
+                
+                if (!provinces || !Array.isArray(provinces)) {
+                    throw new Error('Invalid provinces data');
+                }
+                
+                provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+                
+                provinces.forEach(province => {
+                    if (province && province.id && province.name) {
+                        const option = document.createElement('option');
+                        option.value = province.id;
+                        option.textContent = province.name;
+                        option.setAttribute('data-name', province.name);
+                        provinceSelect.appendChild(option);
+                    }
+                });
+                
+                console.log(`Successfully loaded ${provinces.length} provinces for question ${questionId}`);
+                
+                setTimeout(() => {
+                    loadSavedLocationData(questionId);
+                }, 200);
+            })
+            .catch(error => {
+                console.error('Error loading provinces:', error);
+                console.log('Using fallback province data');
+                loadFallbackProvinces(provinceSelect, questionId);
+            });
+    }
+    
+    function loadFallbackProvinces(provinceSelect, questionId) {
+        const fallbackProvinces = [
+            { id: '11', name: 'Aceh' },
+            { id: '12', name: 'Sumatera Utara' },
+            { id: '13', name: 'Sumatera Barat' },
+            { id: '14', name: 'Riau' },
+            { id: '15', name: 'Jambi' },
+            { id: '16', name: 'Sumatera Selatan' },
+            { id: '17', name: 'Bengkulu' },
+            { id: '18', name: 'Lampung' },
+            { id: '19', name: 'Kepulauan Bangka Belitung' },
+            { id: '21', name: 'Kepulauan Riau' },
+            { id: '31', name: 'DKI Jakarta' },
+            { id: '32', name: 'Jawa Barat' },
+            { id: '33', name: 'Jawa Tengah' },
+            { id: '34', name: 'DI Yogyakarta' },
+            { id: '35', name: 'Jawa Timur' },
+            { id: '36', name: 'Banten' },
+            { id: '51', name: 'Bali' },
+            { id: '52', name: 'Nusa Tenggara Barat' },
+            { id: '53', name: 'Nusa Tenggara Timur' },
+            { id: '61', name: 'Kalimantan Barat' },
+            { id: '62', name: 'Kalimantan Tengah' },
+            { id: '63', name: 'Kalimantan Selatan' },
+            { id: '64', name: 'Kalimantan Timur' },
+            { id: '65', name: 'Kalimantan Utara' },
+            { id: '71', name: 'Sulawesi Utara' },
+            { id: '72', name: 'Sulawesi Tengah' },
+            { id: '73', name: 'Sulawesi Selatan' },
+            { id: '74', name: 'Sulawesi Tenggara' },
+            { id: '75', name: 'Gorontalo' },
+            { id: '76', name: 'Sulawesi Barat' },
+            { id: '81', name: 'Maluku' },
+            { id: '82', name: 'Maluku Utara' },
+            { id: '91', name: 'Papua Barat' },
+            { id: '94', name: 'Papua' }
+        ];
+        
+        provinceSelect.innerHTML = '<option value="">-- Pilih Provinsi --</option>';
+        
+        fallbackProvinces.forEach(province => {
+            const option = document.createElement('option');
+            option.value = province.id;
+            option.textContent = province.name;
+            option.setAttribute('data-name', province.name);
+            provinceSelect.appendChild(option);
+        });
+        
+        console.log(`Loaded ${fallbackProvinces.length} fallback provinces for question ${questionId}`);
+        
+        setTimeout(() => {
+            loadSavedLocationData(questionId);
+        }, 200);
+    }
+    
     function setupLocationEventListeners(questionId) {
         console.log('Setting up event listeners for question:', questionId);
         
@@ -1136,6 +1213,126 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         console.log('Event listeners set up successfully for question:', questionId);
+    }
+    
+    function handleProvinceChange(questionId, provinceId) {
+        console.log(`Province changed for question ${questionId}: ${provinceId}`);
+        
+        const citySelect = document.getElementById(`city-${questionId}`);
+        if (!citySelect) {
+            console.error('City select not found for question:', questionId);
+            return;
+        }
+        
+        citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
+        citySelect.disabled = true;
+        
+        const selectedLocationDiv = document.getElementById(`selected-location-${questionId}`);
+        const locationCombinedInput = document.getElementById(`location-combined-${questionId}`);
+        
+        if (selectedLocationDiv) {
+            selectedLocationDiv.classList.add('hidden');
+        }
+        if (locationCombinedInput) {
+            locationCombinedInput.value = '';
+        }
+        
+        if (!provinceId) {
+            console.log('No province selected, city select disabled');
+            return;
+        }
+        
+        citySelect.innerHTML = '<option value="">-- Memuat kota/kabupaten... --</option>';
+        
+        const apiUrl = `https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`;
+        console.log('Fetching cities from:', apiUrl);
+        
+        fetch(apiUrl)
+            .then(response => {
+                console.log('City API Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(cities => {
+                console.log('Cities received:', cities.length);
+                
+                if (!cities || !Array.isArray(cities)) {
+                    throw new Error('Invalid cities data received');
+                }
+                
+                if (cities.length === 0) {
+                    console.warn('No cities found for province:', provinceId);
+                    citySelect.innerHTML = '<option value="">-- Tidak ada kota/kabupaten --</option>';
+                    return;
+                }
+                
+                citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
+                
+                cities.forEach(city => {
+                    if (city && city.id && city.name) {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        option.setAttribute('data-name', city.name);
+                        citySelect.appendChild(option);
+                    }
+                });
+                
+                citySelect.disabled = false;
+                console.log(`Successfully loaded ${cities.length} cities for province ${provinceId}`);
+            })
+            .catch(error => {
+                console.error('Error loading cities:', error);
+                
+                const fallbackCities = getFallbackCities(provinceId);
+                if (fallbackCities && fallbackCities.length > 0) {
+                    console.log('Using fallback cities for province:', provinceId);
+                    citySelect.innerHTML = '<option value="">-- Pilih Kota/Kabupaten --</option>';
+                    
+                    fallbackCities.forEach(city => {
+                        const option = document.createElement('option');
+                        option.value = city.id;
+                        option.textContent = city.name;
+                        option.setAttribute('data-name', city.name);
+                        citySelect.appendChild(option);
+                    });
+                    
+                    citySelect.disabled = false;
+                } else {
+                    citySelect.innerHTML = '<option value="">-- Error memuat kota/kabupaten --</option>';
+                    citySelect.disabled = true;
+                }
+            });
+    }
+    
+    function getFallbackCities(provinceId) {
+        const fallbackData = {
+            '11': [
+                { id: '1101', name: 'Kabupaten Simeulue' },
+                { id: '1102', name: 'Kabupaten Aceh Singkil' },
+                { id: '1171', name: 'Kota Banda Aceh' },
+                { id: '1172', name: 'Kota Sabang' }
+            ],
+            '31': [
+                { id: '3101', name: 'Kabupaten Kepulauan Seribu' },
+                { id: '3171', name: 'Kota Jakarta Selatan' },
+                { id: '3172', name: 'Kota Jakarta Timur' },
+                { id: '3173', name: 'Kota Jakarta Pusat' },
+                { id: '3174', name: 'Kota Jakarta Barat' },
+                { id: '3175', name: 'Kota Jakarta Utara' }
+            ],
+            '34': [
+                { id: '3401', name: 'Kabupaten Kulon Progo' },
+                { id: '3402', name: 'Kabupaten Bantul' },
+                { id: '3403', name: 'Kabupaten Gunung Kidul' },
+                { id: '3404', name: 'Kabupaten Sleman' },
+                { id: '3471', name: 'Kota Yogyakarta' }
+            ]
+        };
+        
+        return fallbackData[provinceId] || null;
     }
     
     function updateLocationDisplay(questionId) {
@@ -1665,44 +1862,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (validateCurrentCategory()) {
             // Show confirmation modal
             document.getElementById('confirmation-modal').classList.remove('hidden');
-        }
-    });
-
-    // Modal confirmation handlers
-    document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        console.log('Modal confirmed - submitting final');
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'submit_final';
-        }
-        
-        // Hide modal and submit form
-        document.getElementById('confirmation-modal').classList.add('hidden');
-        form.submit();
-    });
-
-    document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        console.log('Modal cancelled');
-        // Just hide the modal
-        document.getElementById('confirmation-modal').classList.add('hidden');
-    });
-
-    // Also handle clicking outside modal to close it
-    document.getElementById('confirmation-modal')?.addEventListener('click', function(e) {
-        if (e.target === this) {
-            console.log('Modal closed by clicking outside');
-            this.classList.add('hidden');
-        }
-    });
-
-    // Handle escape key to close modal
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('confirmation-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                console.log('Modal closed by escape key');
-                modal.classList.add('hidden');
-            }
         }
     });
 

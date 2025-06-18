@@ -23,6 +23,15 @@ class AuthController extends Controller
                 case 1:
                     return redirect()->route('dashboard.admin');
                 case 2:
+                    $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
+                    if (!$alumni) {
+                        Auth::logout();
+                        return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
+                    }
+                    // Cek first login alumni
+                    if ($alumni->is_First_login) {
+                        return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
+                    }
                     return redirect()->route('dashboard.alumni');
                 case 3:
                     return redirect()->route('dashboard.company');
@@ -49,12 +58,11 @@ class AuthController extends Controller
                     case 1:
                         return redirect()->route('dashboard.admin');
                     case 2:
-                        $alumni = \App\Models\Tb_Alumni::where('id_user', $user->id_user)->first();
+                        $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
                         if (!$alumni) {
                             Auth::logout();
                             return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
                         }
-                        //alumni first login check
                         if ($alumni->is_First_login) {
                             return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
                         }
@@ -65,7 +73,7 @@ class AuthController extends Controller
                         ]);
                         return redirect()->route('dashboard.alumni');
                     case 3:
-                        $company = \App\Models\Tb_Company::where('id_user', $user->id_user)->first();
+                        $company = Tb_Company::where('id_user', $user->id_user)->first();
                         if (!$company) {
                             Auth::logout();
                             return redirect('/login')->with('error', 'Data company tidak ditemukan. Silakan hubungi administrator.');
@@ -120,10 +128,10 @@ class AuthController extends Controller
                         return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
                     }
 
-
-
                     // Cek apakah alumni sudah memverifikasi email
-
+                    if ($alumni && $alumni->is_First_login) {
+                        return redirect()->route('alumni.email.form')->with('success', 'Silakan verifikasi email Anda.');
+                    }
 
                     session(['alumni_nim' => $alumni->nim]);
 
