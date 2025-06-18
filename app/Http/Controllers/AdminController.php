@@ -802,7 +802,7 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Get questionnaire statistics dengan identifikasi company yang benar
+     * ✅ PERBAIKAN: Update logic untuk "Semua Kategori" = semua pertanyaan dari semua kategori
      */
     private function getQuestionnaireStatistics(Request $request)
     {
@@ -812,15 +812,15 @@ class AdminController extends Controller
         $selectedCategory = $request->input('questionnaire_category');
         $selectedQuestion = $request->input('questionnaire_question');
         
-        // ✅ TAMBAHAN: Set default question ke "all" jika kategori dipilih tapi question belum
-        if ($selectedCategory && !$selectedQuestion) {
-            $selectedQuestion = 'all';
-        }
-        
         // Get all active periods
         $availablePeriodes = Tb_Periode::where('status', 'active')
             ->orderBy('start_date', 'desc')
             ->get();
+        
+        // Set default periode ke yang pertama jika belum dipilih
+        if (!$selectedPeriode && $availablePeriodes->count() > 0) {
+            $selectedPeriode = $availablePeriodes->first()->id_periode;
+        }
         
         // Get categories based on selected period and user type
         $availableCategories = collect();
@@ -834,16 +834,36 @@ class AdminController extends Controller
             }
             
             $availableCategories = $categoryQuery->orderBy('order')->get();
+            
+            // Set default kategori ke "all" jika belum dipilih
+            if (!$selectedCategory && $availableCategories->count() > 0) {
+                $selectedCategory = 'all';
+            }
         }
         
         // Get questions based on selected category
         $availableQuestions = collect();
         if ($selectedCategory) {
-            $availableQuestions = Tb_Questions::where('id_category', $selectedCategory)
+            if ($selectedCategory === 'all') {
+                // ✅ PERBAIKAN: Jika "Semua Kategori", ambil semua questions dari semua kategori
+                $questionQuery = Tb_Questions::whereIn('id_category', $availableCategories->pluck('id_category'))
+                    ->with(['category']); // Tambah relasi category untuk grouping
+            } else {
+                // Single category
+                $questionQuery = Tb_Questions::where('id_category', $selectedCategory);
+            }
+            
+            $availableQuestions = $questionQuery
                 ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
                 ->where('status', 'visible')
+                ->orderBy('id_category') // ✅ TAMBAHAN: Order by category dulu
                 ->orderBy('order')
                 ->get();
+            
+            // Set default question ke "all" jika belum dipilih
+            if (!$selectedQuestion && $availableQuestions->count() > 0) {
+                $selectedQuestion = 'all';
+            }
         }
         
         // Generate statistics data
@@ -854,178 +874,30 @@ class AdminController extends Controller
         
         if ($selectedQuestion) {
             if ($selectedQuestion === 'all') {
-                // Handle "Semua Pertanyaan" dalam kategori
-                $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType);
-                $questionnaireChartData = [
-                    'type' => 'multiple',
-                    'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
-                    'questions_data' => $multipleQuestionData,
-                    'total_questions' => count($multipleQuestionData)
-                ];
-            } else {
-                // Handle single question dengan other answers
-                $question = Tb_Questions::with('options')->find($selectedQuestion);
-                
-                if ($question && in_array($question->type, ['option', 'multiple', 'scale', 'rating'])) {
-                    try {
-                        // ✅ PERBAIKAN: Query dengan alias untuk menghindari konflik nama
-                        $answersBaseQuery = "
-                            SELECT DISTINCT 
-                                tai.*, 
-                                tua.id_user, 
-                                tua.nim,
-                                tua.created_at as answer_created_at
-                            FROM tb_user_answer_item tai
-                            INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
-                            INNER JOIN tb_user u ON tua.id_user = u.id_user
-                            WHERE tai.id_question = ? 
-                            AND tua.status = 'completed'
-                        ";
-                        
-                        $queryParams = [$selectedQuestion];
-                        
-                        // Filter by user type
-                        if ($selectedUserType === 'alumni') {
-                            $answersBaseQuery .= " AND EXISTS (
-                                SELECT 1 FROM tb_alumni 
-                                WHERE tb_alumni.id_user = u.id_user
-                            ) AND tua.nim IS NULL";
-                        } elseif ($selectedUserType === 'company') {
-                            $answersBaseQuery .= " AND EXISTS (
-                                SELECT 1 FROM tb_company 
-                                WHERE tb_company.id_user = u.id_user
-                            ) AND tua.nim IS NOT NULL";
-                        }
-                        
-                        $answers = DB::select($answersBaseQuery, $queryParams);
-                        
-                        // Count answers by option
-                        $answerCounts = [];
-                        $otherAnswers = [];
-                        
-                        // ✅ PERBAIKAN: Cek apakah ada options
-                        if ($question->options && $question->options->count() > 0) {
-                            // Initialize all options with 0 count
-                            foreach ($question->options as $option) {
-                                $answerCounts[$option->id_questions_options] = [
-                                    'option_text' => $option->option,
-                                    'count' => 0,
-                                    'is_other' => $option->is_other_option ?? false
-                                ];
-                            }
-                            
-                            // Count actual answers - existing logic
-                            foreach ($answers as $answer) {
-                                if ($question->type === 'multiple') {
-                                    // ✅ PERBAIKAN: Lengkapi logic multiple yang hilang
-                                    if ($answer->id_questions_options) {
-                                        if (isset($answerCounts[$answer->id_questions_options])) {
-                                            $answerCounts[$answer->id_questions_options]['count']++;
-                                            
-                                            if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
-                                                if (!isset($otherAnswers[$answer->id_questions_options])) {
-                                                    $otherAnswers[$answer->id_questions_options] = [];
-                                                }
-                                                $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
-                                            }
-                                        }
-                                    } else {
-                                        // Find option by text untuk multiple choice
-                                        $option = $question->options->where('option', $answer->answer)->first();
-                                        if ($option && isset($answerCounts[$option->id_questions_options])) {
-                                            $answerCounts[$option->id_questions_options]['count']++;
-                                            
-                                            if ($option->is_other_option && !empty($answer->other_answer)) {
-                                                if (!isset($otherAnswers[$option->id_questions_options])) {
-                                                    $otherAnswers[$option->id_questions_options] = [];
-                                                }
-                                                $otherAnswers[$option->id_questions_options][] = $answer->other_answer;
-                                            }
-                                        } else {
-                                            // ✅ PERBAIKAN: Handle jawaban multiple tanpa id_questions_options
-                                            if (!empty($answer->answer)) {
-                                                $answerValue = $answer->answer;
-                                                if (!isset($answerCounts[$answerValue])) {
-                                                    $answerCounts[$answerValue] = [
-                                                        'option_text' => $answerValue,
-                                                        'count' => 0,
-                                                        'is_other' => false
-                                                    ];
-                                                }
-                                                $answerCounts[$answerValue]['count']++;
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    // For single choice (option, rating, scale)
-                                    if ($answer->id_questions_options && isset($answerCounts[$answer->id_questions_options])) {
-                                        $answerCounts[$answer->id_questions_options]['count']++;
-                                        
-                                        if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
-                                            if (!isset($otherAnswers[$answer->id_questions_options])) {
-                                                $otherAnswers[$answer->id_questions_options] = [];
-                                            }
-                                            $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
-                                        }
-                                    } else {
-                                        // ✅ PERBAIKAN: Handle jawaban tanpa id_questions_options
-                                        if (!empty($answer->answer)) {
-                                            $answerValue = $answer->answer;
-                                            if (!isset($answerCounts[$answerValue])) {
-                                                $answerCounts[$answerValue] = [
-                                                    'option_text' => $answerValue,
-                                                    'count' => 0,
-                                                    'is_other' => false
-                                                ];
-                                            }
-                                            $answerCounts[$answerValue]['count']++;
-                                        }
-                                    }
-                                }
-                            }
-                            
-                        } else {
-                            // ✅ PERBAIKAN: No options - group by answer values
-                            $answerGroups = [];
-                            foreach ($answers as $answer) {
-                                $answerValue = trim($answer->answer);
-                                if (!empty($answerValue)) {
-                                    if (!isset($answerGroups[$answerValue])) {
-                                        $answerGroups[$answerValue] = 0;
-                                    }
-                                    $answerGroups[$answerValue]++;
-                                }
-                            }
-                            
-                            foreach ($answerGroups as $answerText => $count) {
-                                $answerCounts[$answerText] = [
-                                    'option_text' => $answerText,
-                                    'count' => $count,
-                                    'is_other' => false
-                                ];
-                            }
-                        }
-                        
-                        // Prepare chart data
-                        foreach ($answerCounts as $data) {
-                            $questionnaireLabels[] = $data['option_text'];
-                            $questionnaireValues[] = $data['count'];
-                        }
-                        
-                        $questionnaireChartData = [
-                            'type' => 'single',
-                            'labels' => $questionnaireLabels,
-                            'values' => $questionnaireValues,
-                            'question' => $question,
-                            'total_responses' => array_sum($questionnaireValues),
-                            'answer_counts' => $answerCounts,
-                            'other_answers' => $otherAnswers
-                        ];
-                        
-                    } catch (\Exception $e) {
-                        // ... existing error handling ...
-                    }
+                if ($selectedCategory === 'all') {
+                    // ✅ PERBAIKAN: Handle "Semua Kategori" = semua pertanyaan dari semua kategori
+                    $allQuestionsData = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType);
+                    $questionnaireChartData = [
+                        'type' => 'all_questions_all_categories',
+                        'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
+                        'questions_data' => $allQuestionsData,
+                        'total_questions' => count($allQuestionsData),
+                        'total_categories' => $availableCategories->count(),
+                        'user_type' => $selectedUserType
+                    ];
+                } else {
+                    // Handle "Semua Pertanyaan" dalam kategori tertentu
+                    $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType);
+                    $questionnaireChartData = [
+                        'type' => 'multiple',
+                        'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
+                        'questions_data' => $multipleQuestionData,
+                        'total_questions' => count($multipleQuestionData)
+                    ];
                 }
+            } else {
+                // Handle single question
+                // ... existing single question logic ...
             }
         }
         
@@ -1045,87 +917,293 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Update getAllQuestionsStatistics dengan logika company yang benar
+     * ✅ TAMBAHAN: Method baru untuk mendapatkan semua pertanyaan dari semua kategori
+     */
+    private function getAllQuestionsFromAllCategories($periodeId, $userType)
+    {
+        $categoryQuery = Tb_Category::where('id_periode', $periodeId);
+        
+        if ($userType === 'alumni') {
+            $categoryQuery->whereIn('for_type', ['alumni', 'both']);
+        } elseif ($userType === 'company') {
+            $categoryQuery->whereIn('for_type', ['company', 'both']);
+        }
+        
+        $categories = $categoryQuery->orderBy('order')->get();
+        $allQuestionsData = [];
+        
+        \Log::info('Getting all questions from all categories in period: ' . $periodeId . ', user type: ' . $userType);
+        
+        foreach ($categories as $category) {
+            try {
+                $questions = Tb_Questions::where('id_category', $category->id_category)
+                    ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
+                    ->where('status', 'visible')
+                    ->with('options')
+                    ->orderBy('order')
+                    ->get();
+                
+                foreach ($questions as $question) {
+                    try {
+                        $answersBaseQuery = "
+                            SELECT DISTINCT 
+                                tai.*, 
+                                tua.id_user, 
+                                tua.nim,
+                                tua.created_at as answer_created_at
+                            FROM tb_user_answer_item tai
+                            INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
+                            INNER JOIN tb_user u ON tua.id_user = u.id_user
+                            WHERE tai.id_question = ? 
+                            AND tua.status = 'completed'
+                        ";
+                        
+                        $queryParams = [$question->id_question];
+                        
+                        if ($userType === 'alumni') {
+                            $answersBaseQuery .= " AND EXISTS (
+                                SELECT 1 FROM tb_alumni 
+                                WHERE tb_alumni.id_user = u.id_user
+                            ) AND tua.nim IS NULL";
+                        } elseif ($userType === 'company') {
+                            $answersBaseQuery .= " AND EXISTS (
+                                SELECT 1 FROM tb_company 
+                                WHERE tb_company.id_user = u.id_user
+                            ) AND tua.nim IS NOT NULL";
+                        }
+                        
+                        $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+                        
+                        $answers = DB::select($answersBaseQuery, $queryParams);
+                        
+                        // Count answers by option dengan logic yang sama
+                        $answerCounts = [];
+                        $labels = [];
+                        $values = [];
+                        $otherAnswers = [];
+                        
+                        if ($question->options && $question->options->count() > 0) {
+                            // Initialize all options with 0 count
+                            foreach ($question->options as $option) {
+                                $answerCounts[$option->id_questions_options] = [
+                                    'option_text' => $option->option,
+                                    'count' => 0,
+                                    'is_other' => $option->is_other_option ?? false
+                                ];
+                            }
+                            
+                            // ✅ GUNAKAN LOGIC YANG SAMA seperti getAllQuestionsStatistics
+                            foreach ($answers as $answer) {
+                                $counted = false;
+                                
+                                // Prioritas 1: id_questions_options
+                                if (!empty($answer->id_questions_options)) {
+                                    if (isset($answerCounts[$answer->id_questions_options])) {
+                                        $answerCounts[$answer->id_questions_options]['count']++;
+                                        $counted = true;
+                                        
+                                        if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
+                                            if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                                $otherAnswers[$answer->id_questions_options] = [];
+                                            }
+                                            $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                                        }
+                                    }
+                                }
+                                
+                                // Prioritas 2: answer text
+                                if (!$counted && !empty($answer->answer)) {
+                                    $option = $question->options->where('option', $answer->answer)->first();
+                                    if ($option && isset($answerCounts[$option->id_questions_options])) {
+                                        $answerCounts[$option->id_questions_options]['count']++;
+                                        $counted = true;
+                                        
+                                        if ($option->is_other_option && !empty($answer->other_answer)) {
+                                            if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                                $otherAnswers[$answer->id_questions_options] = [];
+                                            }
+                                            $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                                        }
+                                    }
+                                }
+                                
+                                // Prioritas 3: numeric ID dalam answer
+                                if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
+                                    $optionId = (int)$answer->answer;
+                                    if (isset($answerCounts[$optionId])) {
+                                        $answerCounts[$optionId]['count']++;
+                                        $counted = true;
+                                        
+                                        if ($answerCounts[$optionId]['is_other'] && !empty($answer->other_answer)) {
+                                            if (!isset($otherAnswers[$optionId])) {
+                                                $otherAnswers[$optionId] = [];
+                                            }
+                                            $otherAnswers[$optionId][] = $answer->other_answer;
+                                        }
+                                    }
+                                }
+                                
+                                // Prioritas 4: virtual option
+                                if (!$counted && !empty($answer->answer)) {
+                                    $answerValue = $answer->answer;
+                                    if (!isset($answerCounts[$answerValue])) {
+                                        $answerCounts[$answerValue] = [
+                                            'option_text' => $answerValue,
+                                            'count' => 0,
+                                            'is_other' => false
+                                        ];
+                                    }
+                                    $answerCounts[$answerValue]['count']++;
+                                }
+                            }
+                            
+                            // Prepare chart data for this question
+                            foreach ($answerCounts as $data) {
+                                $labels[] = $data['option_text'];
+                                $values[] = $data['count'];
+                            }
+                            
+                        } else {
+                            // Question tanpa options - group by answer values
+                            $answerGroups = [];
+                            foreach ($answers as $answer) {
+                                $answerValue = trim($answer->answer);
+                                if (!empty($answerValue)) {
+                                    if (!isset($answerGroups[$answerValue])) {
+                                        $answerGroups[$answerValue] = 0;
+                                    }
+                                    $answerGroups[$answerValue]++;
+                                }
+                            }
+                            
+                            arsort($answerGroups);
+                            
+                            foreach ($answerGroups as $answerText => $count) {
+                                $labels[] = $answerText;
+                                $values[] = $count;
+                                $answerCounts[$answerText] = [
+                                    'option_text' => $answerText,
+                                    'count' => $count,
+                                    'is_other' => false
+                                ];
+                            }
+                        }
+                        
+                        $totalResponses = array_sum($values);
+                        
+                        // ✅ TAMBAHAN: Include category info untuk grouping di view
+                        $allQuestionsData[] = [
+                            'question' => $question,
+                            'category' => $category, // ✅ TAMBAHAN: Info kategori
+                            'labels' => $labels,
+                            'values' => $values,
+                            'total_responses' => $totalResponses,
+                            'answer_counts' => $answerCounts,
+                            'other_answers' => $otherAnswers,
+                            'question_type' => $question->type,
+                            'has_options' => $question->options && $question->options->count() > 0
+                        ];
+                        
+                    } catch (\Exception $e) {
+                        \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
+                        
+                        $allQuestionsData[] = [
+                            'question' => $question,
+                            'category' => $category,
+                            'labels' => [],
+                            'values' => [],
+                            'total_responses' => 0,
+                            'error' => 'Error loading data: ' . $e->getMessage(),
+                            'answer_counts' => [],
+                            'other_answers' => [],
+                            'question_type' => $question->type ?? 'unknown'
+                        ];
+                    }
+                }
+                
+            } catch (\Exception $e) {
+                \Log::error('Error getting questions for category ' . $category->id_category . ': ' . $e->getMessage());
+            }
+        }
+        
+        return $allQuestionsData;
+    }
+    
+    /**
+     * ✅ TAMBAHAN: Method untuk mendapatkan statistik semua pertanyaan dalam satu kategori
      */
     private function getAllQuestionsStatistics($categoryId, $userType)
     {
-        $questions = Tb_Questions::where('id_category', $categoryId)
-            ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
-            ->where('status', 'visible')
-            ->with('options')
-            ->orderBy('order')
-            ->get();
-
-        $allQuestionsData = [];
-
-        \Log::info('Getting statistics for category: ' . $categoryId . ', user type: ' . $userType);
-
-        foreach ($questions as $question) {
-            try {
-                // ✅ PERBAIKAN: Query manual dengan nama tabel yang benar
-                $answersBaseQuery = "
-                    SELECT DISTINCT 
-                        tai.*, 
-                        tua.id_user, 
-                        tua.nim,
-                        tua.created_at as answer_created_at
-                    FROM tb_user_answer_item tai
-                    INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
-                    INNER JOIN tb_user u ON tua.id_user = u.id_user
-                    WHERE tai.id_question = ? 
-                    AND tua.status = 'completed'
-                ";
-                
-                $queryParams = [$question->id_question];
-                
-                // Filter by user type dengan logika yang benar
-                if ($userType === 'alumni') {
-                    // Alumni: user adalah alumni DAN nim kosong di tb_user_answers
-                    $answersBaseQuery .= " AND EXISTS (
-                        SELECT 1 FROM tb_alumni 
-                        WHERE tb_alumni.id_user = u.id_user
-                    ) AND tua.nim IS NULL";
-                } elseif ($userType === 'company') {
-                    // Company: user adalah company DAN nim tidak kosong di tb_user_answers
-                    $answersBaseQuery .= " AND EXISTS (
-                        SELECT 1 FROM tb_company 
-                        WHERE tb_company.id_user = u.id_user
-                    ) AND tua.nim IS NOT NULL";
-                }
-                
-                $answersBaseQuery .= " ORDER BY tua.created_at DESC";
-                
-                $answers = DB::select($answersBaseQuery, $queryParams);
-                
-                \Log::info('Question ' . $question->id_question . ' (' . $question->type . ') filtered answers count: ' . count($answers));
-                
-                if (count($answers) > 0) {
-                    \Log::info('Sample answer data: ' . json_encode($answers[0]));
-                }
-
-                // Count answers by option
-                $answerCounts = [];
-                $labels = [];
-                $values = [];
-                $otherAnswers = [];
-                
-                // Check if question has options
-                if ($question->options && $question->options->count() > 0) {
-                    // Initialize all options with 0 count
-                    foreach ($question->options as $option) {
-                        $answerCounts[$option->id_questions_options] = [
-                            'option_text' => $option->option,
-                            'count' => 0,
-                            'is_other' => $option->is_other_option ?? false
-                        ];
+        try {
+            $questions = Tb_Questions::where('id_category', $categoryId)
+                ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
+                ->where('status', 'visible')
+                ->with('options')
+                ->orderBy('order')
+                ->get();
+            
+            $allQuestionsData = [];
+            
+            \Log::info('Getting statistics for all questions in category: ' . $categoryId . ', user type: ' . $userType);
+            
+            foreach ($questions as $question) {
+                try {
+                    $answersBaseQuery = "
+                        SELECT DISTINCT 
+                            tai.*, 
+                            tua.id_user, 
+                            tua.nim,
+                            tua.created_at as answer_created_at
+                        FROM tb_user_answer_item tai
+                        INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
+                        INNER JOIN tb_user u ON tua.id_user = u.id_user
+                        WHERE tai.id_question = ? 
+                        AND tua.status = 'completed'
+                    ";
+                    
+                    $queryParams = [$question->id_question];
+                    
+                    if ($userType === 'alumni') {
+                        $answersBaseQuery .= " AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user
+                        ) AND tua.nim IS NULL";
+                    } elseif ($userType === 'company') {
+                        $answersBaseQuery .= " AND EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        ) AND tua.nim IS NOT NULL";
                     }
                     
-                    // Count actual answers
-                    foreach ($answers as $answer) {
-                        if ($question->type === 'multiple') {
-                            if ($answer->id_questions_options) {
+                    $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+                    
+                    $answers = DB::select($answersBaseQuery, $queryParams);
+                    
+                    // Count answers by option dengan logic yang sama
+                    $answerCounts = [];
+                    $labels = [];
+                    $values = [];
+                    $otherAnswers = [];
+                    
+                    if ($question->options && $question->options->count() > 0) {
+                        // Initialize all options with 0 count
+                        foreach ($question->options as $option) {
+                            $answerCounts[$option->id_questions_options] = [
+                                'option_text' => $option->option,
+                                'count' => 0,
+                                'is_other' => $option->is_other_option ?? false
+                            ];
+                        }
+                        
+                        // ✅ LOGIC SAMA seperti getAllQuestionsFromAllCategories
+                        foreach ($answers as $answer) {
+                            $counted = false;
+                            
+                            // Prioritas 1: id_questions_options
+                            if (!empty($answer->id_questions_options)) {
                                 if (isset($answerCounts[$answer->id_questions_options])) {
                                     $answerCounts[$answer->id_questions_options]['count']++;
+                                    $counted = true;
                                     
                                     if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
                                         if (!isset($otherAnswers[$answer->id_questions_options])) {
@@ -1134,122 +1212,305 @@ class AdminController extends Controller
                                         $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
                                     }
                                 }
-                            } else {
-                                // Find option by text
+                            }
+                            
+                            // Prioritas 2: answer text
+                            if (!$counted && !empty($answer->answer)) {
                                 $option = $question->options->where('option', $answer->answer)->first();
                                 if ($option && isset($answerCounts[$option->id_questions_options])) {
                                     $answerCounts[$option->id_questions_options]['count']++;
+                                    $counted = true;
                                     
                                     if ($option->is_other_option && !empty($answer->other_answer)) {
-                                        if (!isset($otherAnswers[$option->id_questions_options])) {
-                                            $otherAnswers[$option->id_questions_options] = [];
+                                        if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                            $otherAnswers[$answer->id_questions_options] = [];
                                         }
-                                        $otherAnswers[$option->id_questions_options][] = $answer->other_answer;
+                                        $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
                                     }
                                 }
                             }
-                        } else {
-                            // For single choice (option, rating, scale)
-                            if ($answer->id_questions_options && isset($answerCounts[$answer->id_questions_options])) {
-                                $answerCounts[$answer->id_questions_options]['count']++;
-                                
-                                if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
-                                    if (!isset($otherAnswers[$answer->id_questions_options])) {
-                                        $otherAnswers[$answer->id_questions_options] = [];
-                                    }
-                                    $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
-                                }
-                            } else {
-                                // Handle jawaban tanpa id_questions_options (untuk scale/rating numeric)
-                                if (!empty($answer->answer)) {
-                                    // Cari option berdasarkan value (untuk scale/rating dengan nilai numeric)
-                                    $matchingOption = $question->options->where('option', $answer->answer)->first();
-                                    if ($matchingOption && isset($answerCounts[$matchingOption->id_questions_options])) {
-                                        $answerCounts[$matchingOption->id_questions_options]['count']++;
-                                    } else {
-                                        // Buat virtual option jika tidak ditemukan
-                                        $answerValue = $answer->answer;
-                                        if (!isset($answerCounts[$answerValue])) {
-                                            $answerCounts[$answerValue] = [
-                                                'option_text' => $answerValue,
-                                                'count' => 0,
-                                                'is_other' => false
-                                            ];
+                            
+                            // Prioritas 3: numeric ID dalam answer
+                            if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
+                                $optionId = (int)$answer->answer;
+                                if (isset($answerCounts[$optionId])) {
+                                    $answerCounts[$optionId]['count']++;
+                                    $counted = true;
+                                    
+                                    if ($answerCounts[$optionId]['is_other'] && !empty($answer->other_answer)) {
+                                        if (!isset($otherAnswers[$optionId])) {
+                                            $otherAnswers[$optionId] = [];
                                         }
-                                        $answerCounts[$answerValue]['count']++;
+                                        $otherAnswers[$optionId][] = $answer->other_answer;
                                     }
                                 }
+                            }
+                            
+                            // Prioritas 4: virtual option
+                            if (!$counted && !empty($answer->answer)) {
+                                $answerValue = $answer->answer;
+                                if (!isset($answerCounts[$answerValue])) {
+                                    $answerCounts[$answerValue] = [
+                                        'option_text' => $answerValue,
+                                        'count' => 0,
+                                        'is_other' => false
+                                    ];
+                                }
+                                $answerCounts[$answerValue]['count']++;
+                            }
+                        }
+                        
+                        // Prepare chart data for this question
+                        foreach ($answerCounts as $data) {
+                            $labels[] = $data['option_text'];
+                            $values[] = $data['count'];
+                        }
+                        
+                    } else {
+                        // Question tanpa options - group by answer values
+                        $answerGroups = [];
+                        foreach ($answers as $answer) {
+                            $answerValue = trim($answer->answer);
+                            if (!empty($answerValue)) {
+                                if (!isset($answerGroups[$answerValue])) {
+                                    $answerGroups[$answerValue] = 0;
+                                }
+                                $answerGroups[$answerValue]++;
+                            }
+                        }
+                        
+                        arsort($answerGroups);
+                        
+                        foreach ($answerGroups as $answerText => $count) {
+                            $labels[] = $answerText;
+                            $values[] = $count;
+                            $answerCounts[$answerText] = [
+                                'option_text' => $answerText,
+                                'count' => $count,
+                                'is_other' => false
+                            ];
+                        }
+                    }
+                    
+                    $totalResponses = array_sum($values);
+                    
+                    $allQuestionsData[] = [
+                        'question' => $question,
+                        'labels' => $labels,
+                        'values' => $values,
+                        'total_responses' => $totalResponses,
+                        'answer_counts' => $answerCounts,
+                        'other_answers' => $otherAnswers,
+                        'question_type' => $question->type,
+                        'has_options' => $question->options && $question->options->count() > 0
+                    ];
+                    
+                } catch (\Exception $e) {
+                    \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
+                    
+                    $allQuestionsData[] = [
+                        'question' => $question,
+                        'labels' => [],
+                        'values' => [],
+                        'total_responses' => 0,
+                        'error' => 'Error loading data: ' . $e->getMessage(),
+                        'answer_counts' => [],
+                        'other_answers' => [],
+                        'question_type' => $question->type ?? 'unknown'
+                    ];
+                }
+            }
+            
+            return $allQuestionsData;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting all questions statistics for category ' . $categoryId . ': ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Method untuk handle single question statistics (yang hilang di getQuestionnaireStatistics)
+     */
+    private function getSingleQuestionStatistics($questionId, $selectedUserType)
+    {
+        try {
+            $question = Tb_Questions::with('options')->find($questionId);
+            
+            if (!$question || !in_array($question->type, ['option', 'multiple', 'scale', 'rating'])) {
+                return [
+                    'type' => 'single',
+                    'labels' => [],
+                    'values' => [],
+                    'question' => $question,
+                    'total_responses' => 0,
+                    'error' => 'Pertanyaan tidak valid atau tipe tidak didukung'
+                ];
+            }
+            
+            $answersBaseQuery = "
+                SELECT DISTINCT 
+                    tai.*, 
+                    tua.id_user, 
+                    tua.nim,
+                    tua.created_at as answer_created_at
+                FROM tb_user_answer_item tai
+                INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
+                INNER JOIN tb_user u ON tua.id_user = u.id_user
+                WHERE tai.id_question = ? 
+                AND tua.status = 'completed'
+            ";
+            
+            $queryParams = [$questionId];
+            
+            // Filter by user type
+            if ($selectedUserType === 'alumni') {
+                $answersBaseQuery .= " AND EXISTS (
+                    SELECT 1 FROM tb_alumni 
+                    WHERE tb_alumni.id_user = u.id_user
+                ) AND tua.nim IS NULL";
+            } elseif ($selectedUserType === 'company') {
+                $answersBaseQuery .= " AND EXISTS (
+                    SELECT 1 FROM tb_company 
+                    WHERE tb_company.id_user = u.id_user
+                ) AND tua.nim IS NOT NULL";
+            }
+            
+            $answers = DB::select($answersBaseQuery, $queryParams);
+            
+            // Count answers by option dengan logic yang sama
+            $answerCounts = [];
+            $labels = [];
+            $values = [];
+            $otherAnswers = [];
+            
+            if ($question->options && $question->options->count() > 0) {
+                // Initialize all options with 0 count
+                foreach ($question->options as $option) {
+                    $answerCounts[$option->id_questions_options] = [
+                        'option_text' => $option->option,
+                        'count' => 0,
+                        'is_other' => $option->is_other_option ?? false
+                    ];
+                }
+                
+                // Logic counting sama seperti method lain
+                foreach ($answers as $answer) {
+                    $counted = false;
+                    
+                    // Prioritas 1: id_questions_options
+                    if (!empty($answer->id_questions_options)) {
+                        if (isset($answerCounts[$answer->id_questions_options])) {
+                            $answerCounts[$answer->id_questions_options]['count']++;
+                            $counted = true;
+                            
+                            if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                    $otherAnswers[$answer->id_questions_options] = [];
+                                }
+                                $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
                             }
                         }
                     }
                     
-                    // Prepare chart data for this question
-                    foreach ($answerCounts as $data) {
-                        $labels[] = $data['option_text'];
-                        $values[] = $data['count'];
-                    }
-                    
-                } else {
-                    // Question tanpa options - group by answer values
-                    \Log::info('Question ' . $question->id_question . ' has no options, grouping by answer values');
-                    
-                    $answerGroups = [];
-                    foreach ($answers as $answer) {
-                        $answerValue = trim($answer->answer);
-                        if (!empty($answerValue)) {
-                            if (!isset($answerGroups[$answerValue])) {
-                                $answerGroups[$answerValue] = 0;
+                    // Prioritas 2: answer text
+                    if (!$counted && !empty($answer->answer)) {
+                        $option = $question->options->where('option', $answer->answer)->first();
+                        if ($option && isset($answerCounts[$option->id_questions_options])) {
+                            $answerCounts[$option->id_questions_options]['count']++;
+                            $counted = true;
+                            
+                            if ($option->is_other_option && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                    $otherAnswers[$answer->id_questions_options] = [];
+                                }
+                                $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
                             }
-                            $answerGroups[$answerValue]++;
                         }
                     }
                     
-                    // Sort by count descending
-                    arsort($answerGroups);
+                    // Prioritas 3: numeric ID dalam answer
+                    if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
+                        $optionId = (int)$answer->answer;
+                        if (isset($answerCounts[$optionId])) {
+                            $answerCounts[$optionId]['count']++;
+                            $counted = true;
+                            
+                            if ($answerCounts[$optionId]['is_other'] && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$optionId])) {
+                                    $otherAnswers[$optionId] = [];
+                                }
+                                $otherAnswers[$optionId][] = $answer->other_answer;
+                            }
+                        }
+                    }
                     
-                    foreach ($answerGroups as $answerText => $count) {
-                        $labels[] = $answerText;
-                        $values[] = $count;
-                        $answerCounts[$answerText] = [
-                            'option_text' => $answerText,
-                            'count' => $count,
-                            'is_other' => false
-                        ];
+                    // Prioritas 4: virtual option
+                    if (!$counted && !empty($answer->answer)) {
+                        $answerValue = $answer->answer;
+                        if (!isset($answerCounts[$answerValue])) {
+                            $answerCounts[$answerValue] = [
+                                'option_text' => $answerValue,
+                                'count' => 0,
+                                'is_other' => false
+                            ];
+                        }
+                        $answerCounts[$answerValue]['count']++;
                     }
                 }
                 
-                $totalResponses = array_sum($values);
-                \Log::info('Question ' . $question->id_question . ' (' . $question->type . ') total responses after counting: ' . $totalResponses);
+                // Prepare chart data
+                foreach ($answerCounts as $data) {
+                    $labels[] = $data['option_text'];
+                    $values[] = $data['count'];
+                }
                 
-                $allQuestionsData[] = [
-                    'question' => $question,
-                    'labels' => $labels,
-                    'values' => $values,
-                    'total_responses' => $totalResponses,
-                    'answer_counts' => $answerCounts,
-                    'other_answers' => $otherAnswers,
-                    'question_type' => $question->type,
-                    'has_options' => $question->options && $question->options->count() > 0
-                ];
+            } else {
+                // Handle questions without options
+                $answerGroups = [];
+                foreach ($answers as $answer) {
+                    $answerValue = trim($answer->answer);
+                    if (!empty($answerValue)) {
+                        if (!isset($answerGroups[$answerValue])) {
+                            $answerGroups[$answerValue] = 0;
+                        }
+                        $answerGroups[$answerValue]++;
+                    }
+                }
                 
-            } catch (\Exception $e) {
-                \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
-                \Log::error('Stack trace: ' . $e->getTraceAsString());
-                
-                $allQuestionsData[] = [
-                    'question' => $question,
-                    'labels' => [],
-                    'values' => [],
-                    'total_responses' => 0,
-                    'error' => 'Error loading data: ' . $e->getMessage(),
-                    'answer_counts' => [],
-                    'other_answers' => [],
-                    'question_type' => $question->type ?? 'unknown'
-                ];
+                foreach ($answerGroups as $answerText => $count) {
+                    $labels[] = $answerText;
+                    $values[] = $count;
+                    $answerCounts[$answerText] = [
+                        'option_text' => $answerText,
+                        'count' => $count,
+                        'is_other' => false
+                    ];
+                }
             }
+            
+            return [
+                'type' => 'single',
+                'labels' => $labels,
+                'values' => $values,
+                'question' => $question,
+                'total_responses' => array_sum($values),
+                'answer_counts' => $answerCounts,
+                'other_answers' => $otherAnswers
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error('Single question statistics query error: ' . $e->getMessage());
+            
+            return [
+                'type' => 'single',
+                'labels' => [],
+                'values' => [],
+                'question' => $question ?? null,
+                'total_responses' => 0,
+                'error' => 'Gagal memuat data statistik: ' . $e->getMessage()
+            ];
         }
-
-        return $allQuestionsData;
     }
 }
 

@@ -52,6 +52,10 @@
                         onchange="handleCategoryChange()"
                         {{ !$selectedPeriode ? 'disabled' : '' }}>
                     <option value="">Pilih Kategori</option>
+                    <!-- ✅ TAMBAHAN: Option "Semua Kategori" -->
+                    <option value="all" {{ $selectedCategory === 'all' ? 'selected' : '' }}>
+                        📊 Semua Kategori
+                    </option>
                     @foreach($availableCategories as $category)
                         <option value="{{ $category->id_category }}" 
                                 {{ $selectedCategory == $category->id_category ? 'selected' : '' }}>
@@ -69,7 +73,6 @@
                         onchange="this.form.submit()"
                         {{ !$selectedCategory ? 'disabled' : '' }}>
                     <option value="">Pilih Pertanyaan</option>
-                    <!-- ✅ MODIFIKASI: Option "Semua Pertanyaan" sebagai default -->
                     @if($availableQuestions->count() > 0)
                         <option value="all" {{ $selectedQuestion == 'all' || ($selectedCategory && !$selectedQuestion) ? 'selected' : '' }}>
                             📊 Semua Pertanyaan ({{ $availableQuestions->count() }})
@@ -85,8 +88,193 @@
     
     <!-- Chart Display -->
     @if(!empty($questionnaireChartData))
-        @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
-            <!-- ✅ TAMBAHAN: Display untuk multiple questions -->
+        @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
+            <!-- ✅ Display untuk semua pertanyaan dari semua kategori -->
+            <div class="bg-white rounded-xl shadow p-6">
+                <div class="mb-6">
+                    <h3 class="font-semibold text-purple-800 mb-2">
+                        📊 Semua Pertanyaan dari Semua Kategori - {{ $questionnaireChartData['period_name'] }}
+                    </h3>
+                    <div class="flex items-center gap-4 text-sm text-gray-600">
+                        <span>
+                            <i class="fas fa-layer-group mr-1"></i>
+                            {{ $questionnaireChartData['total_categories'] }} kategori
+                        </span>
+                        <span>
+                            <i class="fas fa-list mr-1"></i>
+                            Total: {{ $questionnaireChartData['total_questions'] }} pertanyaan
+                        </span>
+                        <span>
+                            <i class="fas fa-filter mr-1"></i>
+                            {{ ucfirst($selectedUserType === 'all' ? 'Semua Pengguna' : $selectedUserType) }}
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- ✅ GROUPING: Group questions by category -->
+                @php
+                    $groupedQuestions = collect($questionnaireChartData['questions_data'])->groupBy('category.id_category');
+                @endphp
+                
+                @foreach($groupedQuestions as $categoryId => $categoryQuestions)
+                    @php
+                        $categoryInfo = $categoryQuestions->first()['category'];
+                        $categoryTotalResponses = $categoryQuestions->sum('total_responses');
+                        $categoryAnsweredQuestions = $categoryQuestions->where('total_responses', '>', 0)->count();
+                    @endphp
+                    
+                    <div class="mb-8 border border-purple-200 rounded-lg p-6">
+                        <!-- Category Header -->
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-purple-100">
+                            <div>
+                                <h4 class="font-semibold text-purple-800 text-lg">
+                                    📋 {{ $categoryInfo->category_name }}
+                                </h4>
+                                <div class="flex items-center gap-3 text-xs text-gray-600 mt-1">
+                                    <span class="bg-purple-100 px-2 py-1 rounded">
+                                        {{ $categoryQuestions->count() }} pertanyaan
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-users mr-1"></i>
+                                        {{ $categoryTotalResponses }} total responden
+                                    </span>
+                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded">
+                                        {{ $categoryQuestions->count() > 0 ? round(($categoryAnsweredQuestions / $categoryQuestions->count()) * 100, 1) : 0 }}% terjawab
+                                    </span>
+                                </div>
+                            </div>
+                            <button onclick="viewCategoryDetail('{{ $categoryInfo->id_category }}')" 
+                                    class="text-xs bg-purple-100 hover:bg-purple-200 text-purple-800 px-3 py-2 rounded-lg transition-colors">
+                                <i class="fas fa-eye mr-1"></i>
+                                Lihat Detail Kategori
+                            </button>
+                        </div>
+                        
+                        <!-- Questions Grid dalam Kategori -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                            @foreach($categoryQuestions as $index => $qData)
+                                @php
+                                    $globalIndex = $groupedQuestions->flatten(1)->search($qData);
+                                @endphp
+                                <div class="border border-gray-200 rounded-lg p-4 {{ $qData['total_responses'] > 0 ? 'bg-purple-25' : 'bg-gray-50' }}">
+                                    <div class="mb-3">
+                                        <h5 class="font-medium text-gray-800 mb-2 text-sm">
+                                            {{ $loop->iteration }}. {{ Str::limit($qData['question']->question, 60) }}
+                                        </h5>
+                                        <div class="flex items-center gap-2 text-xs text-gray-600">
+                                            <span class="bg-purple-100 px-2 py-1 rounded">
+                                                {{ ucfirst($qData['question']->type) }}
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-users mr-1"></i>
+                                                {{ $qData['total_responses'] }}
+                                            </span>
+                                            @if(isset($qData['other_answers']) && array_sum(array_map('count', $qData['other_answers'])) > 0)
+                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                                    <i class="fas fa-edit mr-1"></i>
+                                                    {{ array_sum(array_map('count', $qData['other_answers'])) }} lainnya
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    
+                                    @if($qData['total_responses'] > 0)
+                                        <!-- Mini Chart -->
+                                        <div class="mb-3">
+                                            @if($qData['question']->type === 'scale' || $qData['question']->type === 'rating')
+                                                <canvas id="miniLineChart{{ $globalIndex }}" width="250" height="150"></canvas>
+                                            @else
+                                                <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="150"></canvas>
+                                            @endif
+                                        </div>
+                                        
+                                        <!-- Top Answer -->
+                                        @php
+                                            $topAnswer = collect($qData['answer_counts'])->sortByDesc('count')->first();
+                                        @endphp
+                                        @if($topAnswer && $topAnswer['count'] > 0)
+                                            <div class="text-xs text-gray-600 mb-2">
+                                                <strong>Terpopuler:</strong> 
+                                                <span class="text-purple-800">{{ Str::limit($topAnswer['option_text'], 30) }}</span> 
+                                                <span class="bg-purple-100 text-purple-800 px-1 rounded">({{ $topAnswer['count'] }})</span>
+                                            </div>
+                                        @endif
+                                        
+                                        <!-- Other Answers Summary -->
+                                        @if(isset($qData['other_answers']) && count($qData['other_answers']) > 0)
+                                            <div class="mt-2">
+                                                <details class="text-xs">
+                                                    <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
+                                                        Jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
+                                                    </summary>
+                                                    <div class="mt-1 max-h-20 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
+                                                        @foreach($qData['other_answers'] as $optionId => $answers)
+                                                            @if(count($answers) > 0)
+                                                                @foreach($answers as $answer)
+                                                                    <div class="text-blue-700 text-xs">• {{ Str::limit($answer, 40) }}</div>
+                                                                @endforeach
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        @endif
+                                    @else
+                                        <!-- No Responses State -->
+                                        <div class="text-center py-4">
+                                            <div class="text-gray-400 text-lg mb-1">
+                                                <i class="fas fa-chart-line"></i>
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                Belum ada responden
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endforeach
+                
+                <!-- Overall Summary -->
+                <div class="mt-8 bg-purple-50 rounded-lg p-6">
+                    <h4 class="font-semibold text-purple-800 mb-4">
+                        📈 Ringkasan Keseluruhan
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-900">
+                                {{ $questionnaireChartData['total_categories'] }}
+                            </div>
+                            <div class="text-xs text-purple-600">Total Kategori</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-900">
+                                {{ $questionnaireChartData['total_questions'] }}
+                            </div>
+                            <div class="text-xs text-purple-600">Total Pertanyaan</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-900">
+                                {{ collect($questionnaireChartData['questions_data'])->sum('total_responses') }}
+                            </div>
+                            <div class="text-xs text-purple-600">Total Responden</div>
+                        </div>
+                        <div class="text-center">
+                            @php
+                                $answeredQuestions = collect($questionnaireChartData['questions_data'])->where('total_responses', '>', 0)->count();
+                                $completionRate = $questionnaireChartData['total_questions'] > 0 ? round(($answeredQuestions / $questionnaireChartData['total_questions']) * 100, 1) : 0;
+                            @endphp
+                            <div class="text-2xl font-bold text-purple-900">
+                                {{ $completionRate }}%
+                            </div>
+                            <div class="text-xs text-purple-600">Completion Rate</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
+            <!-- ✅ Display untuk multiple questions dalam satu kategori -->
             <div class="bg-white rounded-xl shadow p-6">
                 <div class="mb-6">
                     <h3 class="font-semibold text-purple-800 mb-2">
@@ -120,7 +308,6 @@
                                         <i class="fas fa-users mr-1"></i>
                                         {{ $qData['total_responses'] }} responden
                                     </span>
-                                    <!-- ✅ TAMBAHAN: Show other answers count -->
                                     @if(isset($qData['other_answers']) && count($qData['other_answers']) > 0)
                                         <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded">
                                             <i class="fas fa-edit mr-1"></i>
@@ -130,116 +317,66 @@
                                 </div>
                             </div>
                             
-                            <!-- Mini Chart -->
-                            <div class="mb-4">
-                                @if($qData['question']->type === 'scale' || $qData['question']->type === 'rating')
-                                    <canvas id="miniLineChart{{ $index }}" width="300" height="200"></canvas>
-                                @else
-                                    <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
-                                @endif
-                            </div>
-                            
-                            <!-- Quick Stats -->
-                            <div class="space-y-1">
-                                @php
-                                    $topAnswer = collect($qData['answer_counts'])->sortByDesc('count')->first();
-                                @endphp
-                                @if($topAnswer && $topAnswer['count'] > 0)
-                                    <div class="text-xs text-gray-600">
-                                        <strong>Terpopuler:</strong> {{ $topAnswer['option_text'] }} ({{ $topAnswer['count'] }})
-                                    </div>
-                                @endif
+                            @if($qData['total_responses'] > 0)
+                                <!-- Mini Chart -->
+                                <div class="mb-4">
+                                    @if($qData['question']->type === 'scale' || $qData['question']->type === 'rating')
+                                        <canvas id="miniLineChart{{ $index }}" width="300" height="200"></canvas>
+                                    @else
+                                        <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
+                                    @endif
+                                </div>
                                 
-                                <!-- ✅ TAMBAHAN: Show other answers for this question -->
-                                @if(isset($qData['other_answers']) && count($qData['other_answers']) > 0)
-                                    <div class="mt-2">
-                                        <details class="text-xs">
-                                            <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
-                                                Lihat jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
-                                            </summary>
-                                            <div class="mt-2 max-h-24 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
-                                                @foreach($qData['other_answers'] as $optionId => $answers)
-                                                    @if(count($answers) > 0)
-                                                        @php
-                                                            $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
-                                                        @endphp
-                                                        <div class="text-blue-800 font-medium">{{ $option->option ?? 'Unknown' }}:</div>
-                                                        @foreach($answers as $answer)
-                                                            <div class="ml-2 text-blue-700">• {{ $answer }}</div>
-                                                        @endforeach
-                                                    @endif
-                                                @endforeach
-                                            </div>
-                                        </details>
+                                <!-- Quick Stats -->
+                                <div class="space-y-1">
+                                    @php
+                                        $topAnswer = collect($qData['answer_counts'])->sortByDesc('count')->first();
+                                    @endphp
+                                    @if($topAnswer && $topAnswer['count'] > 0)
+                                        <div class="text-xs text-gray-600">
+                                            <strong>Terpopuler:</strong> {{ $topAnswer['option_text'] }} ({{ $topAnswer['count'] }})
+                                        </div>
+                                    @endif
+                                    
+                                    @if(isset($qData['other_answers']) && count($qData['other_answers']) > 0)
+                                        <div class="mt-2">
+                                            <details class="text-xs">
+                                                <summary class="text-blue-600 hover:text-blue-800 cursor-pointer font-medium">
+                                                    Lihat jawaban lainnya ({{ array_sum(array_map('count', $qData['other_answers'])) }})
+                                                </summary>
+                                                <div class="mt-2 max-h-24 overflow-y-auto bg-blue-50 rounded p-2 space-y-1">
+                                                    @foreach($qData['other_answers'] as $optionId => $answers)
+                                                        @if(count($answers) > 0)
+                                                            @php
+                                                                $option = $qData['question']->options->where('id_questions_options', $optionId)->first();
+                                                            @endphp
+                                                            <div class="text-blue-800 font-medium">{{ $option->option ?? 'Unknown' }}:</div>
+                                                            @foreach($answers as $answer)
+                                                                <div class="ml-2 text-blue-700">• {{ $answer }}</div>
+                                                            @endforeach
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                            </details>
+                                        </div>
+                                    @endif
+                                </div>
+                            @else
+                                <div class="text-center py-4">
+                                    <div class="text-gray-400 text-lg mb-1">
+                                        <i class="fas fa-chart-line"></i>
                                     </div>
-                                @endif
-                            </div>
+                                    <div class="text-xs text-gray-500">
+                                        Belum ada responden
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
-                
-                <!-- Summary Table -->
-                <div class="mt-8">
-                    <h4 class="font-semibold text-purple-800 mb-4">📋 Ringkasan Data</h4>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border border-gray-200 rounded-lg text-sm">
-                            <thead class="bg-purple-50">
-                                <tr>
-                                    <th class="px-4 py-2 text-left text-purple-900">No.</th>
-                                    <th class="px-4 py-2 text-left text-purple-900">Pertanyaan</th>
-                                    <th class="px-4 py-2 text-center text-purple-900">Tipe</th>
-                                    <th class="px-4 py-2 text-center text-purple-900">Responden</th>
-                                    <th class="px-4 py-2 text-center text-purple-900">Jawaban Terpopuler</th>
-                                    <!-- ✅ TAMBAHAN: Kolom other answers -->
-                                    <th class="px-4 py-2 text-center text-purple-900">Jawaban Lainnya</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200">
-                                @foreach($questionnaireChartData['questions_data'] as $index => $qData)
-                                    @php
-                                        $topAnswer = collect($qData['answer_counts'])->sortByDesc('count')->first();
-                                        $totalOtherAnswers = isset($qData['other_answers']) 
-                                            ? array_sum(array_map('count', $qData['other_answers'])) 
-                                            : 0;
-                                    @endphp
-                                    <tr class="hover:bg-purple-25">
-                                        <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
-                                        <td class="px-4 py-2">
-                                            <div class="font-medium">{{ Str::limit($qData['question']->question, 60) }}</div>
-                                        </td>
-                                        <td class="px-4 py-2 text-center">
-                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">
-                                                {{ ucfirst($qData['question']->type) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-2 text-center font-medium">{{ $qData['total_responses'] }}</td>
-                                        <td class="px-4 py-2 text-center">
-                                            @if($topAnswer && $topAnswer['count'] > 0)
-                                                <div class="text-purple-900 font-medium">{{ $topAnswer['option_text'] }}</div>
-                                                <div class="text-xs text-gray-600">({{ $topAnswer['count'] }} pilihan)</div>
-                                            @else
-                                                <span class="text-gray-400">Tidak ada jawaban</span>
-                                            @endif
-                                        </td>
-                                        <!-- ✅ TAMBAHAN: Kolom other answers -->
-                                        <td class="px-4 py-2 text-center">
-                                            @if($totalOtherAnswers > 0)
-                                                <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                                                    {{ $totalOtherAnswers }} jawaban
-                                                </span>
-                                            @else
-                                                <span class="text-gray-400">-</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
         @elseif(isset($questionnaireChartData['question']))
-            <!-- ✅ EXISTING: Display untuk single question -->
+            <!-- ✅ Display untuk single question -->
             @if(isset($questionnaireChartData['error']))
                 <div class="bg-white rounded-xl shadow p-6 text-center">
                     <div class="text-red-400 mb-4">
@@ -272,10 +409,8 @@
                     
                     <div class="flex justify-center">
                         @if($questionnaireChartData['question']->type === 'scale' || $questionnaireChartData['question']->type === 'rating')
-                            <!-- Line Chart for Scale/Rating -->
                             <canvas id="questionnaireLineChart" height="400" width="600" style="max-width:800px;max-height:400px;"></canvas>
                         @else
-                            <!-- Bar Chart for Option/Multiple -->
                             <canvas id="questionnaireBarChart" height="400" width="600" style="max-width:800px;max-height:400px;"></canvas>
                         @endif
                     </div>
@@ -290,7 +425,6 @@
                                         <th class="px-4 py-2 text-left text-sm font-medium text-purple-900">Pilihan</th>
                                         <th class="px-4 py-2 text-center text-sm font-medium text-purple-900">Jumlah</th>
                                         <th class="px-4 py-2 text-center text-sm font-medium text-purple-900">Persentase</th>
-                                        <!-- ✅ TAMBAHAN: Kolom untuk other answers -->
                                         <th class="px-4 py-2 text-center text-sm font-medium text-purple-900">Jawaban Lainnya</th>
                                     </tr>
                                 </thead>
@@ -318,7 +452,6 @@
                                                 <td class="px-4 py-2 text-sm text-center {{ $count > 0 ? 'text-purple-900' : 'text-gray-500' }}">
                                                     {{ $percentage }}%
                                                 </td>
-                                                <!-- ✅ TAMBAHAN: Kolom other answers -->
                                                 <td class="px-4 py-2 text-sm">
                                                     @if($hasOtherAnswers)
                                                         <details class="cursor-pointer">
@@ -345,7 +478,6 @@
                                             </tr>
                                         @endforeach
                                     @else
-                                        <!-- Fallback untuk format lama -->
                                         @foreach($questionnaireChartData['labels'] as $index => $label)
                                             @php
                                                 $count = $questionnaireChartData['values'][$index];
@@ -394,9 +526,7 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // ✅ TAMBAHAN: Auto-submit form saat kategori berubah untuk load default "all"
     @if($selectedCategory && !request('questionnaire_question'))
-        // Auto submit form untuk load default "all" questions
         setTimeout(() => {
             const questionSelect = document.getElementById('questionnaire_question');
             if (questionSelect && questionSelect.value === 'all') {
@@ -406,11 +536,82 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 
     @if(!empty($questionnaireChartData))
-        @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
-            // Handle multiple questions charts
+        @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
+            const allQuestionsData = @json($questionnaireChartData['questions_data']);
+            
+            const colors = [
+                '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444',
+                '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
+                '#ef4444', '#6366f1', '#8b5cf6', '#06b6d4', '#10b981'
+            ];
+            
+            allQuestionsData.forEach((qData, index) => {
+                if (qData.total_responses > 0) {
+                    const questionType = qData.question.type;
+                    const chartLabels = qData.labels;
+                    const chartValues = qData.values;
+                    
+                    if (questionType === 'scale' || questionType === 'rating') {
+                        const lineCtx = document.getElementById(`miniLineChart${index}`);
+                        if (lineCtx) {
+                            new Chart(lineCtx.getContext('2d'), {
+                                type: 'line',
+                                data: {
+                                    labels: chartLabels,
+                                    datasets: [{
+                                        label: 'Responden',
+                                        data: chartValues,
+                                        borderColor: colors[index % colors.length],
+                                        backgroundColor: colors[index % colors.length] + '20',
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.4,
+                                        pointBackgroundColor: colors[index % colors.length],
+                                        pointRadius: 2
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                                    }
+                                }
+                            });
+                        }
+                    } else {
+                        const barCtx = document.getElementById(`miniBarChart${index}`);
+                        if (barCtx) {
+                            new Chart(barCtx.getContext('2d'), {
+                                type: 'bar',
+                                data: {
+                                    labels: chartLabels,
+                                    datasets: [{
+                                        label: 'Responden',
+                                        data: chartValues,
+                                        backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
+                                        borderColor: colors.slice(0, chartLabels.length),
+                                        borderWidth: 1
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: { beginAtZero: true, ticks: { precision: 0 } },
+                                        x: { ticks: { maxRotation: 45, minRotation: 0 } }
+                                    }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
             const questionsData = @json($questionnaireChartData['questions_data']);
             
-            // Generate colors for charts
             const colors = [
                 '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444',
                 '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
@@ -423,7 +624,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const chartValues = qData.values;
                 
                 if (questionType === 'scale' || questionType === 'rating') {
-                    // Line Chart for Scale/Rating
                     const lineCtx = document.getElementById(`miniLineChart${index}`);
                     if (lineCtx) {
                         new Chart(lineCtx.getContext('2d'), {
@@ -453,7 +653,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 } else {
-                    // Bar Chart for Option/Multiple
                     const barCtx = document.getElementById(`miniBarChart${index}`);
                     if (barCtx) {
                         new Chart(barCtx.getContext('2d'), {
@@ -482,12 +681,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         @elseif(isset($questionnaireChartData['question']))
-            // Handle single question chart (existing code)
             const questionType = '{{ $questionnaireChartData['question']->type }}';
             const chartLabels = @json($questionnaireChartData['labels']);
             const chartValues = @json($questionnaireChartData['values']);
             
-            // Generate colors for chart
             const colors = [
                 '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444',
                 '#6366f1', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b',
@@ -495,7 +692,6 @@ document.addEventListener('DOMContentLoaded', function () {
             ];
             
             if (questionType === 'scale' || questionType === 'rating') {
-                // Line Chart for Scale/Rating
                 const lineCtx = document.getElementById('questionnaireLineChart');
                 if (lineCtx) {
                     new Chart(lineCtx.getContext('2d'), {
@@ -547,7 +743,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
                 }
             } else {
-                // Bar Chart for Option/Multiple
                 const barCtx = document.getElementById('questionnaireBarChart');
                 if (barCtx) {
                     new Chart(barCtx.getContext('2d'), {
@@ -597,27 +792,19 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 });
 
-// ✅ MODIFIKASI: Filter change handlers dengan auto-select "all"
 function handlePeriodeChange() {
-    // Reset dependent filters
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
-    
-    // Submit form to reload categories
     document.getElementById('questionnaire-filter-form').submit();
 }
 
 function handleUserTypeChange() {
-    // Reset dependent filters
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
-    
-    // Submit form to reload categories
     document.getElementById('questionnaire-filter-form').submit();
 }
 
 function handleCategoryChange() {
-    // Reset question filter ke "all" sebagai default
     const questionSelect = document.getElementById('questionnaire_question');
     const questionOptions = questionSelect.querySelectorAll('option[value="all"]');
     
@@ -627,7 +814,17 @@ function handleCategoryChange() {
         questionSelect.value = '';
     }
     
-    // Submit form to reload questions
+    document.getElementById('questionnaire-filter-form').submit();
+}
+
+function viewQuestionDetail(questionId) {
+    document.getElementById('questionnaire_question').value = questionId;
+    document.getElementById('questionnaire-filter-form').submit();
+}
+
+function viewCategoryDetail(categoryId) {
+    document.getElementById('questionnaire_category').value = categoryId;
+    document.getElementById('questionnaire_question').value = 'all';
     document.getElementById('questionnaire-filter-form').submit();
 }
 </script>
