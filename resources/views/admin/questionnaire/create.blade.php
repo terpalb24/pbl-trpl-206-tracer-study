@@ -173,10 +173,29 @@
                                 </div>
                             </div>
                             
+                            <!-- Search Box for Years Ago -->
+                            <div class="mb-4">
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="search-years-ago" 
+                                           placeholder="Cari tahun atau periode..." 
+                                           class="w-full pl-10 pr-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <i class="fas fa-search text-green-400"></i>
+                                    </div>
+                                    <button type="button" 
+                                            id="clear-search-years-ago" 
+                                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-green-400 hover:text-green-600 hidden">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
                             @if($yearsAgoOptions->isNotEmpty())
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                                <div id="years-ago-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
                                     @foreach($yearsAgoOptions as $option)
-                                        <label class="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors">
+                                        <label class="years-ago-item flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-green-50 transition-colors" 
+                                               data-search-text="{{ $option['years_ago'] }} tahun lalu {{ $option['year'] }}">
                                             <div class="flex items-center">
                                                 <input type="checkbox" 
                                                        name="years_ago_list[]" 
@@ -193,6 +212,11 @@
                                             </span>
                                         </label>
                                     @endforeach
+                                </div>
+                                <!-- No Results Message for Years Ago -->
+                                <div id="no-results-years-ago" class="hidden text-center py-8">
+                                    <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
+                                    <p class="text-sm text-gray-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p>
                                 </div>
                             @else
                                 <div class="text-center py-8">
@@ -231,10 +255,29 @@
                                 </div>
                             </div>
                             
+                            <!-- Search Box for Specific Years -->
+                            <div class="mb-4">
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="search-specific-years" 
+                                           placeholder="Cari tahun kelulusan..." 
+                                           class="w-full pl-10 pr-4 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <i class="fas fa-search text-purple-400"></i>
+                                    </div>
+                                    <button type="button" 
+                                            id="clear-search-specific-years" 
+                                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-400 hover:text-purple-600 hidden">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
                             @if(!empty($graduationYears))
-                                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
+                                <div id="specific-years-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-60 overflow-y-auto">
                                     @foreach($graduationYears as $year)
-                                        <label class="flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-purple-50 transition-colors">
+                                        <label class="specific-year-item flex items-center justify-between p-3 bg-white rounded border cursor-pointer hover:bg-purple-50 transition-colors" 
+                                               data-search-text="{{ $year }}">
                                             <div class="flex items-center">
                                                 <input type="checkbox" 
                                                        name="target_graduation_years[]" 
@@ -248,6 +291,11 @@
                                             </span>
                                         </label>
                                     @endforeach
+                                </div>
+                                <!-- No Results Message for Specific Years -->
+                                <div id="no-results-specific-years" class="hidden text-center py-8">
+                                    <i class="fas fa-search text-gray-400 text-2xl mb-2"></i>
+                                    <p class="text-sm text-gray-500">Tidak ada hasil yang cocok dengan pencarian Anda.</p>
                                 </div>
                             @else
                                 <div class="text-center py-8">
@@ -309,6 +357,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle target type changes
     targetTypeRadios.forEach(radio => {
         radio.addEventListener('change', function() {
+            // Reset search boxes saat berganti target type
+            if (searchYearsAgo) {
+                searchYearsAgo.value = '';
+                clearSearchYearsAgo.classList.add('hidden');
+                document.querySelectorAll('.years-ago-item').forEach(item => {
+                    item.style.display = '';
+                });
+                if (yearsAgoContainer) yearsAgoContainer.style.display = '';
+                if (noResultsYearsAgo) noResultsYearsAgo.classList.add('hidden');
+            }
+
+            if (searchSpecificYears) {
+                searchSpecificYears.value = '';
+                clearSearchSpecificYears.classList.add('hidden');
+                document.querySelectorAll('.specific-year-item').forEach(item => {
+                    item.style.display = '';
+                });
+                if (specificYearsContainer) specificYearsContainer.style.display = '';
+                if (noResultsSpecificYears) noResultsSpecificYears.classList.add('hidden');
+            }
+
             // Hide all sections first
             yearsAgoSection.classList.add('hidden');
             specificYearsSection.classList.add('hidden');
@@ -355,23 +424,47 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Select/Deselect all buttons for years ago
     document.getElementById('select-all-years-ago')?.addEventListener('click', function() {
-        document.querySelectorAll('.years-ago-checkbox').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => {
+            // Hanya select yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.years-ago-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = true;
+            }
+        });
         updatePreview();
     });
 
     document.getElementById('deselect-all-years-ago')?.addEventListener('click', function() {
-        document.querySelectorAll('.years-ago-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => {
+            // Hanya deselect yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.years-ago-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = false;
+            }
+        });
         updatePreview();
     });
 
     // Select/Deselect all buttons for specific years
     document.getElementById('select-all-specific-years')?.addEventListener('click', function() {
-        document.querySelectorAll('.specific-year-checkbox').forEach(cb => cb.checked = true);
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => {
+            // Hanya select yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.specific-year-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = true;
+            }
+        });
         updatePreview();
     });
 
     document.getElementById('deselect-all-specific-years')?.addEventListener('click', function() {
-        document.querySelectorAll('.specific-year-checkbox').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => {
+            // Hanya deselect yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.specific-year-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = false;
+            }
+        });
         updatePreview();
     });
 
@@ -435,6 +528,161 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateBorderColors(initialTargetType);
     updatePreview();
+
+    // ✅ TAMBAHAN: Search functionality for Years Ago
+    const searchYearsAgo = document.getElementById('search-years-ago');
+    const clearSearchYearsAgo = document.getElementById('clear-search-years-ago');
+    const yearsAgoContainer = document.getElementById('years-ago-container');
+    const noResultsYearsAgo = document.getElementById('no-results-years-ago');
+
+    if (searchYearsAgo) {
+        searchYearsAgo.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.years-ago-item');
+            let visibleCount = 0;
+
+            // Show/hide clear button
+            if (searchTerm) {
+                clearSearchYearsAgo.classList.remove('hidden');
+            } else {
+                clearSearchYearsAgo.classList.add('hidden');
+            }
+
+            items.forEach(item => {
+                const searchText = item.getAttribute('data-search-text').toLowerCase();
+                if (searchText.includes(searchTerm)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0 && searchTerm) {
+                yearsAgoContainer.style.display = 'none';
+                noResultsYearsAgo.classList.remove('hidden');
+            } else {
+                yearsAgoContainer.style.display = '';
+                noResultsYearsAgo.classList.add('hidden');
+            }
+        });
+
+        clearSearchYearsAgo.addEventListener('click', function() {
+            searchYearsAgo.value = '';
+            this.classList.add('hidden');
+            
+            // Reset visibility
+            document.querySelectorAll('.years-ago-item').forEach(item => {
+                item.style.display = '';
+            });
+            yearsAgoContainer.style.display = '';
+            noResultsYearsAgo.classList.add('hidden');
+        });
+    }
+
+    // ✅ TAMBAHAN: Search functionality for Specific Years
+    const searchSpecificYears = document.getElementById('search-specific-years');
+    const clearSearchSpecificYears = document.getElementById('clear-search-specific-years');
+    const specificYearsContainer = document.getElementById('specific-years-container');
+    const noResultsSpecificYears = document.getElementById('no-results-specific-years');
+
+    if (searchSpecificYears) {
+        searchSpecificYears.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const items = document.querySelectorAll('.specific-year-item');
+            let visibleCount = 0;
+
+            // Show/hide clear button
+            if (searchTerm) {
+                clearSearchSpecificYears.classList.remove('hidden');
+            } else {
+                clearSearchSpecificYears.classList.add('hidden');
+            }
+
+            items.forEach(item => {
+                const searchText = item.getAttribute('data-search-text').toLowerCase();
+                if (searchText.includes(searchTerm)) {
+                    item.style.display = '';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Show/hide no results message
+            if (visibleCount === 0 && searchTerm) {
+                specificYearsContainer.style.display = 'none';
+                noResultsSpecificYears.classList.remove('hidden');
+            } else {
+                specificYearsContainer.style.display = '';
+                noResultsSpecificYears.classList.add('hidden');
+            }
+        });
+
+        clearSearchSpecificYears.addEventListener('click', function() {
+            searchSpecificYears.value = '';
+            this.classList.add('hidden');
+            
+            // Reset visibility
+            document.querySelectorAll('.specific-year-item').forEach(item => {
+                item.style.display = '';
+            });
+            specificYearsContainer.style.display = '';
+            noResultsSpecificYears.classList.add('hidden');
+        });
+    }
+
+    // ✅ MODIFIKASI: Update select/deselect all functions untuk mempertimbangkan search filter
+    document.getElementById('select-all-years-ago')?.addEventListener('click', function() {
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => {
+            // Hanya select yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.years-ago-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = true;
+            }
+        });
+        updatePreview();
+    });
+
+    document.getElementById('deselect-all-years-ago')?.addEventListener('click', function() {
+        document.querySelectorAll('.years-ago-checkbox').forEach(cb => {
+            // Hanya deselect yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.years-ago-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = false;
+            }
+        });
+        updatePreview();
+    });
+
+    document.getElementById('select-all-specific-years')?.addEventListener('click', function() {
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => {
+            // Hanya select yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.specific-year-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = true;
+            }
+        });
+        updatePreview();
+    });
+
+    document.getElementById('deselect-all-specific-years')?.addEventListener('click', function() {
+        document.querySelectorAll('.specific-year-checkbox').forEach(cb => {
+            // Hanya deselect yang terlihat (tidak disembunyikan oleh search)
+            const item = cb.closest('.specific-year-item');
+            if (item && item.style.display !== 'none') {
+                cb.checked = false;
+            }
+        });
+        updatePreview();
+    });
+
+    // ✅ HAPUS: Duplicate event listeners yang sudah ada sebelumnya
+    // Handle checkbox changes (existing)
+    document.querySelectorAll('.years-ago-checkbox, .specific-year-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updatePreview);
+    });
 
     // Profile dropdown functionality
     document.getElementById('profile-toggle')?.addEventListener('click', function() {
