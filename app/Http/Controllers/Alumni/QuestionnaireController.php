@@ -834,14 +834,19 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data jawaban tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        // Get all categories for this period - FILTER UNTUK ALUMNI
+        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DEPENDENCY
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
                       ->orWhere('for_type', 'both');
             })
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(function($category) use ($alumni) {
+                // ✅ TAMBAHAN: Filter berdasarkan status dependency seperti di fill questionnaire
+                return $category->isAccessibleByAlumni($alumni);
+            })
+            ->values(); // Reset array keys
 
         // ✅ GUNAKAN STRUKTUR YANG SAMA PERSIS DENGAN COMPANY
         $questionsWithAnswers = [];
@@ -862,6 +867,7 @@ class QuestionnaireController extends Controller
                 // Get answers for this question
                 $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswerId)
                     ->where('id_question', $question->id_question)
+                    ->with(['question', 'option'])
                     ->get();
 
                 $hasAnswer = $answerItems->isNotEmpty();
@@ -874,20 +880,28 @@ class QuestionnaireController extends Controller
 
                 if ($hasAnswer) {
                     if ($question->type === 'multiple') {
-                        // Multiple choice handling
+                        // Multiple choice answers
                         foreach ($answerItems as $answerItem) {
                             if ($answerItem->id_questions_options) {
                                 $multipleAnswers[] = $answerItem->id_questions_options;
                                 
-                                $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
-                                if ($option && $option->is_other_option && !empty($answerItem->other_answer)) {
+                                // ✅ PERBAIKAN: Handle other answers untuk multiple choice
+                                if (!empty($answerItem->other_answer)) {
                                     $multipleOtherAnswers[$answerItem->id_questions_options] = $answerItem->other_answer;
-                                    $multipleOtherOptions[$answerItem->id_questions_options] = $option;
+                                    
+                                    $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
+                                    if ($option && $option->is_other_option) {
+                                        $multipleOtherOptions[$answerItem->id_questions_options] = $option;
+                                    }
                                 }
-                            } else {
-                                $multipleAnswers[] = $answerItem->answer;
                             }
                         }
+                        
+                        \Log::info('Multiple choice processed', [
+                            'question_id' => $question->id_question,
+                            'multiple_answers' => $multipleAnswers,
+                            'multiple_other_answers' => $multipleOtherAnswers
+                        ]);
                     } else {
                         // Single answer
                         $answerItem = $answerItems->first();
@@ -940,7 +954,7 @@ class QuestionnaireController extends Controller
 
                 $questionArray[] = $questionData;
             }
-            
+
             // Only add category if it has questions
             if (!empty($questionArray)) {
                 $questionsWithAnswers[] = [
@@ -955,6 +969,10 @@ class QuestionnaireController extends Controller
             'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) {
                 return [
                     'category' => $cat['category']->category_name,
+                    'category_status_dependent' => $cat['category']->is_status_dependent,
+                    'category_required_status' => $cat['category']->required_alumni_status,
+                    'alumni_status' => auth()->user()->alumni->status ?? 'unknown',
+                    'category_accessible' => $cat['category']->isAccessibleByAlumni(auth()->user()->alumni),
                     'questions' => collect($cat['questions'])->map(function($q) {
                         return [
                             'id' => $q['question']->id_question,
@@ -963,17 +981,16 @@ class QuestionnaireController extends Controller
                             'depends_value' => $q['question']->depends_value,
                             'hasAnswer' => $q['hasAnswer'],
                             'answer' => $q['answer'],
-                            'type' => $q['question']->type
+                            'otherAnswer' => $q['otherAnswer'],
+                            'multipleAnswers' => $q['multipleAnswers'],
+                            'multipleOtherAnswers' => $q['multipleOtherAnswers']
                         ];
-                    })
+                    })->toArray()
                 ];
-            })
+            })->toArray()
         ]);
 
-        return view('alumni.questionnaire.response-detail', compact(
-            'userAnswer',
-            'questionsWithAnswers'
-        ));
+        return view('alumni.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers'));
     }
 
     private function validateAnswers(Request $request, $questions)

@@ -274,13 +274,13 @@ class QuestionnaireController extends Controller
             
             $periode = Tb_Periode::findOrFail($id_periode);
             
-            // Check if periode has any user responses
-            $hasResponses = Tb_User_Answers::where('id_periode', $id_periode)->exists();
+            // // Check if periode has any user responses
+            // $hasResponses = Tb_User_Answers::where('id_periode', $id_periode)->exists();
             
-            if ($hasResponses) {
-                return redirect()->route('admin.questionnaire.index')
-                    ->with('error', 'Tidak dapat menghapus periode yang sudah memiliki respons dari pengguna.');
-            }
+            // if ($hasResponses) {
+            //     return redirect()->route('admin.questionnaire.index')
+            //         ->with('error', 'Tidak dapat menghapus periode yang sudah memiliki respons dari pengguna.');
+            // }
             
             // Check if periode is currently active
             if ($periode->status === 'active') {
@@ -1099,7 +1099,12 @@ class QuestionnaireController extends Controller
                 }
             })
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(function($category) use ($alumni) {
+                // ✅ TAMBAHAN: Filter berdasarkan status dependency seperti di fill questionnaire
+                return $category->isAccessibleByAlumni($alumni);
+            })
+            ->values(); 
         
         \Log::info('Response Detail - Categories Filter', [
             'user_type' => $userType,

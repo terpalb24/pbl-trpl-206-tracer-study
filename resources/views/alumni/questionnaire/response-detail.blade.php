@@ -3,7 +3,7 @@
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-      < {{-- Sidebar Komponen --}}
+      {{-- Sidebar Komponen --}}
     <x-alumni.sidebar class="lg:block hidden" />
 
     
