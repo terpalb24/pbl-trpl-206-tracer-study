@@ -134,18 +134,65 @@ $admin = auth()->user()->admin;
             </div>
         @endif
 
-        <!-- Second Card - Search and List Questionnaires -->
+        <!-- Second Card - Filter and List Questionnaires -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
-            <div class="p-4 flex justify-between items-center border-b">
-                <form method="GET" action="{{ route('admin.questionnaire.index') }}" class="flex items-center space-x-2 w-full max-w-md">
-                    <div class="relative w-full">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Kuisioner"
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                            <i class="fas fa-search"></i>
-                        </div>
+            <div class="p-4 border-b">
+                <form method="GET" action="{{ route('admin.questionnaire.index') }}" class="flex flex-wrap items-center gap-4">
+                    <!-- Filter Tahun -->
+                    <div class="flex items-center space-x-2">
+                        <label for="year" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter Tahun:</label>
+                        <select name="year" id="year" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+                            <option value="">Semua Tahun</option>
+                            @foreach($availableYears as $year)
+                                <option value="{{ $year }}" {{ request('year') == $year ? 'selected' : '' }}>
+                                    {{ $year }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Filter Status -->
+                    <div class="flex items-center space-x-2">
+                        <label for="status" class="text-sm font-medium text-gray-700 whitespace-nowrap">Filter Status:</label>
+                        <select name="status" id="status" class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 min-w-[120px]">
+                            <option value="">Semua Status</option>
+                            <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="expired" {{ request('status') == 'expired' ? 'selected' : '' }}>Expired</option>
+                        </select>
+                    </div>
+
+                    <!-- Tombol Filter dan Reset -->
+                    <div class="flex items-center space-x-2">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                            <i class="fas fa-filter mr-2"></i>
+                            Filter
+                        </button>
+                        
+                        @if(request('year') || request('status'))
+                            <a href="{{ route('admin.questionnaire.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                                <i class="fas fa-times mr-2"></i>
+                                Reset
+                            </a>
+                        @endif
                     </div>
                 </form>
+
+                <!-- Informasi Filter Aktif -->
+                @if(request('year') || request('status'))
+                    <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center text-sm text-blue-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            <span>Filter aktif: </span>
+                            @if(request('year'))
+                                <span class="ml-1 px-2 py-1 bg-blue-100 rounded">Tahun {{ request('year') }}</span>
+                            @endif
+                            @if(request('status'))
+                                <span class="ml-1 px-2 py-1 bg-blue-100 rounded">Status {{ ucfirst(request('status')) }}</span>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
 
             <div class="overflow-x-auto">
@@ -157,6 +204,7 @@ $admin = auth()->user()->admin;
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Tanggal Mulai</th>
                             <th class="px-4 py-3">Tanggal Selesai</th>
+                            <th class="px-4 py-3">Tahun Dibuat</th>
                             <th class="px-4 py-3">Jumlah Kategori</th>
                             <th class="px-4 py-3">Aksi</th>
                         </tr>
@@ -190,6 +238,10 @@ $admin = auth()->user()->admin;
                                 </td>
                                 <td class="px-4 py-3">{{ $periode->start_date->format('d M Y') }}</td>
                                 <td class="px-4 py-3">{{ $periode->end_date->format('d M Y') }}</td>
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900">{{ $periode->created_at->format('Y') }}</div>
+                                    <div class="text-xs text-gray-500">{{ $periode->created_at->format('d M Y') }}</div>
+                                </td>
                                 <td class="px-4 py-3 text-center">
                                     <span class="inline-flex items-center justify-center w-8 h-8 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
                                         {{ $periode->categories->count() }}
@@ -213,7 +265,7 @@ $admin = auth()->user()->admin;
                                         @php
                                             // Check if periode can be deleted (no responses and not active)
                                             $hasResponses = \App\Models\Tb_User_Answers::where('id_periode', $periode->id_periode)->exists();
-                                            $canDelete = !$hasResponses && $periode->status !== 'active';
+                                            $canDelete =  $periode->status !== 'active';
                                         @endphp
                                         
                                         @if($canDelete)
@@ -239,11 +291,16 @@ $admin = auth()->user()->admin;
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                                <td colspan="8" class="px-4 py-8 text-center text-gray-500">
                                     <div class="flex flex-col items-center">
                                         <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-3"></i>
-                                        <p class="text-lg font-medium mb-1">Belum ada periode kuesioner</p>
-                                        <p class="text-sm">Klik tombol "Tambah Periode" untuk membuat kuesioner baru</p>
+                                        @if(request('year') || request('status'))
+                                            <p class="text-lg font-medium mb-1">Tidak ada periode kuesioner ditemukan</p>
+                                            <p class="text-sm">Coba ubah filter atau reset filter untuk melihat semua data</p>
+                                        @else
+                                            <p class="text-lg font-medium mb-1">Belum ada periode kuesioner</p>
+                                            <p class="text-sm">Klik tombol "Tambah Periode" untuk membuat kuesioner baru</p>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

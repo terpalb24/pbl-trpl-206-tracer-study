@@ -32,15 +32,27 @@ class QuestionnaireController extends Controller
         
         $query = Tb_Periode::with('categories');
 
-        // Search functionality
-        if ($request->has('search') ) {
-            $search = $request->get('search');
-            $query->where('periode_name', 'like', '%' . $search . '%');
+        // ✅ PERBAIKAN: Filter berdasarkan tahun dibuat - handle empty values
+        if ($request->filled('year') && $request->get('year') !== '' && $request->get('year') !== null) {
+            $year = $request->get('year');
+            $query->whereYear('created_at', $year);
+        }
+
+        // ✅ PERBAIKAN: Filter berdasarkan status - handle empty values
+        if ($request->filled('status') && $request->get('status') !== '' && $request->get('status') !== null) {
+            $status = $request->get('status');
+            $query->where('status', $status);
         }
 
         $periodes = $query->latest()->paginate(10);
 
-        return view('admin.questionnaire.index', compact('periodes'));
+        // Ambil daftar tahun yang tersedia untuk filter
+        $availableYears = Tb_Periode::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
+
+        return view('admin.questionnaire.index', compact('periodes', 'availableYears'));
     }
 
     /**
