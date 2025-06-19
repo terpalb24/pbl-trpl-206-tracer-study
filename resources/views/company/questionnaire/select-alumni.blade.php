@@ -89,16 +89,95 @@
                         <h2 class="text-xl font-semibold text-gray-700">ALUMNI YANG DAPAT DINILAI</h2>
                         <div class="flex items-center text-sm text-gray-500">
                             <i class="fas fa-users mr-2"></i>
-                            {{ $availableAlumni->count() }} Alumni Tersedia
+                            <span id="alumni-count">{{ $availableAlumni->count() }}</span> Alumni Tersedia
                         </div>
                     </div>
 
-                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <!-- ✅ TAMBAHAN: Filter dan Search Section -->
+                    <div class="mb-6 p-4 bg-gray-50 rounded-lg border">
+                        <div class="flex flex-col md:flex-row md:items-center gap-4">
+                            <!-- Search Box -->
+                            <div class="flex-1">
+                                <div class="relative">
+                                    <input type="text" 
+                                           id="search-alumni" 
+                                           placeholder="Cari nama, NIM, atau posisi alumni..." 
+                                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                    <button type="button" 
+                                            id="clear-search" 
+                                            class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 hidden">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Filter Tahun Lulus -->
+                            <div class="w-full md:w-48">
+                                <select id="filter-graduation-year" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <option value="">Semua Tahun Lulus</option>
+                                    @php
+                                        $graduationYears = $availableAlumni->pluck('alumni.graduation_year')->unique()->sort()->reverse();
+                                    @endphp
+                                    @foreach($graduationYears as $year)
+                                        <option value="{{ $year }}">{{ $year }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Filter Status -->
+                            <div class="w-full md:w-48">
+                                <select id="filter-draft-status" 
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <option value="">Semua Status</option>
+                                    <option value="draft">Memiliki Draft</option>
+                                    <option value="new">Belum Dinilai</option>
+                                </select>
+                            </div>
+
+                            <!-- Reset Button -->
+                            <button type="button" 
+                                    id="reset-filters" 
+                                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-md transition-colors duration-200 flex items-center">
+                                <i class="fas fa-refresh mr-2"></i>
+                                Reset
+                            </button>
+                        </div>
+
+                        <!-- Filter Summary -->
+                        <div id="filter-summary" class="mt-3 text-sm text-gray-600 hidden">
+                            <span id="filter-summary-text"></span>
+                        </div>
+                    </div>
+
+                    <!-- Alumni Grid -->
+                    <div id="alumni-grid" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                         @foreach($availableAlumni as $jobHistory)
-                            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
+                            <div class="alumni-card border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200"
+                                 data-name="{{ strtolower($jobHistory->alumni->name) }}"
+                                 data-nim="{{ $jobHistory->nim }}"
+                                 data-position="{{ strtolower($jobHistory->position ?? '') }}"
+                                 data-graduation-year="{{ $jobHistory->alumni->graduation_year }}"
+                                 data-draft-status="{{ in_array($jobHistory->nim, $draftNims) ? 'draft' : 'new' }}">
                                 <div class="flex flex-col h-full">
                                     <div class="flex-grow">
-                                        <h3 class="font-semibold text-gray-800 mb-2">{{ $jobHistory->alumni->name }}</h3>
+                                        <div class="flex items-start justify-between mb-2">
+                                            <h3 class="font-semibold text-gray-800">{{ $jobHistory->alumni->name }}</h3>
+                                            @if(in_array($jobHistory->nim, $draftNims))
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                    <i class="fas fa-edit mr-1"></i>
+                                                    Draft
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                    <i class="fas fa-plus mr-1"></i>
+                                                    Baru
+                                                </span>
+                                            @endif
+                                        </div>
                                         <div class="space-y-1 text-sm text-gray-600">
                                             <div class="flex items-center">
                                                 <i class="fas fa-id-card text-gray-400 mr-2 w-4"></i>
@@ -106,7 +185,7 @@
                                             </div>
                                             <div class="flex items-center">
                                                 <i class="fas fa-graduation-cap text-gray-400 mr-2 w-4"></i>
-                                                <span>Lulus {{ $jobHistory->alumni->graduation_year }}</span>
+                                                <span class="font-medium text-blue-600">Lulus {{ $jobHistory->alumni->graduation_year }}</span>
                                             </div>
                                             <div class="flex items-center">
                                                 <i class="fas fa-briefcase text-gray-400 mr-2 w-4"></i>
@@ -137,6 +216,23 @@
                                 </div>
                             </div>
                         @endforeach
+                    </div>
+
+                    <!-- No Results Message -->
+                    <div id="no-results" class="hidden text-center py-8">
+                        <div class="text-gray-500 mb-4">
+                            <i class="fas fa-search text-4xl"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-600 mb-2">Tidak Ada Alumni yang Cocok</h3>
+                        <p class="text-gray-500">
+                            Tidak ada alumni yang sesuai dengan kriteria pencarian atau filter yang dipilih.
+                        </p>
+                        <button type="button" 
+                                onclick="resetAllFilters()" 
+                                class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors duration-200">
+                            <i class="fas fa-refresh mr-2"></i>
+                            Reset Semua Filter
+                        </button>
                     </div>
                 </div>
             @endif
@@ -211,6 +307,148 @@
 </div>
 
 <script>
+    // ✅ TAMBAHAN: Alumni Search and Filter Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('search-alumni');
+        const clearSearchBtn = document.getElementById('clear-search');
+        const graduationYearFilter = document.getElementById('filter-graduation-year');
+        const draftStatusFilter = document.getElementById('filter-draft-status');
+        const resetFiltersBtn = document.getElementById('reset-filters');
+        const alumniCards = document.querySelectorAll('.alumni-card');
+        const alumniGrid = document.getElementById('alumni-grid');
+        const noResults = document.getElementById('no-results');
+        const alumniCount = document.getElementById('alumni-count');
+        const filterSummary = document.getElementById('filter-summary');
+        const filterSummaryText = document.getElementById('filter-summary-text');
+
+        // Search functionality
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                // Show/hide clear button
+                if (searchTerm) {
+                    clearSearchBtn.classList.remove('hidden');
+                } else {
+                    clearSearchBtn.classList.add('hidden');
+                }
+                
+                filterAlumni();
+            });
+
+            clearSearchBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                this.classList.add('hidden');
+                filterAlumni();
+            });
+        }
+
+        // Filter functionality
+        if (graduationYearFilter) {
+            graduationYearFilter.addEventListener('change', filterAlumni);
+        }
+
+        if (draftStatusFilter) {
+            draftStatusFilter.addEventListener('change', filterAlumni);
+        }
+
+        // Reset filters
+        if (resetFiltersBtn) {
+            resetFiltersBtn.addEventListener('click', resetAllFilters);
+        }
+
+        function filterAlumni() {
+            const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+            const selectedYear = graduationYearFilter ? graduationYearFilter.value : '';
+            const selectedStatus = draftStatusFilter ? draftStatusFilter.value : '';
+            
+            let visibleCount = 0;
+            let totalCount = alumniCards.length;
+
+            alumniCards.forEach(card => {
+                const name = card.getAttribute('data-name') || '';
+                const nim = card.getAttribute('data-nim') || '';
+                const position = card.getAttribute('data-position') || '';
+                const graduationYear = card.getAttribute('data-graduation-year') || '';
+                const draftStatus = card.getAttribute('data-draft-status') || '';
+
+                // Search criteria
+                const matchesSearch = !searchTerm || 
+                    name.includes(searchTerm) || 
+                    nim.includes(searchTerm) || 
+                    position.includes(searchTerm);
+
+                // Filter criteria
+                const matchesYear = !selectedYear || graduationYear === selectedYear;
+                const matchesStatus = !selectedStatus || draftStatus === selectedStatus;
+
+                // Show/hide card
+                if (matchesSearch && matchesYear && matchesStatus) {
+                    card.style.display = '';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Update count
+            if (alumniCount) {
+                alumniCount.textContent = visibleCount;
+            }
+
+            // Show/hide no results message
+            if (visibleCount === 0) {
+                if (alumniGrid) alumniGrid.style.display = 'none';
+                if (noResults) noResults.classList.remove('hidden');
+            } else {
+                if (alumniGrid) alumniGrid.style.display = '';
+                if (noResults) noResults.classList.add('hidden');
+            }
+
+            // Update filter summary
+            updateFilterSummary(searchTerm, selectedYear, selectedStatus, visibleCount, totalCount);
+        }
+
+        function updateFilterSummary(searchTerm, selectedYear, selectedStatus, visibleCount, totalCount) {
+            let summaryParts = [];
+
+            if (searchTerm) {
+                summaryParts.push(`pencarian "${searchTerm}"`);
+            }
+
+            if (selectedYear) {
+                summaryParts.push(`tahun lulus ${selectedYear}`);
+            }
+
+            if (selectedStatus) {
+                const statusText = selectedStatus === 'draft' ? 'memiliki draft' : 'belum dinilai';
+                summaryParts.push(`status ${statusText}`);
+            }
+
+            if (summaryParts.length > 0) {
+                filterSummaryText.textContent = `Menampilkan ${visibleCount} dari ${totalCount} alumni dengan filter: ${summaryParts.join(', ')}`;
+                filterSummary.classList.remove('hidden');
+            } else {
+                filterSummary.classList.add('hidden');
+            }
+        }
+
+        function resetAllFilters() {
+            if (searchInput) {
+                searchInput.value = '';
+                clearSearchBtn.classList.add('hidden');
+            }
+            if (graduationYearFilter) graduationYearFilter.value = '';
+            if (draftStatusFilter) draftStatusFilter.value = '';
+            
+            filterAlumni();
+        }
+
+        // Make resetAllFilters global
+        window.resetAllFilters = resetAllFilters;
+    });
+
+    // ✅ EXISTING: Sidebar and other functionality
     document.getElementById('toggle-sidebar').addEventListener('click', () => {
         document.getElementById('sidebar').classList.toggle('hidden');
     });
