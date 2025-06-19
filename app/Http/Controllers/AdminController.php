@@ -275,10 +275,21 @@ class AdminController extends Controller
             foreach ($rows as $index => $row) {
                 if (empty($row[0])) continue; // Skip empty rows
 
+                // Cek NIM sudah ada
+                $existingNim = Tb_Alumni::where('nim', $row[0])->exists();
+                if ($existingNim) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIM '" . $row[0] . "' sudah terdaftar di sistem.");
+                }
+
+                // Cek NIK sudah ada
+                $existingNik = Tb_Alumni::where('nik', $row[1])->exists();
+                if ($existingNik) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIK '" . $row[1] . "' sudah terdaftar di sistem.");
+                }
+
                 // Validate status
                 $status = strtolower(trim($row[12] ?? ''));
                 $validStatuses = ['bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'];
-                
                 if (!in_array($status, $validStatuses)) {
                     throw new \Exception("Baris ke-" . ($index + 2) . ": Status harus salah satu dari: " . implode(', ', $validStatuses));
                 }
@@ -292,7 +303,6 @@ class AdminController extends Controller
                 // Validate study program using case-insensitive LIKE 
                 $studyProgramName = trim($row[11]);
                 $studyProgram = Tb_study_program::whereRaw('LOWER(study_program) LIKE ?', ['%' . strtolower($studyProgramName) . '%'])->first();
-                
                 if (!$studyProgram) {
                     throw new \Exception("Baris ke-" . ($index + 2) . ": Program Studi '" . $studyProgramName . "' tidak ditemukan");
                 }
