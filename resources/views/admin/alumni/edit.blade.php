@@ -215,13 +215,14 @@
             <!-- Angkatan -->
             <div>
                 <label for="batch" class="block font-semibold mb-1">Angkatan</label>
-                <input
-                    type="number"
-                    name="batch"
-                    id="batch"
-                    value="{{ old('batch', $alumni->batch) }}"
-                    class="w-full border rounded px-3 py-2"
-                />
+                <select name="batch" id="batch" class="w-full border rounded px-3 py-2">
+                    <option value="">-- Pilih Angkatan --</option>
+                    @for($y = date('Y'); $y >= 1990; $y--)
+                        <option value="{{ substr($y, -2) }}" {{ old('batch', $alumni->batch) == substr($y, -2) ? 'selected' : '' }}>
+                            {{ substr($y, -2) }}
+                        </option>
+                    @endfor
+                </select>
                 @error('batch')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
@@ -230,13 +231,14 @@
             <!-- Tahun Lulus -->
             <div>
                 <label for="graduation_year" class="block font-semibold mb-1">Tahun Lulus</label>
-                <input
-                    type="number"
-                    name="graduation_year"
-                    id="graduation_year"
-                    value="{{ old('graduation_year', $alumni->graduation_year) }}"
-                    class="w-full border rounded px-3 py-2"
-                />
+                <select name="graduation_year" id="graduation_year" class="w-full border rounded px-3 py-2">
+                    <option value="">-- Pilih Tahun Lulus --</option>
+                    @for($y = date('Y'); $y >= 1990; $y--)
+                        <option value="{{ $y }}" {{ old('graduation_year', $alumni->graduation_year) == $y ? 'selected' : '' }}>
+                            {{ $y }}
+                        </option>
+                    @endfor
+                </select>
                 @error('graduation_year')
                 <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
