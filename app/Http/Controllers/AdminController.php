@@ -812,10 +812,8 @@ class AdminController extends Controller
         $selectedCategory = $request->input('questionnaire_category');
         $selectedQuestion = $request->input('questionnaire_question');
         
-        // Get all active periods
-        $availablePeriodes = Tb_Periode::where('status', 'active')
-            ->orderBy('start_date', 'desc')
-            ->get();
+        // Get all periods (not just active)
+        $availablePeriodes = Tb_Periode::orderBy('start_date', 'desc')->get();
         
         // Set default periode ke yang pertama jika belum dipilih
         if (!$selectedPeriode && $availablePeriodes->count() > 0) {
