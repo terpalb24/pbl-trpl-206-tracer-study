@@ -2,7 +2,8 @@
     'position' => 'top-right',
     'languages' => 'en,id',
     'theme' => 'light',
-    'draggable' => true
+    'draggable' => true,
+    'minimizable' => true
 ])
 
 @php
@@ -21,11 +22,13 @@ $themeClasses = match($theme) {
     default => 'translate-widget-light'
 };
 @endphp
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 <!-- Draggable Language Switcher -->
 <div id="custom_translate_widget" 
      class="fixed {{ $positionClasses }} z-50 {{ $themeClasses }} select-none {{ $draggable ? 'cursor-move' : '' }}"
-     data-draggable="{{ $draggable ? 'true' : 'false' }}">
+     data-draggable="{{ $draggable ? 'true' : 'false' }}"
+     data-minimizable="{{ $minimizable ? 'true' : 'false' }}">
     
     <!-- Drag Handle (visible when draggable) -->
     @if($draggable)
@@ -36,8 +39,36 @@ $themeClasses = match($theme) {
         </div>
     @endif
     
-    <div class="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden min-w-[120px] sm:min-w-[140px] max-w-[160px] sm:max-w-none transition-all duration-200 hover:shadow-xl">
-        <button id="language_toggle" class="flex items-center justify-between w-full px-3 sm:px-4 py-2 sm:py-3 text-gray-700 hover:bg-gray-50 transition-colors duration-200">
+    <!-- Minimize Button (visible when minimizable) -->
+    @if($minimizable)
+        <div id="minimize_button" class="absolute -top-2 -right-2 w-6 h-6 bg-gray-500 hover:bg-gray-600 rounded-full shadow-lg flex items-center justify-center cursor-pointer opacity-70 hover:opacity-100 transition-all duration-200">
+            <svg id="minimize_icon" class="w-3 h-3 text-white transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+            </svg>
+        </div>
+    @endif
+    
+    <!-- Main Widget Content - Tanpa Background Belakang -->
+    <div id="widget_content" class="rounded-lg overflow-hidden min-w-[120px] sm:min-w-[140px] max-w-[160px] sm:max-w-none transition-all duration-300">
+        <!-- Header with Title Bar -->
+        <div class="flex items-center justify-between bg-white/90 backdrop-blur-sm px-2 py-1 border-b border-gray-200/50 rounded-t-lg shadow-sm">
+            <div class="flex items-center gap-1">
+                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            </div>
+            <span class="text-xs text-gray-600 font-medium">Translate</span>
+            @if($minimizable)
+                <button id="minimize_btn" class="text-gray-400 hover:text-gray-600 transition-colors duration-200 p-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                    </svg>
+                </button>
+            @endif
+        </div>
+        
+        <!-- Language Toggle Button -->
+        <button id="language_toggle" class="flex items-center justify-between w-full px-3 sm:px-4 py-2 sm:py-3 text-gray-700 bg-white/90 backdrop-blur-sm hover:bg-white/95 transition-all duration-200 shadow-sm">
             <div class="flex items-center gap-1 sm:gap-2">
                 <span id="current_flag" class="text-sm sm:text-base">🇮🇩</span>
                 <span id="current_language" class="text-xs sm:text-sm font-medium truncate">Indonesia</span>
@@ -47,16 +78,22 @@ $themeClasses = match($theme) {
             </svg>
         </button>
         
-        <div id="language_dropdown" class="hidden border-t border-gray-100">
-            <button class="language_option flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-gray-700 hover:bg-blue-50 transition-colors duration-200 w-full text-left" data-lang="id" data-flag="🇮🇩" data-name="Indonesia">
+        <!-- Language Dropdown -->
+        <div id="language_dropdown" class="hidden border-t border-gray-200/50">
+            <button class="language_option flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-gray-700 bg-white/90 backdrop-blur-sm hover:bg-blue-50/90 transition-all duration-200 w-full text-left shadow-sm" data-lang="id" data-flag="🇮🇩" data-name="Indonesia">
                 <span class="text-sm sm:text-lg flex-shrink-0">🇮🇩</span>
                 <span class="text-xs sm:text-sm truncate">Indonesia</span>
             </button>
-            <button class="language_option flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-gray-700 hover:bg-blue-50 transition-colors duration-200 w-full text-left" data-lang="en" data-flag="🇺🇸" data-name="English">
+            <button class="language_option flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 text-gray-700 bg-white/90 backdrop-blur-sm hover:bg-blue-50/90 transition-all duration-200 w-full text-left rounded-b-lg shadow-sm" data-lang="en" data-flag="🇺🇸" data-name="English">
                 <span class="text-sm sm:text-lg flex-shrink-0">🇺🇸</span>
                 <span class="text-xs sm:text-sm truncate">English</span>
             </button>
         </div>
+    </div>
+    
+    <!-- Minimized State - Hanya Bulatan Kecil -->
+    <div id="minimized_state" class="hidden bg-white rounded-full shadow-lg border border-gray-200 w-8 h-8 flex items-center justify-center cursor-pointer hover:shadow-xl transition-all duration-300">
+        <span id="minimized_flag" class="text-sm">🇮🇩</span>
     </div>
     
     <!-- Position Indicator (only visible when dragging) -->
@@ -70,26 +107,110 @@ $themeClasses = match($theme) {
 
 @once
 <style>
-/* Draggable Widget Styles */
+
+/* Enhanced Widget Styles with Minimize */
 .translate-widget-dragging {
     transition: none !important;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
     transform: scale(1.05) !important;
     z-index: 9999 !important;
+    min-width: fit-content !important;    
 }
 
 .translate-widget-dragging .bg-white {
     background-color: rgb(249 250 251) !important;
+    min-width: fit-content !important;    
 }
 
 .drag-handle-active {
     background-color: rgb(34 197 94) !important;
     transform: scale(1.1) !important;
+    min-width: fit-content !important;    
 }
 
 /* Smooth transitions for non-dragging state */
 #custom_translate_widget:not(.translate-widget-dragging) {
     transition: all 0.3s ease !important;
+    min-width: fit-content !important;    
+}
+
+/* Minimize animations */
+.widget-minimizing #widget_content {
+    animation: minimizeOut 0.3s ease-in-out forwards;
+}
+
+.widget-minimizing #minimized_state {
+    animation: minimizeIn 0.3s ease-in-out forwards;
+}
+
+.widget-maximizing #widget_content {
+    animation: maximizeIn 0.3s ease-in-out forwards;
+}
+
+.widget-maximizing #minimized_state {
+    animation: maximizeOut 0.3s ease-in-out forwards;
+}
+
+@keyframes minimizeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.3);
+        display: none;
+    }
+}
+
+@keyframes minimizeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes maximizeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.3);
+        display: none;
+    }
+}
+
+@keyframes maximizeIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 /* Ensure widget stays within viewport */
@@ -98,49 +219,89 @@ $themeClasses = match($theme) {
     max-height: calc(100vh - 1rem);
 }
 
-/* Mobile optimizations for dragging */
+/* Minimize button positioning */
+#minimize_button {
+    transition: all 0.2s ease;
+}
+
+#minimize_button:hover {
+    transform: scale(1.1);
+}
+
+/* Minimized state styling */
+#minimized_state {
+    transition: all 0.3s ease;
+    width: 2rem !important;
+    height: 2rem !important;
+}
+
+#minimized_state:hover {
+    transform: scale(1.15);
+}
+
+#minimized_flag {
+    font-size: 0.875rem !important;
+}
+
+/* Mobile optimizations */
 @media (max-width: 640px) {
-    #drag_handle {
-        width: 2rem !important;
-        height: 2rem !important;
-        top: -0.75rem !important;
-        left: -0.75rem !important;
+    #drag_handle, #minimize_button {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+        top: -0.5rem !important;
     }
     
-    #drag_handle svg {
-        width: 1rem !important;
-        height: 1rem !important;
+    #drag_handle {
+        left: -0.5rem !important;
+    }
+    
+    #minimize_button {
+        right: -0.5rem !important;
+    }
+    
+    #drag_handle svg, #minimize_button svg {
+        width: 0.75rem !important;
+        height: 0.75rem !important;
     }
     
     .translate-widget-dragging {
         transform: scale(1.02) !important;
     }
+    
+    #minimized_state {
+        width: 1.75rem !important;
+        height: 1.75rem !important;
+    }
+    
+    #minimized_flag {
+        font-size: 0.75rem !important;
+    }
 }
 
-/* Theme variations */
-.translate-widget-dark .bg-white {
-    background-color: rgb(31 41 55) !important;
-    border-color: rgb(75 85 99) !important;
+/* Pulse effect untuk minimized state yang lebih kecil */
+.minimized-pulse {
+    animation: pulse-small 2s infinite;
 }
 
-.translate-widget-dark .text-gray-700 {
-    color: rgb(209 213 219) !important;
+@keyframes pulse-small {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
 }
 
-.translate-widget-dark .hover\:bg-gray-50:hover {
-    background-color: rgb(55 65 81) !important;
-}
-
-.translate-widget-transparent .bg-white {
-    background-color: rgba(255, 255, 255, 0.9) !important;
-    backdrop-filter: blur(8px) !important;
-}
 </style>
 
 <script type="text/javascript">
 let currentLang = 'id';
 let isUserAction = false;
 let translateInitialized = false;
+let isMinimized = false;
 
 // Draggable functionality
 let isDragging = false;
@@ -157,6 +318,16 @@ function getSavedLanguage() {
 function saveLanguagePreference(lang) {
     localStorage.setItem('preferred_language', lang);
     console.log('Language preference saved:', lang);
+}
+
+// Minimize state management
+function getSavedMinimizedState() {
+    return localStorage.getItem('translate_widget_minimized') === 'true';
+}
+
+function saveMinimizedState(minimized) {
+    localStorage.setItem('translate_widget_minimized', minimized.toString());
+    console.log('Minimized state saved:', minimized);
 }
 
 // Position management
@@ -192,6 +363,143 @@ function applySavedPosition() {
     }
 }
 
+// Minimize/Maximize functionality
+function minimizeWidget() {
+    const widget = document.getElementById('custom_translate_widget');
+    const widgetContent = document.getElementById('widget_content');
+    const minimizedState = document.getElementById('minimized_state');
+    const dropdown = document.getElementById('language_dropdown');
+    const arrow = document.getElementById('dropdown_arrow');
+    
+    if (!widget || isMinimized) return;
+    
+    console.log('Minimizing widget...');
+    
+    // Close dropdown if open
+    if (dropdown && !dropdown.classList.contains('hidden')) {
+        dropdown.classList.add('hidden');
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+    
+    // Add animation class
+    widget.classList.add('widget-minimizing');
+    
+    setTimeout(() => {
+        widgetContent.classList.add('hidden');
+        minimizedState.classList.remove('hidden');
+        widget.classList.remove('widget-minimizing');
+        
+        // Update minimized flag
+        const currentFlag = document.getElementById('current_flag').textContent;
+        document.getElementById('minimized_flag').textContent = currentFlag;
+        
+        isMinimized = true;
+        saveMinimizedState(true);
+        
+        // Add pulse effect temporarily
+        minimizedState.classList.add('minimized-pulse');
+        setTimeout(() => {
+            minimizedState.classList.remove('minimized-pulse');
+        }, 4000);
+        
+        console.log('Widget minimized');
+    }, 150);
+}
+
+function maximizeWidget() {
+    const widget = document.getElementById('custom_translate_widget');
+    const widgetContent = document.getElementById('widget_content');
+    const minimizedState = document.getElementById('minimized_state');
+    
+    if (!widget || !isMinimized) return;
+    
+    console.log('Maximizing widget...');
+    
+    // Add animation class
+    widget.classList.add('widget-maximizing');
+    
+    setTimeout(() => {
+        minimizedState.classList.add('hidden');
+        widgetContent.classList.remove('hidden');
+        widget.classList.remove('widget-maximizing');
+        
+        isMinimized = false;
+        saveMinimizedState(false);
+        
+        console.log('Widget maximized');
+    }, 150);
+}
+
+function initializeMinimize() {
+    const widget = document.getElementById('custom_translate_widget');
+    const minimizeBtn = document.getElementById('minimize_btn');
+    const minimizeButton = document.getElementById('minimize_button');
+    const minimizedState = document.getElementById('minimized_state');
+    
+    if (!widget || widget.dataset.minimizable !== 'true') return;
+    
+    console.log('Initializing minimize functionality...');
+    
+    // Apply saved minimized state
+    const savedMinimized = getSavedMinimizedState();
+    if (savedMinimized) {
+        setTimeout(() => {
+            minimizeWidget();
+        }, 500);
+    }
+    
+    // Minimize button in title bar
+    if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (isDragging) return;
+            minimizeWidget();
+        });
+    }
+    
+    // Minimize button (floating)
+    if (minimizeButton) {
+        minimizeButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (isDragging) return;
+            minimizeWidget();
+        });
+    }
+    
+    // Click minimized state to maximize
+    if (minimizedState) {
+        minimizedState.addEventListener('click', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (isDragging) return;
+            maximizeWidget();
+        });
+        
+        // Double-click for quick toggle
+        minimizedState.addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            if (isDragging) return;
+            // Double click already handled by single click
+        });
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        // Ctrl/Cmd + Shift + T to toggle minimize
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+            e.preventDefault();
+            if (isMinimized) {
+                maximizeWidget();
+            } else {
+                minimizeWidget();
+            }
+        }
+    });
+}
+
 function initializeDraggable() {
     const widget = document.getElementById('custom_translate_widget');
     const dragHandle = document.getElementById('drag_handle');
@@ -206,8 +514,13 @@ function initializeDraggable() {
     setTimeout(applySavedPosition, 100);
     
     function startDrag(e) {
-        if (e.target.closest('#language_toggle') || e.target.closest('#language_dropdown')) {
-            return; // Don't start drag if clicking on functional areas
+        // Don't start drag if clicking on functional areas
+        if (e.target.closest('#language_toggle') || 
+            e.target.closest('#language_dropdown') ||
+            e.target.closest('#minimize_btn') ||
+            e.target.closest('#minimize_button') ||
+            (isMinimized && e.target.closest('#minimized_state'))) {
+            return;
         }
         
         isDragging = true;
@@ -342,9 +655,13 @@ function initializeDraggable() {
         }
     });
     
-    // Double-click to reset position
+    // Double-click to reset position (only when not minimized)
     widget.addEventListener('dblclick', function(e) {
-        if (e.target.closest('#language_toggle') || e.target.closest('#language_dropdown')) {
+        if (e.target.closest('#language_toggle') || 
+            e.target.closest('#language_dropdown') ||
+            e.target.closest('#minimize_btn') ||
+            e.target.closest('#minimize_button') ||
+            isMinimized) {
             return;
         }
         
@@ -427,6 +744,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize draggable functionality
     initializeDraggable();
+    
+    // Initialize minimize functionality
+    initializeMinimize();
 
     // Initialize UI with detected language
     const detectedLang = detectCurrentLanguage();
@@ -436,7 +756,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle dropdown
     toggleBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (isDragging) return; // Don't toggle during drag
+        if (isDragging || isMinimized) return; // Don't toggle during drag or when minimized
         
         dropdown.classList.toggle('hidden');
         arrow.style.transform = dropdown.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
@@ -444,7 +764,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Close dropdown when clicking outside
     document.addEventListener('click', function(e) {
-        if (isDragging) return;
+        if (isDragging || isMinimized) return;
         
         if (!toggleBtn.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.add('hidden');
@@ -455,7 +775,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle language selection
     langOptions.forEach(option => {
         option.addEventListener('click', function() {
-            if (isDragging) return;
+            if (isDragging || isMinimized) return;
             
             const lang = this.dataset.lang;
             const flag = this.dataset.flag;
@@ -548,15 +868,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateUIForLanguage(lang) {
         const currentLangElement = document.getElementById('current_language');
         const currentFlagElement = document.getElementById('current_flag');
+        const minimizedFlag = document.getElementById('minimized_flag');
         
         if (lang === 'en') {
             currentLang = 'en';
             if (currentLangElement) currentLangElement.textContent = 'English';
             if (currentFlagElement) currentFlagElement.textContent = '🇺🇸';
+            if (minimizedFlag) minimizedFlag.textContent = '🇺🇸';
         } else {
             currentLang = 'id';
             if (currentLangElement) currentLangElement.textContent = 'Indonesia';
             if (currentFlagElement) currentFlagElement.textContent = '🇮🇩';
+            if (minimizedFlag) minimizedFlag.textContent = '🇮🇩';
         }
         
         console.log('UI updated for language:', lang);
@@ -619,11 +942,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle window resize for mobile optimization
     window.addEventListener('resize', function() {
-        const dropdown = document.getElementById('language_dropdown');
-        const arrow = document.getElementById('dropdown_arrow');
-        if (dropdown && !dropdown.classList.contains('hidden')) {
-            dropdown.classList.add('hidden');
-            if (arrow) arrow.style.transform = 'rotate(0deg)';
+        if (!isMinimized) {
+            const dropdown = document.getElementById('language_dropdown');
+            const arrow = document.getElementById('dropdown_arrow');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                dropdown.classList.add('hidden');
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
+            }
         }
     });
 });
@@ -636,6 +961,4 @@ window.addEventListener('load', function() {
     }, 1000);
 });
 </script>
-
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 @endonce
