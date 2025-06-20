@@ -992,7 +992,7 @@ class QuestionnaireController extends Controller
             }
         }
         
-        $userAnswers = $query->orderBy('created_at', 'desc')->paginate(20);
+        $userAnswers = $query->orderBy('created_at', 'desc')->paginate(10);
 
         // ✅ PERBAIKAN: Add proper display name and user type for each user answer
         foreach ($userAnswers as $answer) {

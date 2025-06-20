@@ -21,136 +21,352 @@
         <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
 
-    <!-- Import & Export Excel Section -->
-    <div class="bg-white rounded-xl shadow-md p-6 md:p-10 mb-6 mt-4 mx-6">
-        <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row md:items-center gap-4">
-            @csrf
-            <input type="file" name="file" accept=".xlsx,.xls" required
-                class="border border-gray-300 rounded-md px-4 py-2 w-full md:w-1/2 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500">
-            <button type="submit"
-                class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
-                <i class="bi bi-upload"></i> Import Excel
-            </button>
-            <a href="{{ route('admin.alumni.export') }}"
-                class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
-                <i class="bi bi-download"></i> Export Excel
-            </a>
-            <a href="{{ route('admin.alumni.template') }}"
-                class="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-md font-semibold text-sm transition duration-200">
-                <i class="bi bi-file-earmark-excel"></i> Download Template
-            </a>
-        </form>
-        @if(session('error'))
-            <div class="text-red-500 mt-4">{{ session('error') }}</div>
-        @endif
-        @error('file')
-            <p class="text-red-600 text-sm mt-2">{{ $message }}</p>
-        @enderror
-    </div>
-
-    <div class="p-6">
-        <!-- Judul & Tombol Tambah Alumni -->
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-semibold text-gray-700">Daftar Alumni</h2>
-            <a href="{{ route('admin.alumni.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
-                + Tambah Alumni
-            </a>
+    <!-- Container utama dengan responsive padding -->
+    <div class="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto">
+        <!-- Import & Export Excel Section -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 mt-3 sm:mt-4">
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Import/Export Data Alumni</h3>
+            <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" 
+                class="flex flex-col gap-3 sm:gap-4">
+                @csrf
+                
+                <!-- File input section -->
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                    <input type="file" name="file" accept=".xlsx,.xls" required
+                        class="border border-gray-300 rounded-md px-3 sm:px-4 py-2 w-full sm:flex-1 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                    
+                    <!-- Action buttons -->
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <button type="submit"
+                            class="flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
+                            <i class="bi bi-upload"></i> 
+                            <span class="hidden sm:inline">Import Excel</span>
+                            <span class="sm:hidden">Import</span>
+                        </button>
+                        
+                        <a href="{{ route('admin.alumni.export') }}"
+                            class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
+                            <i class="bi bi-download"></i> 
+                            <span class="hidden sm:inline">Export Excel</span>
+                            <span class="sm:hidden">Export</span>
+                        </a>
+                        
+                        <a href="{{ route('admin.alumni.template') }}"
+                            class="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
+                            <i class="bi bi-file-earmark-excel"></i> 
+                            <span class="hidden sm:inline">Template</span>
+                            <span class="sm:hidden">Template</span>
+                        </a>
+                    </div>
+                </div>
+            </form>
+            
+            <!-- Error messages -->
+            @if(session('error'))
+                <div class="text-red-500 mt-3 sm:mt-4 p-3 bg-red-50 rounded-md text-sm">{{ session('error') }}</div>
+            @endif
+            @error('file')
+                <p class="text-red-600 text-sm mt-2 p-2 bg-red-50 rounded">{{ $message }}</p>
+            @enderror
         </div>
 
-        <!-- Notifikasi Sukses -->
-        @if(session('success'))
-            <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-                {{ session('success') }}
+        <!-- Main content section -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
+            <!-- Header section dengan judul dan tombol tambah -->
+            <div class="p-4 sm:p-6 border-b">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Daftar Alumni</h2>
+                    <a href="{{ route('admin.alumni.create') }}" 
+                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2 sm:w-auto w-full">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Tambah Alumni</span>
+                    </a>
+                </div>
             </div>
-        @endif
 
-        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <!-- Notifikasi Sukses -->
+            @if(session('success'))
+                <div class="mx-4 sm:mx-6 mt-4 p-3 sm:p-4 bg-green-100 text-green-700 rounded-md text-sm">
+                    {{ session('success') }}
+                </div>
+            @endif
+
             <!-- Filter & Search Section -->
-            <div class="p-4 flex flex-col md:flex-row md:items-center gap-4 border-b">
-                <form method="GET" action="{{ route('admin.alumni.index') }}" class="flex flex-col md:flex-row md:items-center gap-4 w-full">
-                    <!-- Filter Tahun Lulus -->
-                    <select name="graduation_year" class="border border-gray-300 rounded px-3 py-2 w-full md:w-44">
-                        <option value="">-- Semua Tahun Lulus --</option>
-                        @foreach($tahunLulus as $tahun)
-                            <option value="{{ $tahun }}" {{ request('graduation_year') == $tahun ? 'selected' : '' }}>
-                                {{ $tahun }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <!-- Filter Program Studi -->
-                    <select name="id_study" class="border border-gray-300 rounded px-3 py-2 w-full md:w-56">
-                        <option value="">-- Semua Program Studi --</option>
-                        @foreach($prodi as $p)
-                            <option value="{{ $p->id_study }}" {{ request('id_study') == $p->id_study ? 'selected' : '' }}>
-                                {{ $p->study_program }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <!-- Search Nama/NIM/Prodi -->
-                    <div class="relative w-full">
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari Nama, NIM, atau Prodi"
-                            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                            <i class="bi bi-search"></i>
+            <div class="p-4 sm:p-6 border-b bg-gray-50">
+                <form method="GET" action="{{ route('admin.alumni.index') }}" class="space-y-3 sm:space-y-4">
+                    <!-- Mobile: Stack all filters vertically -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                        <!-- Filter Tahun Lulus -->
+                        <div class="space-y-1">
+                            <label class="text-xs sm:text-sm font-medium text-gray-700 block sm:hidden">Tahun Lulus</label>
+                            <select name="graduation_year" class="border border-gray-300 rounded-md px-3 py-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">-- Semua Tahun Lulus --</option>
+                                @foreach($tahunLulus as $tahun)
+                                    <option value="{{ $tahun }}" {{ request('graduation_year') == $tahun ? 'selected' : '' }}>
+                                        {{ $tahun }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Filter Program Studi -->
+                        <div class="space-y-1">
+                            <label class="text-xs sm:text-sm font-medium text-gray-700 block sm:hidden">Program Studi</label>
+                            <select name="id_study" class="border border-gray-300 rounded-md px-3 py-2 w-full text-sm focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">-- Semua Program Studi --</option>
+                                @foreach($prodi as $p)
+                                    <option value="{{ $p->id_study }}" {{ request('id_study') == $p->id_study ? 'selected' : '' }}>
+                                        {{ $p->study_program }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        <!-- Search Input -->
+                        <div class="space-y-1 sm:col-span-1 lg:col-span-1">
+                            <label class="text-xs sm:text-sm font-medium text-gray-700 block sm:hidden">Pencarian</label>
+                            <div class="relative">
+                                <input type="text" name="search" value="{{ request('search') }}" 
+                                    placeholder="Cari Nama, NIM..."
+                                    class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <div class="absolute inset-y-0 left-0 flex items-center pl-2 sm:pl-3 text-gray-400">
+                                    <i class="bi bi-search text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="space-y-1">
+                            <label class="text-xs sm:text-sm font-medium text-gray-700 block sm:hidden invisible">Action</label>
+                            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm transition duration-200">
+                                <i class="bi bi-search mr-1 sm:mr-2"></i>
+                                <span class="hidden sm:inline">Cari</span>
+                                <span class="sm:hidden">Cari</span>
+                            </button>
                         </div>
                     </div>
-                    <!-- Tombol Cari -->
-                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded font-semibold">
-                        Cari
-                    </button>
                 </form>
             </div>
 
-            <!-- Tabel Alumni -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-center">
-                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                        <tr>
-                            <th class="px-4 py-3">No</th>
-                            <th class="px-4 py-3">NIM</th>
-                            <th class="px-4 py-3">Program Studi</th>
-                            <th class="px-4 py-3">Nama Alumni</th>
-                            <th class="px-4 py-3">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-gray-700">
-                        @forelse($alumni as $index => $item)
-                            <tr class="border-t hover:bg-gray-50">
-                                <td class="px-4 py-3">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
-                                <td class="px-4 py-3">{{ $item->nim }}</td>
-                                <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
-                                <td class="px-4 py-3">{{ $item->name }}</td>
-                                <td class="px-4 py-3 flex justify-center space-x-2">
-                                    <!-- Tombol Edit -->
-                                    <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                        class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-sm flex items-center justify-center"
-                                        title="Edit">
-                                        <i class="bi bi-pencil-square mr-1"></i>Edit
-                                    </a>
-                                    <!-- Tombol Hapus -->
-                                    <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus alumni ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                            class="px-3 py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-sm flex items-center justify-center" 
-                                            title="Hapus">
-                                            <i class="bi bi-trash mr-1"></i> Hapus
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
+            <!-- Tabel Alumni - Mobile: Card view, Desktop: Table view -->
+            <div class="overflow-hidden">
+                <!-- Desktop Table View -->
+                <div class="hidden lg:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
-                                <td colspan="5" class="px-4 py-4 text-gray-400 text-center">tidak ada alumni</td>
+                                <th class="px-4 py-3 text-center">No</th>
+                                <th class="px-4 py-3 text-left">NIM</th>
+                                <th class="px-4 py-3 text-left">Program Studi</th>
+                                <th class="px-4 py-3 text-left">Nama Alumni</th>
+                                <th class="px-4 py-3 text-center w-32">Aksi</th>
                             </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            @forelse($alumni as $index => $item)
+                                <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-center">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
+                                    <td class="px-4 py-3">{{ $item->nim }}</td>
+                                    <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
+                                    <td class="px-4 py-3">{{ $item->name }}</td>
+                                    <td class="px-4 py-3">
+                                        <div class="flex justify-center items-center space-x-1 xl:space-x-2">
+                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
+                                                class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 group"
+                                                title="Edit Alumni">
+                                                <i class="bi bi-pencil-square"></i>
+                                                <span class="hidden xl:ml-1 xl:inline">Edit</span>
+                                            </a>
+                                            <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
+                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                    class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 group" 
+                                                    title="Hapus Alumni">
+                                                    <i class="bi bi-trash"></i>
+                                                    <span class="hidden xl:ml-1 xl:inline">Hapus</span>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-4 py-8 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-2xl mb-2 block"></i>
+                                        Tidak ada data alumni
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tablet Table View (md to lg) -->
+                <div class="hidden md:block lg:hidden overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                            <tr>
+                                <th class="px-3 py-2 text-center">No</th>
+                                <th class="px-3 py-2 text-left">NIM</th>
+                                <th class="px-3 py-2 text-left">Nama</th>
+                                <th class="px-3 py-2 text-center w-24">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-700">
+                            @forelse($alumni as $index => $item)
+                                <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-3 py-2 text-center text-xs">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
+                                    <td class="px-3 py-2 text-xs">{{ $item->nim }}</td>
+                                    <td class="px-3 py-2">
+                                        <div class="text-xs font-medium">{{ $item->name }}</div>
+                                        <div class="text-xs text-gray-500 truncate">{{ $item->studyProgram->study_program ?? '-' }}</div>
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="flex justify-center items-center space-x-1">
+                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
+                                                class="inline-flex items-center justify-center w-7 h-7 rounded bg-blue-500 hover:bg-blue-600 text-white transition duration-200"
+                                                title="Edit">
+                                                <i class="bi bi-pencil-square text-xs"></i>
+                                            </a>
+                                            <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
+                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" 
+                                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-500 hover:bg-red-600 text-white transition duration-200" 
+                                                    title="Hapus">
+                                                    <i class="bi bi-trash text-xs"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-3 py-6 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-xl mb-2 block"></i>
+                                        <span class="text-sm">Tidak ada data alumni</span>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card View -->
+                <div class="md:hidden space-y-3 p-4">
+                    @forelse($alumni as $index => $item)
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $item->name }}</h3>
+                                    <p class="text-gray-600 text-xs mt-1">NIM: {{ $item->nim }}</p>
+                                </div>
+                                <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2">
+                                    #{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}
+                                </span>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <p class="text-gray-600 text-sm">
+                                    <span class="font-medium">Program Studi:</span> 
+                                    <span class="break-words">{{ $item->studyProgram->study_program ?? '-' }}</span>
+                                </p>
+                            </div>
+                            
+                            <div class="flex gap-2 pt-2 border-t border-gray-100">
+                                <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
+                                    class="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
+                                    <i class="bi bi-pencil-square"></i>
+                                    <span>Edit</span>
+                                </a>
+                                <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
+                                    onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="flex-1">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                        class="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
+                                        <i class="bi bi-trash"></i>
+                                        <span>Hapus</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-8">
+                            <i class="bi bi-inbox text-3xl text-gray-400 mb-3 block"></i>
+                            <p class="text-gray-400">Tidak ada data alumni</p>
+                        </div>
+                    @endforelse
+                </div>
             </div>
 
             <!-- Pagination -->
-            <div class="p-4 border-t text-sm text-gray-500">
-                {{ $alumni->withQueryString()->links() }}
+            <div class="p-4 sm:p-6 border-t bg-gray-50">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <!-- Results Info -->
+                    <div class="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                        <span class="font-medium">
+                            Menampilkan {{ $alumni->firstItem() ?? 0 }} - {{ $alumni->lastItem() ?? 0 }} 
+                            dari {{ $alumni->total() }} hasil
+                        </span>
+                    </div>
+                    
+                    <!-- Pagination Links -->
+                    <div class="order-1 sm:order-2">
+                        @if($alumni->hasPages())
+                            <nav class="flex items-center justify-center sm:justify-end space-x-1" aria-label="Pagination">
+                                {{-- Previous Page Link --}}
+                                @if ($alumni->onFirstPage())
+                                    <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400 bg-gray-100 rounded cursor-not-allowed">
+                                        <i class="bi bi-chevron-left"></i>
+                                        <span class="hidden sm:inline ml-1">Previous</span>
+                                    </span>
+                                @else
+                                    <a href="{{ $alumni->previousPageUrl() }}" 
+                                        class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                        <i class="bi bi-chevron-left"></i>
+                                        <span class="hidden sm:inline ml-1">Previous</span>
+                                    </a>
+                                @endif
+
+                                {{-- Pagination Elements --}}
+                                @foreach ($alumni->getUrlRange(1, $alumni->lastPage()) as $page => $url)
+                                    @if ($page == $alumni->currentPage())
+                                        <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 rounded">
+                                            {{ $page }}
+                                        </span>
+                                    @elseif ($page == 1 || $page == $alumni->lastPage() || ($page >= $alumni->currentPage() - 2 && $page <= $alumni->currentPage() + 2))
+                                        <a href="{{ $url }}" 
+                                            class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                            {{ $page }}
+                                        </a>
+                                    @elseif ($page == 2 && $alumni->currentPage() > 4)
+                                        <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400">...</span>
+                                    @elseif ($page == $alumni->lastPage() - 1 && $alumni->currentPage() < $alumni->lastPage() - 3)
+                                        <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400">...</span>
+                                    @endif
+                                @endforeach
+
+                                {{-- Next Page Link --}}
+                                @if ($alumni->hasMorePages())
+                                    <a href="{{ $alumni->nextPageUrl() }}" 
+                                        class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                        <span class="hidden sm:inline mr-1">Next</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                @else
+                                    <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400 bg-gray-100 rounded cursor-not-allowed">
+                                        <span class="hidden sm:inline mr-1">Next</span>
+                                        <i class="bi bi-chevron-right"></i>
+                                    </span>
+                                @endif
+                            </nav>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </div>

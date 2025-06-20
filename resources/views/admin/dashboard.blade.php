@@ -12,39 +12,53 @@
         <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
 
-    <div class="container mx-auto px-4 py-6 max-w-7xl">
-        <x-admin.welcome-header :role="'Administrator'" />
-
-        <div class="mb-6">
-            <x-admin.statistic-cards :alumniCount="$alumniCount" :companyCount="$companyCount" :answerCount="$answerCount" />
+    <!-- Container utama dengan responsive padding dan max-width -->
+    <div class="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 max-w-7xl">
+        <!-- Welcome header dengan responsive spacing -->
+        <div class="mb-4 sm:mb-6">
+            <x-admin.welcome-header :role="'Administrator'" />
         </div>
 
-        <div class="mb-6">
-            <x-admin.statistic-chart 
-                :statisticData="$statisticData"
-                :graduationYearStatisticData="$graduationYearStatisticData"
-                :studyPrograms="$studyPrograms"
-                :respondedPerStudy="$respondedPerStudy"
-                :salaryPerStudy="$salaryPerStudy"
-                :allGraduationYears="$allGraduationYears"
-                :filterGraduationYear="$filterGraduationYear"
+        <!-- Statistic cards dengan responsive spacing -->
+        <div class="mb-4 sm:mb-6">
+            <x-admin.statistic-cards 
+                :alumniCount="$alumniCount" 
+                :companyCount="$companyCount" 
+                :answerCount="$answerCount" 
             />
         </div>
 
-        <!-- ✅ TAMBAHAN: Questionnaire Statistics -->
-        <div class="mb-6">
-            <x-admin.questionnaire-statistic-chart 
-                :availablePeriodes="$availablePeriodes"
-                :availableCategories="$availableCategories"
-                :availableQuestions="$availableQuestions"
-                :selectedPeriode="$selectedPeriode"
-                :selectedUserType="$selectedUserType"
-                :selectedCategory="$selectedCategory"
-                :selectedQuestion="$selectedQuestion"
-                :questionnaireChartData="$questionnaireChartData"
-                :questionnaireLabels="$questionnaireLabels"
-                :questionnaireValues="$questionnaireValues"
-            />
+        <!-- Statistic chart dengan responsive grid layout -->
+        <div class="mb-4 sm:mb-6">
+            <div class="grid grid-cols-1 xl:grid-cols-1 gap-4 sm:gap-6">
+                <x-admin.statistic-chart 
+                    :statisticData="$statisticData"
+                    :graduationYearStatisticData="$graduationYearStatisticData"
+                    :studyPrograms="$studyPrograms"
+                    :respondedPerStudy="$respondedPerStudy"
+                    :salaryPerStudy="$salaryPerStudy"
+                    :allGraduationYears="$allGraduationYears"
+                    :filterGraduationYear="$filterGraduationYear"
+                />
+            </div>
+        </div>
+
+        <!-- Questionnaire Statistics dengan responsive layout -->
+        <div class="mb-4 sm:mb-6">
+            <div class="grid grid-cols-1 xl:grid-cols-1 gap-4 sm:gap-6">
+                <x-admin.questionnaire-statistic-chart 
+                    :availablePeriodes="$availablePeriodes"
+                    :availableCategories="$availableCategories"
+                    :availableQuestions="$availableQuestions"
+                    :selectedPeriode="$selectedPeriode"
+                    :selectedUserType="$selectedUserType"
+                    :selectedCategory="$selectedCategory"
+                    :selectedQuestion="$selectedQuestion"
+                    :questionnaireChartData="$questionnaireChartData"
+                    :questionnaireLabels="$questionnaireLabels"
+                    :questionnaireValues="$questionnaireValues"
+                />
+            </div>
         </div>
     </div>
 

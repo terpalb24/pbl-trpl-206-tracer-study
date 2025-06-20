@@ -1,257 +1,388 @@
 @extends('layouts.app')
 
+@php
+    $admin = auth()->user()->admin;
+@endphp
+
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar-menu w-64 bg-blue-950 text-white flex flex-col transition-all duration-300" id="sidebar">
-        <div class="flex flex-col items-center justify-between p-4">
-            <img src="{{ asset('assets/images/Group 3.png') }}" alt="Tracer Study Polibatam Logo" class="h-12 mt-2 object-contain">
-            <button id="close-sidebar" class="text-white text-xl lg:hidden focus:outline-none absolute top-4 right-4">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="flex flex-col p-4">
-            @include('admin.sidebar')
-        </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-grow overflow-y-auto" id="main-content">
-        <!-- Header -->
-        <div class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <button id="toggle-sidebar" class="mr-4 lg:hidden">
-                    <i class="fas fa-bars text-xl text-black-800"></i>
-                </button>
-                <h1 class="text-2xl font-bold text-blue-800">Respons Kuesioner</h1>
-            </div>
+<x-layout-admin>
+    <x-slot name="sidebar">
+        <x-admin.sidebar />
+    </x-slot>
 
-            <!-- Profile Dropdown -->
-            <div class="relative">
-                <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
-                    <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
-                    <div class="text-left">
-                        <p class="font-semibold leading-none">{{ auth()->user()->name ?? 'Administrator' }}</p>
-                        <p class="text-sm text-gray-300 leading-none mt-1">Admin</p>
-                    </div>
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
+    <x-slot name="header">
+        <x-admin.header>Respons Kuesioner</x-admin.header>
+        <x-admin.profile-dropdown></x-admin.profile-dropdown>
+    </x-slot>
 
-                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                    <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                        <i class="fas fa-key mr-2"></i>Ganti Password
-                    </a>
-                    <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                    </a>
+    <!-- Container utama dengan responsive padding -->
+    <div class="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4 sm:py-6">
+        <!-- Breadcrumb -->
+        <nav class="mb-4 sm:mb-6">
+            <ol class="flex items-center space-x-2 text-sm">
+                <li><a href="{{ route('admin.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a></li>
+                <li><span class="text-gray-500">/</span></li>
+                <li class="text-gray-700">Respons Periode</li>
+            </ol>
+        </nav>
+
+        <!-- Alert Messages -->
+        @if(session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-3 sm:px-4 py-3 rounded mb-4" id="success-alert">
+                <div class="flex items-center">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span class="text-sm sm:text-base">{{ session('success') }}</span>
+                    <button type="button" class="ml-auto" onclick="document.getElementById('success-alert').style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
-        </div>
+        @endif
 
-        <!-- Content Section -->
-        <div class="p-6">
-            @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 text-green-700 rounded-md">
-                    <p>{{ session('success') }}</p>
+        @if(session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-3 rounded mb-4" id="error-alert">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span class="text-sm sm:text-base">{{ session('error') }}</span>
+                    <button type="button" class="ml-auto" onclick="document.getElementById('error-alert').style.display='none'">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-            @endif
+            </div>
+        @endif
+
+        <!-- Period Info Card -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 space-y-2 sm:space-y-0">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-700 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>
+                    Informasi Periode
+                </h2>
+                <div class="flex items-center space-x-2">
+                    <span class="px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium
+                        {{ $periode->status == 'active' ? 'bg-green-100 text-green-800' : 
+                          ($periode->status == 'inactive' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                        <i class="fas {{ $periode->status == 'active' ? 'fa-play-circle' : ($periode->status == 'inactive' ? 'fa-pause-circle' : 'fa-stop-circle') }} mr-1"></i>
+                        {{ ucfirst($periode->status) }}
+                    </span>
+                </div>
+            </div>
             
-            @if(session('error'))
-                <div class="mb-4 p-4 bg-red-100 text-red-700 rounded-md">
-                    <p>{{ session('error') }}</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-3 sm:p-4 rounded-lg border border-blue-200">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-play text-green-600 mr-2"></i>
+                        <span class="text-xs sm:text-sm font-medium text-gray-600">Tanggal Mulai</span>
+                    </div>
+                    <p class="text-sm sm:text-lg font-bold text-gray-900">{{ $periode->start_date->format('d M Y') }}</p>
+                    <p class="text-xs text-gray-500">{{ $periode->start_date->format('l') }}</p>
                 </div>
-            @endif
-            
-            <!-- Period Info Card -->
-            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-semibold text-gray-700">Informasi Periode</h2>
+                <div class="bg-gradient-to-r from-red-50 to-red-100 p-3 sm:p-4 rounded-lg border border-red-200">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-stop text-red-600 mr-2"></i>
+                        <span class="text-xs sm:text-sm font-medium text-gray-600">Tanggal Selesai</span>
+                    </div>
+                    <p class="text-sm sm:text-lg font-bold text-gray-900">{{ $periode->end_date->format('d M Y') }}</p>
+                    <p class="text-xs text-gray-500">{{ $periode->end_date->format('l') }}</p>
                 </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <p class="text-sm text-gray-500">Status</p>
-                        <p class="font-medium">
-                            <span class="px-2 py-1 rounded-full text-xs 
-                                {{ $periode->status == 'active' ? 'bg-green-100 text-green-800' : 
-                                  ($periode->status == 'inactive' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
-                                {{ ucfirst($periode->status) }}
-                            </span>
-                        </p>
+                <div class="bg-gradient-to-r from-purple-50 to-purple-100 p-3 sm:p-4 rounded-lg border border-purple-200">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-users text-purple-600 mr-2"></i>
+                        <span class="text-xs sm:text-sm font-medium text-gray-600">Target Alumni</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Tanggal Mulai</p>
-                        <p class="font-medium">{{ $periode->start_date->format('d M Y') }}</p>
+                    <p class="text-xs sm:text-sm font-medium text-gray-900 leading-tight">{{ $periode->getTargetDescription() }}</p>
+                </div>
+                <div class="bg-gradient-to-r from-green-50 to-green-100 p-3 sm:p-4 rounded-lg border border-green-200">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-chart-bar text-green-600 mr-2"></i>
+                        <span class="text-xs sm:text-sm font-medium text-gray-600">Total Responden</span>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500">Tanggal Selesai</p>
-                        <p class="font-medium">{{ $periode->end_date->format('d M Y') }}</p>
-                    </div>
+                    <p class="text-sm sm:text-lg font-bold text-gray-900">{{ count($userAnswers) }}</p>
+                    <p class="text-xs text-gray-500">Responden</p>
                 </div>
             </div>
+        </div>
 
-            <!-- Responses Card -->
-            <div class="bg-white rounded-xl shadow-md overflow-hidden">
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h2 class="text-lg font-semibold text-gray-700">Daftar Responden</h2>
-                    <div class="flex space-x-2">
+        <!-- Responses Card -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
+            <!-- Header with filters -->
+            <div class="p-3 sm:p-4 border-b border-gray-200">
+                <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-3 lg:space-y-0">
+                    <h2 class="text-base sm:text-lg font-semibold text-gray-700 flex items-center">
+                        <i class="fas fa-users mr-2 text-blue-600"></i>
+                        Daftar Responden
+                    </h2>
+                    
+                    <!-- Filter buttons - responsive -->
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode]) }}" 
+                            class="px-3 py-1.5 text-xs sm:text-sm border rounded-full transition-colors duration-200 {{ !request('filter') ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-users mr-1"></i>
+                            <span class="hidden sm:inline">Semua</span>
+                            <span class="sm:hidden">All</span>
+                        </a>
                         <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode, 'filter' => 'alumni']) }}" 
-                            class="px-3 py-1 text-xs border rounded-full {{ request('filter') == 'alumni' ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600' }}">
+                            class="px-3 py-1.5 text-xs sm:text-sm border rounded-full transition-colors duration-200 {{ request('filter') == 'alumni' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-graduation-cap mr-1"></i>
                             Alumni
                         </a>
                         <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode, 'filter' => 'company']) }}" 
-                            class="px-3 py-1 text-xs border rounded-full {{ request('filter') == 'company' ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600' }}">
-                            Perusahaan
-                        </a>
-                        <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode]) }}" 
-                            class="px-3 py-1 text-xs border rounded-full {{ !request('filter') ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600' }}">
-                            Semua
+                            class="px-3 py-1.5 text-xs sm:text-sm border rounded-full transition-colors duration-200 {{ request('filter') == 'company' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-building mr-1"></i>
+                            <span class="hidden sm:inline">Perusahaan</span>
+                            <span class="sm:hidden">Company</span>
                         </a>
                     </div>
                 </div>
+            </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                            <tr>
-                                <th class="px-4 py-3">No</th>
-                                <th class="px-4 py-3">Nama</th>
-                                <th class="px-4 py-3">Tipe</th>
-                                <th class="px-4 py-3">Status</th>
-                                <th class="px-4 py-3">Tanggal Pengisian</th>
-                                <th class="px-4 py-3">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-700">
-                            @if(count($userAnswers) > 0)
-                                @foreach($userAnswers as $index => $userAnswer)
-                                    <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100">
-                                        <td class="px-4 py-3">{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</td>
-                                        
-                                        <!-- Perbaiki: Gunakan display_name dan tambahkan info tambahan -->
-                                        <td class="px-4 py-3">
-                                            <div>
-                                                <p class="font-medium">{{ $userAnswer->display_name }}</p>
-                                                @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
-                                                    <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
-                                                @endif
-                                                @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
-                                                    <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
-                                                @endif
-                                                <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
-                                            </div>
-                                        </td>
-                                        
-                                        <!-- Perbaiki: Gunakan user_type_text yang sudah diset di controller -->
-                                        <td class="px-4 py-3">
-                                            @if($userAnswer->user_type_text == 'Alumni')
-                                                <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
-                                                    <i class="fas fa-graduation-cap mr-1"></i>Alumni
-                                                </span>
-                                            @elseif($userAnswer->user_type_text == 'Perusahaan')
-                                                <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                                    <i class="fas fa-building mr-1"></i>Perusahaan
-                                                </span>
-                                            @else
-                                                <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                                                    <i class="fas fa-user mr-1"></i>User
-                                                </span>
+            <!-- Table - Desktop view -->
+            <div class="hidden lg:block overflow-x-auto">
+                <table class="w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                        <tr>
+                            <th class="px-4 py-3">No</th>
+                            <th class="px-4 py-3">Nama</th>
+                            <th class="px-4 py-3">Tipe</th>
+                            <th class="px-4 py-3">Status</th>
+                            <th class="px-4 py-3">Tanggal Pengisian</th>
+                            <th class="px-4 py-3">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-700">
+                        @if(count($userAnswers) > 0)
+                            @foreach($userAnswers as $index => $userAnswer)
+                                <tr class="{{ $index % 2 == 0 ? 'bg-white' : 'bg-gray-50' }} hover:bg-gray-100 transition-colors duration-150">
+                                    <td class="px-4 py-3">{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</td>
+                                    
+                                    <td class="px-4 py-3">
+                                        <div>
+                                            <p class="font-medium">{{ $userAnswer->display_name }}</p>
+                                            @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
+                                                <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
                                             @endif
-                                        </td>
-                                        
-                                        <td class="px-4 py-3">
-                                            <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                                <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
-                                                {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum Selesai' }}
-                                            </span>
-                                        </td>
-                                        
-                                        <td class="px-4 py-3">
-                                            <div>
-                                                <p>{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y') }}</p>
-                                                <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('H:i') }}</p>
-                                            </div>
-                                        </td>
-                                        
-                                        <td class="px-4 py-3">
-                                            <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
-                                               class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm inline-flex items-center transition-colors duration-200">
-                                                <i class="fas fa-eye mr-1"></i> Lihat Detail
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-gray-500">
-                                        <div class="flex flex-col items-center">
-                                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
-                                            <p class="text-lg font-medium mb-2">Belum ada responden</p>
-                                            <p class="text-sm">Belum ada yang mengisi kuesioner untuk periode ini.</p>
+                                            @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
+                                                <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
+                                            @endif
+                                            <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
                                         </div>
                                     </td>
+                                    
+                                    <td class="px-4 py-3">
+                                        @if($userAnswer->user_type_text == 'Alumni')
+                                            <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
+                                                <i class="fas fa-graduation-cap mr-1"></i>Alumni
+                                            </span>
+                                        @elseif($userAnswer->user_type_text == 'Perusahaan')
+                                            <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                                <i class="fas fa-building mr-1"></i>Perusahaan
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                                <i class="fas fa-user mr-1"></i>User
+                                            </span>
+                                        @endif
+                                    </td>
+                                    
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                            <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
+                                            {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum Selesai' }}
+                                        </span>
+                                    </td>
+                                    
+                                    <td class="px-4 py-3">
+                                        <div>
+                                            <p>{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y') }}</p>
+                                            <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('H:i') }}</p>
+                                        </div>
+                                    </td>
+                                    
+                                    <td class="px-4 py-3">
+                                        <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
+                                           class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center transition-colors duration-200">
+                                            <i class="fas fa-eye mr-1"></i> Detail
+                                        </a>
+                                    </td>
                                 </tr>
-                            @endif
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="p-4 border-t text-sm text-gray-500">
-                    {{ $userAnswers->appends(request()->query())->links() }}
-                </div>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                        <p class="text-lg font-medium mb-2">Belum ada responden</p>
+                                        <p class="text-sm">Belum ada yang mengisi kuesioner untuk periode ini.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
             </div>
 
-            <div class="mt-6">
-                <a href="{{ route('admin.questionnaire.index') }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-md inline-flex items-center">
-                    <i class="fas fa-arrow-left mr-1"></i> Kembali
-                </a>
+            <!-- Card view - Mobile/Tablet -->
+            <div class="lg:hidden space-y-3 p-3 sm:p-4">
+                @if(count($userAnswers) > 0)
+                    @foreach($userAnswers as $index => $userAnswer)
+                        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-medium text-gray-900 truncate">{{ $userAnswer->display_name }}</h3>
+                                    <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
+                                    @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
+                                        <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
+                                    @endif
+                                    @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
+                                        <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
+                                    @endif
+                                </div>
+                                <span class="text-xs text-gray-500 ml-2">#{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</span>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Tipe</p>
+                                    @if($userAnswer->user_type_text == 'Alumni')
+                                        <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
+                                            <i class="fas fa-graduation-cap mr-1"></i>Alumni
+                                        </span>
+                                    @elseif($userAnswer->user_type_text == 'Perusahaan')
+                                        <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                            <i class="fas fa-building mr-1"></i>Company
+                                        </span>
+                                    @else
+                                        <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                            <i class="fas fa-user mr-1"></i>User
+                                        </span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500 mb-1">Status</p>
+                                    <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                        <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
+                                        {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs text-gray-500">Tanggal Pengisian</p>
+                                    <p class="text-sm font-medium">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y, H:i') }}</p>
+                                </div>
+                                <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
+                                   class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center transition-colors duration-200">
+                                    <i class="fas fa-eye mr-1"></i> Detail
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <div class="text-center py-8">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                            <p class="text-lg font-medium mb-2">Belum ada responden</p>
+                            <p class="text-sm text-gray-500">Belum ada yang mengisi kuesioner untuk periode ini.</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Pagination -->
+            @if(count($userAnswers) > 0)
+                <div class="p-3 sm:p-4 border-t border-gray-200 bg-gray-50">
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
+                        <!-- Results Info -->
+                        <div class="text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                            <span class="font-medium">
+                                Menampilkan {{ $userAnswers->firstItem() ?? 0 }} - {{ $userAnswers->lastItem() ?? 0 }} 
+                                dari {{ $userAnswers->total() }} responden
+                            </span>
+                        </div>
+                        
+                        <!-- Pagination Links -->
+                        <div class="order-1 sm:order-2">
+                            @if($userAnswers->hasPages())
+                                <nav class="flex items-center justify-center sm:justify-end space-x-1" aria-label="Pagination">
+                                    {{-- Previous Page Link --}}
+                                    @if ($userAnswers->onFirstPage())
+                                        <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400 bg-gray-100 rounded cursor-not-allowed">
+                                            <i class="fas fa-chevron-left"></i>
+                                            <span class="hidden sm:inline ml-1">Previous</span>
+                                        </span>
+                                    @else
+                                        <a href="{{ $userAnswers->previousPageUrl() }}" 
+                                            class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                            <i class="fas fa-chevron-left"></i>
+                                            <span class="hidden sm:inline ml-1">Previous</span>
+                                        </a>
+                                    @endif
+
+                                    {{-- Pagination Elements --}}
+                                    @foreach ($userAnswers->getUrlRange(1, $userAnswers->lastPage()) as $page => $url)
+                                        @if ($page == $userAnswers->currentPage())
+                                            <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-white bg-blue-600 rounded">
+                                                {{ $page }}
+                                            </span>
+                                        @elseif ($page == 1 || $page == $userAnswers->lastPage() || ($page >= $userAnswers->currentPage() - 2 && $page <= $userAnswers->currentPage() + 2))
+                                            <a href="{{ $url }}" 
+                                                class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                                {{ $page }}
+                                            </a>
+                                        @elseif ($page == 2 && $userAnswers->currentPage() > 4)
+                                            <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400">...</span>
+                                        @elseif ($page == $userAnswers->lastPage() - 1 && $userAnswers->currentPage() < $userAnswers->lastPage() - 3)
+                                            <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400">...</span>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Next Page Link --}}
+                                    @if ($userAnswers->hasMorePages())
+                                        <a href="{{ $userAnswers->nextPageUrl() }}" 
+                                            class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 transition">
+                                            <span class="hidden sm:inline mr-1">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    @else
+                                        <span class="px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm text-gray-400 bg-gray-100 rounded cursor-not-allowed">
+                                            <span class="hidden sm:inline mr-1">Next</span>
+                                            <i class="fas fa-chevron-right"></i>
+                                        </span>
+                                    @endif
+                                </nav>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mt-4 sm:mt-6 space-y-3 sm:space-y-0">
+            <a href="{{ route('admin.questionnaire.index') }}" 
+               class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors duration-200">
+                <i class="fas fa-arrow-left mr-2"></i> Kembali
+            </a>
+            
+            <!-- Export/Additional actions -->
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+                <button class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
+                    <i class="fas fa-download mr-2"></i> Export Data
+                </button>
+                <button class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                    <i class="fas fa-chart-bar mr-2"></i> Lihat Statistik
+                </button>
             </div>
         </div>
-    </main>
-</div>
+    </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.toggle('hidden');
-        });
-    
-        document.getElementById('close-sidebar')?.addEventListener('click', function() {
-            document.getElementById('sidebar').classList.add('hidden');
-        });
-    
-        document.getElementById('profile-toggle')?.addEventListener('click', function() {
-            document.getElementById('profile-dropdown').classList.toggle('hidden');
-        });
-    
-        document.addEventListener('click', function(event) {
-            const dropdown = document.getElementById('profile-dropdown');
-            const toggle = document.getElementById('profile-toggle');
-            
-            if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
-    
-        document.getElementById('logout-btn')?.addEventListener('click', function(event) {
-            event.preventDefault();
-    
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("logout") }}';
-    
-            const csrfTokenInput = document.createElement('input');
-            csrfTokenInput.type = 'hidden';
-            csrfTokenInput.name = '_token';
-            csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    
-            form.appendChild(csrfTokenInput);
-            document.body.appendChild(form);
-            form.submit();
-        });
-    });
-</script>
+    <script src="{{ asset('js/script.js') }}"></script>
+</x-layout-admin>
 @endsection

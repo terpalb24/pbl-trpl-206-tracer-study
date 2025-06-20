@@ -1,60 +1,88 @@
 @if($jobHistories->count() > 0)
-    <div class="overflow-x-auto">
-        <table class="min-w-full">
-            <thead>
-                <tr class="border-b">
-                    <th class="text-left py-3 px-4 font-medium text-gray-600 uppercase text-sm">NO</th>
-                    <th class="text-left py-3 px-4 font-medium text-gray-600 uppercase text-sm">POSISI</th>
-                    <th class="text-left py-3 px-4 font-medium text-gray-600 uppercase text-sm">NAMA PERUSAHAAN</th>
-                    <th class="text-left py-3 px-4 font-medium text-gray-600 uppercase text-sm">AKSI</th>
+    <div class="overflow-x-auto shadow-sm rounded-lg border border-gray-200">
+        <table class="min-w-full bg-white">
+            <thead class="bg-gray-50">
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-600 uppercase text-xs sm:text-sm">NO</th>
+                    <th class="text-left py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-600 uppercase text-xs sm:text-sm">POSISI</th>
+                    <th class="text-left py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-600 uppercase text-xs sm:text-sm hidden sm:table-cell">NAMA PERUSAHAAN</th>
+                    <th class="text-center py-3 sm:py-4 px-2 sm:px-4 font-medium text-gray-600 uppercase text-xs sm:text-sm">AKSI</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-200">
                 @foreach($jobHistories as $index => $jobHistory)
-                <tr class="border-b hover:bg-gray-50">
-                    <td class="py-3 px-4">{{ $index + 1 }}</td>
-                    <td class="py-3 px-4 font-medium">{{ $jobHistory->position }}</td>
-                    <td class="py-3 px-4">
-                        {{ $jobHistory->company->company_name ?? '-' }}
+                <tr class="hover:bg-gray-50 transition-colors duration-200">
+                    <td class="py-3 sm:py-4 px-2 sm:px-4 text-sm sm:text-base whitespace-nowrap">{{ $index + 1 }}</td>
+                    <td class="py-3 sm:py-4 px-2 sm:px-4 font-medium text-sm sm:text-base">
+                        <div class="max-w-xs truncate">{{ $jobHistory->position }}</div>
+                        <div class="sm:hidden text-xs text-gray-500 mt-1">
+                            {{ $jobHistory->company->company_name ?? '-' }}
+                        </div>
                     </td>
-                    <td class="py-3 px-4">
-                        <div class="flex space-x-2">
+                    <td class="py-3 sm:py-4 px-2 sm:px-4 text-sm sm:text-base hidden sm:table-cell">
+                        <div class="max-w-xs truncate">{{ $jobHistory->company->company_name ?? '-' }}</div>
+                    </td>
+                    <td class="py-3 sm:py-4 px-2 sm:px-4">
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2">
+                            <!-- Edit Button -->
                             <a href="{{ route('alumni.job-history.edit', $jobHistory->id_jobhistory) }}"
-                               class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-yellow-200 hover:bg-yellow-300 text-yellow-700 transition"
+                               class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 transition-colors duration-200"
                                title="Edit">
-                                <i class="fas fa-edit"></i>
+                                <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
 
+                            <!-- Delete Button -->
                             <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline"
                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat kerja ini?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
-                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-red-200 hover:bg-red-300 text-red-700 transition"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                     title="Hapus">
-                                    <i class="fas fa-trash"></i>
+                                    <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>
                             </form>
 
+                            <!-- Detail Button -->
                             <button type="button"
-                                class="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-200 hover:bg-blue-300 text-blue-700 transition"
+                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors duration-200"
                                 title="Detail"
                                 onclick="showDetail({{ $jobHistory->id_jobhistory }})">
-                                <i class="fas fa-info-circle"></i>
+                                <i class="fas fa-info-circle text-xs sm:text-sm"></i>
                             </button>
                         </div>
 
                         {{-- Modal Detail --}}
-                        <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/10 hidden">
-                            <div class="bg-white rounded-lg shadow-lg p-10 w-full max-w-2xl relative">
-                                <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" class="absolute top-2 right-2 text-gray-500 hover:text-red-600">
-                                    <i class="fas fa-times"></i>
+                        <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/50 hidden p-4">
+                            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 lg:p-8 w-full max-w-xs sm:max-w-md lg:max-w-2xl relative max-h-screen overflow-y-auto">
+                                <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
+                                        class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
+                                    <i class="fas fa-times text-lg sm:text-xl"></i>
                                 </button>
-                                <h2 class="text-2xl font-semibold mb-4 text-blue-800">Detail Riwayat Kerja</h2>
-                                <div class="mb-4"><strong>Nama Perusahaan:</strong> {{ $jobHistory->company->company_name ?? '-' }}</div>
-                                <div class="mb-4"><strong>Posisi:</strong> {{ $jobHistory->position }}</div>
-                                <div class="mb-4"><strong>Gaji:</strong> Rp {{ $jobHistory->salary }}</div>
-                                <div class="mb-4"><strong>Durasi:</strong> {{ $jobHistory->duration }}</div>
+                                
+                                <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-4 sm:mb-6 text-blue-800 pr-8">Detail Riwayat Kerja</h2>
+                                
+                                <div class="space-y-3 sm:space-y-4">
+                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
+                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Nama Perusahaan</span>
+                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->company->company_name ?? '-' }}</div>
+                                    </div>
+                                    
+                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
+                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Posisi</span>
+                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->position }}</div>
+                                    </div>
+                                    
+                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
+                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Gaji</span>
+                                        <div class="text-sm sm:text-base text-gray-900 mt-1">Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
+                                    </div>
+                                    
+                                    <div>
+                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Durasi</span>
+                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->duration }}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </td>
@@ -63,12 +91,50 @@
             </tbody>
         </table>
     </div>
-     <div class="flex justify-end mb-4 mt-4 ">
+    
+    <!-- Add Button -->
+    <div class="flex flex-col sm:flex-row justify-end mt-4 sm:mt-6">
         <a href="{{ route('alumni.job-history.create') }}"
-           class="bg-blue-900 hover:bg-blue-900 text-white font-semibold py-2 px-4 rounded transition duration-300">
-        + Tambah Riwayat Kerja
+           class="bg-blue-900 hover:bg-blue-800 text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 rounded-lg transition-colors duration-300 text-center text-sm sm:text-base">
+            <i class="fas fa-plus mr-1 sm:mr-2"></i>
+            <span class="hidden sm:inline">Tambah Riwayat Kerja</span>
+            <span class="sm:hidden">Tambah</span>
         </a>
-        </div>
+    </div>
 @else
     <x-alumni.job-history-empty />
 @endif
+
+<script>
+function showDetail(id) {
+    document.getElementById('modal-detail-' + id).classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeDetail(id) {
+    document.getElementById('modal-detail-' + id).classList.add('hidden');
+    document.body.style.overflow = 'auto'; // Restore scrolling
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('backdrop-blur-sm')) {
+        const modals = document.querySelectorAll('[id^="modal-detail-"]');
+        modals.forEach(modal => {
+            modal.classList.add('hidden');
+        });
+        document.body.style.overflow = 'auto';
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const modals = document.querySelectorAll('[id^="modal-detail-"]');
+        modals.forEach(modal => {
+            modal.classList.add('hidden');
+        });
+        document.body.style.overflow = 'auto';
+    }
+});
+</script>

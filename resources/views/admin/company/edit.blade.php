@@ -1,117 +1,137 @@
 @extends('layouts.app')
 
+@php
+    $admin = auth()->user()->admin;
+@endphp
+
 @section('content')
 <!-- CSRF Token -->
 <meta name="csrf-token" content="{{ csrf_token() }}">
 
 <x-layout-admin>
-     <x-slot name="sidebar">
+    <x-slot name="sidebar">
         <x-admin.sidebar />
     </x-slot>
 
-  <x-slot name="header">
-          <x-admin.header>Pengguna alumni</x-admin.header>
+    <x-slot name="header">
+        <x-admin.header>Edit Perusahaan</x-admin.header>
         <x-admin.profile-dropdown></x-admin.profile-dropdown>
     </x-slot>
-    {{-- Konten utama (default slot) --}}
-    <div class="p-6">
-        <form
-            action="{{ route('admin.company.update', $company->id_company) }}"
-            method="POST"
-            class="bg-white rounded-xl shadow-md p-6 md:p-10"
-        >
-            @csrf
-            @method('PUT')
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="id" class="block font-semibold mb-1">ID Company</label>
-                    <input
-                        type="text"
-                        name="id"
-                        id="id"
-                        value="{{ $company->id_company }}"
-                        readonly
-                        class="w-full border rounded px-3 py-2 bg-gray-100"
-                    />
-                </div>
+    <!-- Container utama dengan responsive padding -->
+    <div class="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4 sm:py-6">
+        <!-- Back button - responsive -->
+        <div class="mb-4 sm:mb-6">
+            <a href="{{ route('admin.company.index') }}" 
+                class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm sm:text-base transition-colors">
+                <i class="bi bi-arrow-left"></i>
+                <span>Kembali ke Daftar Perusahaan</span>
+            </a>
+        </div>
 
-                <div>
-                    <label for="company_name" class="block font-semibold mb-1">Nama Perusahaan</label>
-                    <input
-                        type="text"
-                        name="company_name"
-                        id="company_name"
-                        value="{{ old('company_name', $company->company_name) }}"
-                        class="w-full border rounded px-3 py-2"
-                    />
-                    @error('company_name')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="company_email" class="block font-semibold mb-1">Email</label>
-                    <input
-                        type="email"
-                        name="company_email"
-                        id="company_email"
-                        value="{{ old('company_email', $company->company_email) }}"
-                        class="w-full border rounded px-3 py-2"
-                    />
-                    @error('company_email')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div>
-                    <label for="company_phone_number" class="block font-semibold mb-1">Nomor Telepon</label>
-                    <input
-                        type="text"
-                        name="company_phone_number"
-                        id="company_phone_number"
-                        value="{{ old('company_phone_number', $company->company_phone_number) }}"
-                        class="w-full border rounded px-3 py-2"
-                    />
-                    @error('company_phone_number')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div class="md:col-span-2">
-                    <label for="company_address" class="block font-semibold mb-1">Alamat</label>
-                    <textarea
-                        name="company_address"
-                        id="company_address"
-                        rows="3"
-                        class="w-full border rounded px-3 py-2 resize-none"
-                    >{{ old('company_address', $company->company_address) }}</textarea>
-                    @error('company_address')
-                    <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
-                    @enderror
+        <!-- Form container -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
+            <!-- Header section -->
+            <div class="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gray-50">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Data Perusahaan</h1>
+                        <p class="text-sm sm:text-base text-gray-600 mt-1">
+                            ID Perusahaan: <span class="font-semibold">{{ $company->id_company }}</span>
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <i class="bi bi-info-circle"></i>
+                        <span class="hidden sm:inline">Pastikan data yang diisi sudah benar</span>
+                        <span class="sm:hidden">Periksa data dengan teliti</span>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-2 mt-6">
-                <a
-                    href="{{ route('admin.company.index') }}"
-                    class="bg-gray-200 text-gray-700 py-2 px-6 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                >
-                    Kembali
-                </a>
-                <button
-                    type="submit"
-                    class="bg-blue-800 text-white py-2 px-6 rounded-lg font-semibold hover:bg-blue-900 transition-colors"
-                >
-                    Simpan
-                </button>
-            </div>
-        </form>
+            <!-- Form section -->
+            <form action="{{ route('admin.company.update', $company->id_company) }}" method="POST" 
+                class="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+                @csrf
+                @method('PUT')
+
+                <!-- Grid layout responsive -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <!-- Nama Perusahaan -->
+                    <div class="space-y-1 sm:space-y-2">
+                        <label for="company_name" class="block text-sm sm:text-base font-semibold text-gray-700">
+                            Nama Perusahaan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="company_name" id="company_name" 
+                            value="{{ old('company_name', $company->company_name) }}"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="Masukkan nama perusahaan">
+                        @error('company_name')
+                            <p class="text-red-600 text-xs sm:text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Email Perusahaan -->
+                    <div class="space-y-1 sm:space-y-2">
+                        <label for="company_email" class="block text-sm sm:text-base font-semibold text-gray-700">
+                            Email Perusahaan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="company_email" id="company_email" 
+                            value="{{ old('company_email', $company->company_email) }}"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="info@perusahaan.com">
+                        @error('company_email')
+                            <p class="text-red-600 text-xs sm:text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Nomor Telepon -->
+                    <div class="space-y-1 sm:space-y-2">
+                        <label for="company_phone_number" class="block text-sm sm:text-base font-semibold text-gray-700">
+                            Nomor Telepon <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="company_phone_number" id="company_phone_number" 
+                            value="{{ old('company_phone_number', $company->company_phone_number) }}"
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            placeholder="021-xxxxxxxx atau 08xxxxxxxxxx">
+                        @error('company_phone_number')
+                            <p class="text-red-600 text-xs sm:text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Alamat Perusahaan - Full width on larger screens -->
+                    <div class="md:col-span-2 space-y-1 sm:space-y-2">
+                        <label for="company_address" class="block text-sm sm:text-base font-semibold text-gray-700">
+                            Alamat Lengkap Perusahaan <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="company_address" id="company_address" rows="4" 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none"
+                            placeholder="Masukkan alamat lengkap perusahaan">{{ old('company_address', $company->company_address) }}</textarea>
+                        @error('company_address')
+                            <p class="text-red-600 text-xs sm:text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                </div>
+
+                <!-- Action buttons - Responsive -->
+                <div class="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
+                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:justify-end">
+                        <a href="{{ route('admin.company.index') }}" 
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-md text-sm sm:text-base font-semibold text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:border-gray-500 transition-colors order-2 sm:order-1">
+                            <i class="bi bi-arrow-left mr-2"></i>
+                            <span>Kembali</span>
+                        </a>
+                        <button type="submit" 
+                            class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 border border-transparent rounded-md text-sm sm:text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors order-1 sm:order-2">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            <span>Simpan Perubahan</span>
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
-    @push('scripts')
     <!-- script JS  -->
-           <script src="{{ asset('js/script.js') }}"></script>
-    @endpush
+    <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>
 @endsection

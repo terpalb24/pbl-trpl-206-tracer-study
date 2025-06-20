@@ -788,13 +788,13 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        // Get all user answers for this alumni
+        // Change from get() to paginate()
         $userAnswers = Tb_User_Answers::where('id_user', auth()->id())
             ->with(['periode' => function($query) {
                 $query->select('id_periode', 'start_date', 'end_date', 'status');
             }])
             ->orderBy('updated_at', 'desc')
-            ->get();
+            ->paginate(10); // Add pagination with 10 items per page
 
         \Log::info('User answers loaded', [
             'count' => $userAnswers->count(),
