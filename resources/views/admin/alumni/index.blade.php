@@ -150,7 +150,7 @@
 
             <!-- Tabel Alumni - Mobile: Card view, Desktop: Table view -->
             <div class="overflow-hidden">
-                <!-- Desktop Table View -->
+                <!-- Desktop Table View - Perbaikan Aksi -->
                 <div class="hidden lg:block overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -159,7 +159,7 @@
                                 <th class="px-4 py-3 text-left">NIM</th>
                                 <th class="px-4 py-3 text-left">Program Studi</th>
                                 <th class="px-4 py-3 text-left">Nama Alumni</th>
-                                <th class="px-4 py-3 text-center w-32">Aksi</th>
+                                <th class="px-4 py-3 text-center w-40">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
@@ -170,22 +170,26 @@
                                     <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ $item->name }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="flex justify-center items-center space-x-1 xl:space-x-2">
+                                        <div class="flex justify-center items-center space-x-2">
+                                            <!-- Edit Button -->
                                             <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                                class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 group"
+                                                class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[70px]"
                                                 title="Edit Alumni">
-                                                <i class="bi bi-pencil-square"></i>
-                                                <span class="hidden xl:ml-1 xl:inline">Edit</span>
+                                                <i class="bi bi-pencil-square mr-1"></i>
+                                                <span>Edit</span>
                                             </a>
+                                            
+                                            <!-- Delete Button -->
                                             <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
+                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
+                                                class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                    class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 group" 
+                                                    class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[70px]" 
                                                     title="Hapus Alumni">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span class="hidden xl:ml-1 xl:inline">Hapus</span>
+                                                    <i class="bi bi-trash mr-1"></i>
+                                                    <span>Hapus</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -203,7 +207,7 @@
                     </table>
                 </div>
 
-                <!-- Tablet Table View (md to lg) -->
+                <!-- Tablet Table View (md to lg) - Perbaikan Aksi -->
                 <div class="hidden md:block lg:hidden overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
@@ -211,7 +215,7 @@
                                 <th class="px-3 py-2 text-center">No</th>
                                 <th class="px-3 py-2 text-left">NIM</th>
                                 <th class="px-3 py-2 text-left">Nama</th>
-                                <th class="px-3 py-2 text-center w-24">Aksi</th>
+                                <th class="px-3 py-2 text-center w-32">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
@@ -224,20 +228,22 @@
                                         <div class="text-xs text-gray-500 truncate">{{ $item->studyProgram->study_program ?? '-' }}</div>
                                     </td>
                                     <td class="px-3 py-2">
-                                        <div class="flex justify-center items-center space-x-1">
+                                        <div class="flex justify-center items-center space-x-2">
                                             <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                                class="inline-flex items-center justify-center w-7 h-7 rounded bg-blue-500 hover:bg-blue-600 text-white transition duration-200"
+                                                class="inline-flex items-center justify-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[60px]"
                                                 title="Edit">
-                                                <i class="bi bi-pencil-square text-xs"></i>
+                                                <i class="bi bi-pencil-square mr-1"></i>
+                                                <span>Edit</span>
                                             </a>
                                             <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-500 hover:bg-red-600 text-white transition duration-200" 
+                                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]" 
                                                     title="Hapus">
-                                                    <i class="bi bi-trash text-xs"></i>
+                                                    <i class="bi bi-trash mr-1"></i>
+                                                    <span>Hapus</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -255,7 +261,7 @@
                     </table>
                 </div>
 
-                <!-- Mobile Card View -->
+                <!-- Mobile Card View - Perbaikan Aksi -->
                 <div class="md:hidden space-y-3 p-4">
                     @forelse($alumni as $index => $item)
                         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
@@ -278,18 +284,19 @@
                             
                             <div class="flex gap-2 pt-2 border-t border-gray-100">
                                 <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                    class="flex-1 flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
+                                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
                                     <i class="bi bi-pencil-square"></i>
-                                    <span>Edit</span>
+                                    <span>Edit Alumni</span>
                                 </a>
                                 <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                    onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="flex-1">
+                                    onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
+                                    class="flex-1">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
-                                        class="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
+                                        class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
                                         <i class="bi bi-trash"></i>
-                                        <span>Hapus</span>
+                                        <span>Hapus Alumni</span>
                                     </button>
                                 </form>
                             </div>

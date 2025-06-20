@@ -87,7 +87,7 @@
                                 <th class="px-4 py-3 text-center">No</th>
                                 <th class="px-4 py-3 text-left">Nama Perusahaan</th>
                                 <th class="px-4 py-3 text-left">Ditambahkan Oleh</th>
-                                <th class="px-4 py-3 text-center">Aksi</th>
+                                <th class="px-4 py-3 text-center w-32">Aksi</th> {{-- Tambah width --}}
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
@@ -113,9 +113,10 @@
                                     <td class="px-4 py-3">
                                         <div class="flex justify-center">
                                             <a href="{{ route('admin.company.edit', $company->id_company) }}"
-                                               class="px-3 py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200"
-                                               title="Lengkapi Data">
-                                               <i class="bi bi-pencil-square"></i>
+                                               class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[100px]"
+                                               title="Lengkapi Data Perusahaan">
+                                               <i class="bi bi-pencil-square mr-1"></i>
+                                               <span>Lengkapi</span>
                                             </a>
                                         </div>
                                     </td>
@@ -222,7 +223,7 @@
                                 <th class="px-4 py-3 text-left">Alamat</th>
                                 <th class="px-4 py-3 text-left">Email</th>
                                 <th class="px-4 py-3 text-left">Telepon</th>
-                                <th class="px-4 py-3 text-center w-24">Aksi</th>
+                                <th class="px-4 py-3 text-center w-40">Aksi</th> {{-- Ubah dari w-24 ke w-40 --}}
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
@@ -237,23 +238,23 @@
                                         <div class="flex justify-center items-center space-x-2">
                                             <!-- Edit Button -->
                                             <a href="{{ route('admin.company.edit', $company->id_company) }}" 
-                                                class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200"
+                                                class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[70px]"
                                                 title="Edit Perusahaan">
-                                                <i class="bi bi-pencil-square"></i>
-                                                <span class="hidden xl:ml-1 xl:inline">Edit</span>
+                                                <i class="bi bi-pencil-square mr-1"></i>
+                                                <span>Edit</span>
                                             </a>
                                             
                                             <!-- Delete Button -->
                                             <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ $company->company_name }}\n- Semua data terkait akan ikut terhapus')" 
+                                                onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
                                                 class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                    class="inline-flex items-center justify-center w-8 h-8 xl:w-auto xl:h-auto xl:px-3 xl:py-1 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200" 
+                                                    class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[70px]" 
                                                     title="Hapus Perusahaan">
-                                                    <i class="bi bi-trash"></i>
-                                                    <span class="hidden xl:ml-1 xl:inline">Hapus</span>
+                                                    <i class="bi bi-trash mr-1"></i>
+                                                    <span>Hapus</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -279,7 +280,7 @@
                                 <th class="px-3 py-2 text-center">No</th>
                                 <th class="px-3 py-2 text-left">Perusahaan</th>
                                 <th class="px-3 py-2 text-left">Kontak</th>
-                                <th class="px-3 py-2 text-center w-20">Aksi</th>
+                                <th class="px-3 py-2 text-center w-32">Aksi</th> {{-- Ubah dari w-20 ke w-32 --}}
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
@@ -295,20 +296,22 @@
                                         <div class="text-xs text-gray-500">{{ $company->company_phone_number ?? '-' }}</div>
                                     </td>
                                     <td class="px-3 py-2">
-                                        <div class="flex justify-center items-center space-x-1">
+                                        <div class="flex justify-center items-center space-x-2">
                                             <a href="{{ route('admin.company.edit', $company->id_company) }}" 
-                                                class="inline-flex items-center justify-center w-7 h-7 rounded bg-blue-500 hover:bg-blue-600 text-white transition duration-200"
+                                                class="inline-flex items-center justify-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[60px]"
                                                 title="Edit">
-                                                <i class="bi bi-pencil-square text-xs"></i>
+                                                <i class="bi bi-pencil-square mr-1"></i>
+                                                <span>Edit</span>
                                             </a>
                                             <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
-                                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-500 hover:bg-red-600 text-white transition duration-200" 
+                                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]" 
                                                     title="Hapus">
-                                                    <i class="bi bi-trash text-xs"></i>
+                                                    <i class="bi bi-trash mr-1"></i>
+                                                    <span>Hapus</span>
                                                 </button>
                                             </form>
                                         </div>
@@ -351,20 +354,21 @@
                                 </p>
                             </div>
                             
-                            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
+                            <div class="flex gap-2 pt-2 border-t border-gray-100">
                                 <a href="{{ route('admin.company.edit', $company->id_company) }}" 
-                                    class="flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
+                                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
                                     <i class="bi bi-pencil-square"></i>
-                                    <span>Edit</span>
+                                    <span>Edit Perusahaan</span>
                                 </a>
                                 <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
-                                    onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')" class="w-full">
+                                    onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
+                                    class="flex-1">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
-                                        class="w-full flex items-center justify-center gap-1 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
+                                        class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
                                         <i class="bi bi-trash"></i>
-                                        <span>Hapus</span>
+                                        <span>Hapus Perusahaan</span>
                                     </button>
                                 </form>
                             </div>
