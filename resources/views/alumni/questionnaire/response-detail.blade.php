@@ -378,7 +378,7 @@
                                                                                             @endif
                                                                                             
                                                                                             <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-base sm:text-lg font-mono">
-                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                                {{ $qData['answer'] }}
                                                                                             </span>
                                                                                             
                                                                                             @if(!empty($qData['question']->after_text))
@@ -394,7 +394,7 @@
                                                                                         <div class="mb-2">
                                                                                             <span class="text-xs sm:text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
                                                                                             <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-lg sm:text-2xl font-mono">
-                                                                                                {{ number_format(floatval(str_replace(',', '', $qData['answer']))) }}
+                                                                                                {{ $qData['answer'] }}
                                                                                             </span>
                                                                                         </div>
                                                                                         
