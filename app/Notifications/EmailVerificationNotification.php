@@ -37,17 +37,17 @@ class EmailVerificationNotification extends Notification implements ShouldQueue
     /**
      * Get the mail representation of the notification.
      */
-   public function toMail($notifiable)
-{
-    $email = $notifiable->routeNotificationFor('mail'); // Dapatkan email tujuan notifikasi
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->subject('Verifikasi Email Anda')
+            ->greeting('Halo!')
+            ->line('Silakan klik tombol di bawah ini untuk memverifikasi email Anda.')
+            ->action('Verifikasi Email', url('/alumni/email/verify/' . $this->token))
+            ->line('Jika Anda tidak meminta verifikasi ini, abaikan email ini.')
+            ->line('Terima kasih telah menggunakan aplikasi kami!');
+    }
 
-    return (new MailMessage)
-        ->subject('Verifikasi Email Anda')
-        ->line("Silakan klik tautan berikut untuk memverifikasi email: $email")
-        ->action('Verifikasi Email', url('/alumni/password/' . $this->token))
-        ->line('Terima kasih telah menggunakan aplikasi kami!');
-}
-    
     /**
      * Get the array representation of the notification.
      */

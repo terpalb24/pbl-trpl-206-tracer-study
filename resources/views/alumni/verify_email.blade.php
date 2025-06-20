@@ -1,67 +1,83 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center max-w-6xl w-full">
-        <!-- Form Section -->
-        <div class="space-y-6">
-            @if (session('success'))
-                <div class="bg-green-500 text-white p-4 rounded-md mb-6">
-                    {{ session('success') }}
-                </div>
-            @endif
-
-            <!-- Error Message if Token is Not Found -->
-            @if (session('error'))
-                <div class="bg-red-500 text-white p-4 rounded-md mb-6">
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
+    <div class="flex flex-col-reverse md:flex-row items-center w-full max-w-4xl mx-auto rounded-lg shadow-lg overflow-hidden bg-white">
+        <!-- Left Side - Form -->
+        <div class="w-full md:w-1/2 p-8 sm:p-10">
+            <h2 class="text-2xl sm:text-3xl font-bold text-center text-black mb-3">Verifikasi Email Alumni</h2>
+            <p class="text-sm sm:text-base text-center text-gray-600 mb-6">
+                Masukkan email Anda untuk menerima link verifikasi.
+            </p>
+            @if(session('error'))
+                <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
                     {{ session('error') }}
                 </div>
             @endif
-
-            <p class="text-sm text-gray-700">
-                Silahkan masukkan akun email yang terhubung, agar kami dapat mengirim email untuk mereset kata sandi anda <span class="text-blue-500">^_^</span>
-            </p>
-
-            <form method="POST" action="{{ route('alumni.email.verify') }}" class="space-y-4">
+            @if(session('status'))
+                <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
+                    {{ session('status') }}
+                </div>
+            @endif
+            @if ($errors->any())
+                <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form method="POST" action="{{ route('alumni.verify.email') }}" class="space-y-5">
                 @csrf
-                <div class="relative">
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Masukkan Email"
-                        required
-                        class="w-full pl-10 pr-4 py-2 border rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 12a4 4 0 01-8 0 4 4 0 018 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 14v2m0 0h3m-3 0H9m3 0v4" />
-                        </svg>
+                <div>
+                    <label for="email" class="block mb-1 text-sm font-medium text-gray-700">Email</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-envelope"></i></span>
+                        <input id="email" name="email" type="email" required autofocus class="input-field pl-10" placeholder="Masukkan Email">
                     </div>
                     @error('email')
                         <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
                     @enderror
                 </div>
-
                 <div class="flex flex-col space-y-2">
                     <button
                         type="submit"
                         class="bg-blue-900 text-white py-2 rounded-md hover:bg-blue-800 transition">
-                        Kirim
+                        Kirim Link Verifikasi
                     </button>
-                    <a href="{{ route('login') }}" class="text-center text-sm text-black font-semibold hover:underline">
-                        Batal
-                    </a>
+                    <button type="button" id="btn-cancel" class="text-center text-sm text-black font-semibold hover:underline">
+                        Continue
+                    </button>
                 </div>
             </form>
         </div>
-
-        <!-- Illustration Section -->
-        <div class="hidden md:block">
-            <img src="{{ asset('assets/images/email.png') }}" alt="Reset Password Illustration" class="w-full max-w-md mx-auto" />
+        <!-- Right Side - Illustration -->
+        <div class="w-full md:w-1/2 flex justify-center items-center p-6 bg-gray-50">
+            <img src="{{ asset('assets/images/email.png') }}" alt="Verifikasi Email" class="max-w-xs md:max-w-md lg:max-w-lg w-full h-auto">
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const isFirstLogin = @json(session('alumni_is_first_login', 1));
+        document.getElementById('btn-cancel').onclick = function() {
+            if (isFirstLogin == 1) {
+                // Hapus session dan redirect ke login
+                fetch("{{ route('logout') }}", {
+                    method: "POST",
+                    headers: {
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                        "Accept": "application/json"
+                    }
+                }).then(() => {
+                    window.location.href = "{{ route('login') }}";
+                });
+            } else {
+                alert('Email Anda sudah terverifikasi. Anda akan diarahkan ke dashboard.');
+                window.location.href = "{{ route('dashboard.alumni') }}";
+            }
+        }
+    });
+</script>
 @endsection

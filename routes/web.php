@@ -60,19 +60,6 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->get('/admin/dashboard'
 Route::middleware(['auth:web', CheckRole::class . ':2'])->get('/alumni/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard.alumni');
 Route::middleware(['auth:web', CheckRole::class . ':3'])->get('/company/dashboard', [CompanyController::class, 'dashboard'])->name('dashboard.company');
 
-/*
-|--------------------------------------------------------------------------
-| Email Verification Routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth'])->group(function () {
-    Route::get('/alumni/email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
-    Route::post('/alumni/email', [AlumniController::class, 'verifyEmail'])->name('alumni.email.verify');
-});
-
-// Password reset (no auth required - accessed from email)
-Route::get('/alumni/password/{token}', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.password.form');
-Route::post('/alumni/password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
 
 /*
 |--------------------------------------------------------------------------
@@ -103,6 +90,12 @@ Route::middleware(['auth:web', CheckRole::class . ':2'])->group(function () {
     // Location API routes for alumni questionnaire
     Route::get('/alumni/questionnaire/provinces', [AlumniQuestionnaireController::class, 'getProvinces'])->name('alumni.questionnaire.provinces');
     Route::get('/alumni/questionnaire/cities/{provinceId}', [AlumniQuestionnaireController::class, 'getCities'])->name('alumni.questionnaire.cities');
+
+    // Email verification & password update for alumni
+    Route::get('/alumni/verify-email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
+    Route::post('/alumni/verify-email', [AlumniController::class, 'sendEmailVerification'])->name('alumni.verify.email');
+    Route::get('/alumni/verify-email/{token}', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.change_password');
+    Route::post('/alumni/update-password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
 });
 
 /*

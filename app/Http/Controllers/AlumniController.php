@@ -28,53 +28,40 @@ class AlumniController extends Controller
     return view('alumni.verify_email');
 }
 
-
-public function verifyEmail(Request $request)
+public function sendEmailVerification(Request $request)
 {
     $request->validate([
-        'email' => 'required|email', 
+        'email' => 'required|email',
     ]);
 
     $user = Auth::user();
     $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
-    
 
     if (!$alumni) {
-        return redirect()->back()->with('error', 'Data alumni tidak ditemukan.');
+        return back()->with('error', 'Data alumni tidak ditemukan.');
     }
 
-    // Enkripsi data email dan id_user sebagai token
-    $token = Crypt::encrypt([
+    // Buat token verifikasi
+    $token = \Crypt::encrypt([
         'email' => $request->email,
         'id_user' => $user->id_user,
-        'expires_at' => Carbon::now()->addMinutes(30), // Token kadaluarsa 30 menit
+        'expires_at' => now()->addMinutes(30),
     ]);
-    // Kirim notifikasi verifikasi email (link berisi token)
-    Notification::route('mail', $request->email)
-    ->notify((new EmailVerificationNotification($token))->delay(now()->addSeconds(1)));
 
-        
+    // Kirim email menggunakan queue
+    \Mail::to($request->email)->queue(new \App\Mail\AlumniEmailVerification($token));
 
-    return redirect()->route('alumni.email.form')->with('success', 'Silakan cek inbox Anda dan klik link untuk verifikasi serta ubah password.');
+    return back()->with('status', 'Link verifikasi telah dikirim ke email Anda.');
 }
-
-
 
 public function showChangePasswordForm($token)
 {
     try {
-        // Debug token yang diterima
-        \Log::info('Received token for password change: ', ['token' => $token]);
-
         // Dekripsi token untuk mendapatkan data
         $data = \Crypt::decrypt($token);
 
-        // Debug data setelah dekripsi
-        \Log::info('Decrypted data: ', ['data' => $data]);
-
-        // Cek apakah token sudah kadaluarsa (misalnya kadaluarsa 30 menit setelah dibuat)
-        if (Carbon::now()->greaterThan($data['expires_at'])) {
-            \Log::warning('Token expired: ', ['token' => $token]);
+        // Cek apakah token sudah kadaluarsa
+        if (now()->greaterThan($data['expires_at'])) {
             return redirect()->route('alumni.email.form')->with('error', 'Token sudah kadaluarsa.');
         }
 
@@ -85,13 +72,6 @@ public function showChangePasswordForm($token)
             'id_user' => $data['id_user'],
         ]);
     } catch (\Exception $e) {
-        // Log error untuk debugging jika dekripsi token gagal
-        \Log::error('Token decryption failed: ', [
-            'error' => $e->getMessage(),
-            'token' => $token
-        ]);
-
-        // Jika token tidak valid, redirect ke halaman verifikasi email
         return redirect()->route('alumni.email.form')->with('error', 'Token tidak valid atau kadaluarsa.');
     }
 }
@@ -189,4 +169,25 @@ public function update(Request $request)
 }
 
 
-};
+public function verifyEmailToken($token)
+{
+    try {
+        $data = \Crypt::decrypt($token);
+
+        if (now()->greaterThan($data['expires_at'])) {
+            return redirect()->route('alumni.email.form')->with('error', 'Token sudah kadaluarsa.');
+        }
+
+        $alumni = Tb_Alumni::where('id_user', $data['id_user'])->first();
+        if ($alumni) {
+            $alumni->update([
+                'email' => $data['email'],
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        return redirect()->route('alumni.change_password')->with('success', 'Email berhasil diverifikasi.');
+    } catch (\Exception $e) {
+        return redirect()->route('alumni.email.form')->with('error', 'Token tidak valid atau kadaluarsa.');
+    }
+}}
