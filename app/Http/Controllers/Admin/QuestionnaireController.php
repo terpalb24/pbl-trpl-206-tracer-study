@@ -1400,7 +1400,7 @@ class QuestionnaireController extends Controller
      */
     public function remindUserToFill($id_periode, $id_user_answer)
     {
-        $userAnswer = \App\Models\Tb_User_Answers::with(['user.alumni', 'user.company'])->findOrFail($id_user_answer);
+        $userAnswer = Tb_User_Answers::with(['user.alumni', 'user.company'])->findOrFail($id_user_answer);
         $user = $userAnswer->user;
 
         // Cek tipe user dan ambil email dari tabel yang sesuai
@@ -1419,7 +1419,7 @@ class QuestionnaireController extends Controller
         }
 
         try {
-            $periode = \App\Models\Tb_Periode::findOrFail($id_periode);
+            $periode = Tb_Periode::findOrFail($id_periode);
             $target->notify(new RemindFillQuestionnaireNotification($periode));
             return redirect()->back()->with('success', 'Notifikasi pengingat berhasil dikirim ke email user.');
         } catch (\Exception $e) {
@@ -1432,7 +1432,7 @@ class QuestionnaireController extends Controller
      */
     public function remindAllUsers($id_periode)
     {
-        $periode = \App\Models\Tb_Periode::findOrFail($id_periode);
+        $periode = Tb_Periode::findOrFail($id_periode);
 
         // Ambil alumni sesuai target periode
         $alumniQuery = Tb_Alumni::query();
@@ -1454,13 +1454,13 @@ class QuestionnaireController extends Controller
         $sent = 0;
         foreach ($alumniList as $alumni) {
             if ($alumni->email) {
-                $alumni->notify(new RemindFillQuestionnaireNotification($periode));
+                \Mail::to($alumni->email)->queue(new \App\Mail\RemindFillQuestionnaireMail($periode));
                 $sent++;
             }
         }
         foreach ($companyList as $company) {
             if ($company->company_email) {
-                $company->notify(new RemindFillQuestionnaireNotification($periode));
+                \Mail::to($company->company_email)->queue(new \App\Mail\RemindFillQuestionnaireMail($periode));
                 $sent++;
             }
         }
