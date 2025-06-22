@@ -8,10 +8,10 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
        {{-- Sidebar Komponen --}}
-    <x-alumni.sidebar class="lg:block hidden" />
+    <x-alumni.sidebar/>
 
     <!-- Main Content -->
-    <main class="flex-grow overflow-y-auto relative" id="main-content">
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
         <!-- Header dengan judul -->
         <x-alumni.header title="Riwayat Kerja" />
 

@@ -9,15 +9,10 @@
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="editprofil-container">
 
     {{-- Sidebar Komponen --}}
-    <x-alumni.sidebar class="lg:block hidden" id="sidebar" />
-
-    {{-- Tombol Toggle Sidebar (Untuk Mobile) --}}
-    <button id="toggle-sidebar" class="text-white text-xl lg:hidden focus:outline-none absolute top-4 left-4 z-50">
-        <i class="fas fa-bars"></i> <!-- Ikon hamburger menu -->
-    </button>
-
+    <x-alumni.sidebar/>
+    
     {{-- Main Content --}}
-    <main class="flex-grow overflow-y-auto" id="main-content">
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
         {{-- Header --}}
         <x-alumni.header title="Edit Profil" />
 

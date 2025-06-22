@@ -6,8 +6,8 @@
 
 @section('content')
 <div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-    <x-alumni.sidebar class="lg:block hidden" />
-    <main class="flex-grow overflow-y-auto relative" id="main-content">
+    <x-alumni.sidebar/>
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
         <x-alumni.header title="Riwayat Kerja" />
         <div class="p-6">
             <div class="bg-white rounded-lg shadow-lg p-6 max-w-8xl mx-auto">

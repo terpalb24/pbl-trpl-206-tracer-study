@@ -7,7 +7,8 @@
     @include('components.company.sidebar')
 
     <!-- Main Content -->
-    <main class="flex-1 overflow-y-auto transition-all duration-300 ease-in-out" id="main-content">
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
+
         {{-- Header --}}
         @include('components.company.header', ['title' => 'Riwayat Kuesioner'])
 
