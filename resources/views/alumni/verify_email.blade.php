@@ -58,9 +58,22 @@
         </div>
     </div>
 </div>
+{{-- SweetAlert CDN --}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const isFirstLogin = @json(session('alumni_is_first_login', 1));
+        if (isFirstLogin == 0) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Akun sudah diverifikasi',
+                text: 'Akun Anda sudah diverifikasi. Anda akan diarahkan ke dashboard.',
+                showConfirmButton: false,
+                timer: 2500
+            }).then(() => {
+                window.location.href = "{{ route('dashboard.alumni') }}";
+            });
+        }
         document.getElementById('btn-cancel').onclick = function() {
             if (isFirstLogin == 1) {
                 // Hapus session dan redirect ke login
@@ -74,8 +87,7 @@
                     window.location.href = "{{ route('login') }}";
                 });
             } else {
-                alert('Email Anda sudah terverifikasi. Anda akan diarahkan ke dashboard.');
-                window.location.href = "{{ route('dashboard.alumni') }}";
+                // Sudah diverifikasi, SweetAlert sudah handle redirect di atas
             }
         }
     });

@@ -174,6 +174,10 @@ class AdminController extends Controller
             'address' => 'required|string|max:255',
         ]);
 
+        // membuat kapital pada awal inputan nama dan gender
+        $name = ucwords(strtolower($request->name));
+        $gender = ucfirst(strtolower($request->gender));
+
         // Simpan user baru (username & password = nim)
         $user = Tb_User::create([
             'username' => $request->nim,
@@ -185,8 +189,8 @@ class AdminController extends Controller
         Tb_alumni::create([
             'nim' => $request->nim,
             'nik' => $request->nik,
-            'name' => $request->name,
-            'gender' => $request->gender,
+            'name' => $name,
+            'gender' => $gender,
             'date_of_birth' => $request->date_of_birth,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
@@ -230,11 +234,15 @@ class AdminController extends Controller
 
         $alumni = Tb_alumni::where('nim', $nim)->firstOrFail();
 
+        // Kapitalisasi nama dan gender
+        $name = ucwords(strtolower($request->name));
+        $gender = ucfirst(strtolower($request->gender));
+
         // Update field (kecuali NIM dan id_user)
         $alumni->update([
             'nik' => $request->nik,
-            'name' => $request->name,
-            'gender' => $request->gender,
+            'name' => $name,
+            'gender' => $gender,
             'date_of_birth' => $request->date_of_birth,
             'email' => $request->email,
             'phone_number' => $request->phone_number,
@@ -295,9 +303,9 @@ class AdminController extends Controller
                 }
 
                 // Validate gender
-                $gender = strtolower(trim($row[3]));
-                if (!in_array($gender, ['pria', 'wanita'])) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'pria' atau 'wanita'");
+                $gender = ucfirst(strtolower(trim($row[3]))); // Kapitalisasi gender
+                if (!in_array($gender, ['Pria', 'Wanita'])) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'Pria' atau 'Wanita'");
                 }
 
                 // Validate study program using case-insensitive LIKE 
@@ -306,6 +314,9 @@ class AdminController extends Controller
                 if (!$studyProgram) {
                     throw new \Exception("Baris ke-" . ($index + 2) . ": Program Studi '" . $studyProgramName . "' tidak ditemukan");
                 }
+
+                // Kapitalisasi nama alumni
+                $name = ucwords(strtolower(trim($row[2])));
 
                 // Create/update user
                 $user = Tb_User::updateOrCreate(
@@ -322,7 +333,7 @@ class AdminController extends Controller
                     [
                         'id_user' => $user->id_user,
                         'nik' => $row[1],
-                        'name' => $row[2],
+                        'name' => $name,
                         'gender' => $gender,
                         'date_of_birth' => $row[4],
                         'email' => $row[5],
@@ -463,7 +474,7 @@ class AdminController extends Controller
             '12345678',              // NIM
             '1234567890123456',      // NIK
             'John Doe',              // Nama
-            'pria',            // Jenis Kelamin
+            'Pria',            // Jenis Kelamin
             '2000-01-01',           // Tanggal Lahir
             'john.doe@email.com',    // Email
             '081234567890',         // No. Telepon
@@ -483,7 +494,7 @@ class AdminController extends Controller
         $notes = [
             'Catatan:',
             '- NIM wajib diisi dan harus unik',
-            '- Jenis Kelamin harus diisi dengan: laki-laki atau perempuan',
+            '- Jenis Kelamin harus diisi dengan: Pria atau Wanita',
             '- Tanggal Lahir format: YYYY-MM-DD (contoh: 2000-01-01)',
             '- Status harus diisi dengan salah satu dari: bekerja, tidak bekerja, melanjutkan studi, berwiraswasta, atau sedang mencari kerja',
             '- Program Studi harus sesuai dengan yang ada di sistem',

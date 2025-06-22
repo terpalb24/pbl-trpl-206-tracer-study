@@ -125,7 +125,8 @@ public function updatePassword(Request $request)
         'email' => $data['email'],
         'is_First_login' => false,
     ]);
-
+    // Set session alumni_nim setelah update password
+    session(['alumni_nim' => $alumni->nim]);
     return redirect()->route('login')->with('success', 'Password dan email berhasil diperbarui. Silakan login.');
 }
 

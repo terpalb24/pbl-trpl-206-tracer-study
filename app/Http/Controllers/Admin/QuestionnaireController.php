@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Notifications\RemindFillQuestionnaireNotification;
+use App\Jobs\SendQuestionnaireReminderJob;
 
 class QuestionnaireController extends Controller
 {
@@ -146,8 +147,23 @@ class QuestionnaireController extends Controller
 
         Tb_Periode::create($data);
 
+        // Ambil periode yang baru saja dibuat
+        $periode = Tb_Periode::latest()->first();
+        if ($periode) {
+            // Jadwalkan pengingat 1 hari setelah mulai
+            $remindAfterStart = $periode->start_date->copy()->addDay()->setTime(8,0,0); // jam 8 pagi
+            SendQuestionnaireReminderJob::dispatch($periode->id_periode)
+                ->delay($remindAfterStart);
+            // Jadwalkan pengingat 2 hari sebelum berakhir
+            $remindBeforeEnd = $periode->end_date->copy()->subDays(2)->setTime(8,0,0); // jam 8 pagi
+            if ($remindBeforeEnd->gt(now())) {
+                SendQuestionnaireReminderJob::dispatch($periode->id_periode)
+                    ->delay($remindBeforeEnd);
+            }
+        }
+
         return redirect()->route('admin.questionnaire.index')
-            ->with('success', 'Periode Questionnaire berhasil dibuat.');
+            ->with('success', 'Periode Questionnaire berhasil dibuat. Pengingat otomatis juga dijadwalkan.');
     }
 
     /**

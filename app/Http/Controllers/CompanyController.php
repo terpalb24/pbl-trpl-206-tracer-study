@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tb_Company;
+use App\Models\Tb_user;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class CompanyController extends Controller
 {
@@ -44,9 +46,19 @@ class CompanyController extends Controller
     }
 
     // Perbarui data perusahaan kecuali company_name
+    $oldEmail = $company->company_email;
     $company->company_email = $validated['company_email'];
     $company->company_phone_number = $validated['company_phone_number'];
     $company->company_address = $validated['company_address'];
+
+    // Jika email berubah, update  username Tb_user
+    if ($oldEmail !== $validated['company_email']) {
+        $user = Tb_user::where('id_user', $company->id_user)->first();
+        if ($user) {
+            $user->username = $validated['company_email'];
+            $user->save();
+        }
+    }
 
     if (!$company->save()) {
         return back()->with('error', 'Gagal memperbarui profil perusahaan');
