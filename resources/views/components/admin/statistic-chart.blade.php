@@ -118,6 +118,30 @@
 document.addEventListener('DOMContentLoaded', function () {
     // Bar Chart Status Alumni
     const ctx = document.getElementById('statistikChart').getContext('2d');
+    
+    // Data untuk chart
+    const chartData = [
+        {{ $statisticData['bekerja'] ?? 0 }},
+        {{ $statisticData['tidak bekerja'] ?? 0 }},
+        {{ $statisticData['melanjutkan studi'] ?? 0 }},
+        {{ $statisticData['berwiraswasta'] ?? 0 }},
+        {{ $statisticData['sedang mencari kerja'] ?? 0 }}
+    ];
+    
+    // Hitung nilai maksimum untuk menentukan skala Y yang proporsional
+    const maxValue = Math.max(...chartData);
+    const suggestedMax = maxValue > 0 ? Math.ceil(maxValue * 1.2) : 10; // Tambah 20% dari nilai maksimum
+    
+    // Tentukan step size yang dinamis berdasarkan range data
+    let stepSize = 1;
+    if (suggestedMax > 100) {
+        stepSize = 10;
+    } else if (suggestedMax > 50) {
+        stepSize = 5;
+    } else if (suggestedMax > 20) {
+        stepSize = 2;
+    }
+    
     const data = {
         labels: [
             'Bekerja',
@@ -128,13 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
         ],
         datasets: [{
             label: 'Jumlah Alumni',
-            data: [
-                {{ $statisticData['bekerja'] ?? 0 }},
-                {{ $statisticData['tidak bekerja'] ?? 0 }},
-                {{ $statisticData['melanjutkan studi'] ?? 0 }},
-                {{ $statisticData['berwiraswasta'] ?? 0 }},
-                {{ $statisticData['sedang mencari kerja'] ?? 0 }}
-            ],
+            data: chartData,
             backgroundColor: [
                 '#2563eb', // biru
                 '#f59e42', // orange
@@ -145,6 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
             borderRadius: 8,
         }]
     };
+    
     new Chart(ctx, {
         type: 'bar',
         data: data,
@@ -156,11 +175,17 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             scales: {
                 y: { 
-                    beginAtZero: true, 
+                    beginAtZero: true,
+                    suggestedMax: suggestedMax, // Skala maksimum yang dinamis
                     ticks: { 
+                        stepSize: stepSize, // Step yang dinamis
                         precision: 0,
                         font: {
                             size: window.innerWidth < 640 ? 10 : 12
+                        },
+                        // Hanya tampilkan nilai bulat
+                        callback: function(value) {
+                            return Number.isInteger(value) ? value : '';
                         }
                     }
                 },
@@ -175,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Pie Chart Tahun Lulus Alumni
+    // Pie Chart Tahun Lulus Alumni (tidak diubah)
     const graduationYearPieCtx = document.getElementById('graduationYearPieChart').getContext('2d');
     const graduationYearLabels = {!! json_encode(array_keys($graduationYearStatisticData ?? [])) !!};
     const graduationYearValues = {!! json_encode(array_values($graduationYearStatisticData ?? [])) !!};
