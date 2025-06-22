@@ -21,3 +21,11 @@
         <span>Edit Profil</span>
     </a>
 </nav>
+<!-- Include Google Translate Widget Component -->
+<x-translate-widget 
+    position="bottom-left" 
+    :languages="['en', 'id']" 
+    theme="light" 
+/>
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">

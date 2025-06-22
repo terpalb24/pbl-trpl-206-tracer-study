@@ -215,7 +215,7 @@
                 </div>
                 
                 @if($option->is_other_option)
-                    <div class="ml-4 sm:ml-6 mt-2 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md {{ in_array($option->id_questions_options, $prevMultipleAnswers ?? []) ? '' : 'hidden' }}"
+                    <div class="ml-4 sm:ml-6 mt-2 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md {{ in_array($option->id_questions_options, $prevMultipleAnswers[$questionId] ?? []) ? '' : 'hidden' }}"
                          id="multiple_other_field_{{ $questionId }}_{{ $option->id_questions_options }}">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-2">
                             <i class="fas fa-edit text-blue-600 self-start sm:self-center"></i>
@@ -224,7 +224,7 @@
                             @endif
                             <input type="text" 
                                    name="question_{{ $questionId }}_other_{{ $option->id_questions_options }}"
-                                   value="{{ $prevMultipleOtherAnswers[$option->id_questions_options] ?? '' }}"
+                                   value="{{ isset($prevMultipleOtherAnswers[$option->id_questions_options]) ? $prevMultipleOtherAnswers[$option->id_questions_options] : '' }}"
                                    class="flex-grow px-2 sm:px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                                    placeholder="Sebutkan..."
                                    id="multiple_other_{{ $option->id_questions_options }}">
@@ -275,8 +275,8 @@
                            data-question-id="{{ $questionId }}"
                            {{ isset($prevAnswer) && $prevAnswer == $option->id_questions_options ? 'checked' : '' }}>
                     <label for="rating_{{ $option->id_questions_options }}" class="cursor-pointer flex items-center flex-grow">
-                        <span class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-medium {{ isset($prevAnswer) && $prevAnswer == $option->id_questions_options ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300' : 'bg-gray-100 text-gray-700 border-2 border-gray-300' }} hover:bg-yellow-50 transition-colors duration-200">
-                            <span class="flex items-center mr-1 sm:mr-2">
+                        <span class="rating-option inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 {{ isset($prevAnswer) && $prevAnswer == $option->id_questions_options ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300' : 'bg-gray-100 text-gray-700 border-2 border-gray-300' }} hover:bg-yellow-50 hover:border-yellow-200" >
+                            <span class="flex items-center mr-1 sm:mr-2"style="box-shadow: none;">
                                 @for($i = 1; $i <= 5; $i++)
                                     @if($i <= $starCount)
                                         <i class="fas fa-star text-yellow-500 text-xs sm:text-sm"></i>
@@ -285,7 +285,7 @@
                                     @endif
                                 @endfor
                             </span>
-                            <span class="break-words">{{ $option->option }}</span>
+                            <span class="break-words" style="box-shadow: none;">{{ $option->option }}</span>
                         </span>
                     </label>
                 </div>
@@ -461,8 +461,69 @@ input[type="checkbox"]:checked {
     animation: fadeIn 0.3s ease !important;
 }
 
+/* Rating option styling dengan dynamic color change menggunakan JavaScript */
+.rating-radio:checked + label .rating-option {
+    background-color: rgb(254 249 195) !important; /* bg-yellow-100 */
+    color: rgb(146 64 14) !important; /* text-yellow-800 */
+    border-color: rgb(252 211 77) !important; /* border-yellow-300 */
+    box-shadow: 0 0 0 2px rgba(252, 211, 77, 0.2) !important;
+}
+
+.rating-radio:not(:checked) + label .rating-option {
+    background-color: rgb(243 244 246) !important; /* bg-gray-100 */
+    color: rgb(55 65 81) !important; /* text-gray-700 */
+    border-color: rgb(209 213 219) !important; /* border-gray-300 */
+}
+
+/* Hover states untuk rating options */
+.rating-option:hover {
+    background-color: rgb(254 252 232) !important; /* bg-yellow-50 */
+    border-color: rgb(253 224 71) !important; /* border-yellow-200 */
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Transition untuk smooth color change */
+.rating-option {
+    transition: all 0.3s ease !important;
+}
+
+/* Stars hover effect untuk rating */
+.rating-radio + label:hover .fa-star {
+    transform: scale(1.1) !important;
+    transition: transform 0.2s ease !important;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-0.25rem); }
     to { opacity: 1; transform: translateY(0); }
 }
 </style>
+
+<script>
+// Dynamic rating color change dengan JavaScript untuk memastikan Tailwind classes bekerja
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle rating radio buttons
+    const ratingRadios = document.querySelectorAll('.rating-radio');
+    
+    ratingRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            const questionId = this.getAttribute('data-question-id');
+            const allRatingOptions = document.querySelectorAll(`input[name="question_${questionId}"] + label .rating-option`);
+            
+            // Reset semua rating options ke state default
+            allRatingOptions.forEach(option => {
+                option.classList.remove('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+                option.classList.add('bg-gray-100', 'text-gray-700', 'border-gray-300');
+            });
+            
+            // Apply yellow style ke option yang dipilih
+            if (this.checked) {
+                const selectedOption = this.nextElementSibling.querySelector('.rating-option');
+                selectedOption.classList.remove('bg-gray-100', 'text-gray-700', 'border-gray-300');
+                selectedOption.classList.add('bg-yellow-100', 'text-yellow-800', 'border-yellow-300');
+            }
+        });
+    });
+});
+</script>

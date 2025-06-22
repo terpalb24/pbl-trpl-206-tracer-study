@@ -336,50 +336,109 @@ class QuestionnaireController extends Controller
             
             foreach ($answerItems as $item) {
                 $question = Tb_Questions::find($item->id_question);
-                if ($question && $question->type === 'multiple') {
-                    if (!isset($prevMultipleAnswers[$item->id_question])) {
-                        $prevMultipleAnswers[$item->id_question] = [];
-                    }
-                    $prevMultipleAnswers[$item->id_question][] = $item->answer;
-                    
-                    if ($item->other_answer) {
-                        $prevMultipleOtherAnswers[$item->answer] = $item->other_answer;
-                    }
-                } elseif ($question && $question->type === 'location') {
-                    // ✅ PERBAIKAN: Properly parse and structure location data
-                    try {
-                        if (!empty($item->answer)) {
-                            $locationData = json_decode($item->answer, true);
-                            
-                            if ($locationData && is_array($locationData)) {
-                                // Store the complete location data for JavaScript to use
-                                $prevLocationAnswers[$item->id_question] = $locationData;
-                                
-                                \Log::info('Location answer loaded from database', [
-                                    'question_id' => $item->id_question,
-                                    'location_data' => $locationData
-                                ]);
-                            } else {
-                                \Log::warning('Invalid location data format in database', [
-                                    'question_id' => $item->id_question,
-                                    'raw_answer' => $item->answer
-                                ]);
+                
+                if (!$question) continue;
+                
+                switch ($question->type) {
+                    case 'text':
+                    case 'email':
+                    case 'numeric':
+                    case 'date':
+                        $prevAnswers[$item->id_question] = $item->answer;
+                        if ($item->other_answer) {
+                            $prevOtherAnswers[$item->id_question] = $item->other_answer;
+                        }
+                        break;
+
+                    case 'option':
+                    case 'rating':
+                    case 'scale':
+                        // Untuk option, rating, dan scale, gunakan id_questions_options untuk checked state
+                        if ($item->id_questions_options) {
+                            $prevAnswers[$item->id_question] = $item->id_questions_options;
+                        } else {
+                            // Fallback: jika data lama masih menyimpan ID di kolom answer
+                            if (is_numeric($item->answer)) {
+                                $option = Tb_Question_Options::find($item->answer);
+                                if ($option) {
+                                    $prevAnswers[$item->id_question] = $option->id_questions_options;
                             }
                         }
-                    } catch (\Exception $e) {
-                        \Log::error('Failed to parse location answer from database', [
-                            'question_id' => $item->id_question,
-                            'error' => $e->getMessage(),
-                            'raw_answer' => $item->answer
-                        ]);
-                    }
-                } else {
-                    $prevAnswers[$item->id_question] = $item->answer;
-                    if ($item->other_answer) {
-                        $prevOtherAnswers[$item->id_question] = $item->other_answer;
-                    }
+                        }
+                        
+                        if ($item->other_answer) {
+                            $prevOtherAnswers[$item->id_question] = $item->other_answer;
+                        }
+                        break;
+
+                    case 'multiple':
+                        if (!isset($prevMultipleAnswers[$item->id_question])) {
+                            $prevMultipleAnswers[$item->id_question] = [];
+                        }
+                        
+                        // Untuk multiple choice, gunakan id_questions_options untuk checked state
+                        if ($item->id_questions_options) {
+                            $prevMultipleAnswers[$item->id_question][] = $item->id_questions_options;
+                        } else {
+                            // Fallback: jika data lama masih menyimpan ID di kolom answer
+                            if (is_numeric($item->answer)) {
+                                $option = Tb_Question_Options::find($item->answer);
+                                if ($option) {
+                                    $prevMultipleAnswers[$item->id_question][] = $option->id_questions_options;
+                                }
+                            }
+                        }
+                        
+                        // ✅ PERBAIKAN: Ubah struktur menjadi sama dengan Alumni
+                        if ($item->other_answer && $item->id_questions_options) {
+                            if (!isset($prevMultipleOtherAnswers[$item->id_question])) {
+                                $prevMultipleOtherAnswers[$item->id_question] = [];
+                            }
+                            $prevMultipleOtherAnswers[$item->id_question][$item->id_questions_options] = $item->other_answer;
+                        }
+                        break;
+
+                    case 'location':
+                        // Location handling tetap sama
+                        try {
+                            if (!empty($item->answer)) {
+                                $locationData = json_decode($item->answer, true);
+                                
+                                if ($locationData && is_array($locationData)) {
+                                    $prevLocationAnswers[$item->id_question] = $locationData;
+                                    
+                                    \Log::info('Location answer loaded from database', [
+                                        'question_id' => $item->id_question,
+                                        'location_data' => $locationData
+                                    ]);
+                                } else {
+                                    \Log::warning('Invalid location data format in database', [
+                                        'question_id' => $item->id_question,
+                                        'raw_answer' => $item->answer
+                                    ]);
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            \Log::error('Failed to parse location answer from database', [
+                                'question_id' => $item->id_question,
+                                'error' => $e->getMessage(),
+                                'raw_answer' => $item->answer
+                            ]);
+                        }
+                        break;
                 }
             }
+            
+            // Debug log untuk memastikan data dimuat dengan benar
+            \Log::info('Company questionnaire - Previous answers loaded', [
+                'question_answers' => count($prevAnswers),
+                'multiple_answers' => count($prevMultipleAnswers),
+                'other_answers' => count($prevOtherAnswers),
+                'multiple_other_answers' => count($prevMultipleOtherAnswers),
+                'location_answers' => count($prevLocationAnswers),
+                'sample_prev_answers' => array_slice($prevAnswers, 0, 3, true),
+                'sample_multiple_answers' => array_slice($prevMultipleAnswers, 0, 3, true)
+            ]);
         }
         
         return view('company.questionnaire.fill', compact(
@@ -400,8 +459,8 @@ class QuestionnaireController extends Controller
             'prevMultipleAnswers',
             'prevMultipleOtherAnswers',
             'prevLocationAnswers',
-            'activeJobHistory', // ✅ TAMBAHAN: Data pekerjaan aktif
-            'eligibleGraduationYears' // ✅ TAMBAHAN: Info target periode
+            'activeJobHistory',
+            'eligibleGraduationYears'
         ));
     }
 
@@ -693,43 +752,43 @@ class QuestionnaireController extends Controller
             case 'option':
             case 'rating':
             case 'scale':
-                $answer = $request->input("question_{$questionId}");
+                $optionId = $request->input("question_{$questionId}"); // Ini adalah ID option
                 $otherAnswer = $request->input("question_{$questionId}_other");
                 
-                if ($answer) {
-                    // Cari option ID berdasarkan value
-                    $option = Tb_Question_Options::where('id_question', $questionId)
-                        ->where('option', $answer)
-                        ->first();
+                if ($optionId) {
+                    // Ambil data option berdasarkan ID untuk mendapatkan text
+                    $option = Tb_Question_Options::find($optionId);
                     
-                    Tb_User_Answer_Item::create([
-                        'id_user_answer' => $userAnswer->id_user_answer,
-                        'id_question' => $questionId,
-                        'id_questions_options' => $option ? $option->id_questions_options : null,
-                        'answer' => $answer,
-                        'other_answer' => $otherAnswer
-                    ]);
+                    if ($option) {
+                        Tb_User_Answer_Item::create([
+                            'id_user_answer' => $userAnswer->id_user_answer,
+                            'id_question' => $questionId,
+                            'id_questions_options' => $optionId, // Simpan ID di kolom yang benar
+                            'answer' => $option->option, // Simpan text pilihan di kolom answer
+                            'other_answer' => $otherAnswer
+                        ]);
+                    }
                 }
                 break;
 
             case 'multiple':
-                $answers = $request->input("question_{$questionId}", []);
+                $optionIds = $request->input("question_{$questionId}", []); // Array ID options
                 
-                foreach ($answers as $answer) {
-                    $otherAnswer = $request->input("question_{$questionId}_other_{$answer}");
+                foreach ($optionIds as $optionId) {
+                    $otherAnswer = $request->input("question_{$questionId}_other_{$optionId}");
                     
-                    // Cari option ID berdasarkan value
-                    $option = Tb_Question_Options::where('id_question', $questionId)
-                        ->where('option', $answer)
-                        ->first();
+                    // Ambil data option berdasarkan ID untuk mendapatkan text
+                    $option = Tb_Question_Options::find($optionId);
                     
-                    Tb_User_Answer_Item::create([
-                        'id_user_answer' => $userAnswer->id_user_answer,
-                        'id_question' => $questionId,
-                        'id_questions_options' => $option ? $option->id_questions_options : null,
-                        'answer' => $answer,
-                        'other_answer' => $otherAnswer
-                    ]);
+                    if ($option) {
+                        Tb_User_Answer_Item::create([
+                            'id_user_answer' => $userAnswer->id_user_answer,
+                            'id_question' => $questionId,
+                            'id_questions_options' => $optionId, // Simpan ID di kolom yang benar
+                            'answer' => $option->option, // Simpan text pilihan di kolom answer
+                            'other_answer' => $otherAnswer
+                        ]);
+                    }
                 }
                 break;
 
