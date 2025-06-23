@@ -139,7 +139,39 @@
                 @foreach($groupedQuestions as $categoryId => $categoryQuestions)
                     @php
                         $categoryInfo = $categoryQuestions->first()['category'];
-                        $categoryTotalResponses = $categoryQuestions->sum('total_responses');
+                        
+                        // ✅ PERBAIKAN: Hitung responden yang sudah menjawab pertanyaan dalam kategori ini
+                        $questionIds = $categoryQuestions->pluck('question.id_question')->toArray();
+                        
+                        $categoryTotalResponses = 0;
+                        if (!empty($questionIds)) {
+                            $answersQuery = "
+                                SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                                FROM tb_user_answers tua
+                                INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                                INNER JOIN tb_user u ON tua.id_user = u.id_user
+                                WHERE tai.id_question IN (" . implode(',', array_fill(0, count($questionIds), '?')) . ")
+                                AND tua.status = 'completed'
+                            ";
+                            
+                            $queryParams = $questionIds;
+                            
+                            if ($selectedUserType === 'alumni') {
+                                $answersQuery .= " AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.id_user = u.id_user
+                                ) AND tua.nim IS NULL";
+                            } elseif ($selectedUserType === 'company') {
+                                $answersQuery .= " AND EXISTS (
+                                    SELECT 1 FROM tb_company 
+                                    WHERE tb_company.id_user = u.id_user
+                                ) AND tua.nim IS NOT NULL";
+                            }
+                            
+                            $result = DB::select($answersQuery, $queryParams);
+                            $categoryTotalResponses = $result[0]->total_responders ?? 0;
+                        }
+                        
                         $categoryAnsweredQuestions = $categoryQuestions->where('total_responses', '>', 0)->count();
                     @endphp
                     
@@ -296,7 +328,29 @@
                         </div>
                         <div class="text-center">
                             <div class="text-2xl font-bold text-orange-900">
-                                {{ collect($questionnaireChartData['questions_data'])->sum('total_responses') }}
+                                @php
+                                    // Hitung total responden berdasarkan tb_user_answers dengan filter user type
+                                    $totalResponders = 0;
+                                    if ($selectedUserType === 'alumni') {
+                                        // Count tb_user_answers yang nim nya null (alumni)
+                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                            ->whereNull('nim')
+                                            ->distinct('id_user')
+                                            ->count('id_user');
+                                    } elseif ($selectedUserType === 'company') {
+                                        // Count tb_user_answers yang nim nya ada (perusahaan)
+                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                            ->whereNotNull('nim')
+                                            ->distinct('id_user')
+                                            ->count('id_user');
+                                    } else {
+                                        // Count semua tb_user_answers
+                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                            ->distinct('id_user')
+                                            ->count('id_user');
+                                    }
+                                @endphp
+                                {{ $totalResponders }}
                             </div>
                             <div class="text-xs text-orange-600">Total Responden</div>
                         </div>

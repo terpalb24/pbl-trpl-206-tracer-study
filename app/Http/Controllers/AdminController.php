@@ -895,13 +895,14 @@ class AdminController extends Controller
             if ($selectedQuestion === 'all') {
                 if ($selectedCategory === 'all') {
                     // ✅ PERBAIKAN: Handle "Semua Kategori" = semua pertanyaan dari semua kategori
-                    $allQuestionsData = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType);
+                    $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType);
                     $questionnaireChartData = [
                         'type' => 'all_questions_all_categories',
                         'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
-                        'questions_data' => $allQuestionsData,
-                        'total_questions' => count($allQuestionsData),
+                        'questions_data' => $allQuestionsResult['questions_data'],
+                        'total_questions' => count($allQuestionsResult['questions_data']),
                         'total_categories' => $availableCategories->count(),
+                        'total_responders' => $allQuestionsResult['total_responders'], // ✅ TAMBAHAN
                         'user_type' => $selectedUserType
                     ];
                 } else {
@@ -911,12 +912,16 @@ class AdminController extends Controller
                         'type' => 'multiple',
                         'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
                         'questions_data' => $multipleQuestionData,
-                        'total_questions' => count($multipleQuestionData)
+                        'total_questions' => count($multipleQuestionData),
+                        'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType) // ✅ TAMBAHAN
                     ];
                 }
             } else {
                 // Handle single question
-                // ... existing single question logic ...
+                $singleQuestionData = $this->getSingleQuestionStatistics($selectedQuestion, $selectedUserType);
+                $questionnaireChartData = array_merge($singleQuestionData, [
+                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType) // ✅ TAMBAHAN
+                ]);
             }
         }
         
@@ -947,11 +952,15 @@ class AdminController extends Controller
         } elseif ($userType === 'company') {
             $categoryQuery->whereIn('for_type', ['company', 'both']);
         }
+        // Jika $userType === 'all', tidak ada filter kategori
         
         $categories = $categoryQuery->orderBy('order')->get();
         $allQuestionsData = [];
         
         \Log::info('Getting all questions from all categories in period: ' . $periodeId . ', user type: ' . $userType);
+        
+        // ✅ PERBAIKAN: Hitung total responders untuk periode TANPA filter user type
+        $totalResponders = $this->getTotalResponders($periodeId, 'all'); // ✅ Selalu gunakan 'all'
         
         foreach ($categories as $category) {
             try {
@@ -964,6 +973,10 @@ class AdminController extends Controller
                 
                 foreach ($questions as $question) {
                     try {
+                        // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini TANPA filter user type
+                        $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question);
+                        
+                        // ✅ PERBAIKAN BESAR: Ambil jawaban TANPA filter user type untuk chart data
                         $answersBaseQuery = "
                             SELECT DISTINCT 
                                 tai.*, 
@@ -972,30 +985,18 @@ class AdminController extends Controller
                                 tua.created_at as answer_created_at
                             FROM tb_user_answer_item tai
                             INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
-                            INNER JOIN tb_user u ON tua.id_user = u.id_user
                             WHERE tai.id_question = ? 
                             AND tua.status = 'completed'
+                            ORDER BY tua.created_at DESC
                         ";
                         
                         $queryParams = [$question->id_question];
                         
-                        if ($userType === 'alumni') {
-                            $answersBaseQuery .= " AND EXISTS (
-                                SELECT 1 FROM tb_alumni 
-                                WHERE tb_alumni.id_user = u.id_user
-                            ) AND tua.nim IS NULL";
-                        } elseif ($userType === 'company') {
-                            $answersBaseQuery .= " AND EXISTS (
-                                SELECT 1 FROM tb_company 
-                                WHERE tb_company.id_user = u.id_user
-                            ) AND tua.nim IS NOT NULL";
-                        }
-                        
-                        $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+                        // ✅ HAPUS semua filter user type untuk chart data
                         
                         $answers = DB::select($answersBaseQuery, $queryParams);
                         
-                        // Count answers by option dengan logic yang sama
+                        // Count answers by option TANPA filter user type (untuk chart data)
                         $answerCounts = [];
                         $labels = [];
                         $values = [];
@@ -1011,7 +1012,7 @@ class AdminController extends Controller
                                 ];
                             }
                             
-                            // ✅ GUNAKAN LOGIC YANG SAMA seperti getAllQuestionsStatistics
+                            // ✅ GUNAKAN LOGIC YANG SAMA seperti getAllQuestionsStatistics TANPA filter
                             foreach ($answers as $answer) {
                                 $counted = false;
                                 
@@ -1108,17 +1109,17 @@ class AdminController extends Controller
                             }
                         }
                         
-                        $totalResponses = array_sum($values);
+                        // ✅ PERBAIKAN: total_responses TIDAK terpengaruh filter user type
+                        $totalResponses = $questionTotalResponses;
                         
-                        // ✅ TAMBAHAN: Include category info untuk grouping di view
                         $allQuestionsData[] = [
                             'question' => $question,
-                            'category' => $category, // ✅ TAMBAHAN: Info kategori
-                            'labels' => $labels,
-                            'values' => $values,
-                            'total_responses' => $totalResponses,
-                            'answer_counts' => $answerCounts,
-                            'other_answers' => $otherAnswers,
+                            'category' => $category,
+                            'labels' => $labels, // ✅ Data chart TANPA filter user type
+                            'values' => $values, // ✅ Data chart TANPA filter user type  
+                            'total_responses' => $totalResponses, // ✅ Total responders tanpa filter
+                            'answer_counts' => $answerCounts, // ✅ Data chart TANPA filter user type
+                            'other_answers' => $otherAnswers, // ✅ Data chart TANPA filter user type
                             'question_type' => $question->type,
                             'has_options' => $question->options && $question->options->count() > 0
                         ];
@@ -1145,11 +1146,14 @@ class AdminController extends Controller
             }
         }
         
-        return $allQuestionsData;
+        return [
+            'questions_data' => $allQuestionsData,
+            'total_responders' => $totalResponders
+        ];
     }
-    
+
     /**
-     * ✅ TAMBAHAN: Method untuk mendapatkan statistik semua pertanyaan dalam satu kategori
+     * ✅ PERBAIKAN BESAR: Method untuk mendapatkan statistik semua pertanyaan dalam satu kategori TANPA filter user type untuk chart data
      */
     private function getAllQuestionsStatistics($categoryId, $userType)
     {
@@ -1167,6 +1171,10 @@ class AdminController extends Controller
             
             foreach ($questions as $question) {
                 try {
+                    // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini TANPA filter user type
+                    $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question);
+                    
+                    // ✅ PERBAIKAN BESAR: Ambil jawaban TANPA filter user type untuk chart data
                     $answersBaseQuery = "
                         SELECT DISTINCT 
                             tai.*, 
@@ -1175,30 +1183,18 @@ class AdminController extends Controller
                             tua.created_at as answer_created_at
                         FROM tb_user_answer_item tai
                         INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
-                        INNER JOIN tb_user u ON tua.id_user = u.id_user
                         WHERE tai.id_question = ? 
                         AND tua.status = 'completed'
+                        ORDER BY tua.created_at DESC
                     ";
                     
                     $queryParams = [$question->id_question];
                     
-                    if ($userType === 'alumni') {
-                        $answersBaseQuery .= " AND EXISTS (
-                            SELECT 1 FROM tb_alumni 
-                            WHERE tb_alumni.id_user = u.id_user
-                        ) AND tua.nim IS NULL";
-                    } elseif ($userType === 'company') {
-                        $answersBaseQuery .= " AND EXISTS (
-                            SELECT 1 FROM tb_company 
-                            WHERE tb_company.id_user = u.id_user
-                        ) AND tua.nim IS NOT NULL";
-                    }
-                    
-                    $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+                    // ✅ HAPUS semua filter user type untuk chart data
                     
                     $answers = DB::select($answersBaseQuery, $queryParams);
                     
-                    // Count answers by option dengan logic yang sama
+                    // Count answers by option TANPA filter user type (untuk chart data)
                     $answerCounts = [];
                     $labels = [];
                     $values = [];
@@ -1214,7 +1210,7 @@ class AdminController extends Controller
                             ];
                         }
                         
-                        // ✅ LOGIC SAMA seperti getAllQuestionsFromAllCategories
+                        // ✅ LOGIC SAMA seperti getAllQuestionsFromAllCategories TANPA filter
                         foreach ($answers as $answer) {
                             $counted = false;
                             
@@ -1311,15 +1307,16 @@ class AdminController extends Controller
                         }
                     }
                     
-                    $totalResponses = array_sum($values);
+                    // ✅ PERBAIKAN: total_responses TIDAK terpengaruh filter user type
+                    $totalResponses = $questionTotalResponses;
                     
                     $allQuestionsData[] = [
                         'question' => $question,
-                        'labels' => $labels,
-                        'values' => $values,
-                        'total_responses' => $totalResponses,
-                        'answer_counts' => $answerCounts,
-                        'other_answers' => $otherAnswers,
+                        'labels' => $labels, // ✅ Data chart TANPA filter user type
+                        'values' => $values, // ✅ Data chart TANPA filter user type
+                        'total_responses' => $totalResponses, // ✅ Total responders tanpa filter
+                        'answer_counts' => $answerCounts, // ✅ Data chart TANPA filter user type
+                        'other_answers' => $otherAnswers, // ✅ Data chart TANPA filter user type
                         'question_type' => $question->type,
                         'has_options' => $question->options && $question->options->count() > 0
                     ];
@@ -1349,7 +1346,7 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ TAMBAHAN: Method untuk handle single question statistics (yang hilang di getQuestionnaireStatistics)
+     * ✅ PERBAIKAN BESAR: Method untuk handle single question statistics TANPA filter user type untuk chart data
      */
     private function getSingleQuestionStatistics($questionId, $selectedUserType)
     {
@@ -1367,6 +1364,10 @@ class AdminController extends Controller
                 ];
             }
             
+            // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini TANPA filter user type
+            $questionTotalResponses = $this->getQuestionTotalResponders($questionId);
+            
+            // ✅ PERBAIKAN BESAR: Ambil jawaban TANPA filter user type untuk chart data
             $answersBaseQuery = "
                 SELECT DISTINCT 
                     tai.*, 
@@ -1375,29 +1376,17 @@ class AdminController extends Controller
                     tua.created_at as answer_created_at
                 FROM tb_user_answer_item tai
                 INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
-                INNER JOIN tb_user u ON tua.id_user = u.id_user
                 WHERE tai.id_question = ? 
                 AND tua.status = 'completed'
             ";
             
             $queryParams = [$questionId];
             
-            // Filter by user type
-            if ($selectedUserType === 'alumni') {
-                $answersBaseQuery .= " AND EXISTS (
-                    SELECT 1 FROM tb_alumni 
-                    WHERE tb_alumni.id_user = u.id_user
-                ) AND tua.nim IS NULL";
-            } elseif ($selectedUserType === 'company') {
-                $answersBaseQuery .= " AND EXISTS (
-                    SELECT 1 FROM tb_company 
-                    WHERE tb_company.id_user = u.id_user
-                ) AND tua.nim IS NOT NULL";
-            }
+            // ✅ HAPUS semua filter user type untuk chart data
             
             $answers = DB::select($answersBaseQuery, $queryParams);
             
-            // Count answers by option dengan logic yang sama
+            // Count answers by option TANPA filter user type (untuk chart data)
             $answerCounts = [];
             $labels = [];
             $values = [];
@@ -1413,7 +1402,7 @@ class AdminController extends Controller
                     ];
                 }
                 
-                // Logic counting sama seperti method lain
+                // Logic counting sama seperti method lain TANPA filter
                 foreach ($answers as $answer) {
                     $counted = false;
                     
@@ -1510,12 +1499,12 @@ class AdminController extends Controller
             
             return [
                 'type' => 'single',
-                'labels' => $labels,
-                'values' => $values,
+                'labels' => $labels, // ✅ Data chart TANPA filter user type
+                'values' => $values, // ✅ Data chart TANPA filter user type
                 'question' => $question,
-                'total_responses' => array_sum($values),
-                'answer_counts' => $answerCounts,
-                'other_answers' => $otherAnswers
+                'total_responses' => $questionTotalResponses, // ✅ Total responders tanpa filter
+                'answer_counts' => $answerCounts, // ✅ Data chart TANPA filter user type
+                'other_answers' => $otherAnswers // ✅ Data chart TANPA filter user type
             ];
             
         } catch (\Exception $e) {
@@ -1529,6 +1518,204 @@ class AdminController extends Controller
                 'total_responses' => 0,
                 'error' => 'Gagal memuat data statistik: ' . $e->getMessage()
             ];
+        }
+    }
+    
+    /**
+     * ✅ TAMBAHAN: Method untuk menghitung total responders berdasarkan user type
+     */
+    private function getTotalResponders($periodeId, $userType)
+    {
+        try {
+            if ($userType === 'all') {
+                // Untuk tipe "semua", hitung semua responders
+                $query = Tb_User_Answers::where('status', 'completed');
+            } else {
+                // Untuk tipe spesifik, gunakan filter user type
+                $query = Tb_User_Answers::where('status', 'completed');
+                
+                if ($userType === 'alumni') {
+                    // Alumni: nim IS NULL DAN ada di tb_alumni
+                    $query->whereNull('nim')
+                          ->whereHas('user', function($q) {
+                              $q->whereExists(function($subQuery) {
+                                  $subQuery->select(DB::raw(1))
+                                           ->from('tb_alumni')
+                                           ->whereRaw('tb_alumni.id_user = tb_user.id_user');
+                              });
+                          });
+                } elseif ($userType === 'company') {
+                    // Company: nim IS NOT NULL DAN ada di tb_company
+                    $query->whereNotNull('nim')
+                          ->whereHas('user', function($q) {
+                              $q->whereExists(function($subQuery) {
+                                  $subQuery->select(DB::raw(1))
+                                           ->from('tb_company')
+                                           ->whereRaw('tb_company.id_user = tb_user.id_user');
+                              });
+                          });
+                }
+            }
+            
+            // Filter berdasarkan periode jika diperlukan
+            if ($periodeId) {
+                // Ambil tanggal periode untuk filter
+                $periode = Tb_Periode::find($periodeId);
+                if ($periode) {
+                    $query->whereBetween('created_at', [$periode->start_date, $periode->end_date]);
+                }
+            }
+            
+            return $query->distinct('id_user')->count('id_user');
+            
+        } catch (\Exception $e) {
+            \Log::error('Error counting total responders: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Method untuk menghitung responders per pertanyaan tanpa filter user type
+     */
+    private function getQuestionTotalResponders($questionId)
+    {
+        try {
+            // Selalu hitung semua responders tanpa filter user type
+            $answersQuery = "
+                SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                FROM tb_user_answers tua
+                INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                WHERE tai.id_question = ?
+                AND tua.status = 'completed'
+            ";
+            
+            $queryParams = [$questionId];
+            
+            $result = DB::select($answersQuery, $queryParams);
+            return $result[0]->total_responders ?? 0;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error counting total question responders: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Method untuk menghitung responders per pertanyaan dengan filter user type (untuk chart data)
+     */
+    private function getQuestionResponders($questionId, $userType)
+    {
+        try {
+            if ($userType === 'all') {
+                // Untuk tipe "semua", hitung semua responders tanpa filter user type
+                $answersQuery = "
+                    SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                    FROM tb_user_answers tua
+                    INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                    WHERE tai.id_question = ?
+                    AND tua.status = 'completed'
+                ";
+                
+                $queryParams = [$questionId];
+            } else {
+                // Untuk tipe spesifik, gunakan filter user type
+                $answersQuery = "
+                    SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                    FROM tb_user_answers tua
+                    INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                    INNER JOIN tb_user u ON tua.id_user = u.id_user
+                    WHERE tai.id_question = ?
+                    AND tua.status = 'completed'
+                ";
+                
+                $queryParams = [$questionId];
+                
+                if ($userType === 'alumni') {
+                    // Alumni: nim IS NULL DAN ada di tb_alumni
+                    $answersQuery .= " AND tua.nim IS NULL AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user
+                    )";
+                } elseif ($userType === 'company') {
+                    // Company: nim IS NOT NULL DAN ada di tb_company
+                    $answersQuery .= " AND tua.nim IS NOT NULL AND EXISTS (
+                        SELECT 1 FROM tb_company 
+                        WHERE tb_company.id_user = u.id_user
+                    )";
+                }
+            }
+            
+            $result = DB::select($answersQuery, $queryParams);
+            return $result[0]->total_responders ?? 0;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error counting question responders: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Method untuk menghitung responders per kategori
+     */
+    private function getCategoryResponders($categoryId, $userType)
+    {
+        try {
+            // Ambil semua question IDs dalam kategori ini
+            $questionIds = Tb_Questions::where('id_category', $categoryId)
+                ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
+                ->where('status', 'visible')
+                ->pluck('id_question')
+                ->toArray();
+            
+            if (empty($questionIds)) {
+                return 0;
+            }
+            
+            if ($userType === 'all') {
+                // Untuk tipe "semua", hitung semua responders tanpa filter user type
+                $answersQuery = "
+                    SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                    FROM tb_user_answers tua
+                    INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                    WHERE tai.id_question IN (" . implode(',', array_fill(0, count($questionIds), '?')) . ")
+                    AND tua.status = 'completed'
+                ";
+                
+                $queryParams = $questionIds;
+            } else {
+                // Untuk tipe spesifik, gunakan filter user type
+                $answersQuery = "
+                    SELECT COUNT(DISTINCT tua.id_user) as total_responders
+                    FROM tb_user_answers tua
+                    INNER JOIN tb_user_answer_item tai ON tua.id_user_answer = tai.id_user_answer
+                    INNER JOIN tb_user u ON tua.id_user = u.id_user
+                    WHERE tai.id_question IN (" . implode(',', array_fill(0, count($questionIds), '?')) . ")
+                    AND tua.status = 'completed'
+                ";
+                
+                $queryParams = $questionIds;
+                
+                if ($userType === 'alumni') {
+                    // Alumni: nim IS NULL DAN ada di tb_alumni
+                    $answersQuery .= " AND tua.nim IS NULL AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user
+                    )";
+                } elseif ($userType === 'company') {
+                    // Company: nim IS NOT NULL DAN ada di tb_company
+                    $answersQuery .= " AND tua.nim IS NOT NULL AND EXISTS (
+                        SELECT 1 FROM tb_company 
+                        WHERE tb_company.id_user = u.id_user
+                    )";
+                }
+            }
+            
+            $result = DB::select($answersQuery, $queryParams);
+            return $result[0]->total_responders ?? 0;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error counting category responders: ' . $e->getMessage());
+            return 0;
         }
     }
 }
