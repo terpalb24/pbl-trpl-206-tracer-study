@@ -12,7 +12,7 @@
     <x-alumni.sidebar/>
     
     {{-- Main Content --}}
-    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-28" id="main-content">
         {{-- Header --}}
         <x-alumni.header title="Edit Profil" />
 
@@ -46,8 +46,9 @@
             <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-200">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div class="flex-shrink-0">
-                        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <i class="fas fa-user-graduate text-white text-2xl sm:text-3xl"></i>
+                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center overflow-hidden bg-gray-200 relative">
+                            <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil"
+                                 class="absolute inset-0 w-full h-full object-cover rounded-full" />
                         </div>
                     </div>
                     <div class="flex-1 min-w-0">

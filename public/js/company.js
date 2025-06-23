@@ -57,36 +57,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
-
-    // Logout functionality
-    const logoutBtn = document.getElementById("logout-btn");
-    if (logoutBtn) {
-        logoutBtn.addEventListener("click", function (event) {
-            event.preventDefault();
-
-            // Show confirmation dialog
-            if (confirm("Apakah Anda yakin ingin keluar?")) {
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = "/logout";
-
-                const csrfToken = document.querySelector(
-                    'meta[name="csrf-token"]'
-                );
-                if (csrfToken) {
-                    const csrfTokenInput = document.createElement("input");
-                    csrfTokenInput.type = "hidden";
-                    csrfTokenInput.name = "_token";
-                    csrfTokenInput.value = csrfToken.getAttribute("content");
-                    form.appendChild(csrfTokenInput);
-                }
-
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-    }
-
     // Form validation helper
     window.validateForm = function (formId) {
         const form = document.getElementById(formId);

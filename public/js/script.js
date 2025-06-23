@@ -1,54 +1,54 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const toggleSidebar = document.getElementById('toggle-sidebar');
-    const closeSidebar = document.getElementById('close-sidebar');
-    const sidebar = document.getElementById('sidebar');
-    const profileToggle = document.getElementById('profile-toggle');
-    const profileDropdown = document.getElementById('profile-dropdown');
-    const logoutBtn = document.getElementById('logout-btn');
+document.addEventListener("DOMContentLoaded", () => {
+    const toggleSidebar = document.getElementById("toggle-sidebar");
+    const closeSidebar = document.getElementById("close-sidebar");
+    const sidebar = document.getElementById("sidebar");
+    const profileToggle = document.getElementById("profile-toggle");
+    const profileDropdown = document.getElementById("profile-dropdown");
 
     // Toggle sidebar (mobile)
-    toggleSidebar?.addEventListener('click', () => {
-        sidebar?.classList.toggle('-translate-x-full');
+    toggleSidebar?.addEventListener("click", () => {
+        sidebar?.classList.toggle("-translate-x-full");
     });
 
-    closeSidebar?.addEventListener('click', () => {
-        sidebar?.classList.add('-translate-x-full');
+    closeSidebar?.addEventListener("click", () => {
+        sidebar?.classList.add("-translate-x-full");
     });
 
     // Toggle profile dropdown
-    profileToggle?.addEventListener('click', () => {
-        profileDropdown?.classList.toggle('hidden');
-    });
-
-    // Logout button (POST ke route logout Laravel)
-    logoutBtn?.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (confirm('Yakin ingin logout?')) {
-            const logoutUrl = logoutBtn.getAttribute('data-logout-url');
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-            if (!logoutUrl || !csrfToken) {
-                alert('Logout URL atau CSRF token tidak ditemukan.');
-                return;
-            }
-
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = logoutUrl;
-
-            const tokenInput = document.createElement('input');
-            tokenInput.type = 'hidden';
-            tokenInput.name = '_token';
-            tokenInput.value = csrfToken;
-
-            form.appendChild(tokenInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
+    profileToggle?.addEventListener("click", () => {
+        profileDropdown?.classList.toggle("hidden");
     });
 
     // Responsive sidebar saat halaman pertama kali dimuat
     if (window.innerWidth < 1024 && sidebar) {
-        sidebar.classList.add('-translate-x-full');
+        sidebar.classList.add("-translate-x-full");
+    }
+});
+
+// Delete modal scripts
+function openDeleteModal(id) {
+    document.getElementById("modal-delete-" + id).classList.remove("hidden");
+    document.body.style.overflow = "hidden";
+}
+function closeDeleteModal(id) {
+    document.getElementById("modal-delete-" + id).classList.add("hidden");
+    document.body.style.overflow = "auto";
+}
+// Tutup modal jika klik backdrop
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("bg-black/50")) {
+        document.querySelectorAll('[id^="modal-delete-"]').forEach((modal) => {
+            modal.classList.add("hidden");
+        });
+        document.body.style.overflow = "auto";
+    }
+});
+// Tutup modal dengan Escape
+document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+        document.querySelectorAll('[id^="modal-delete-"]').forEach((modal) => {
+            modal.classList.add("hidden");
+        });
+        document.body.style.overflow = "auto";
     }
 });

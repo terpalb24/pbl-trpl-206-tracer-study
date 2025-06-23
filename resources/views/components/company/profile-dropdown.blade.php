@@ -26,3 +26,54 @@ $company = auth()->user()->company;
         </a>
     </div>
 </div>
+
+<!-- Modal Logout -->
+<div id="modal-logout" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-xs sm:max-w-sm relative">
+        <div class="flex flex-col items-center text-center">
+            <img src="{{ asset('assets/images/logout.png') }}" alt="Logout" class="w-16 h-16 mb-3" />
+            <h3 class="text-lg font-semibold mb-2 text-gray-800">Konfirmasi Logout</h3>
+            <p class="text-gray-600 mb-4 text-sm">Apakah Anda yakin ingin keluar dari aplikasi?</p>
+            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="w-full flex flex-col gap-2">
+                @csrf
+                <div class="flex justify-center gap-2 mt-2">
+                    <button type="button" onclick="closeLogoutModal()"
+                        class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition">Batal</button>
+                    <button type="submit"
+                        class="px-4 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white font-semibold transition">Ya, Logout</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Buka modal saat tombol logout diklik
+    document.getElementById('logout-btn').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('modal-logout').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    });
+});
+
+// Tutup modal
+function closeLogoutModal() {
+    document.getElementById('modal-logout').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Tutup modal jika klik backdrop
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'modal-logout') {
+        closeLogoutModal();
+    }
+});
+
+// Tutup modal dengan Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeLogoutModal();
+    }
+});
+</script>

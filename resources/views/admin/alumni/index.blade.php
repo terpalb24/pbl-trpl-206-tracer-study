@@ -170,28 +170,46 @@
                                     <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
                                     <td class="px-4 py-3">{{ $item->name }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="flex justify-center items-center space-x-2">
+                                        <div class="flex justify-center items-center gap-2">
                                             <!-- Edit Button -->
-                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                                class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[70px]"
-                                                title="Edit Alumni">
-                                                <i class="bi bi-pencil-square mr-1"></i>
-                                                <span>Edit</span>
+                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}"
+                                               class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 transition-colors duration-200"
+                                               title="Edit Alumni">
+                                                <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
-                                            
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
-                                                class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="inline-flex items-center justify-center px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[70px]" 
-                                                    title="Hapus Alumni">
-                                                    <i class="bi bi-trash mr-1"></i>
-                                                    <span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            <!-- Delete Button pakai modal -->
+                                            <button type="button"
+                                                onclick="openDeleteModal({{ $item->id_user }})"
+                                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                                title="Hapus Alumni">
+                                                <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                            </button>
+                                            <!-- Modal Confirm Delete -->
+                                            <div id="modal-delete-{{ $item->id_user }}" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+                                                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-xs sm:max-w-sm relative">
+                                                    <button onclick="closeDeleteModal({{ $item->id_user }})"
+                                                            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
+                                                        <i class="fas fa-times text-lg"></i>
+                                                    </button>
+                                                    <div class="flex flex-col items-center text-center">
+                                                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
+                                                        <h3 class="text-lg font-semibold mb-2 text-gray-800">Konfirmasi Hapus</h3>
+                                                        <p class="text-gray-600 mb-4 text-sm">Yakin ingin menghapus alumni ini?<br>
+                                                            <b>{{ $item->name }}</b> (NIM: {{ $item->nim }})<br>
+                                                            Semua data terkait akan ikut terhapus.</p>
+                                                        <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" class="w-full flex flex-col gap-2">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <div class="flex justify-center gap-2 mt-2">
+                                                                <button type="button" onclick="closeDeleteModal({{ $item->id_user }})"
+                                                                    class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition">Batal</button>
+                                                                <button type="submit"
+                                                                    class="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold transition">Ya, Hapus</button>
+                                                            </div>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>

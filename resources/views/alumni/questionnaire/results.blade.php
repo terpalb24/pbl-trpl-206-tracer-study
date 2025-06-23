@@ -7,7 +7,7 @@
     <x-alumni.sidebar/>
 
     <!-- Main Content -->
-    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-20" id="main-content">
+    <main class="flex-grow overflow-y-auto transition-all duration-300 lg:ml-64 pt-28" id="main-content">
         <!-- Header -->
         <x-alumni.header title="Hasil Kuesioner" />
         
