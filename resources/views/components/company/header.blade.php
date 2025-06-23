@@ -13,15 +13,3 @@
         @include('components.company.profile-dropdown')
     </div>
 </header>
-
-<!-- Google Translate Widget -->
-<div class="relative z-30">
-    <x-translate-widget 
-        position="bottom-left" 
-        :languages="['en', 'id']" 
-        theme="light"
-    />
-</div>
-
-<!-- Google Translate Widget CSS -->
-<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">

@@ -130,7 +130,7 @@
             @endif
 
             <!-- Empty State -->
-            @if($availableActivePeriodes->isEmpty() && $completedUserAnswers->isEmpty() && $draftUserAnswers->isEmpty())
+            @if($availableActivePeriodes->isEmpty())
                 <div class="bg-white rounded-xl shadow-md p-6 sm:p-8 text-center">
                     <div class="text-gray-500 mb-4">
                         <i class="fas fa-clipboard-list text-4xl sm:text-5xl"></i>

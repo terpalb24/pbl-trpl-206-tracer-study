@@ -242,11 +242,11 @@ class EksportRespondenController extends Controller
                                 $answerText = '';
                                  // tampilkan juga answer aslinya (tb_user_answer_item.answer) jika ada dan berbeda dari $main
                                 if (!empty($item->answer) && $item->answer !== $main) {
-                                    $answerText .=  $item->answer;
+                                    $answerText .=  $item->answer ;
                                 }
                                 // before_text (dari kolom option)
                                 if ($optionBefore !== '') {
-                                    $answerText .='['.$optionBefore . ' ';
+                                    $answerText .= ' ['. $optionBefore . ' ';
                                 }
                                 // value (jawaban lainnya)
                                 $answerText .= $main;

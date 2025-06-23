@@ -12,4 +12,14 @@
     <div class="flex flex-col p-4 flex-1">
         @include('company.sidebar')
     </div>
+<!-- Google Translate Widget -->
+<div class="relative z-30">
+    <x-translate-widget 
+        position="bottom-left" 
+        :languages="['en', 'id']" 
+        theme="light"
+    />
+</div>
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
 </aside>
