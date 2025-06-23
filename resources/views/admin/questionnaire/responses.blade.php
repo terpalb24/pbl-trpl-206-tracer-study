@@ -373,16 +373,42 @@
             
             <!-- Export/Additional actions -->
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
-                <button class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200">
-                    <i class="fas fa-download mr-2"></i> Export Data
-                </button>
+                <div class="relative w-full sm:w-auto">
+                    <button id="btn-export-dropdown" type="button"
+                        class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors duration-200 focus:outline-none">
+                        <i class="fas fa-download mr-2"></i> Export Data
+                        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div id="export-dropdown-menu" class="hidden absolute right-0 bottom-full mb-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                        <a href="{{ route('admin.export-responden', ['id_periode' => $periode->id_periode, 'type' => 'alumni']) }}"
+                           class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Export Respon Alumni</a>
+                        <a href="{{ route('admin.export-responden', ['id_periode' => $periode->id_periode, 'type' => 'company']) }}"
+                           class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Export Respon Perusahaan</a>
+                    </div>
+                </div>
                 <button class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
                     <i class="fas fa-chart-bar mr-2"></i> Lihat Statistik
                 </button>
             </div>
         </div>
     </div>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('btn-export-dropdown');
+            const menu = document.getElementById('export-dropdown-menu');
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                menu.classList.toggle('hidden');
+            });
+            document.addEventListener('click', function(e) {
+                if (!menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                }
+            });
+        });
+    </script>
     <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>
 @endsection

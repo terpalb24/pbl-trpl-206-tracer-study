@@ -20,6 +20,10 @@
                     <select name="graduation_year_filter" id="graduation_year_filter" 
                         class="w-full sm:flex-1 border border-gray-300 rounded px-2 py-1 sm:px-3 sm:py-2 text-xs sm:text-sm focus:ring-blue-500 focus:border-blue-500 transition"
                         onchange="document.getElementById('graduation-year-filter-form').submit()">
+
+
+
+
                         <option value="">Semua Tahun</option>
                         @foreach($allGraduationYears ?? [] as $year)
                             <option value="{{ $year }}" {{ (isset($filterGraduationYear) && $filterGraduationYear == $year) ? 'selected' : '' }}>{{ $year }}</option>
