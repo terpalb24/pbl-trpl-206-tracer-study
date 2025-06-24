@@ -185,7 +185,15 @@ class EksportRespondenController extends Controller
                                     if ($optionBefore !== '') {
                                         $val .= '['. $optionBefore . ' ';
                                     }
-                                    $val .= $main;
+                                    if (!$optionBefore && !$optionAfter) {
+                                        $val .='[' . $main . ']';
+                                    }
+                                    if (!$optionBefore) {
+                                        $val .='[' . $main;
+                                    }
+                                    if (!$optionAfter) {
+                                        $val .=$main . ']';
+                                    }
                                     if ($optionAfter !== '') {
                                         $val .= ' ' . $optionAfter . ']';
                                     }
@@ -248,8 +256,17 @@ class EksportRespondenController extends Controller
                                 if ($optionBefore !== '') {
                                     $answerText .= ' ['. $optionBefore . ' ';
                                 }
+                                if (!$optionBefore && !$optionAfter) {
+                                    $answerText .= '[' . $main . ']';
+                                }
+                                if (!$optionBefore) {
+                                    $answerText .= '[' . $main;
+                                }
+                                if (!$optionAfter) {
+                                    $answerText .= $main . ']';
+                                }
                                 // value (jawaban lainnya)
-                                $answerText .= $main;
+                                
                                 // after_text (dari kolom option)
                                 if ($optionAfter !== '') {
                                     $answerText .= ' ' . $optionAfter . ']';
