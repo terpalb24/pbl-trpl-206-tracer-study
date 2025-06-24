@@ -85,7 +85,7 @@
             </div>
 
             <!-- Question Filter -->
-            <div>
+            <div class="hidden">
                 <label for="questionnaire_question" class="block text-sm font-medium text-gray-700 mb-1">Pertanyaan:</label>
                 <select name="questionnaire_question" id="questionnaire_question" 
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
@@ -122,6 +122,27 @@
                         @endforeach
                     @else
                         <option disabled>Tidak ada program studi tersedia</option>
+                    @endif
+                </select>
+            </div>
+
+            <!-- Graduation Year Filter -->
+            <div>
+                <label for="questionnaire_graduation_year" class="block text-sm font-medium text-gray-700 mb-1">Tahun Lulus:</label>
+                <select name="questionnaire_graduation_year" id="questionnaire_graduation_year" 
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+                        onchange="handleGraduationYearChange()"
+                        {{ !$selectedPeriode ? 'disabled' : '' }}>
+                    <option value="">Semua Tahun Lulus</option>
+                    @if(isset($availableGraduationYears) && count($availableGraduationYears) > 0)
+                        @foreach($availableGraduationYears as $year)
+                            <option value="{{ $year }}" 
+                                    {{ (isset($selectedGraduationYear) && $selectedGraduationYear == $year) ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    @else
+                        <option disabled>Tidak ada tahun lulus tersedia</option>
                     @endif
                 </select>
             </div>
@@ -900,12 +921,14 @@ document.addEventListener('DOMContentLoaded', function () {
 function handlePeriodeChange() {
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
+    document.getElementById('questionnaire_graduation_year').value = ''; // ✅ TAMBAHAN: Reset graduation year
     document.getElementById('questionnaire-filter-form').submit();
 }
 
 function handleUserTypeChange() {
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
+    document.getElementById('questionnaire_graduation_year').value = ''; // ✅ TAMBAHAN: Reset graduation year
     document.getElementById('questionnaire-filter-form').submit();
 }
 
@@ -929,7 +952,10 @@ function handleStudyProgramChange() {
     
     document.getElementById('questionnaire-filter-form').submit();
 }
-
+function handleGraduationYearChange() {
+    // Hanya submit tanpa reset apapun - untuk perubahan graduation year saja
+    document.getElementById('questionnaire-filter-form').submit();
+}
 // ✅ ALTERNATIF: Buat function yang lebih spesifik
 function handleStudyProgramChangeOnly() {
     // Hanya submit tanpa reset apapun - untuk perubahan program studi saja

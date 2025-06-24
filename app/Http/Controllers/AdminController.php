@@ -859,7 +859,8 @@ class AdminController extends Controller
         $selectedUserType = $request->input('questionnaire_user_type', 'all');
         $selectedCategory = $request->input('questionnaire_category');
         $selectedQuestion = $request->input('questionnaire_question');
-        $selectedStudyProgram = $request->input('questionnaire_study_program'); // ✅ TAMBAHAN
+        $selectedStudyProgram = $request->input('questionnaire_study_program');
+        $selectedGraduationYear = $request->input('questionnaire_graduation_year');
         
         // Get all periods (not just active)
         $availablePeriodes = Tb_Periode::orderBy('start_date', 'desc')->get();
@@ -881,13 +882,68 @@ class AdminController extends Controller
             $availableStudyPrograms = collect(); // Empty collection sebagai fallback
         }
         
-        // ✅ DEBUG: Log untuk memastikan data tersedia
-        \Log::info('Available study programs count: ' . $availableStudyPrograms->count());
-        \Log::info('Study programs data: ', $availableStudyPrograms->toArray());
-
+        // ✅ TAMBAHAN: Get available graduation years based on selected period
+        $availableGraduationYears = [];
+        if ($selectedPeriode) {
+            $periode = Tb_Periode::find($selectedPeriode);
+            if ($periode) {
+                if ($periode->all_alumni || $periode->target_type === 'all') {
+                    // Jika untuk semua alumni, ambil semua tahun lulus yang ada
+                    $availableGraduationYears = Tb_Alumni::select('graduation_year')
+                        ->distinct()
+                        ->whereNotNull('graduation_year')
+                        ->where('graduation_year', '!=', '')
+                        ->orderBy('graduation_year', 'desc')
+                        ->pluck('graduation_year')
+                        ->toArray();
+                } elseif ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
+                    // Berdasarkan years_ago_list
+                    $currentYear = now()->year;
+                    $availableGraduationYears = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                        return (string)($currentYear - $yearsAgo);
+                    })->sort()->reverse()->values()->toArray();
+                } elseif ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
+                    // Berdasarkan target_graduation_years
+                    $availableGraduationYears = collect($periode->target_graduation_years)
+                        ->map(function($year) { return (string)$year; })
+                        ->sort()
+                        ->reverse()
+                        ->values()
+                        ->toArray();
+                }
+            }
+        }
         // Set default periode ke yang pertama jika belum dipilih
         if (!$selectedPeriode && $availablePeriodes->count() > 0) {
             $selectedPeriode = $availablePeriodes->first()->id_periode;
+
+            // ✅ TAMBAHAN: Refresh graduation years setelah set default periode
+            if ($selectedPeriode) {
+                $periode = Tb_Periode::find($selectedPeriode);
+                if ($periode) {
+                    if ($periode->all_alumni || $periode->target_type === 'all') {
+                        $availableGraduationYears = Tb_Alumni::select('graduation_year')
+                            ->distinct()
+                            ->whereNotNull('graduation_year')
+                            ->where('graduation_year', '!=', '')
+                            ->orderBy('graduation_year', 'desc')
+                            ->pluck('graduation_year')
+                            ->toArray();
+                    } elseif ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
+                        $currentYear = now()->year;
+                        $availableGraduationYears = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                            return (string)($currentYear - $yearsAgo);
+                        })->sort()->reverse()->values()->toArray();
+                    } elseif ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
+                        $availableGraduationYears = collect($periode->target_graduation_years)
+                            ->map(function($year) { return (string)$year; })
+                            ->sort()
+                            ->reverse()
+                            ->values()
+                            ->toArray();
+                    }
+                }
+            }
         }
         
         // Get categories based on selected period and user type
@@ -913,17 +969,18 @@ class AdminController extends Controller
         $availableQuestions = collect();
         if ($selectedCategory) {
             if ($selectedCategory === 'all') {
-                // ✅ PERBAIKAN: Jika "Semua Kategori", ambil semua questions dari semua kategori
-                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram);
+                // ✅ PERBAIKAN: Jika "Semua Kategori", ambil semua questions dari semua kategori DENGAN PARAMETER GRADUATION YEAR
+                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'all_questions_all_categories',
                     'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
                     'questions_data' => $allQuestionsResult['questions_data'],
                     'total_questions' => count($allQuestionsResult['questions_data']),
                     'total_categories' => $availableCategories->count(),
-                    'total_responders' => $allQuestionsResult['total_responders'], // ✅ TAMBAHAN
+                    'total_responders' => $allQuestionsResult['total_responders'],
                     'user_type' => $selectedUserType,
-                    'study_program_filter' => $selectedStudyProgram // ✅ TAMBAHAN
+                    'study_program_filter' => $selectedStudyProgram,
+                    'graduation_year_filter' => $selectedGraduationYear
                 ];
             } else {
                 // Normal category selected - get questions for this category
@@ -938,16 +995,16 @@ class AdminController extends Controller
             $availableQuestions = Tb_Questions::whereIn('id_category', $availableCategories->pluck('id_category'))
                 ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
                 ->where('status', 'visible')
-                ->orderBy('id_category') // ✅ TAMBAHAN: Order by category dulu
+                ->orderBy('id_category')
                 ->orderBy('order')
                 ->get();
         }
-        
+
         // ✅ PERBAIKAN: Set default question ke "all" jika belum dipilih dan ada kategori
         if (!$selectedQuestion && $selectedCategory) {
             $selectedQuestion = 'all';
         }
-        
+
         // Generate statistics data
         $questionnaireChartData = [];
         $questionnaireLabels = [];
@@ -957,42 +1014,45 @@ class AdminController extends Controller
         if ($selectedQuestion) {
             if ($selectedQuestion === 'all') {
                 if ($selectedCategory === 'all') {
-                    // ✅ PERBAIKAN: Handle "Semua Kategori" = semua pertanyaan dari semua kategori
-                    $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram);
+                    // ✅ PERBAIKAN: Handle "Semua Kategori" = semua pertanyaan dari semua kategori DENGAN GRADUATION YEAR
+                    $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                     $questionnaireChartData = [
                         'type' => 'all_questions_all_categories',
                         'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
                         'questions_data' => $allQuestionsResult['questions_data'],
                         'total_questions' => count($allQuestionsResult['questions_data']),
                         'total_categories' => $availableCategories->count(),
-                        'total_responders' => $allQuestionsResult['total_responders'], // ✅ TAMBAHAN
+                        'total_responders' => $allQuestionsResult['total_responders'],
                         'user_type' => $selectedUserType,
-                        'study_program_filter' => $selectedStudyProgram // ✅ TAMBAHAN
+                        'study_program_filter' => $selectedStudyProgram,
+                        'graduation_year_filter' => $selectedGraduationYear
                     ];
                 } else {
                     // Handle "Semua Pertanyaan" dalam kategori tertentu
-                    $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram);
+                    $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                     $questionnaireChartData = [
                         'type' => 'multiple',
                         'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
                         'questions_data' => $multipleQuestionData,
                         'total_questions' => count($multipleQuestionData),
-                        'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram), // ✅ TAMBAHAN
-                        'study_program_filter' => $selectedStudyProgram // ✅ TAMBAHAN
+                        'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                        'study_program_filter' => $selectedStudyProgram,
+                        'graduation_year_filter' => $selectedGraduationYear
                     ];
                 }
             } else {
                 // Handle single question
-                $singleQuestionData = $this->getSingleQuestionStatistics($selectedQuestion, $selectedUserType, $selectedStudyProgram);
+                $singleQuestionData = $this->getSingleQuestionStatistics($selectedQuestion, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = array_merge($singleQuestionData, [
-                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram), // ✅ TAMBAHAN
-                    'study_program_filter' => $selectedStudyProgram // ✅ TAMBAHAN
+                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                    'study_program_filter' => $selectedStudyProgram,
+                    'graduation_year_filter' => $selectedGraduationYear
                 ]);
             }
         } elseif ($selectedCategory) {
-            // ✅ TAMBAHAN: Jika ada kategori tapi belum ada question, otomatis tampilkan semua pertanyaan
+            // ✅ PERBAIKAN: Jika ada kategori tapi belum ada question, otomatis tampilkan semua pertanyaan DENGAN GRADUATION YEAR
             if ($selectedCategory === 'all') {
-                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram);
+                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'all_questions_all_categories',
                     'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
@@ -1001,17 +1061,19 @@ class AdminController extends Controller
                     'total_categories' => $availableCategories->count(),
                     'total_responders' => $allQuestionsResult['total_responders'],
                     'user_type' => $selectedUserType,
-                    'study_program_filter' => $selectedStudyProgram
+                    'study_program_filter' => $selectedStudyProgram,
+                    'graduation_year_filter' => $selectedGraduationYear
                 ];
             } else {
-                $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram);
+                $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'multiple',
                     'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
                     'questions_data' => $multipleQuestionData,
                     'total_questions' => count($multipleQuestionData),
-                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram),
-                    'study_program_filter' => $selectedStudyProgram
+                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                    'study_program_filter' => $selectedStudyProgram,
+                    'graduation_year_filter' => $selectedGraduationYear
                 ];
             }
         }
@@ -1021,26 +1083,25 @@ class AdminController extends Controller
             'availableCategories' => $availableCategories,
             'availableQuestions' => $availableQuestions,
             'availableStudyPrograms' => $availableStudyPrograms, // ✅ PASTIKAN INI ADA
+            'availableGraduationYears' => $availableGraduationYears,
             'selectedPeriode' => $selectedPeriode,
             'selectedUserType' => $selectedUserType,
             'selectedCategory' => $selectedCategory,
             'selectedQuestion' => $selectedQuestion,
             'selectedStudyProgram' => $selectedStudyProgram, // ✅ PASTIKAN INI ADA
+            'selectedGraduationYear' => $selectedGraduationYear, // ✅ PASTIKAN INI ADA
             'questionnaireChartData' => $questionnaireChartData,
             'questionnaireLabels' => $questionnaireLabels,
             'questionnaireValues' => $questionnaireValues,
             'multipleQuestionData' => $multipleQuestionData
         ];
-        // ✅ DEBUG: Log untuk memastikan semua variabel ada
-        \Log::info('Questionnaire statistics result keys: ' . implode(', ', array_keys($result)));
-        \Log::info('availableStudyPrograms in result: ' . ($result['availableStudyPrograms'] ? $result['availableStudyPrograms']->count() : 'null'));
         return $result;
     }
 
     /**
-     * ✅ PERBAIKAN: Method baru untuk mendapatkan semua pertanyaan dari semua kategori dengan parameter study program
+     * ✅ PERBAIKAN: Method baru untuk mendapatkan semua pertanyaan dari semua kategori dengan parameter study program dan graduation year
      */
-    private function getAllQuestionsFromAllCategories($periodeId, $userType, $studyProgramId = null)
+    private function getAllQuestionsFromAllCategories($periodeId, $userType, $studyProgramId = null, $graduationYear = null)
     {
         $categoryQuery = Tb_Category::where('id_periode', $periodeId);
         
@@ -1054,10 +1115,10 @@ class AdminController extends Controller
         $categories = $categoryQuery->orderBy('order')->get();
         $allQuestionsData = [];
         
-        \Log::info('Getting all questions from all categories in period: ' . $periodeId . ', user type: ' . $userType . ', study program: ' . $studyProgramId);
+        \Log::info('Getting all questions from all categories in period: ' . $periodeId . ', user type: ' . $userType . ', study program: ' . $studyProgramId . ', graduation year: ' . $graduationYear);
         
-        // ✅ PERBAIKAN: Hitung total responders untuk periode dengan filter study program
-        $totalResponders = $this->getTotalResponders($periodeId, $userType, $studyProgramId);
+        // ✅ PERBAIKAN: Hitung total responders untuk periode dengan filter study program dan graduation year
+        $totalResponders = $this->getTotalResponders($periodeId, $userType, $studyProgramId, $graduationYear);
         
         foreach ($categories as $category) {
             try {
@@ -1070,10 +1131,10 @@ class AdminController extends Controller
                 
                 foreach ($questions as $question) {
                     try {
-                        // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini dengan filter study program
-                        $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question, $studyProgramId, $userType);
+                        // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini dengan filter study program dan graduation year
+                        $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question, $studyProgramId, $userType, $graduationYear);
                         
-                        // ✅ PERBAIKAN BESAR: Ambil jawaban dengan filter study program dan user type
+                        // ✅ PERBAIKAN BESAR: Ambil jawaban dengan filter study program, user type, dan graduation year
                         $answersBaseQuery = "
                             SELECT DISTINCT 
                                 tai.*, 
@@ -1107,6 +1168,18 @@ class AdminController extends Controller
                                     )";
                                 $queryParams[] = $studyProgramId;
                             }
+                            
+                            // ✅ TAMBAHAN: Filter graduation year untuk company (berdasarkan alumni yang dinilai)
+                            if ($graduationYear) {
+                                $answersBaseQuery .= " AND tua.nim IS NOT NULL 
+                                    AND EXISTS (
+                                        SELECT 1 FROM tb_alumni 
+                                        WHERE tb_alumni.nim = tua.nim 
+                                        AND tb_alumni.graduation_year = ?
+                                    )";
+                                $queryParams[] = $graduationYear;
+                            }
+                            
                         } elseif ($userType === 'alumni') {
                             // ✅ PERBAIKAN: Hanya responden alumni yang mengisi kuesioner sendiri
                             $answersBaseQuery .= " AND EXISTS (
@@ -1123,6 +1196,17 @@ class AdminController extends Controller
                                 )";
                                 $queryParams[] = $studyProgramId;
                             }
+                            
+                            // ✅ TAMBAHAN: Filter graduation year untuk alumni
+                            if ($graduationYear) {
+                                $answersBaseQuery .= " AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.id_user = u.id_user 
+                                    AND tb_alumni.graduation_year = ?
+                                )";
+                                $queryParams[] = $graduationYear;
+                            }
+                            
                         } else {
                             // $userType === 'all' - include both alumni and company
                             $answersBaseQuery .= " AND (
@@ -1156,6 +1240,28 @@ class AdminController extends Controller
                                 )";
                                 $queryParams[] = $studyProgramId;
                                 $queryParams[] = $studyProgramId;
+                            }
+                            
+                            // ✅ TAMBAHAN: Filter graduation year untuk all
+                            if ($graduationYear) {
+                                $answersBaseQuery .= " AND (
+                                    (EXISTS (
+                                        SELECT 1 FROM tb_alumni 
+                                        WHERE tb_alumni.id_user = u.id_user 
+                                        AND tb_alumni.graduation_year = ?
+                                    ) AND tua.nim IS NULL)
+                                    OR 
+                                    (EXISTS (
+                                        SELECT 1 FROM tb_company 
+                                        WHERE tb_company.id_user = u.id_user
+                                    ) AND tua.nim IS NOT NULL AND EXISTS (
+                                        SELECT 1 FROM tb_alumni 
+                                        WHERE tb_alumni.nim = tua.nim 
+                                        AND tb_alumni.graduation_year = ?
+                                    ))
+                                )";
+                                $queryParams[] = $graduationYear;
+                                $queryParams[] = $graduationYear;
                             }
                         }
                         
@@ -1198,7 +1304,7 @@ class AdminController extends Controller
                                     }
                                 }
                                 
-                                // Prioritas 2: answer text
+                                // Continue dengan prioritas lainnya seperti sebelumnya...
                                 if (!$counted && !empty($answer->answer)) {
                                     $option = $question->options->where('option', $answer->answer)->first();
                                     if ($option && isset($answerCounts[$option->id_questions_options])) {
@@ -1214,7 +1320,6 @@ class AdminController extends Controller
                                     }
                                 }
                                 
-                                // Prioritas 3: numeric ID dalam answer
                                 if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
                                     $optionId = (int)$answer->answer;
                                     if (isset($answerCounts[$optionId])) {
@@ -1230,7 +1335,6 @@ class AdminController extends Controller
                                     }
                                 }
                                 
-                                // Prioritas 4: virtual option
                                 if (!$counted && !empty($answer->answer)) {
                                     $answerValue = $answer->answer;
                                     if (!isset($answerCounts[$answerValue])) {
@@ -1320,9 +1424,9 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Method untuk menghitung responders per pertanyaan dengan filter study program dan user type
+     * ✅ PERBAIKAN: Method untuk menghitung responders per pertanyaan dengan filter study program, user type, dan graduation year
      */
-    private function getQuestionTotalResponders($questionId, $studyProgramId = null, $userType = null)
+    private function getQuestionTotalResponders($questionId, $studyProgramId = null, $userType = null, $graduationYear = null)
     {
         try {
             if ($userType === 'company') {
@@ -1352,6 +1456,17 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $answersQuery .= " AND tua.nim IS NOT NULL 
+                        AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.graduation_year = ?
+                        )";
+                    $queryParams[] = $graduationYear;
+                }
+                
             } elseif ($userType === 'alumni') {
                 // ✅ PERBAIKAN: Hanya alumni yang mengisi kuesioner
                 $answersQuery = "
@@ -1377,6 +1492,16 @@ class AdminController extends Controller
                         AND tb_alumni.id_study = ?
                     )";
                     $queryParams[] = $studyProgramId;
+                }
+                
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $answersQuery .= " AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user 
+                        AND tb_alumni.graduation_year = ?
+                    )";
+                    $queryParams[] = $graduationYear;
                 }
                 
             } else {
@@ -1422,6 +1547,28 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                     $queryParams[] = $studyProgramId;
                 }
+                
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $answersQuery .= " AND (
+                        (EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user 
+                            AND tb_alumni.graduation_year = ?
+                        ) AND tua.nim IS NULL)
+                        OR 
+                        (EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        ) AND tua.nim IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.graduation_year = ?
+                        ))
+                    )";
+                    $queryParams[] = $graduationYear;
+                    $queryParams[] = $graduationYear;
+                }
             }
             
             $result = DB::select($answersQuery, $queryParams);
@@ -1434,9 +1581,9 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Method untuk menghitung total responders berdasarkan user type dan study program
+     * ✅ PERBAIKAN: Method untuk menghitung total responders berdasarkan user type, study program, dan graduation year
      */
-    private function getTotalResponders($periodeId, $userType, $studyProgramId = null)
+    private function getTotalResponders($periodeId, $userType, $studyProgramId = null, $graduationYear = null)
     {
         try {
             if ($userType === 'company') {
@@ -1463,6 +1610,16 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $query .= " AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.nim = tua.nim 
+                        AND tb_alumni.graduation_year = ?
+                    )";
+                    $queryParams[] = $graduationYear;
+                }
+                
             } elseif ($userType === 'alumni') {
                 // ✅ PERBAIKAN: Hanya alumni yang mengisi kuesioner
                 $query = "
@@ -1486,6 +1643,16 @@ class AdminController extends Controller
                         AND tb_alumni.id_study = ?
                     )";
                     $queryParams[] = $studyProgramId;
+                }
+                
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $query .= " AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user 
+                        AND tb_alumni.graduation_year = ?
+                    )";
+                    $queryParams[] = $graduationYear;
                 }
                 
             } else {
@@ -1529,6 +1696,28 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                     $queryParams[] = $studyProgramId;
                 }
+                
+                // ✅ TAMBAHAN: Filter graduation year
+                if ($graduationYear) {
+                    $query .= " AND (
+                        (EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user 
+                            AND tb_alumni.graduation_year = ?
+                        ) AND tua.nim IS NULL)
+                        OR 
+                        (EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        ) AND tua.nim IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.graduation_year = ?
+                        ))
+                    )";
+                    $queryParams[] = $graduationYear;
+                    $queryParams[] = $graduationYear;
+                }
             }
             
             if ($periodeId) {
@@ -1546,6 +1735,467 @@ class AdminController extends Controller
         } catch (\Exception $e) {
             \Log::error('Error counting total responders: ' . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Update method getAllQuestionsStatistics untuk mendukung graduation year filter
+     */
+    private function getAllQuestionsStatistics($categoryId, $userType, $studyProgramId = null, $graduationYear = null)
+    {
+        try {
+            $questions = Tb_Questions::where('id_category', $categoryId)
+                ->whereIn('type', ['option', 'multiple', 'scale', 'rating'])
+                ->where('status', 'visible')
+                ->with('options')
+                ->orderBy('order')
+                ->get();
+            
+            $allQuestionsData = [];
+            
+            foreach ($questions as $question) {
+                try {
+                    // Hitung total responders untuk pertanyaan ini dengan filter
+                    $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question, $studyProgramId, $userType, $graduationYear);
+                    
+                    // Ambil jawaban dengan filter yang sama seperti di getAllQuestionsFromAllCategories
+                    $answersBaseQuery = "
+                        SELECT DISTINCT 
+                            tai.*, 
+                            tua.id_user, 
+                            tua.nim,
+                            tua.created_at as answer_created_at
+                        FROM tb_user_answer_item tai
+                        INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
+                        INNER JOIN tb_user u ON tua.id_user = u.id_user
+                        WHERE tai.id_question = ? 
+                        AND tua.status = 'completed'
+                    ";
+                    
+                    $queryParams = [$question->id_question];
+                    
+                    // Apply same filter logic as in getAllQuestionsFromAllCategories
+                    if ($userType === 'company') {
+                        $answersBaseQuery .= " AND EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        )";
+                        
+                        if ($studyProgramId) {
+                            $answersBaseQuery .= " AND tua.nim IS NOT NULL 
+                                AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.nim = tua.nim 
+                                    AND tb_alumni.id_study = ?
+                                )";
+                            $queryParams[] = $studyProgramId;
+                        }
+                        
+                        if ($graduationYear) {
+                            $answersBaseQuery .= " AND tua.nim IS NOT NULL 
+                                AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.nim = tua.nim 
+                                    AND tb_alumni.graduation_year = ?
+                                )";
+                            $queryParams[] = $graduationYear;
+                        }
+                        
+                    } elseif ($userType === 'alumni') {
+                        $answersBaseQuery .= " AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user
+                        ) AND tua.nim IS NULL";
+                        
+                        if ($studyProgramId) {
+                            $answersBaseQuery .= " AND EXISTS (
+                                SELECT 1 FROM tb_alumni 
+                                WHERE tb_alumni.id_user = u.id_user 
+                                AND tb_alumni.id_study = ?
+                            )";
+                            $queryParams[] = $studyProgramId;
+                        }
+                        
+                        if ($graduationYear) {
+                            $answersBaseQuery .= " AND EXISTS (
+                                SELECT 1 FROM tb_alumni 
+                                WHERE tb_alumni.id_user = u.id_user 
+                                AND tb_alumni.graduation_year = ?
+                            )";
+                            $queryParams[] = $graduationYear;
+                        }
+                        
+                    } else {
+                        // $userType === 'all'
+                        $answersBaseQuery .= " AND (
+                            (EXISTS (
+                                SELECT 1 FROM tb_alumni 
+                                WHERE tb_alumni.id_user = u.id_user
+                            ) AND tua.nim IS NULL)
+                            OR 
+                            (EXISTS (
+                                SELECT 1 FROM tb_company 
+                                WHERE tb_company.id_user = u.id_user
+                            ) AND tua.nim IS NOT NULL)
+                        )";
+                        
+                        if ($studyProgramId) {
+                            $answersBaseQuery .= " AND (
+                                (EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.id_user = u.id_user 
+                                    AND tb_alumni.id_study = ?
+                                ) AND tua.nim IS NULL)
+                                OR 
+                                (EXISTS (
+                                    SELECT 1 FROM tb_company 
+                                    WHERE tb_company.id_user = u.id_user
+                                ) AND tua.nim IS NOT NULL AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.nim = tua.nim 
+                                    AND tb_alumni.id_study = ?
+                                ))
+                            )";
+                            $queryParams[] = $studyProgramId;
+                            $queryParams[] = $studyProgramId;
+                        }
+                        
+                        if ($graduationYear) {
+                            $answersBaseQuery .= " AND (
+                                (EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.id_user = u.id_user 
+                                    AND tb_alumni.graduation_year = ?
+                                ) AND tua.nim IS NULL)
+                                OR 
+                                (EXISTS (
+                                    SELECT 1 FROM tb_company 
+                                    WHERE tb_company.id_user = u.id_user
+                                ) AND tua.nim IS NOT NULL AND EXISTS (
+                                    SELECT 1 FROM tb_alumni 
+                                    WHERE tb_alumni.nim = tua.nim 
+                                    AND tb_alumni.graduation_year = ?
+                                ))
+                            )";
+                            $queryParams[] = $graduationYear;
+                            $queryParams[] = $graduationYear;
+                        }
+                    }
+                    
+                    $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+                    $answers = DB::select($answersBaseQuery, $queryParams);
+                    
+                    // Process answers the same way as in getAllQuestionsFromAllCategories
+                    $answerCounts = [];
+                    $labels = [];
+                    $values = [];
+                    $otherAnswers = [];
+                    
+                    if ($question->options && $question->options->count() > 0) {
+                        // Initialize all options with 0 count
+                        foreach ($question->options as $option) {
+                            $answerCounts[$option->id_questions_options] = [
+                                'option_text' => $option->option,
+                                'count' => 0,
+                                'is_other' => $option->is_other_option ?? false
+                            ];
+                        }
+                        
+                        // Logic counting sama dengan filter
+                        foreach ($answers as $answer) {
+                            $counted = false;
+                            
+                            // Prioritas 1: id_questions_options
+                            if (!empty($answer->id_questions_options)) {
+                                if (isset($answerCounts[$answer->id_questions_options])) {
+                                    $answerCounts[$answer->id_questions_options]['count']++;
+                                    $counted = true;
+                                    
+                                    if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
+                                        if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                            $otherAnswers[$answer->id_questions_options] = [];
+                                        }
+                                        $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                                    }
+                                }
+                            }
+                            
+                            // Prioritas 2: answer text
+                            if (!$counted && !empty($answer->answer)) {
+                                $option = $question->options->where('option', $answer->answer)->first();
+                                if ($option && isset($answerCounts[$option->id_questions_options])) {
+                                    $answerCounts[$option->id_questions_options]['count']++;
+                                    $counted = true;
+                                    
+                                    if ($option->is_other_option && !empty($answer->other_answer)) {
+                                        if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                            $otherAnswers[$answer->id_questions_options] = [];
+                                        }
+                                        $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                                    }
+                                }
+                            }
+                            
+                            // Prioritas 3: numeric ID dalam answer
+                            if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
+                                $optionId = (int)$answer->answer;
+                                if (isset($answerCounts[$optionId])) {
+                                    $answerCounts[$optionId]['count']++;
+                                    $counted = true;
+                                    
+                                    if ($answerCounts[$optionId]['is_other'] && !empty($answer->other_answer)) {
+                                        if (!isset($otherAnswers[$optionId])) {
+                                            $otherAnswers[$optionId] = [];
+                                        }
+                                        $otherAnswers[$optionId][] = $answer->other_answer;
+                                    }
+                                }
+                            }
+                            
+                            // Prioritas 4: virtual option
+                            if (!$counted && !empty($answer->answer)) {
+                                $answerValue = $answer->answer;
+                                if (!isset($answerCounts[$answerValue])) {
+                                    $answerCounts[$answerValue] = [
+                                        'option_text' => $answerValue,
+                                        'count' => 0,
+                                        'is_other' => false
+                                    ];
+                                }
+                                $answerCounts[$answerValue]['count']++;
+                            }
+                        }
+                        
+                        // Prepare chart data for this question
+                        foreach ($answerCounts as $data) {
+                            $labels[] = $data['option_text'];
+                            $values[] = $data['count'];
+                        }
+                        
+                    } else {
+                        // Question tanpa options - group by answer values
+                        $answerGroups = [];
+                        foreach ($answers as $answer) {
+                            $answerValue = trim($answer->answer);
+                            if (!empty($answerValue)) {
+                                if (!isset($answerGroups[$answerValue])) {
+                                    $answerGroups[$answerValue] = 0;
+                                }
+                                $answerGroups[$answerValue]++;
+                            }
+                        }
+                        
+                        arsort($answerGroups);
+                        
+                        foreach ($answerGroups as $answerText => $count) {
+                            $labels[] = $answerText;
+                            $values[] = $count;
+                            $answerCounts[$answerText] = [
+                                'option_text' => $answerText,
+                                'count' => $count,
+                                'is_other' => false
+                            ];
+                        }
+                    }
+                    
+                    $allQuestionsData[] = [
+                        'question' => $question,
+                        'labels' => $labels,
+                        'values' => $values,
+                        'total_responses' => $questionTotalResponses,
+                        'answer_counts' => $answerCounts,
+                        'other_answers' => $otherAnswers,
+                        'question_type' => $question->type,
+                        'has_options' => $question->options && $question->options->count() > 0
+                    ];
+                    
+                } catch (\Exception $e) {
+                    \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
+                    
+                    $allQuestionsData[] = [
+                        'question' => $question,
+                        'labels' => [],
+                        'values' => [],
+                        'total_responses' => 0,
+                        'error' => 'Error loading data: ' . $e->getMessage(),
+                        'answer_counts' => [],
+                        'other_answers' => [],
+                        'question_type' => $question->type ?? 'unknown'
+                    ];
+                }
+            }
+            
+            return $allQuestionsData;
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting all questions statistics: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * ✅ TAMBAHAN: Update method getSingleQuestionStatistics untuk mendukung graduation year filter
+     */
+    private function getSingleQuestionStatistics($questionId, $userType, $studyProgramId = null, $graduationYear = null)
+    {
+        try {
+            $question = Tb_Questions::with('options')->find($questionId);
+            if (!$question) {
+                return ['error' => 'Question not found'];
+            }
+            
+            // Apply same filter logic as in other methods
+            $questionTotalResponses = $this->getQuestionTotalResponders($questionId, $studyProgramId, $userType, $graduationYear);
+            
+            // Get answers with filters
+            $answersBaseQuery = "
+                SELECT DISTINCT 
+                    tai.*, 
+                    tua.id_user, 
+                    tua.nim,
+                    tua.created_at as answer_created_at
+                FROM tb_user_answer_item tai
+                INNER JOIN tb_user_answers tua ON tai.id_user_answer = tua.id_user_answer 
+                INNER JOIN tb_user u ON tua.id_user = u.id_user
+                WHERE tai.id_question = ? 
+                AND tua.status = 'completed'
+            ";
+            
+            $queryParams = [$questionId];
+            
+            // Apply same filter logic as in getAllQuestionsFromAllCategories
+            if ($userType === 'company') {
+                $answersBaseQuery .= " AND EXISTS (
+                    SELECT 1 FROM tb_company 
+                    WHERE tb_company.id_user = u.id_user
+                )";
+                
+                if ($studyProgramId) {
+                    $answersBaseQuery .= " AND tua.nim IS NOT NULL 
+                        AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.id_study = ?
+                        )";
+                    $queryParams[] = $studyProgramId;
+                }
+                
+                if ($graduationYear) {
+                    $answersBaseQuery .= " AND tua.nim IS NOT NULL 
+                        AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.graduation_year = ?
+                        )";
+                    $queryParams[] = $graduationYear;
+                }
+                
+            } elseif ($userType === 'alumni') {
+                $answersBaseQuery .= " AND EXISTS (
+                    SELECT 1 FROM tb_alumni 
+                    WHERE tb_alumni.id_user = u.id_user
+                ) AND tua.nim IS NULL";
+                
+                if ($studyProgramId) {
+                    $answersBaseQuery .= " AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user 
+                        AND tb_alumni.id_study = ?
+                    )";
+                    $queryParams[] = $studyProgramId;
+                }
+                
+                if ($graduationYear) {
+                    $answersBaseQuery .= " AND EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user 
+                        AND tb_alumni.graduation_year = ?
+                    )";
+                    $queryParams[] = $graduationYear;
+                }
+                
+            } else {
+                // $userType === 'all'
+                $answersBaseQuery .= " AND (
+                    (EXISTS (
+                        SELECT 1 FROM tb_alumni 
+                        WHERE tb_alumni.id_user = u.id_user
+                    ) AND tua.nim IS NULL)
+                    OR 
+                    (EXISTS (
+                        SELECT 1 FROM tb_company 
+                        WHERE tb_company.id_user = u.id_user
+                    ) AND tua.nim IS NOT NULL)
+                )";
+                
+                if ($studyProgramId) {
+                    $answersBaseQuery .= " AND (
+                        (EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user 
+                            AND tb_alumni.id_study = ?
+                        ) AND tua.nim IS NULL)
+                        OR 
+                        (EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        ) AND tua.nim IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.id_study = ?
+                        ))
+                    )";
+                    $queryParams[] = $studyProgramId;
+                    $queryParams[] = $studyProgramId;
+                }
+                
+                if ($graduationYear) {
+                    $answersBaseQuery .= " AND (
+                        (EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.id_user = u.id_user 
+                            AND tb_alumni.graduation_year = ?
+                        ) AND tua.nim IS NULL)
+                        OR 
+                        (EXISTS (
+                            SELECT 1 FROM tb_company 
+                            WHERE tb_company.id_user = u.id_user
+                        ) AND tua.nim IS NOT NULL AND EXISTS (
+                            SELECT 1 FROM tb_alumni 
+                            WHERE tb_alumni.nim = tua.nim 
+                            AND tb_alumni.graduation_year = ?
+                        ))
+                    )";
+                    $queryParams[] = $graduationYear;
+                    $queryParams[] = $graduationYear;
+                }
+            }
+            
+            $answersBaseQuery .= " ORDER BY tua.created_at DESC";
+            $answers = DB::select($answersBaseQuery, $queryParams);
+            
+            // Process answers the same way as in other methods
+            $answerCounts = [];
+            $labels = [];
+            $values = [];
+            $otherAnswers = [];
+            
+            // [Same logic as in getAllQuestionsFromAllCategories for processing answers]
+            
+            return [
+                'question' => $question,
+                'labels' => $labels,
+                'values' => $values,
+                'total_responses' => $questionTotalResponses,
+                'answer_counts' => $answerCounts,
+                'other_answers' => $otherAnswers,
+                'question_type' => $question->type,
+                'has_options' => $question->options && $question->options->count() > 0
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error('Error getting single question statistics: ' . $e->getMessage());
+            return ['error' => 'Error loading question data'];
         }
     }
 }
