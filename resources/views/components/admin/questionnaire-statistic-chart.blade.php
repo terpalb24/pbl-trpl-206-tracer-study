@@ -23,7 +23,7 @@
     <div class="hidden md:block">
     <div class="bg-white rounded-xl shadow p-6 mb-6">
         <h3 class="font-semibold text-orange-800 mb-4">Filter Statistik</h3>
-        <form method="GET" id="questionnaire-filter-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <form method="GET" id="questionnaire-filter-form" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <!-- Preserve other filters -->
             @if(request('graduation_year_filter'))
                 <input type="hidden" name="graduation_year_filter" value="{{ request('graduation_year_filter') }}">
@@ -83,22 +83,45 @@
                     @endforeach
                 </select>
             </div>
-            
+
             <!-- Question Filter -->
             <div>
                 <label for="questionnaire_question" class="block text-sm font-medium text-gray-700 mb-1">Pertanyaan:</label>
                 <select name="questionnaire_question" id="questionnaire_question" 
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
-                        onchange="this.form.submit()"
+                        onchange="handleQuestionChange()"
                         {{ !$selectedCategory ? 'disabled' : '' }}>
                     <option value="">Pilih Pertanyaan</option>
-                    @if($availableQuestions->count() > 0)
-                        <option value="all" {{ $selectedQuestion == 'all' || ($selectedCategory && !$selectedQuestion) ? 'selected' : '' }}>
-                            📊 Semua Pertanyaan ({{ $availableQuestions->count() }})
+                    @if($selectedCategory)
+                        <option value="all" {{ $selectedQuestion === 'all' ? 'selected' : '' }}>
+                            📊 Semua Pertanyaan
                         </option>
-                        @if($availableQuestions->count() > 1)
-                            <option disabled>─────────────────</option>
-                        @endif
+                        @foreach($availableQuestions as $question)
+                            <option value="{{ $question->id_question }}" 
+                                    {{ $selectedQuestion == $question->id_question ? 'selected' : '' }}>
+                                {{ Str::limit($question->question, 50) }}
+                            </option>
+                        @endforeach
+                    @endif
+                </select>
+            </div>
+
+            <!-- Study Program Filter -->
+            <div>
+                <label for="questionnaire_study_program" class="block text-sm font-medium text-gray-700 mb-1">Program Studi:</label>
+                <select name="questionnaire_study_program" id="questionnaire_study_program" 
+                        class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
+                        onchange="handleStudyProgramChangeOnly()">
+                    <option value="">Semua Program Studi</option>
+                    @if(isset($availableStudyPrograms) && $availableStudyPrograms->count() > 0)
+                        @foreach($availableStudyPrograms as $studyProgram)
+                            <option value="{{ $studyProgram->id_study }}" 
+                                    {{ (isset($selectedStudyProgram) && $selectedStudyProgram == $studyProgram->id_study) ? 'selected' : '' }}>
+                                {{ $studyProgram->study_program }}
+                            </option>
+                        @endforeach
+                    @else
+                        <option disabled>Tidak ada program studi tersedia</option>
                     @endif
                 </select>
             </div>
@@ -233,13 +256,7 @@
                                     @if($qData['total_responses'] > 0)
                                         <!-- Mini Chart -->
                                         <div class="mb-3">
-                                            @if($qData['question']->type === 'scale' || $qData['question']->type === 'rating')
-                                                <canvas id="miniLineChart{{ $globalIndex }}" width="250" height="150"></canvas>
-                                            @elseif($qData['question']->type === 'multiple')
-                                                <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="300"></canvas>
-                                            @else
-                                                <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="150"></canvas>
-                                            @endif
+                                            <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="150"></canvas>
                                         </div>
                                         
                                         <!-- Top Answer -->
@@ -414,13 +431,7 @@
                             @if($qData['total_responses'] > 0)
                                 <!-- Mini Chart -->
                                 <div class="mb-4">
-                                    @if($qData['question']->type === 'scale' || $qData['question']->type === 'rating')
-                                        <canvas id="miniLineChart{{ $index }}" width="300" height="200"></canvas>
-                                    @elseif($qData['question']->type === 'multiple')
-                                        <canvas id="miniBarChart{{ $index }}" width="300" height="500"></canvas>
-                                    @else
-                                        <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
-                                    @endif
+                                    <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
                                 </div>
                                 
                                 <!-- Detailed Options Table -->
@@ -573,11 +584,7 @@
                     </div>
                     
                     <div class="flex justify-center">
-                        @if($questionnaireChartData['question']->type === 'scale' || $questionnaireChartData['question']->type === 'rating')
-                            <canvas id="questionnaireLineChart" height="400" width="600" style="max-width:800px;max-height:400px;"></canvas>
-                        @else
-                            <canvas id="questionnaireBarChart" height="400" width="600" style="max-width:800px;max-height:400px;"></canvas>
-                        @endif
+                        <canvas id="questionnaireBarChart" height="400" width="600" style="max-width:800px;max-height:400px;"></canvas>
                     </div>
                     
                     <!-- Data Table -->
@@ -729,61 +736,43 @@ document.addEventListener('DOMContentLoaded', function () {
                     const chartLabels = qData.labels;
                     const chartValues = qData.values;
                     
-                    if (questionType === 'scale' || questionType === 'rating') {
-                        const lineCtx = document.getElementById(`miniLineChart${index}`);
-                        if (lineCtx) {
-                            new Chart(lineCtx.getContext('2d'), {
-                                type: 'line',
-                                data: {
-                                    labels: chartLabels,
-                                    datasets: [{
-                                        label: 'Responden',
-                                        data: chartValues,
-                                        borderColor: colors[index % colors.length],
-                                        backgroundColor: colors[index % colors.length] + '20',
-                                        borderWidth: 2,
-                                        fill: true,
-                                        tension: 0.4,
-                                        pointBackgroundColor: colors[index % colors.length],
-                                        pointRadius: 2
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: { legend: { display: false } },
-                                    scales: {
-                                        y: { beginAtZero: true, ticks: { precision: 0 } }
+                    // Changed: Use bar chart for all types including scale and rating
+                    const chartCtx = document.getElementById(`miniBarChart${index}`);
+                    if (chartCtx) {
+                        new Chart(chartCtx.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: chartLabels,
+                                datasets: [{
+                                    label: 'Responden',
+                                    data: chartValues,
+                                    backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
+                                    borderColor: colors.slice(0, chartLabels.length),
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { 
+                                    legend: { display: false },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                                const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                                return context.parsed.y + ' responden (' + percentage + '%)';
+                                            }
+                                        }
                                     }
-                                }
-                            });
-                        }
-                    } else {
-                        const barCtx = document.getElementById(`miniBarChart${index}`);
-                        if (barCtx) {
-                            new Chart(barCtx.getContext('2d'), {
-                                type: 'bar',
-                                data: {
-                                    labels: chartLabels,
-                                    datasets: [{
-                                        label: 'Responden',
-                                        data: chartValues,
-                                        backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
-                                        borderColor: colors.slice(0, chartLabels.length),
-                                        borderWidth: 1
-                                    }]
                                 },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: true,
-                                    plugins: { legend: { display: false } },
-                                    scales: {
-                                        y: { beginAtZero: true, ticks: { precision: 0 } },
-                                        x: { ticks: { maxRotation: 100, minRotation: 0 } }
-                                    }
+                                scales: {
+                                    y: { beginAtZero: true, ticks: { precision: 0 } },
+                                    x: { ticks: { maxRotation: 45, minRotation: 0 } }
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
                 }
             });
@@ -801,61 +790,43 @@ document.addEventListener('DOMContentLoaded', function () {
                 const chartLabels = qData.labels;
                 const chartValues = qData.values;
                 
-                if (questionType === 'scale' || questionType === 'rating') {
-                    const lineCtx = document.getElementById(`miniLineChart${index}`);
-                    if (lineCtx) {
-                        new Chart(lineCtx.getContext('2d'), {
-                            type: 'line',
-                            data: {
-                                labels: chartLabels,
-                                datasets: [{
-                                    label: 'Responden',
-                                    data: chartValues,
-                                    borderColor: colors[index % colors.length],
-                                    backgroundColor: colors[index % colors.length] + '20',
-                                    borderWidth: 2,
-                                    fill: true,
-                                    tension: 0.4,
-                                    pointBackgroundColor: colors[index % colors.length],
-                                    pointRadius: 3
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
-                                scales: {
-                                    y: { beginAtZero: true, ticks: { precision: 0 } }
+                // Changed: Use bar chart for all types including scale and rating
+                const chartCtx = document.getElementById(`miniBarChart${index}`);
+                if (chartCtx) {
+                    new Chart(chartCtx.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: chartLabels,
+                            datasets: [{
+                                label: 'Responden',
+                                data: chartValues,
+                                backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
+                                borderColor: colors.slice(0, chartLabels.length),
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                            const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                            return context.parsed.y + ' responden (' + percentage + '%)';
+                                        }
+                                    }
                                 }
-                            }
-                        });
-                    }
-                } else {
-                    const barCtx = document.getElementById(`miniBarChart${index}`);
-                    if (barCtx) {
-                        new Chart(barCtx.getContext('2d'), {
-                            type: 'bar',
-                            data: {
-                                labels: chartLabels,
-                                datasets: [{
-                                    label: 'Responden',
-                                    data: chartValues,
-                                    backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
-                                    borderColor: colors.slice(0, chartLabels.length),
-                                    borderWidth: 1
-                                }]
                             },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: { legend: { display: false } },
-                                scales: {
-                                    y: { beginAtZero: true, ticks: { precision: 0 } },
-                                    x: { ticks: { maxRotation: 45, minRotation: 0 } }
-                                }
+                            scales: {
+                                y: { beginAtZero: true, ticks: { precision: 0 } },
+                                x: { ticks: { maxRotation: 45, minRotation: 0 } }
                             }
-                        });
-                    }
+                        }
+                    });
                 }
             });
         @elseif(isset($questionnaireChartData['question']))
@@ -869,101 +840,57 @@ document.addEventListener('DOMContentLoaded', function () {
                 '#ef4444', '#6366f1', '#8b5cf6', '#06b6d4', '#10b981'
             ];
             
-            if (questionType === 'scale' || questionType === 'rating') {
-                const lineCtx = document.getElementById('questionnaireLineChart');
-                if (lineCtx) {
-                    new Chart(lineCtx.getContext('2d'), {
-                        type: 'line',
-                        data: {
-                            labels: chartLabels,
-                            datasets: [{
-                                label: 'Jumlah Responden',
-                                data: chartValues,
-                                borderColor: '#8b5cf6',
-                                backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                                borderWidth: 3,
-                                fill: true,
-                                tension: 0.4,
-                                pointBackgroundColor: '#8b5cf6',
-                                pointBorderColor: '#ffffff',
-                                pointBorderWidth: 2,
-                                pointRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { 
-                                    display: true,
-                                    position: 'top'
-                                },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return context.dataset.label + ': ' + context.parsed.y + ' responden';
-                                        }
+            // Changed: Use bar chart for all types including scale and rating
+            const barCtx = document.getElementById('questionnaireBarChart');
+            if (barCtx) {
+                new Chart(barCtx.getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Jumlah Responden',
+                            data: chartValues,
+                            backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
+                            borderColor: colors.slice(0, chartLabels.length),
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
+                                        return context.parsed.y + ' responden (' + percentage + '%)';
                                     }
                                 }
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                ticks: { precision: 0 },
+                                title: {
+                                    display: true,
+                                    text: 'Jumlah Responden'
+                                }
                             },
-                            scales: {
-                                y: { 
-                                    beginAtZero: true, 
-                                    ticks: { precision: 0 }
+                            x: {
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0
                                 },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Pilihan Jawaban'
-                                    }
+                                title: {
+                                    display: true,
+                                    text: 'Pilihan Jawaban'
                                 }
                             }
                         }
                     });
-                }
-            } else {
-                const barCtx = document.getElementById('questionnaireBarChart');
-                if (barCtx) {
-                    new Chart(barCtx.getContext('2d'), {
-                        type: 'bar',
-                        data: {
-                            labels: chartLabels,
-                            datasets: [{
-                                label: 'Jumlah Responden',
-                                data: chartValues,
-                                backgroundColor: colors.slice(0, chartLabels.length),
-                                borderColor: colors.slice(0, chartLabels.length).map(color => color + 'dd'),
-                                borderWidth: 1,
-                                borderRadius: 4
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                            const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
-                                            return context.parsed.y + ' responden (' + percentage + '%)';
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: { 
-                                    beginAtZero: true, 
-                                    ticks: { precision: 0 }
-                                },
-                                x: {
-                                    ticks: {
-                                        maxRotation: 45,
-                                        minRotation: 0
-                                    }
-                                }
-                            }
-                        });
-                    }
                 }
             }
         @endif
@@ -994,7 +921,20 @@ function handleCategoryChange() {
     
     document.getElementById('questionnaire-filter-form').submit();
 }
+function handleStudyProgramChange() {
+    // ✅ PERBAIKAN: Mirip dengan handleUserTypeChange - reset category dan question
+    // tetapi pertahankan periode
+    document.getElementById('questionnaire_category').value = '';
+    document.getElementById('questionnaire_question').value = '';
+    
+    document.getElementById('questionnaire-filter-form').submit();
+}
 
+// ✅ ALTERNATIF: Buat function yang lebih spesifik
+function handleStudyProgramChangeOnly() {
+    // Hanya submit tanpa reset apapun - untuk perubahan program studi saja
+    document.getElementById('questionnaire-filter-form').submit();
+}
 function viewQuestionDetail(questionId) {
     document.getElementById('questionnaire_question').value = questionId;
     document.getElementById('questionnaire-filter-form').submit();
