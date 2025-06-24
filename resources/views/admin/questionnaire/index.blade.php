@@ -206,17 +206,17 @@
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap gap-1">
+                                        <div class="grid grid-cols-2 gap-2 w-full max-w-[160px]">
                                             <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
-                                               class="text-blue-600 hover:text-blue-900 font-medium text-xs px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 transition">
+                                               class="inline-flex items-center justify-center text-blue-600 hover:text-blue-900 font-medium text-xs px-2 py-1.5 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all duration-200">
                                                 <i class="fas fa-eye mr-1"></i>Detail
                                             </a>
                                             <a href="{{ route('admin.questionnaire.edit', $periode->id_periode) }}" 
-                                               class="text-indigo-600 hover:text-indigo-900 font-medium text-xs px-2 py-1 rounded bg-indigo-50 hover:bg-indigo-100 transition">
+                                               class="inline-flex items-center justify-center text-indigo-600 hover:text-indigo-900 font-medium text-xs px-2 py-1.5 rounded-md bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all duration-200">
                                                 <i class="fas fa-edit mr-1"></i>Edit
                                             </a>
                                             <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" 
-                                               class="text-green-600 hover:text-green-900 font-medium text-xs px-2 py-1 rounded bg-green-50 hover:bg-green-100 transition">
+                                               class="inline-flex items-center justify-center text-green-600 hover:text-green-900 font-medium text-xs px-2 py-1.5 rounded-md bg-green-50 hover:bg-green-100 border border-green-200 transition-all duration-200">
                                                 <i class="fas fa-chart-bar mr-1"></i>Respons
                                             </a>
                                             
@@ -228,17 +228,17 @@
                                             @if($canDelete)
                                                 <form action="{{ route('admin.questionnaire.destroy', $periode->id_periode) }}" 
                                                       method="POST" 
-                                                      class="inline-block"
+                                                      class="w-full"
                                                       onsubmit="return confirmDelete('{{ $periode->periode_name }}')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
-                                                            class="text-red-600 hover:text-red-900 font-medium text-xs px-2 py-1 rounded bg-red-50 hover:bg-red-100 transition">
+                                                            class="w-full inline-flex items-center justify-center text-red-600 hover:text-red-900 font-medium text-xs px-2 py-1.5 rounded-md bg-red-50 hover:bg-red-100 border border-red-200 transition-all duration-200">
                                                         <i class="fas fa-trash mr-1"></i>Hapus
                                                     </button>
                                                 </form>
                                             @else
-                                                <span class="text-gray-400 font-medium text-xs px-2 py-1 rounded bg-gray-50 cursor-not-allowed" 
+                                                <span class="inline-flex items-center justify-center text-gray-400 font-medium text-xs px-2 py-1.5 rounded-md bg-gray-50 border border-gray-200 cursor-not-allowed" 
                                                       title="{{ $hasResponses ? 'Periode ini sudah memiliki respons dan tidak dapat dihapus' : 'Periode aktif tidak dapat dihapus' }}">
                                                     <i class="fas fa-trash mr-1"></i>Hapus
                                                 </span>
@@ -315,17 +315,17 @@
                             
                             <div class="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
                                 <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
-                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
+                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-blue-50 hover:bg-blue-100 border border-blue-500 text-blue-600 text-xs font-medium transition duration-200">
                                     <i class="fas fa-eye"></i>
                                     <span>Detail</span>
                                 </a>
                                 <a href="{{ route('admin.questionnaire.edit', $periode->id_periode) }}" 
-                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-medium transition duration-200">
+                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-indigo-50 hover:bg-indigo-100 border border-indigo-500 text-indigo-600 text-xs font-medium transition duration-200">
                                     <i class="fas fa-edit"></i>
                                     <span>Edit</span>
                                 </a>
                                 <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" 
-                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-green-500 hover:bg-green-600 text-white text-xs font-medium transition duration-200">
+                                    class="flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-green-50 hover:bg-green-100 border border-green-500 text-green-600 text-xs font-medium transition duration-200">
                                     <i class="fas fa-chart-bar"></i>
                                     <span>Respons</span>
                                 </a>
@@ -343,7 +343,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
-                                                class="w-full flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
+                                                class="w-full flex items-center justify-center gap-1 px-2 py-2 rounded-md bg-red-50 hover:bg-red-100 border border-red-500 text-red-600 text-xs font-medium transition duration-200">
                                             <i class="fas fa-trash"></i>
                                             <span>Hapus</span>
                                         </button>

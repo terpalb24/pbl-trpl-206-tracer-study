@@ -394,7 +394,7 @@
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" 
-                                                                class="w-full px-2 sm:px-3 py-1 sm:py-2 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200 transition-all duration-200 hover:shadow-md flex items-center justify-center lg:w-auto"
+                                                                class="w-full px-2 sm:px-3 py-1 sm:py-2 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200 transition-all duration-200 hover:shadow-md flex items-center justify-center lg:w-full"
                                                                 title="Hapus pertanyaan">
                                                             <i class="fas fa-trash mr-1 sm:mr-0 lg:mr-1"></i>
                                                             <span class="sm:hidden lg:inline">Hapus</span>
