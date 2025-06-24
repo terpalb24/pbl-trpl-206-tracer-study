@@ -245,7 +245,7 @@
                                             </a>
                                             
                                             <!-- Delete Button -->
-                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
+                                            <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
                                                 class="inline">
                                                 @csrf
@@ -303,7 +303,7 @@
                                                 <i class="bi bi-pencil-square mr-1"></i>
                                                 <span>Edit</span>
                                             </a>
-                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
+                                            <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -360,7 +360,7 @@
                                     <i class="bi bi-pencil-square"></i>
                                     <span>Edit Perusahaan</span>
                                 </a>
-                                <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
+                                <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
                                     onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
                                     class="flex-1">
                                     @csrf

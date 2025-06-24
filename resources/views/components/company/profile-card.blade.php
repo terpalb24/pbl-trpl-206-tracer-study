@@ -60,6 +60,14 @@
                 </div>
                 @endif
 
+                <!-- HRD Name -->
+                <div class="col-span-1">
+                    <h3 class="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 uppercase tracking-wide">Nama HRD</h3>
+                    <p class="font-semibold text-sm sm:text-base lg:text-lg text-gray-800">
+                        {{ $company->Hrd_name ?? 'Belum diisi' }}
+                    </p>
+                </div>
+
                 <!-- Address -->
                 <div class="col-span-1 sm:col-span-2">
                     <h3 class="text-xs sm:text-sm text-gray-500 mb-1 sm:mb-2 uppercase tracking-wide">Alamat</h3>

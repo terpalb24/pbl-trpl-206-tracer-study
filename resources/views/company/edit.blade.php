@@ -94,6 +94,21 @@
                             @enderror
                         </div>
 
+                        <!-- Hrd Name -->
+                        <div class="lg:col-span-1">
+                            <label class="block text-sm sm:text-base font-semibold text-gray-700 mb-2">
+                                Nama HRD
+                            </label>
+                            <input type="text"
+                                   name="Hrd_name"
+                                   value="{{ old('Hrd_name', $company->Hrd_name) }}"
+                                   class="w-full border border-gray-300 px-3 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 @error('Hrd_name') border-red-500 @enderror"
+                                   placeholder="Nama HRD (jika ada)">
+                            @error('Hrd_name')
+                                <p class="text-red-500 text-xs sm:text-sm mt-1">{{ $message }}</p>
+                            @enderror
+                        </div>
+
                         <!-- Company Address -->
                         <div class="lg:col-span-2">
                             <label class="block text-sm sm:text-base font-semibold text-gray-700 mb-2">

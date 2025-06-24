@@ -36,6 +36,7 @@ class CompanyController extends Controller
         'company_email' => 'required|email',
         'company_phone_number' => 'required|string|max:20',
         'company_address' => 'required|string|max:500',
+        'Hrd_name' => 'nullable|string|max:50',
     ]);
 
     // Cari perusahaan berdasarkan id_company
@@ -50,6 +51,9 @@ class CompanyController extends Controller
     $company->company_email = $validated['company_email'];
     $company->company_phone_number = $validated['company_phone_number'];
     $company->company_address = $validated['company_address'];
+    $company->Hrd_name = isset($validated['Hrd_name']) && $validated['Hrd_name'] !== null
+        ? ucwords(strtolower($validated['Hrd_name']))
+        : null;
 
     // Jika email berubah, update  username Tb_user
     if ($oldEmail !== $validated['company_email']) {

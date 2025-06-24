@@ -565,7 +565,12 @@ class AdminController extends Controller
             'company_address' => 'required|string|max:255',
             'company_email' => 'required|email|unique:tb_company,company_email',
             'company_phone_number' => 'required|string|max:20',
+            'Hrd_name' => 'nullable|string|max:50', // Tambahan untuk nama HRD
         ]);
+
+        // Kapitalisasi nama HRD
+        $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
+        $company_name = $request->company_name ? ucwords(strtolower($request->company_name)) : null;
 
         // Buat user baru untuk perusahaan
         $user = Tb_User::create([
@@ -576,11 +581,12 @@ class AdminController extends Controller
 
         // Simpan data perusahaan, sertakan id_user
         Tb_company::create([
-            'company_name' => $request->company_name,
+            'company_name' => $company_name,
             'company_address' => $request->company_address,
             'company_email' => $request->company_email,
             'company_phone_number' => $request->company_phone_number,
             'id_user' => $user->id_user,
+            'Hrd_name' => $hrdName, // Nama HRD sudah dikapitalisasi
         ]);
 
         return redirect()->route('admin.company.index')->with('success', 'Perusahaan berhasil ditambahkan.');
@@ -599,19 +605,25 @@ class AdminController extends Controller
             'company_email' => 'required|email|unique:tb_company,company_email,' . $id_company . ',id_company',
             'company_phone_number' => 'required|string|max:15',
             'company_address' => 'required|string|max:255',
+            'Hrd_name' => 'nullable|string|max:50', // Konsisten gunakan Hrd_name
         ]);
 
         $company = Tb_company::findOrFail($id_company);
+
+        // Kapitalisasi nama HRD
+        $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
+        $company_name = $request->company_name ? ucwords(strtolower($request->company_name)) : null;
 
         // Cek jika data perusahaan sebelumnya kosong (hanya company_name, data lain null)
         $isIncomplete = !$company->company_address && !$company->company_email && !$company->company_phone_number && !$company->id_user;
 
         // Update data perusahaan
         $company->update([
-            'company_name' => $request->company_name,
+            'company_name' => $company_name,
             'company_email' => $request->company_email,
             'company_phone_number' => $request->company_phone_number,
             'company_address' => $request->company_address,
+            'Hrd_name' => $hrdName, // Nama HRD sudah dikapitalisasi
         ]);
 
         // Jika sebelumnya incomplete dan sekarang sudah ada email, buat user perusahaan
@@ -642,6 +654,8 @@ class AdminController extends Controller
 
     public function companyDestroy($id_user)
     {
+
+
         Tb_User::where('id_user', $id_user)->delete();
         return redirect()->route('admin.company.index')->with('success', 'Data perusahaan dihapus.');
     }
@@ -667,6 +681,11 @@ class AdminController extends Controller
                     throw new \Exception("Baris ke-" . ($index + 2) . ": Format email tidak valid");
                 }
 
+                // Kapitalisasi nama HRD
+                $hrdName = isset($row[4]) && $row[4] ? ucwords(strtolower($row[4])) : null;
+
+                $company_name = isset($row[0]) && $row[0] ? ucwords(strtolower($row[0])) : null;
+
                 // Create/update user
                 $user = Tb_User::updateOrCreate(
                     ['username' => $row[1]], // company_email as username
@@ -681,10 +700,11 @@ class AdminController extends Controller
                     ['company_email' => $row[1]], // company_email as unique identifier
                     [
                         'id_user' => $user->id_user,
-                        'company_name' => $row[0],
+                        'company_name' => $company_name, // Kapitalisasi nama perusahaan
                         'company_email' => $row[1],
                         'company_address' => $row[2],
-                        'company_phone_number' => $row[3]
+                        'company_phone_number' => $row[3],
+                        'Hrd_name' => $hrdName // Nama HRD sudah dikapitalisasi
                     ]
                 );
             }
@@ -707,7 +727,8 @@ class AdminController extends Controller
             'Nama Perusahaan',
             'Email',
             'Alamat',
-            'Nomor Telepon'
+            'Nomor Telepon',
+            'Nama HRD'  
         ];
 
         // Apply headers with styling
@@ -717,7 +738,7 @@ class AdminController extends Controller
         }
 
         // Style headers
-        $sheet->getStyle('A1:D1')->applyFromArray([
+        $sheet->getStyle('A1:E1')->applyFromArray([
             'font' => ['bold' => true],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
@@ -727,21 +748,24 @@ class AdminController extends Controller
 
         // Add data
         $row = 2;
-        Tb_Company::select('company_name', 'company_email', 'company_address', 'company_phone_number')
+        Tb_Company::select('company_name', 'company_email', 'company_address', 'company_phone_number', 'Hrd_name')
             ->chunk(100, function($companies) use ($sheet, &$row) {
                 foreach ($companies as $company) {
+                    // Kapitalisasi nama HRD saat export
+                    $hrdName = $company->Hrd_name ? ucwords(strtolower($company->Hrd_name)) : '';
                     $sheet->fromArray([
                         $company->company_name,
                         $company->company_email,
                         $company->company_address,
-                        $company->company_phone_number
+                        $company->company_phone_number,
+                        $hrdName
                     ], null, 'A' . $row);
                     $row++;
                 }
             });
 
         // Auto-size columns
-        foreach (range('A', 'D') as $column) {
+        foreach (range('A', 'E') as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -763,7 +787,8 @@ class AdminController extends Controller
             'Nama Perusahaan',
             'Email',
             'Alamat',
-            'Nomor Telepon'
+            'Nomor Telepon',
+            'Nama HRD' 
         ];
 
         // Apply headers with styling
@@ -786,7 +811,8 @@ class AdminController extends Controller
             'PT Example Company',
             'company@example.com',
             'Jl. Example No. 123, Jakarta',
-            '021-1234567'
+            '021-1234567',
+            'Budi Santoso' // Nama HRD
         ];
 
         // Add example row with styling
@@ -799,7 +825,8 @@ class AdminController extends Controller
             '- Email perusahaan wajib diisi dan harus unik',
             '- Email akan digunakan sebagai username dan password untuk login',
             '- Format email harus valid (contoh: company@example.com)',
-            '- Format nomor telepon: 021-1234567 atau 0812-3456-7890'
+            '- Format nomor telepon: 021-1234567 atau 0812-3456-7890',
+            '- Nama HRD wajib diisi jika ada, bisa kosong jika tidak diketahui',
         ];
 
         $row = 4;

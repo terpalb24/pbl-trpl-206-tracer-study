@@ -24,7 +24,8 @@ class Tb_Company extends Authenticatable
         'company_email',
         'company_phone_number',
         'created_at',
-        'updated_at'
+        'updated_at',
+        'Hrd_name'
     ];
 
     public function jobHistories()
