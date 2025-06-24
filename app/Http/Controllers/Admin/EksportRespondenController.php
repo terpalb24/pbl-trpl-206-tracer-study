@@ -188,10 +188,13 @@ class EksportRespondenController extends Controller
                                     if (!$optionBefore && !$optionAfter) {
                                         $val .='[' . $main . ']';
                                     }
-                                    if (!$optionBefore) {
+                                    if ($optionBefore && $optionAfter) {
+                                        $val .= $main;
+                                    }
+                                    if (!$optionBefore && $optionAfter) {
                                         $val .='[' . $main;
                                     }
-                                    if (!$optionAfter) {
+                                    if (!$optionAfter && $optionBefore) {
                                         $val .=$main . ']';
                                     }
                                     if ($optionAfter !== '') {
@@ -253,21 +256,21 @@ class EksportRespondenController extends Controller
                                     $answerText .=  $item->answer ;
                                 }
                                 // before_text (dari kolom option)
-                                if ($optionBefore !== '') {
-                                    $answerText .= ' ['. $optionBefore . ' ';
-                                }
                                 if (!$optionBefore && !$optionAfter) {
                                     $answerText .= '[' . $main . ']';
                                 }
-                                if (!$optionBefore) {
+                                if ($optionBefore && $optionAfter) {
+                                    $answerText .=$main;
+                                }
+                                if (!$optionBefore && $optionAfter) {
                                     $answerText .= '[' . $main;
                                 }
-                                if (!$optionAfter) {
+                                if (!$optionAfter && $optionBefore) {
                                     $answerText .= $main . ']';
                                 }
-                                // value (jawaban lainnya)
-                                
-                                // after_text (dari kolom option)
+                                if ($optionBefore !== '') {
+                                    $answerText .= ' ['. $optionBefore . ' ';
+                                }
                                 if ($optionAfter !== '') {
                                     $answerText .= ' ' . $optionAfter . ']';
                                 }
