@@ -19,7 +19,7 @@ class EksportRespondenController extends Controller
 
         // Get all user answers for this periode
         $userAnswers = Tb_User_Answers::where('id_periode', $id_periode)
-            ->with(['user.alumni', 'user.company'])
+            ->with(['user.alumni.studyProgram', 'user.company'])
             ->where('status', 'completed')
             ->get();
 
@@ -28,7 +28,7 @@ class EksportRespondenController extends Controller
 
         // Prepare dynamic question headers
         $headers = [
-            'No', 'Nama', 'Tipe', 'NIM/Email', 'Tanggal Isi'
+            'No', 'Nama', 'Program Studi', 'Tipe', 'NIM/Email', 'Tanggal Isi'
         ];
 
         // Pisahkan pertanyaan berdasarkan kategori dan tipe user
@@ -52,8 +52,10 @@ class EksportRespondenController extends Controller
         // Split userAnswers by type
         $alumniAnswers = $userAnswers->filter(function($ua) {
             return $ua->user && $ua->user->alumni;
+        })->sortBy(function($ua){
+            return $ua->user->alumni->studyProgram->study_program ?? '';
         })->values();
-
+    
         $companyAnswers = $userAnswers->filter(function($ua) {
             return $ua->user && $ua->user->company;
         })->values();
@@ -103,6 +105,7 @@ class EksportRespondenController extends Controller
                 $user = $userAnswer->user;
                 $alumni = $user ? $user->alumni : null;
                 $company = $user ? $user->company : null;
+                $prodiName = $alumni ? ($alumni->studyProgram ? $alumni->studyProgram->study_program : '-') : '-';
 
                 $name = $alumni ? $alumni->name : ($company ? $company->company_name : ($user->name ?? ''));
                 $tipe = $alumni ? 'Alumni' : ($company ? 'Perusahaan' : '-');
@@ -112,6 +115,7 @@ class EksportRespondenController extends Controller
                 $colIdx = 1;
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $idx + 1);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
 
@@ -130,7 +134,7 @@ class EksportRespondenController extends Controller
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tanggalIsi);
 
                 // Get all answer items for this user answer
-                $answerItems = \App\Models\Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)->get();
+                $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)->get();
 
                 // Map answers by question id
                 $answersByQuestion = [];
@@ -378,8 +382,8 @@ class EksportRespondenController extends Controller
         }
 
         $tempFile = tempnam(sys_get_temp_dir(), $fileName);
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($tempFile);
+        $writer = new Xlsx($spreadsheet);
+        $writer->save(filename: $tempFile);
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
