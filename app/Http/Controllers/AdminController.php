@@ -2198,5 +2198,52 @@ class AdminController extends Controller
             return ['error' => 'Error loading question data'];
         }
     }
+    public function storeStudyProgram(Request $request)
+{
+    $request->validate([
+        'study_program' => 'required|string|max:255',
+    ]);
+
+    // Simpan ke tabel program studi
+    Tb_Study_Program::create([
+        'study_program' => $request->input('study_program'),
+    ]);
+
+    return redirect()->back()->with('success', 'Program Studi berhasil ditambahkan.');
 }
+
+    public function deleteStudyProgramBySelect(Request $request)
+{
+    $request->validate([
+        'id_study' => 'required|exists:tb_study_program,id_study',
+    ]);
+
+    $studyProgram = Tb_Study_Program::where('id_study', $request->id_study)->first();
+
+    if ($studyProgram) {
+        $studyProgram->delete();
+        return redirect()->back()->with('success', 'Program Studi berhasil dihapus.');
+    }
+
+    return redirect()->back()->with('error', 'Program Studi tidak ditemukan.');
+}
+public function updateStudyProgram(Request $request)
+{
+    $request->validate([
+        'id_study' => 'required|exists:tb_study_program,id_study',
+        'study_program' => 'required|string|max:255',
+    ]);
+
+    $prodi = Tb_Study_Program::findOrFail($request->id_study);
+    $prodi->study_program = $request->study_program;
+    $prodi->save();
+
+    return redirect()->back()->with('success', 'Program Studi berhasil diperbarui.');
+}
+
+
+};
+   
+      
+
 
