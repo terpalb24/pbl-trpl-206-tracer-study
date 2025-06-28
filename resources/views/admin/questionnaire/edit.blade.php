@@ -180,7 +180,7 @@
                         </label>
 
                         <!-- Specific Years -->
-                        <label class="flex items-start p-3 sm:p-4 bg-purple-50 rounded-lg border-2 cursor-pointer transition-all hover:bg-purple-100" id="target-specific">
+                        <!-- <label class="flex items-start p-3 sm:p-4 bg-purple-50 rounded-lg border-2 cursor-pointer transition-all hover:bg-purple-100" id="target-specific">
                             <input type="radio" 
                                    name="target_type" 
                                    value="specific_years"
@@ -190,7 +190,7 @@
                                 <span class="text-sm font-medium text-purple-800">Tahun Kelulusan Spesifik</span>
                                 <p class="text-xs text-purple-600 mt-1">Target alumni berdasarkan tahun kelulusan yang spesifik</p>
                             </div>
-                        </label>
+                        </label> -->
                     </div>
 
                     <!-- Years Ago Options -->
@@ -226,7 +226,7 @@
                                 </div>
                                 <button type="button" 
                                         id="clear-search-years-ago" 
-                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-green-400 hover:text-green-600 hidden">
+                                        class="absolute inset-y-0 right-0 items-center pr-3 text-green-400 hover:text-green-600 hidden">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -308,7 +308,7 @@
                                 </div>
                                 <button type="button" 
                                         id="clear-search-specific-years" 
-                                        class="absolute inset-y-0 right-0 flex items-center pr-3 text-purple-400 hover:text-purple-600 hidden">
+                                        class="absolute inset-y-0 right-0 items-center pr-3 text-purple-400 hover:text-purple-600 hidden">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>

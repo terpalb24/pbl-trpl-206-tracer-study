@@ -23,16 +23,4 @@
             <span class="ml-3">Kuisioner</span>
         </a>
     </li>
-    <li>
-        <a href="#" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800">
-            <i class="fas fa-chart-bar w-6 text-center"></i>
-            <span class="ml-3">Laporan</span>
-        </a>
-    </li>
-    <li>
-        <a href="#" class="flex items-center p-2 text-white rounded-lg hover:bg-blue-800">
-            <i class="fas fa-cog w-6 text-center"></i>
-            <span class="ml-3">Pengaturan</span>
-        </a>
-    </li>
 </ul>

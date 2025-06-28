@@ -51,7 +51,7 @@
         </div>
 
         <!-- Modal Pilih Periode -->
-        <div id="remindAllModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 hidden p-4">
+        <div id="remindAllModal" class="fixed inset-0 bg-black bg-opacity-30 items-center justify-center z-50 p-4 hidden">
             <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md">
                 <h3 class="text-lg font-semibold mb-4">Kirim Pengingat ke Semua</h3>
                 <form id="remindAllModalForm" method="POST">

@@ -430,7 +430,7 @@
                         <!-- Questions Grid dalam Kategori -->
                         <div class="grid grid-cols-1 
                             @if($categoryQuestions->count() < 2)
-                                lg:grid-cols-1 xl:grid-cols-1
+                               
                             @else
                                 lg:grid-cols-2 xl:grid-cols-2
                             @endif
@@ -564,7 +564,7 @@
                 @endphp
                 <div class="grid grid-cols-1 
                             @if($questionsCount < 2)
-                                lg:grid-cols-1 xl:grid-cols-1
+                                
                             @else
                                 lg:grid-cols-2 xl:grid-cols-2
                             @endif

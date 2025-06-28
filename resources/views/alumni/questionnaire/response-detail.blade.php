@@ -302,13 +302,14 @@
                                                                                 <div class="ml-4 sm:ml-6 mt-2 bg-blue-50 border border-blue-200 rounded-lg p-2 sm:p-3">
                                                                                     <div class="flex items-start">
                                                                                         <i class="fas fa-edit text-blue-600 mr-2 mt-0.5"></i>
-                                                                                        <div class="flex-1">
+                                                                                        <div class="flex-1 min-w-0">
                                                                                             <p class="text-xs sm:text-sm font-semibold text-blue-800 mb-1">Jawaban Lainnya:</p>
-                                                                                            <div class="text-blue-700 text-sm">
+                                                                                            <div class="text-blue-700 text-sm break-words whitespace-pre-line overflow-x-auto"
+                                                                                                style="word-break: break-word;">
                                                                                                 @if($option->other_before_text)
                                                                                                     <span class="text-blue-600 mr-1">{{ $option->other_before_text }}:</span>
                                                                                                 @endif
-                                                                                                <strong class="text-blue-800 bg-white px-2 py-1 rounded border border-blue-300">
+                                                                                                <strong class="text-blue-800 bg-white px-2 py-1 rounded border border-blue-300 block w-full overflow-x-auto"style="word-break: break-word;">
                                                                                                     {{ $qData['multipleOtherAnswers'][$optionId] }}
                                                                                                 </strong>
                                                                                                 @if($option->other_after_text)
@@ -351,7 +352,7 @@
                                                                                             @if($option->other_before_text)
                                                                                                 <span class="text-blue-600 mr-1">{{ $option->other_before_text }}:</span>
                                                                                             @endif
-                                                                                            <strong class="text-blue-900 bg-white px-2 sm:px-3 py-1 sm:py-2 rounded border border-blue-300 inline-block">
+                                                                                            <strong class="text-blue-900 bg-white px-2 sm:px-3 py-1 sm:py-2 rounded border border-blue-300 inline-block"style="word-break: break-word;">
                                                                                                 {{ $qData['otherAnswer'] }}
                                                                                             </strong>
                                                                                             @if($option->other_after_text)
@@ -377,7 +378,7 @@
                                                                                                 <span class="text-green-700 font-medium mr-2 text-sm sm:text-base">{{ $qData['question']->before_text }}</span>
                                                                                             @endif
                                                                                             
-                                                                                            <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-base sm:text-lg font-mono">
+                                                                                            <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-base sm:text-lg font-mono" style="word-break: break-word;">
                                                                                                 {{ $qData['answer'] }}
                                                                                             </span>
                                                                                             
@@ -393,7 +394,7 @@
                                                                                     @else
                                                                                         <div class="mb-2">
                                                                                             <span class="text-xs sm:text-sm text-green-600 font-medium block mb-1">Nilai yang diinput:</span>
-                                                                                            <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-lg sm:text-2xl font-mono">
+                                                                                            <span class="bg-white border border-green-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-green-900 text-lg sm:text-2xl font-mono" style="word-break: break-word;">
                                                                                                 {{ $qData['answer'] }}
                                                                                             </span>
                                                                                         </div>
@@ -420,8 +421,8 @@
                                                                                             @if($qData['question']->before_text)
                                                                                                 <span class="text-blue-700 font-medium mr-2 text-sm sm:text-base">{{ $qData['question']->before_text }}</span>
                                                                                             @endif
-                                                                                            
-                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-blue-900 text-base sm:text-lg hover:bg-blue-50 transition-colors break-all">
+
+                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-blue-900 text-base sm:text-lg hover:bg-blue-50 transition-colors break-all" style="word-break: break-word;">
                                                                                                 {{ $qData['answer'] }}
                                                                                             </a>
                                                                                             
@@ -432,7 +433,7 @@
                                                                                     @else
                                                                                         <div class="mb-2">
                                                                                             <span class="text-xs sm:text-sm text-blue-600 font-medium block mb-1">Email yang diinput:</span>
-                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-blue-900 text-base sm:text-xl hover:bg-blue-50 transition-colors inline-block break-all">
+                                                                                            <a href="mailto:{{ $qData['answer'] }}" class="bg-white border border-blue-300 rounded-md px-3 sm:px-4 py-1 sm:py-2 font-bold text-blue-900 text-base sm:text-xl hover:bg-blue-50 transition-colors inline-block break-all" style="word-break: break-word;">
                                                                                                 {{ $qData['answer'] }}
                                                                                             </a>
                                                                                         </div>

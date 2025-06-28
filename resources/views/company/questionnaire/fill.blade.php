@@ -236,7 +236,7 @@
 </div>
 
 <!-- Enhanced Confirmation Modal - Responsive -->
-            <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 hidden p-4">
+            <div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 items-center justify-center z-50 hidden p-4">
                 <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-md w-full mx-4">
                     <div class="text-center">
                         <div class="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 mb-3 sm:mb-4">
@@ -1253,16 +1253,18 @@ function showConfirmationModal() {
     const modal = document.getElementById('confirmation-modal');
     if (modal) {
         modal.classList.remove('hidden');
+        modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
     }
 }
-
 function hideConfirmationModal() {
     const modal = document.getElementById('confirmation-modal');
     if (modal) {
         modal.classList.add('hidden');
+        modal.classList.remove('flex');
         document.body.style.overflow = '';
     }
+}
 }
 
 function showValidationAlert(message) {

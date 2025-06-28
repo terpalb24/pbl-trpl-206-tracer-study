@@ -148,7 +148,7 @@
             $hasAlumniCategories = $alumniCategories->count() > 0 || $bothCategories->count() > 0;
             $hasCompanyCategories = $companyCategories->count() > 0 || $bothCategories->count() > 0;
         @endphp
-
+        
         @if($hasCategories)
             <!-- Tab Navigation -->
             <div class="bg-white rounded-lg sm:rounded-xl shadow-md mb-4 sm:mb-6">
@@ -185,7 +185,21 @@
                     </nav>
                 </div>
             </div>
-
+            <!-- General Add Category Button -->
+            <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 text-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors mt-4 sm:mt-6 mb-6">
+                <div class="text-gray-400 mb-2">
+                    <i class="fas fa-plus-circle text-xl sm:text-2xl"></i>
+                </div>
+                <p class="text-sm sm:text-base text-gray-600 font-medium mb-4">Tambah Kategori</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}" 
+                       class="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700 transition-colors duration-200">
+                        <i class="fas fa-plus mr-2"></i>
+                        <span class="hidden sm:inline">Kategori Baru</span>
+                        <span class="sm:hidden">Baru</span>
+                    </a>
+                </div>
+            </div>
             <!-- Alumni Tab Content -->
             <div id="alumni-content" class="tab-content {{ !$hasAlumniCategories ? 'hidden' : '' }}">
                 @if($hasAlumniCategories)
@@ -690,21 +704,7 @@
                 @endif
             </div>
 
-            <!-- General Add Category Button -->
-            <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 text-center border-2 border-dashed border-gray-300 hover:border-gray-400 transition-colors mt-4 sm:mt-6">
-                <div class="text-gray-400 mb-2">
-                    <i class="fas fa-plus-circle text-xl sm:text-2xl"></i>
-                </div>
-                <p class="text-sm sm:text-base text-gray-600 font-medium mb-4">Tambah Kategori</p>
-                <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}" 
-                       class="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-plus mr-2"></i>
-                        <span class="hidden sm:inline">Kategori Baru</span>
-                        <span class="sm:hidden">Baru</span>
-                    </a>
-                </div>
-            </div>
+            
         @else
             <!-- No categories at all -->
             <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-6 sm:p-8 text-center">

@@ -109,7 +109,7 @@
                                     </div>
                                     <button type="button" 
                                             id="clear-search" 
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 sm:pr-3 text-gray-400 hover:text-gray-600 hidden">
+                                            class="absolute inset-y-0 right-0 items-center pr-2 sm:pr-3 text-gray-400 hover:text-gray-600 hidden">
                                         <i class="fas fa-times text-xs sm:text-sm"></i>
                                     </button>
                                 </div>
