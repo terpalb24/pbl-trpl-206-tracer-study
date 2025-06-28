@@ -92,7 +92,7 @@ $themeClasses = match($theme) {
     </div>
     
     <!-- Minimized State - Hanya Bulatan Kecil -->
-    <div id="minimized_state" class="hidden bg-white rounded-full shadow-lg border border-gray-200 w-8 h-8 flex items-center justify-center cursor-pointer hover:shadow-xl transition-all duration-300">
+    <div id="minimized_state" class="hidden bg-white rounded-full shadow-lg border border-gray-200 w-8 h-8 items-center justify-center cursor-pointer hover:shadow-xl transition-all duration-300">
         <span id="minimized_flag" class="text-sm">🇮🇩</span>
     </div>
     

@@ -95,7 +95,7 @@
                     <textarea name="question" 
                               id="question" 
                               rows="3" 
-                              class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 @error('question') border-red-500 @enderror" 
+                            class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $errors->has('question') ? 'border-red-500' : 'border-gray-300' }}"
                               required>{{ old('question', $question->question) }}</textarea>
                     @error('question')
                         <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
@@ -117,7 +117,7 @@
                                name="order" 
                                id="order" 
                                value="{{ old('order', $question->order) }}" 
-                               class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 @error('order') border-red-500 @enderror" 
+                               class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $errors->has('order') ? 'border-red-500' : 'border-gray-300' }}" 
                                required>
                         @error('order')
                             <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
@@ -639,7 +639,7 @@
                             </label> 
                             <select name="depends_on" 
                                     id="depends_on_select" 
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('depends_on') border-red-500 @enderror">
+                                    class="w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('depends_on') ? 'border-red-500' : 'border-gray-300' }}">
                                 <option value="">-- Pilih Pertanyaan --</option>
                                 @foreach($availableQuestions as $q)
                                     @if(in_array($q->type, ['option', 'multiple', 'rating', 'scale']))
@@ -665,7 +665,7 @@
                             </label>
                             <select name="depends_value" 
                                     id="depends_value_select" 
-                                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('depends_value') border-red-500 @enderror">
+                                    class="w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('depends_value') ? 'border-red-500' : 'border-gray-300' }}">
                                 <option value="">-- Pilih Jawaban --</option>
                             </select>
                             @error('depends_value')
