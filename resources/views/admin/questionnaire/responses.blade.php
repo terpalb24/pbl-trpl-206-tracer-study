@@ -134,6 +134,13 @@
                             <span class="hidden sm:inline">Perusahaan</span>
                             <span class="sm:hidden">Company</span>
                         </a>
+                        <form method="GET" action="" class="inline-block">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama/NIM/username"
+                                class="border rounded px-2 py-1 text-xs sm:text-sm mr-2" />
+                            @foreach(request()->except(['search', 'page']) as $key => $val)
+                                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                            @endforeach
+                        </form>
                         <form method="GET" action="" class="inline-block" id="filter-prodi-form">
                             <select name="study_program" id="study_program_select" class="border rounded px-2 py-1 text-xs sm:text-sm">
                                 <option value="">Semua Program Studi</option>
@@ -286,6 +293,13 @@
                             class="flex-1 px-2 py-1.5 text-xs border rounded-full text-center transition-colors duration-200 {{ request('filter') == 'company' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
                             <i class="fas fa-building mr-1"></i> Company
                         </a>
+                        <form method="GET" action="" class="w-full mb-2">
+                            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama/NIM/username"
+                                class="w-full border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200" />
+                            @foreach(request()->except(['search', 'page']) as $key => $val)
+                                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                            @endforeach
+                        </form>
                         <form method="GET" action="" id="filter-prodi-form-mobile" class="w-full">
                             <select name="study_program" id="study_program_select_mobile"
                                 class="w-full border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 mt-1">

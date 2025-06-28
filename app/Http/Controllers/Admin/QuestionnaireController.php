@@ -1039,6 +1039,24 @@ class QuestionnaireController extends Controller
             });
         }
         $studyProgramss = Tb_study_program::orderBy('study_program')->get();
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function($q) use ($search) {
+                // Search pada kolom milik tb_user_answers
+                $q->orWhere('status', 'like', "%$search%")
+                ->orWhereRaw("DATE_FORMAT(created_at, '%d %b %Y') LIKE ?", ["%$search%"]);
+                // Search pada relasi alumni
+                $q->orWhereHas('user.alumni', function($qa) use ($search) {
+                    $qa->where('name', 'like', "%$search%")
+                    ->orWhere('nim', 'like', "%$search%");
+                });
+                // Search pada relasi company
+                $q->orWhereHas('user.company', function($qc) use ($search) {
+                    $qc->where('company_name', 'like', "%$search%")
+                    ->orWhere('nim', 'like', "%$search%");
+                });
+            });
+        }
         $userAnswers = $query->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->except('page'));
