@@ -99,7 +99,7 @@
                         <i class="fas fa-chart-bar text-green-600 mr-2"></i>
                         <span class="text-xs sm:text-sm font-medium text-gray-600">Total Responden</span>
                     </div>
-                    <p class="text-sm sm:text-lg font-bold text-gray-900">{{ count($userAnswers) }}</p>
+                    <p class="text-sm sm:text-lg font-bold text-gray-900">{{ $userAnswers->total() }}</p>
                     <p class="text-xs text-gray-500">Responden</p>
                 </div>
             </div>
