@@ -174,7 +174,7 @@ class AdminController extends Controller
 
         // membuat kapital pada awal inputan nama dan gender
         $name = ucwords(strtolower($request->name));
-        $gender = ucfirst(strtolower($request->gender));
+        $gender = strtolower($request->gender);
 
         // Simpan user baru (username & password = nim)
         $user = Tb_User::create([
@@ -234,7 +234,7 @@ class AdminController extends Controller
 
         // Kapitalisasi nama dan gender
         $name = ucwords(strtolower($request->name));
-        $gender = ucfirst(strtolower($request->gender));
+        $gender = strtolower($request->gender);
 
         // Update field (kecuali NIM dan id_user)
         $alumni->update([
@@ -301,8 +301,8 @@ class AdminController extends Controller
                 }
 
                 // Validate gender
-                $gender = ucfirst(strtolower(trim($row[3]))); // Kapitalisasi gender
-                if (!in_array($gender, ['Pria', 'Wanita'])) {
+                $gender = strtolower(trim($row[3])); // Paksa lowercase gender
+                if (!in_array($gender, ['pria', 'wanita'])) {
                     throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'Pria' atau 'Wanita'");
                 }
 
