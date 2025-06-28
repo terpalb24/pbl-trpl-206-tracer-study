@@ -2,6 +2,7 @@
 
 @php
     $admin = auth()->user()->admin;
+
 @endphp
 
 @section('content')
@@ -70,29 +71,127 @@
             @enderror
         </div>
 
-        <!-- Main content section -->
-        <div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
-            <!-- Header section dengan judul dan tombol tambah -->
-            <div class="p-4 sm:p-6 border-b">
-                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                    <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Daftar Alumni</h2>
-                    <a href="{{ route('admin.alumni.create') }}" 
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2 sm:w-auto w-full">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Tambah Alumni</span>
-                    </a>
-                </div>
-            </div>
+       <!-- Main content section -->
+<!-- Section: Manajemen Program Studi -->
+<div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden p-4 sm:p-6 space-y-6">
 
-            <!-- Notifikasi Sukses -->
-            @if(session('success'))
-                <div class="mx-4 sm:mx-6 mt-4 p-3 sm:p-4 bg-green-100 text-green-700 rounded-md text-sm">
-                    {{ session('success') }}
-                </div>
-            @endif
+    <!-- Header dan Tombol -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <h2 class="text-xl font-semibold text-gray-800">Manajemen Program Studi</h2>
+
+        <div class="flex flex-wrap gap-2">
+          
+            <!-- Tombol Toggle Tambah Prodi -->
+            <button type="button" onclick="toggleProdiForm('prodiForm')" 
+                class="inline-flex items-center justify-center bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
+                <i class="bi bi-plus-circle"></i>
+                <span>Tambah Prodi</span>
+            </button>
+
+            <!-- Tombol Toggle Edit Prodi -->
+            <button type="button" onclick="toggleProdiForm('editProdiForm')" 
+                class="inline-flex items-center justify-center bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
+                <i class="bi bi-pencil-square"></i>
+                <span>Edit Prodi</span>
+            </button>
+
+            <!-- Tombol Toggle Hapus Prodi -->
+            <button type="button" onclick="toggleProdiForm('hapusProdiForm')" 
+                class="inline-flex items-center justify-center bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
+                <i class="bi bi-trash"></i>
+                <span>Hapus Prodi</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Pesan Sukses -->
+    @if (session('success'))
+        <div class="bg-green-50 border border-green-300 text-green-800 text-sm px-4 py-3 rounded-md flex items-start gap-2 shadow-sm animate-fade-in">
+            <i class="bi bi-check-circle-fill text-green-600 text-base mt-0.5"></i>
+            <span class="font-medium">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    <!-- Form Tambah Prodi -->
+    <div id="prodiForm" class="hidden">
+        <form action="{{ route('admin.study-program.store') }}" method="POST" class="flex flex-col sm:flex-row gap-3 mt-2">
+            @csrf
+            <input type="text" name="study_program" required 
+                placeholder="Nama Program Studi" 
+                class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-green-300">
+            <button type="submit" 
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                Simpan
+            </button>
+        </form>
+    </div>
+
+    <!-- Form Edit Prodi -->
+    <div id="editProdiForm" class="hidden space-y-2">
+        <h3 class="text-lg font-semibold text-gray-800">Edit Program Studi</h3>
+        <form action="{{ route('admin.study-program.update') }}" method="POST" class="flex flex-col sm:flex-row gap-3">
+            @csrf
+            @method('PUT')
+            <select name="id_study" id="editSelect" required 
+                class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-yellow-300">
+                <option value="">-- Pilih Program Studi --</option>
+                @foreach ($prodi as $p)
+                    <option value="{{ $p->id_study }}" data-name="{{ $p->study_program }}">{{ $p->study_program }}</option>
+                @endforeach
+            </select>
+            <input type="text" name="study_program" id="editInput" required 
+                placeholder="Nama Baru Program Studi"
+                class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-yellow-300">
+            <button type="submit" 
+                class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                Simpan Perubahan
+            </button>
+        </form>
+    </div>
+
+    <!-- Form Hapus Prodi -->
+    <div id="hapusProdiForm" class="hidden space-y-2">
+        <h3 class="text-lg font-semibold text-gray-800">Hapus Program Studi</h3>
+        <form action="{{ route('admin.study-program.deleteBySelect') }}" method="POST" 
+              onsubmit="return confirm('Yakin ingin menghapus program studi ini?')" 
+              class="flex flex-col sm:flex-row gap-3">
+            @csrf
+            @method('DELETE')
+            <select name="id_study" required 
+                class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-red-300">
+                <option value="">-- Pilih Program Studi --</option>
+                @foreach ($prodi as $p)
+                    <option value="{{ $p->id_study }}">{{ $p->study_program }}</option>
+                @endforeach
+            </select>
+            <button type="submit" 
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition">
+                Hapus
+            </button>
+        </form>
+    </div>
+</div>
+
+
+<!-- Section: Judul dan Tombol Tambah Alumni -->
+<div class="px-4 sm:px-6 py-4 border-b bg-white mt-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <!-- Judul -->
+        <h1 class="text-2xl font-bold text-gray-800">Data Alumni</h1>
+
+        <!-- Tombol Tambah Alumni -->
+        <a href="{{ route('admin.alumni.create') }}" 
+            class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
+            <i class="bi bi-plus-circle"></i>
+            <span>Tambah Alumni</span>
+        </a>
+    </div>
+</div>
+
 
             <!-- Filter & Search Section -->
             <div class="p-4 sm:p-6 border-b bg-gray-50">
+                
                 <form method="GET" action="{{ route('admin.alumni.index') }}" class="space-y-3 sm:space-y-4">
                     <!-- Mobile: Stack all filters vertically -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -396,7 +495,26 @@
         </div>
     </div>
 
-    <!-- script JS  -->
+   
+     <!-- Script Toggle -->
+<script>
+       // Autofill input edit saat pilihan diubah
+    document.getElementById('editSelect').addEventListener('change', function () {
+        const selectedOption = this.options[this.selectedIndex];
+        const name = selectedOption.getAttribute('data-name');
+        document.getElementById('editInput').value = name ?? '';
+    });
+      function toggleProdiForm(id) {
+        document.querySelectorAll('#prodiForm, #editProdiForm, #hapusProdiForm').forEach(el => {
+            if (el.id === id) {
+                el.classList.toggle('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
+</script>
+ <!-- script JS  -->
     <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>
 @endsection

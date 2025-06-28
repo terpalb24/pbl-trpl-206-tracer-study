@@ -202,12 +202,15 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     ->name('admin.questionnaire.complete-drafts');
     Route::get('/admin/questionnaire/{id_periode}/export-responden', [\App\Http\Controllers\Admin\EksportRespondenController::class, 'export'])->name('admin.export-responden');
 });
-// Route for mailtrap
-Route::get('/send-forgot-password', function () {
-Mail::to('sigma@gmail.com')->send(new ForgotPassword());
-});
+//ROUTE UNTUK ADMIN NAMBAHIN study Program\
+Route::post('/admin/study-program', [AdminController::class, 'storeStudyProgram'])->name('admin.study-program.store');
+//route untuk menghapus study program
+Route::delete('/admin/study-program/delete-by-select', [AdminController::class, 'deleteStudyProgramBySelect'])->name('admin.study-program.deleteBySelect');
 
+Route::put('/admin/study-program/update', [AdminController::class, 'updateStudyProgram'])
+    ->name('admin.study-program.update');
 // Tambahkan route ini di routes/web.php untuk debugging
+
 Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompanyAnswers'])
     ->middleware(['auth']) // Hapus 'admin' middleware jika tidak ada
     ->name('admin.debug.company-answers');

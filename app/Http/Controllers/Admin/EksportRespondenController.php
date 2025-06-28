@@ -10,6 +10,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class EksportRespondenController extends Controller
 {
@@ -60,17 +61,37 @@ class EksportRespondenController extends Controller
             return $ua->user && $ua->user->company;
         })->values();
 
-        // Helper function to fill worksheet for a single category
-        $fillCategorySheet = function($sheet, $answers, $headers, $category, $periode, $type = 'alumni') {
-            // Header: Basic info
-            $sheet->setCellValue('A1', 'Periode Kuesioner');
-            $sheet->setCellValue('B1', $periode->periode_name);
-            $sheet->setCellValue('A2', 'Tanggal Mulai');
-            $sheet->setCellValue('B2', $periode->start_date);
-            $sheet->setCellValue('A3', 'Tanggal Selesai');
-            $sheet->setCellValue('B3', $periode->end_date);
+    $fillCategorySheet = function($sheet, $answers, $headers, $category, $periode, $type = 'alumni') {
 
-            $headerRow = 5;
+    // === Tambahkan Logo ===
+    $drawing = new Drawing();
+    $drawing->setName('Logo Kampus');
+    $drawing->setDescription('Logo');
+    $drawing->setPath(public_path('assets/images/polteklogo.png')); // Ganti backslash ke slash
+    $drawing->setHeight(80); // Sesuaikan ukuran jika perlu
+    $drawing->setCoordinates('A1'); // Letakkan di kiri atas
+    $drawing->setOffsetX(10); // Jarak dari kiri cell
+    $drawing->setOffsetY(5);  // Jarak dari atas cell
+    $drawing->setWorksheet($sheet);
+
+    // === Judul Utama ===
+    $sheet->mergeCells('B1:H1'); // Span beberapa kolom agar judul besar
+    $sheet->setCellValue('B1', 'Laporan Hasil Kuesioner Tracer Study');
+    $sheet->getStyle('B1')->getFont()->setSize(16)->setBold(true);
+    $sheet->getStyle('B1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+    $sheet->getRowDimension('1')->setRowHeight(40); // Tinggikan baris judul
+
+    // === Informasi Periode (Baris 4–6) ===
+    $sheet->setCellValue('A4', 'Periode Kuesioner');
+    $sheet->setCellValue('B4', $periode->periode_name);
+    $sheet->setCellValue('A5', 'Tanggal Mulai');
+    $sheet->setCellValue('B5', $periode->start_date);
+    $sheet->setCellValue('A6', 'Tanggal Selesai');
+    $sheet->setCellValue('B6', $periode->end_date);
+
+    // Header tabel dimulai dari baris ke-8 agar cukup ruang
+    $headerRow = 8;
+
             // Set static headers
             $staticHeaders = $headers;
             if ($type === 'company') {
