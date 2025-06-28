@@ -61,12 +61,12 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Periode kuesioner tidak aktif.');
         }
 
-        // PERBAIKAN: Gunakan 'for_type' sesuai database
-        $hasCategories = Tb_Category::where('id_periode', $id_periode)
+        // ✅ ENHANCED: Check categories with graduation year dependency filtering
+        $companyCategories = Tb_Category::where('id_periode', $id_periode)
             ->whereIn('for_type', ['company', 'both'])
-            ->exists();
+            ->get();
 
-        if (!$hasCategories) {
+        if ($companyCategories->isEmpty()) {
             return redirect()->route('company.questionnaire.index')
                 ->with('error', 'Tidak ada kategori kuesioner untuk perusahaan pada periode ini.');
         }
@@ -78,6 +78,11 @@ class QuestionnaireController extends Controller
 
         // ✅ SOLUSI BARU: Filter berdasarkan target alumni periode
         $eligibleGraduationYears = $this->getEligibleGraduationYears($periode);
+
+        // ✅ ENHANCED: Get alumni that have graduation year dependent categories
+        $hasGraduationYearDependentCategories = $companyCategories->contains(function($category) {
+            return $category->is_graduation_year_dependent && !empty($category->required_graduation_years);
+        });
 
         // ✅ SOLUSI: Ambil hanya alumni yang MASIH AKTIF bekerja di perusahaan ini DAN sesuai target periode
         $activeAlumniFromJobHistory = Tb_jobhistory::with('alumni')
@@ -93,8 +98,31 @@ class QuestionnaireController extends Controller
                 }
             })
             ->get()
-            ->filter(function($jobHistory) {
-                return $jobHistory->alumni !== null;
+            ->filter(function($jobHistory) use ($companyCategories) {
+                if ($jobHistory->alumni === null) {
+                    return false;
+                }
+                
+                // ✅ NEW: Check if alumni can access at least one category
+                $alumni = $jobHistory->alumni;
+                $canAccessAnyCategory = false;
+                
+                foreach ($companyCategories as $category) {
+                    // For company categories, we need to check if they have graduation year dependency
+                    if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                        // Check if alumni's graduation year matches required years
+                        if (in_array($alumni->graduation_year, $category->required_graduation_years)) {
+                            $canAccessAnyCategory = true;
+                            break;
+                        }
+                    } else {
+                        // No graduation year dependency, alumni can access
+                        $canAccessAnyCategory = true;
+                        break;
+                    }
+                }
+                
+                return $canAccessAnyCategory;
             })
             ->unique('nim')
             ->values();
@@ -119,7 +147,7 @@ class QuestionnaireController extends Controller
             ->toArray();
 
         // ✅ TAMBAHAN: Filter draft alumni untuk memastikan mereka masih aktif DAN sesuai target periode
-        $draftNims = array_filter($draftNims, function($nim) use ($idCompany, $eligibleGraduationYears) {
+        $draftNims = array_filter($draftNims, function($nim) use ($idCompany, $eligibleGraduationYears, $companyCategories) {
             $isActive = Tb_jobhistory::where('id_company', $idCompany)
                 ->where('nim', $nim)
                 ->where(function ($query) {
@@ -128,20 +156,47 @@ class QuestionnaireController extends Controller
                 })
                 ->exists();
                 
-            // ✅ FILTER TAMBAHAN: Cek juga tahun lulus alumni
-            if ($isActive && !empty($eligibleGraduationYears)) {
-                $alumni = Tb_Alumni::where('nim', $nim)->first();
-                return $alumni && in_array($alumni->graduation_year, $eligibleGraduationYears);
+            if (!$isActive) {
+                return false;
             }
             
-            return $isActive;
+            // ✅ FILTER TAMBAHAN: Cek juga tahun lulus alumni dan category dependency
+            if (!empty($eligibleGraduationYears)) {
+                $alumni = Tb_Alumni::where('nim', $nim)->first();
+                if (!$alumni || !in_array($alumni->graduation_year, $eligibleGraduationYears)) {
+                    return false;
+                }
+                
+                // ✅ NEW: Check category access
+                $canAccessAnyCategory = false;
+                foreach ($companyCategories as $category) {
+                    if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                        if (in_array($alumni->graduation_year, $category->required_graduation_years)) {
+                            $canAccessAnyCategory = true;
+                            break;
+                        }
+                    } else {
+                        $canAccessAnyCategory = true;
+                        break;
+                    }
+                }
+                
+                return $canAccessAnyCategory;
+            }
+            
+            return true;
         });
 
         // ✅ TAMBAHAN: Log informasi untuk debugging
-        Log::info('Company selectAlumni - Target filtering', [
+        Log::info('Company selectAlumni - Enhanced target filtering', [
             'periode_id' => $id_periode,
             'periode_target_type' => $periode->target_type,
             'eligible_graduation_years' => $eligibleGraduationYears,
+            'has_graduation_year_dependent_categories' => $hasGraduationYearDependentCategories,
+            'total_company_categories' => $companyCategories->count(),
+            'categories_with_graduation_dependency' => $companyCategories->filter(function($cat) {
+                return $cat->is_graduation_year_dependent;
+            })->count(),
             'total_active_alumni_before_filter' => Tb_jobhistory::where('id_company', $idCompany)
                 ->where(function ($query) {
                     $query->where('duration', 'Masih bekerja')
@@ -161,7 +216,8 @@ class QuestionnaireController extends Controller
             'availableAlumni', 
             'completedNims', 
             'draftNims',
-            'eligibleGraduationYears' // ✅ TAMBAHAN: Kirim ke view untuk informasi
+            'eligibleGraduationYears', // ✅ TAMBAHAN: Kirim ke view untuk informasi
+            'hasGraduationYearDependentCategories' // ✅ NEW: Information about graduation year dependency
         ));
     }
     
@@ -228,34 +284,51 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Periode kuesioner tidak aktif.');
         }
         
-        // PERBAIKAN: Get categories dengan field yang benar
+        // ✅ ENHANCED: Get categories dengan graduation year dependency filtering
         $allCategories = Tb_Category::where('id_periode', $id_periode)
             ->whereIn('for_type', ['company', 'both']) // Gunakan for_type
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(function($category) use ($alumni) {
+                // ✅ NEW: Filter categories based on graduation year dependency
+                if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                    return in_array($alumni->graduation_year, $category->required_graduation_years);
+                }
+                // If no graduation year dependency, category is accessible
+                return true;
+            })
+            ->values(); // Reset array keys
 
-        // DEBUGGING: Log categories dengan info target
-        Log::info('Categories found for company', [
+        // ✅ ENHANCED DEBUGGING: Log categories dengan info dependency
+        Log::info('Enhanced categories found for company', [
             'periode_id' => $id_periode,
             'company_id' => $idCompany,
-            'categories_count' => $allCategories->count(),
+            'total_categories_before_filter' => Tb_Category::where('id_periode', $id_periode)
+                ->whereIn('for_type', ['company', 'both'])
+                ->count(),
+            'categories_count_after_filter' => $allCategories->count(),
             'alumni_nim' => $nim,
             'alumni_graduation_year' => $alumni->graduation_year,
             'eligible_graduation_years' => $eligibleGraduationYears,
             'alumni_active_job_position' => $activeJobHistory ? $activeJobHistory->position : null,
-            'categories' => $allCategories->map(function($cat) {
+            'categories' => $allCategories->map(function($cat) use ($alumni) {
                 return [
                     'id' => $cat->id_category,
                     'name' => $cat->category_name,
                     'for_type' => $cat->for_type,
-                    'order' => $cat->order
+                    'order' => $cat->order,
+                    'is_graduation_year_dependent' => $cat->is_graduation_year_dependent,
+                    'required_graduation_years' => $cat->required_graduation_years,
+                    'is_accessible_to_alumni' => !$cat->is_graduation_year_dependent || 
+                        empty($cat->required_graduation_years) || 
+                        in_array($alumni->graduation_year, $cat->required_graduation_years ?? [])
                 ];
             })->toArray()
         ]);
             
         if ($allCategories->isEmpty()) {
-            return redirect()->route('company.questionnaire.index')
-                ->with('error', 'Tidak ada kategori kuesioner untuk perusahaan pada periode ini.');
+            return redirect()->route('company.questionnaire.select-alumni', $id_periode)
+                ->with('error', 'Tidak ada kategori kuesioner yang tersedia untuk alumni dengan tahun lulus ' . $alumni->graduation_year . ' pada periode ini.');
         }
         
         // Determine current category
@@ -287,15 +360,18 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get();
 
-        // DEBUGGING: Log questions
-        Log::info('Questions found for company', [
+        // ✅ ENHANCED DEBUGGING: Log questions dengan info category dependency
+        Log::info('Enhanced questions found for company', [
             'category_id' => $currentCategory->id_category,
             'category_name' => $currentCategory->category_name,
+            'category_is_graduation_year_dependent' => $currentCategory->is_graduation_year_dependent,
+            'category_required_graduation_years' => $currentCategory->required_graduation_years,
+            'alumni_graduation_year' => $alumni->graduation_year,
             'questions_count' => $questions->count(),
             'questions' => $questions->map(function($q) {
                 return [
                     'id' => $q->id_question,
-                    'question' => $q->question,
+                    'question' => substr($q->question, 0, 50) . '...',
                     'type' => $q->type,
                     'status' => $q->status,
                     'order' => $q->order,
@@ -362,8 +438,8 @@ class QuestionnaireController extends Controller
                                 $option = Tb_Question_Options::find($item->answer);
                                 if ($option) {
                                     $prevAnswers[$item->id_question] = $option->id_questions_options;
+                                }
                             }
-                        }
                         }
                         
                         if ($item->other_answer) {
@@ -502,6 +578,25 @@ class QuestionnaireController extends Controller
             $categoryId = $request->input('id_category');
             $action = $request->input('action', 'save_draft');
 
+            // ✅ ENHANCED: Validate category access based on graduation year dependency
+            $category = Tb_Category::where('id_category', $categoryId)
+                ->where('id_periode', $id_periode)
+                ->whereIn('for_type', ['company', 'both'])
+                ->first();
+
+            if (!$category) {
+                return redirect()->back()
+                    ->with('error', 'Kategori tidak ditemukan atau tidak tersedia untuk perusahaan.');
+            }
+
+            // ✅ NEW: Check graduation year dependency for category
+            if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                if (!in_array($alumni->graduation_year, $category->required_graduation_years)) {
+                    return redirect()->back()
+                        ->with('error', 'Kategori ini tidak tersedia untuk alumni dengan tahun lulus ' . $alumni->graduation_year . '.');
+                }
+            }
+
             // Get or create user answer record
             $userAnswer = Tb_User_Answers::firstOrCreate(
                 [
@@ -536,10 +631,18 @@ class QuestionnaireController extends Controller
                 return redirect()->route('company.questionnaire.fill', [$id_periode, $nim, $categoryId])
                     ->with('success', 'Draft berhasil disimpan.');
             } elseif ($action === 'prev_category') {
+                // ✅ ENHANCED: Filter categories based on graduation year dependency
                 $allCategories = Tb_Category::where('id_periode', $id_periode)
                     ->whereIn('for_type', ['company', 'both'])
                     ->orderBy('order')
-                    ->get();
+                    ->get()
+                    ->filter(function($category) use ($alumni) {
+                        if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                            return in_array($alumni->graduation_year, $category->required_graduation_years);
+                        }
+                        return true;
+                    })
+                    ->values();
                 
                 $currentIndex = $allCategories->search(function($cat) use ($categoryId) {
                     return $cat->id_category == $categoryId;
@@ -552,10 +655,18 @@ class QuestionnaireController extends Controller
                 
                 return redirect()->route('company.questionnaire.fill', [$id_periode, $nim]);
             } elseif ($action === 'next_category') {
+                // ✅ ENHANCED: Filter categories based on graduation year dependency
                 $allCategories = Tb_Category::where('id_periode', $id_periode)
                     ->whereIn('for_type', ['company', 'both'])
                     ->orderBy('order')
-                    ->get();
+                    ->get()
+                    ->filter(function($category) use ($alumni) {
+                        if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                            return in_array($alumni->graduation_year, $category->required_graduation_years);
+                        }
+                        return true;
+                    })
+                    ->values();
                 
                 $currentIndex = $allCategories->search(function($cat) use ($categoryId) {
                     return $cat->id_category == $categoryId;
@@ -623,9 +734,18 @@ class QuestionnaireController extends Controller
             $totalQuestions = 0;
             $answeredQuestions = 0;
             
+            // ✅ ENHANCED: Filter categories based on graduation year dependency
             $categories = Tb_Category::where('id_periode', $userAnswer->id_periode)
                 ->whereIn('for_type', ['company', 'both'])
-                ->get();
+                ->get()
+                ->filter(function($category) use ($alumni) {
+                    if (!$alumni) return true; // If alumni not found, don't filter
+                    
+                    if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                        return in_array($alumni->graduation_year, $category->required_graduation_years);
+                    }
+                    return true;
+                });
             
             foreach ($categories as $category) {
                 // PERBAIKAN: Tambahkan filter status
@@ -676,10 +796,23 @@ class QuestionnaireController extends Controller
             ];
         }
         
+        // ✅ ENHANCED: Get alumni for graduation year filtering
+        $alumni = Tb_Alumni::where('nim', $userAnswer->nim)->first();
+        
+        // ✅ ENHANCED: Filter categories based on graduation year dependency
         $categories = Tb_Category::where('id_periode', $id_periode)
             ->whereIn('for_type', ['company', 'both'])
             ->orderBy('order')
-            ->get();
+            ->get()
+            ->filter(function($category) use ($alumni) {
+                if (!$alumni) return true; // If alumni not found, don't filter
+                
+                if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
+                    return in_array($alumni->graduation_year, $category->required_graduation_years);
+                }
+                return true;
+            })
+            ->values();
         
         $questionsWithAnswers = [];
         
@@ -721,6 +854,21 @@ class QuestionnaireController extends Controller
 
             $questionsWithAnswers[] = $categoryData;
         }
+
+        // ✅ ENHANCED DEBUG: Log untuk debugging dependency filtering
+        Log::info('Company response detail - Enhanced dependency filtering', [
+            'user_answer_id' => $id_user_answer,
+            'alumni_nim' => $userAnswer->nim,
+            'alumni_graduation_year' => $alumni ? $alumni->graduation_year : 'unknown',
+            'total_categories_before_filter' => Tb_Category::where('id_periode', $id_periode)
+                ->whereIn('for_type', ['company', 'both'])
+                ->count(),
+            'total_categories_after_filter' => $categories->count(),
+            'categories_with_graduation_dependency' => $categories->filter(function($cat) {
+                return $cat->is_graduation_year_dependent;
+            })->count(),
+            'questionsWithAnswers_count' => count($questionsWithAnswers)
+        ]);
         
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
     }
