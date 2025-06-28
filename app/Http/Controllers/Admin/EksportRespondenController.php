@@ -92,16 +92,15 @@ class EksportRespondenController extends Controller
     // Header tabel dimulai dari baris ke-8 agar cukup ruang
     $headerRow = 8;
 
-            // Set static headers
-            $staticHeaders = $headers;
-            if ($type === 'company') {
-                // Tambahkan kolom NIM Alumni dan Nama Alumni untuk perusahaan
-                $staticHeaders = array_merge(
-                    array_slice($headers, 0, 4),
-                    ['NIM Alumni yang dinilai', 'Nama Alumni yang dinilai','Prodi Alumni yang dinilai'],
-                    array_slice($headers, 4)
-                );
-            }
+           if ($type === 'alumni') {
+    $staticHeaders = ['No', 'Nama', 'Program Studi', 'Tipe', 'NIM', 'Tanggal Isi'];
+} elseif ($type === 'company') {
+    $staticHeaders = [
+        'No', 'Prodi Alumni yang dinilai', 'Nama Perusahaan', 'Tipe',
+        'NIM Alumni yang dinilai', 'Nama Alumni yang dinilai', 'Tanggal Isi'
+    ];
+}
+
             foreach ($staticHeaders as $col => $header) {
                 $colLetter = Coordinate::stringFromColumnIndex($col + 1);
                 $sheet->setCellValue($colLetter . $headerRow, $header);
@@ -143,25 +142,28 @@ class EksportRespondenController extends Controller
 
                 $colIdx = 1;
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $idx + 1);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
+             if ($type === 'alumni') {
+    // Alumni: Nama - Prodi - Tipe - NIM - Tanggal Isi
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
+} elseif ($type === 'company') {
+    // Company: Prodi alumni yang dinilai (kolom 2), nama perusahaan, tipe, nim alumni, nama alumni
+    $nimAlumni = $userAnswer->nim ?? '';
+    $namaAlumni = '';
+    $prodiAlumni = '-';
+    if ($nimAlumni) {
+        $alumniObj = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
+        $namaAlumni = $alumniObj ? $alumniObj->name : '';
+        $prodiAlumni = $alumniObj && $alumniObj->studyProgram ? $alumniObj->studyProgram->study_program : '-';
+    }
 
-                if ($type === 'company') {
-                    // Tampilkan NIM Alumni dan Nama Alumni yang dinilai perusahaan
-                    $nimAlumni = $userAnswer->nim ?? '';
-                    $namaAlumni = '';
-                    $prodiAlumni ='-';
-                    if ($nimAlumni) {
-                     $alumniObj = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
-                     $namaAlumni = $alumniObj ? $alumniObj->name : '';
-                     $prodiAlumni = $alumniObj && $alumniObj->studyProgram ? $alumniObj->studyProgram->study_program : '-';
-              }
-
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiAlumni);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiAlumni); // kolom 2
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name); // nama perusahaan
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
+    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
 }
 
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tanggalIsi);
