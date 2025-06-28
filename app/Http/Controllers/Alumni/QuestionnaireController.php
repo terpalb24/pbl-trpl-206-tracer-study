@@ -83,7 +83,6 @@ class QuestionnaireController extends Controller
             ])->with('info', 'Anda sudah menyelesaikan kuesioner ini.');
         }
 
-        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DAN GRADUATION YEAR DEPENDENCY
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
@@ -92,7 +91,6 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get()
             ->filter(function($category) use ($alumni) {
-                // ✅ ENHANCED: Filter berdasarkan status dependency DAN graduation year dependency
                 return $category->isAccessibleByAlumni($alumni);
             })
             ->values(); // Reset array keys
@@ -102,25 +100,24 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Tidak ada kategori yang tersedia untuk alumni dengan status dan tahun lulus Anda pada kuesioner ini.');
         }
 
-        // ✅ DEBUG: Log kategori yang dapat diakses
-        \Log::info('Categories accessible by alumni', [
-            'alumni_id' => $alumni->id_alumni,
-            'alumni_status' => $alumni->status,
-            'alumni_graduation_year' => $alumni->graduation_year,
-            'total_categories' => $categories->count(),
-            'accessible_categories' => $categories->map(function($cat) use ($alumni) {
-                return [
-                    'id' => $cat->id_category,
-                    'name' => $cat->category_name,
-                    'for_type' => $cat->for_type,
-                    'is_status_dependent' => $cat->is_status_dependent,
-                    'required_alumni_status' => $cat->required_alumni_status,
-                    'is_graduation_year_dependent' => $cat->is_graduation_year_dependent,
-                    'required_graduation_years' => $cat->required_graduation_years,
-                    'is_accessible' => $cat->isAccessibleByAlumni($alumni)
-                ];
-            })->toArray()
-        ]);
+        // \Log::info('Categories accessible by alumni', [
+        //     'alumni_id' => $alumni->id_alumni,
+        //     'alumni_status' => $alumni->status,
+        //     'alumni_graduation_year' => $alumni->graduation_year,
+        //     'total_categories' => $categories->count(),
+        //     'accessible_categories' => $categories->map(function($cat) use ($alumni) {
+        //         return [
+        //             'id' => $cat->id_category,
+        //             'name' => $cat->category_name,
+        //             'for_type' => $cat->for_type,
+        //             'is_status_dependent' => $cat->is_status_dependent,
+        //             'required_alumni_status' => $cat->required_alumni_status,
+        //             'is_graduation_year_dependent' => $cat->is_graduation_year_dependent,
+        //             'required_graduation_years' => $cat->required_graduation_years,
+        //             'is_accessible' => $cat->isAccessibleByAlumni($alumni)
+        //         ];
+        //     })->toArray()
+        // ]);
 
         // Calculate total categories and other variables
         $totalCategories = $categories->count();
@@ -152,13 +149,11 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Kategori ini belum memiliki pertanyaan.');
         }
 
-        // ✅ PERBAIKAN LOADING EXISTING ANSWERS - LOAD DENGAN BENAR
         $existingAnswers = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
             ->whereIn('id_question', $questions->pluck('id_question'))
             ->with(['question', 'option'])  // Load relasi untuk optimasi
             ->get();
 
-        // ✅ PERBAIKAN FORMAT EXISTING ANSWERS - STRUKTUR YANG BENAR
         $prevAnswers = [];
         $prevMultipleAnswers = [];
         $prevLocationAnswers = [];
@@ -181,7 +176,6 @@ class QuestionnaireController extends Controller
                     $prevMultipleAnswers[$answer->id_question][] = $answer->answer;
                 }
                 
-                // ✅ PERBAIKAN: Load multiple other answers dengan benar
                 if (!empty($answer->other_answer) && $answer->id_questions_options) {
                     if (!isset($prevMultipleOtherAnswers[$answer->id_question])) {
                         $prevMultipleOtherAnswers[$answer->id_question] = [];
@@ -209,21 +203,19 @@ class QuestionnaireController extends Controller
                     $prevAnswers[$answer->id_question] = $answer->answer;
                 }
                 
-                // ✅ PERBAIKAN: Handle other answers untuk semua jenis pertanyaan
                 if (!empty($answer->other_answer)) {
                     $prevOtherAnswers[$answer->id_question] = $answer->other_answer;
                     
-                    \Log::info('Other answer loaded for question', [
-                        'question_id' => $answer->id_question,
-                        'question_type' => $question ? $question->type : 'unknown',
-                        'other_answer' => $answer->other_answer,
-                        'option_id' => $answer->id_questions_options
-                    ]);
+                    // \Log::info('Other answer loaded for question', [
+                    //     'question_id' => $answer->id_question,
+                    //     'question_type' => $question ? $question->type : 'unknown',
+                    //     'other_answer' => $answer->other_answer,
+                    //     'option_id' => $answer->id_questions_options
+                    // ]);
                 }
             }
         }
 
-        // ✅ PERBAIKAN: Load conditional questions data dengan benar
         $conditionalQuestions = [];
         foreach ($questions as $question) {
             if (!empty($question->depends_on) && !empty($question->depends_value)) {
@@ -235,29 +227,29 @@ class QuestionnaireController extends Controller
             }
         }
 
-        \Log::info('Loaded existing answers with improved structure', [
-            'current_category_index' => $currentCategoryIndex,
-            'current_category_name' => $currentCategory->category_name,
-            'current_category_dependencies' => [
-                'is_status_dependent' => $currentCategory->is_status_dependent,
-                'required_alumni_status' => $currentCategory->required_alumni_status,
-                'is_graduation_year_dependent' => $currentCategory->is_graduation_year_dependent,
-                'required_graduation_years' => $currentCategory->required_graduation_years,
-            ],
-            'total_categories' => $totalCategories,
-            'progress_percentage' => $progressPercentage,
-            'prev_answers_count' => count($prevAnswers),
-            'prev_multiple_answers_count' => count($prevMultipleAnswers),
-            'prev_location_answers_count' => count($prevLocationAnswers),
-            'prev_other_answers_count' => count($prevOtherAnswers),
-            'prev_multiple_other_answers_count' => count($prevMultipleOtherAnswers),
-            'conditional_questions_count' => count($conditionalQuestions),
-            'prev_answers' => $prevAnswers,
-            'prev_multiple_answers' => $prevMultipleAnswers,
-            'prev_location_answers' => $prevLocationAnswers,
-            'prev_other_answers' => $prevOtherAnswers,
-            'prev_multiple_other_answers' => $prevMultipleOtherAnswers
-        ]);
+        // \Log::info('Loaded existing answers with improved structure', [
+        //     'current_category_index' => $currentCategoryIndex,
+        //     'current_category_name' => $currentCategory->category_name,
+        //     'current_category_dependencies' => [
+        //         'is_status_dependent' => $currentCategory->is_status_dependent,
+        //         'required_alumni_status' => $currentCategory->required_alumni_status,
+        //         'is_graduation_year_dependent' => $currentCategory->is_graduation_year_dependent,
+        //         'required_graduation_years' => $currentCategory->required_graduation_years,
+        //     ],
+        //     'total_categories' => $totalCategories,
+        //     'progress_percentage' => $progressPercentage,
+        //     'prev_answers_count' => count($prevAnswers),
+        //     'prev_multiple_answers_count' => count($prevMultipleAnswers),
+        //     'prev_location_answers_count' => count($prevLocationAnswers),
+        //     'prev_other_answers_count' => count($prevOtherAnswers),
+        //     'prev_multiple_other_answers_count' => count($prevMultipleOtherAnswers),
+        //     'conditional_questions_count' => count($conditionalQuestions),
+        //     'prev_answers' => $prevAnswers,
+        //     'prev_multiple_answers' => $prevMultipleAnswers,
+        //     'prev_location_answers' => $prevLocationAnswers,
+        //     'prev_other_answers' => $prevOtherAnswers,
+        //     'prev_multiple_other_answers' => $prevMultipleOtherAnswers
+        // ]);
 
         return view('alumni.questionnaire.fill', compact(
             'periode',
@@ -282,11 +274,11 @@ class QuestionnaireController extends Controller
     // Change this method name from 'store' to 'submit'
     public function submit(Request $request, $periodeId)
     {
-        \Log::info('=== QUESTIONNAIRE SUBMISSION ===', [
-            'periode_id' => $periodeId,
-            'user_id' => auth()->id(),
-            'request_data' => $request->all()
-        ]);
+        // \Log::info('=== QUESTIONNAIRE SUBMISSION ===', [
+        //     'periode_id' => $periodeId,
+        //     'user_id' => auth()->id(),
+        //     'request_data' => $request->all()
+        // ]);
 
         $alumni = auth()->user()->alumni;
         $periode = Tb_Periode::findOrFail($periodeId);
@@ -304,17 +296,16 @@ class QuestionnaireController extends Controller
 
         $action = $request->input('action') ?: $request->input('form_action');
         
-        \Log::info('Form submission received', [
-            'action' => $action,
-            'has_answers' => $request->has('answers'),
-            'has_multiple' => $request->has('multiple'),
-            'has_location' => $request->has('location_combined')
-        ]);
+        // \Log::info('Form submission received', [
+        //     'action' => $action,
+        //     'has_answers' => $request->has('answers'),
+        //     'has_multiple' => $request->has('multiple'),
+        //     'has_location' => $request->has('location_combined')
+        // ]);
         
         try {
             DB::beginTransaction();
 
-            // ✅ VALIDASI: Pastikan kategori yang disubmit adalah untuk alumni DAN sesuai dependency
             if ($request->has('id_category')) {
                 $category = Tb_Category::where('id_category', $request->input('id_category'))
                     ->where('id_periode', $periodeId)
@@ -329,7 +320,6 @@ class QuestionnaireController extends Controller
                         ->with('error', 'Kategori tidak tersedia untuk alumni.');
                 }
 
-                // ✅ ENHANCED: Validasi status dan graduation year dependency
                 if (!$category->isAccessibleByAlumni($alumni)) {
                     return redirect()->back()
                         ->with('error', 'Kategori ini tidak tersedia untuk status atau tahun lulus Anda.');
@@ -339,11 +329,10 @@ class QuestionnaireController extends Controller
             // Always save answers first (except for prev_category)
             if ($action !== 'prev_category') {
                 $savedCount = $this->saveAnswers($request, $userAnswer);
-                \Log::info('Answers saved', ['count' => $savedCount]);
+                // \Log::info('Answers saved', ['count' => $savedCount]);
             }
 
             if ($action === 'prev_category') {
-                // ✅ HANDLE PREVIOUS CATEGORY
                 $currentIndex = (int) session('current_category_index', 0);
                 
                 if ($currentIndex > 0) {
@@ -361,7 +350,6 @@ class QuestionnaireController extends Controller
             } elseif ($action === 'next_category') {
                 $currentIndex = (int) session('current_category_index', 0);
                 
-                // ✅ PERBAIKAN: Filter kategori untuk alumni saja DENGAN DEPENDENCY
                 $categories = Tb_Category::where('id_periode', $periodeId)
                     ->where(function($query) {
                         $query->where('for_type', 'alumni')
@@ -370,7 +358,6 @@ class QuestionnaireController extends Controller
                     ->orderBy('order')
                     ->get()
                     ->filter(function($category) use ($alumni) {
-                        // ✅ ENHANCED: Filter berdasarkan status dan graduation year dependency
                         return $category->isAccessibleByAlumni($alumni);
                     })
                     ->values(); // Reset array keys
@@ -435,19 +422,19 @@ class QuestionnaireController extends Controller
     {
         $savedCount = 0;
         
-        \Log::info('=== SAVE ANSWERS DEBUG ===', [
-            'user_answer_id' => $userAnswer->id_user_answer,
-            'all_request' => $request->all(),
-            'has_answers' => $request->has('answers'),
-            'has_other_answers' => $request->has('other_answers'),
-            'has_other_answer' => $request->has('other_answer'),
-            'other_answers_data' => $request->input('other_answers', []),
-            'other_answer_data' => $request->input('other_answer', []),
-            'has_multiple' => $request->has('multiple'),
-            'multiple_data' => $request->input('multiple', []),
-            'has_multiple_other_answers' => $request->has('multiple_other_answers'),
-            'multiple_other_answers_data' => $request->input('multiple_other_answers', [])
-        ]);
+        // \Log::info('=== SAVE ANSWERS DEBUG ===', [
+        //     'user_answer_id' => $userAnswer->id_user_answer,
+        //     'all_request' => $request->all(),
+        //     'has_answers' => $request->has('answers'),
+        //     'has_other_answers' => $request->has('other_answers'),
+        //     'has_other_answer' => $request->has('other_answer'),
+        //     'other_answers_data' => $request->input('other_answers', []),
+        //     'other_answer_data' => $request->input('other_answer', []),
+        //     'has_multiple' => $request->has('multiple'),
+        //     'multiple_data' => $request->input('multiple', []),
+        //     'has_multiple_other_answers' => $request->has('multiple_other_answers'),
+        //     'multiple_other_answers_data' => $request->input('multiple_other_answers', [])
+        // ]);
 
         // Handle regular answers (termasuk option radio)
         if ($request->has('answers')) {
@@ -456,12 +443,12 @@ class QuestionnaireController extends Controller
                     try {
                         $question = Tb_Questions::find($questionId);
                         
-                        \Log::info('Processing question', [
-                            'question_id' => $questionId,
-                            'question_type' => $question ? $question->type : 'not_found',
-                            'received_answer' => $answer,
-                            'is_numeric' => is_numeric($answer)
-                        ]);
+                        // \Log::info('Processing question', [
+                        //     'question_id' => $questionId,
+                        //     'question_type' => $question ? $question->type : 'not_found',
+                        //     'received_answer' => $answer,
+                        //     'is_numeric' => is_numeric($answer)
+                        // ]);
                         
                         $finalAnswer = $answer;
                         $optionId = null;
@@ -473,16 +460,15 @@ class QuestionnaireController extends Controller
                                 $finalAnswer = $option->option;
                                 $optionId = $answer;
                                 
-                                \Log::info('Option found', [
-                                    'option_id' => $optionId,
-                                    'option' => $finalAnswer
-                                ]);
+                                // \Log::info('Option found', [
+                                //     'option_id' => $optionId,
+                                //     'option' => $finalAnswer
+                                // ]);
                             } else {
                                 \Log::warning('Option not found for ID', ['option_id' => $answer]);
                             }
                         }
                         
-                        // ✅ PERBAIKAN CRITICAL: Coba SEMUA kemungkinan format other_answer
                         $otherAnswer = null;
                         
                         // Format 1: other_answers[question_id] (plural)
@@ -502,14 +488,14 @@ class QuestionnaireController extends Controller
                         // Pilih yang tidak kosong
                         $otherAnswer = $otherAnswer1 ?: $otherAnswer2 ?: $otherAnswer3 ?: $otherAnswer4;
                         
-                        \Log::info('Other answer detection', [
-                            'question_id' => $questionId,
-                            'format1_other_answers' => $otherAnswer1,
-                            'format2_other_answer' => $otherAnswer2, 
-                            'format3_array_other_answers' => $otherAnswer3,
-                            'format4_array_other_answer' => $otherAnswer4,
-                            'final_other_answer' => $otherAnswer
-                        ]);
+                        // \Log::info('Other answer detection', [
+                        //     'question_id' => $questionId,
+                        //     'format1_other_answers' => $otherAnswer1,
+                        //     'format2_other_answer' => $otherAnswer2, 
+                        //     'format3_array_other_answers' => $otherAnswer3,
+                        //     'format4_array_other_answer' => $otherAnswer4,
+                        //     'final_other_answer' => $otherAnswer
+                        // ]);
                         
                         try {
                             $saved = Tb_User_Answer_Item::updateOrCreate([
@@ -520,13 +506,13 @@ class QuestionnaireController extends Controller
                                 'id_questions_options' => $optionId,
                                 'other_answer' => !empty($otherAnswer) ? trim($otherAnswer) : null
                             ]);
-                            \Log::info('Regular answer saved', [
-                                'question_id' => $questionId,
-                                'answer' => $finalAnswer,
-                                'option_id' => $optionId,
-                                'other_answer' => $otherAnswer,
-                                'id' => $saved->id_user_answer_item
-                            ]);
+                            // \Log::info('Regular answer saved', [
+                            //     'question_id' => $questionId,
+                            //     'answer' => $finalAnswer,
+                            //     'option_id' => $optionId,
+                            //     'other_answer' => $otherAnswer,
+                            //     'id' => $saved->id_user_answer_item
+                            // ]);
                             $savedCount++;
                         } catch (\Exception $e) {
                             \Log::error('DB error on regular answer, skipped', [
@@ -550,7 +536,6 @@ class QuestionnaireController extends Controller
             }
         }
 
-        // ✅ TAMBAHAN: Handle other_answer secara terpisah untuk SEMUA format
         $otherAnswerSources = [
             'other_answers' => $request->input('other_answers', []),
             'other_answer' => $request->input('other_answer', [])
@@ -558,10 +543,10 @@ class QuestionnaireController extends Controller
         
         foreach ($otherAnswerSources as $sourceName => $otherAnswers) {
             if (!empty($otherAnswers) && is_array($otherAnswers)) {
-                \Log::info("Processing {$sourceName} separately", [
-                    'source' => $sourceName,
-                    'data' => $otherAnswers
-                ]);
+                // \Log::info("Processing {$sourceName} separately", [
+                //     'source' => $sourceName,
+                //     'data' => $otherAnswers
+                // ]);
                 
                 foreach ($otherAnswers as $questionId => $otherAnswer) {
                     if (!empty($otherAnswer) && trim($otherAnswer) !== '') {
@@ -574,12 +559,12 @@ class QuestionnaireController extends Controller
                             if ($answerItem) {
                                 try {
                                     $answerItem->update(['other_answer' => trim($otherAnswer)]);
-                                    \Log::info('Other answer updated to existing', [
-                                        'source' => $sourceName,
-                                        'question_id' => $questionId,
-                                        'other_answer' => $otherAnswer,
-                                        'existing_answer_id' => $answerItem->id_user_answer_item
-                                    ]);
+                                    // \Log::info('Other answer updated to existing', [
+                                    //     'source' => $sourceName,
+                                    //     'question_id' => $questionId,
+                                    //     'other_answer' => $otherAnswer,
+                                    //     'existing_answer_id' => $answerItem->id_user_answer_item
+                                    // ]);
                                 } catch (\Exception $e) {
                                     \Log::error('DB error on update other_answer, skipped', [
                                         'question_id' => $questionId,
@@ -596,12 +581,12 @@ class QuestionnaireController extends Controller
                                         'answer' => '', // Empty answer tapi ada other_answer
                                         'other_answer' => trim($otherAnswer)
                                     ]);
-                                    \Log::info('New answer item created for other_answer only', [
-                                        'source' => $sourceName,
-                                        'question_id' => $questionId,
-                                        'other_answer' => $otherAnswer,
-                                        'new_answer_id' => $newAnswerItem->id_user_answer_item
-                                    ]);
+                                    // \Log::info('New answer item created for other_answer only', [
+                                    //     'source' => $sourceName,
+                                    //     'question_id' => $questionId,
+                                    //     'other_answer' => $otherAnswer,
+                                    //     'new_answer_id' => $newAnswerItem->id_user_answer_item
+                                    // ]);
                                 } catch (\Exception $e) {
                                     \Log::error('DB error on create other_answer only, skipped', [
                                         'question_id' => $questionId,
@@ -624,17 +609,16 @@ class QuestionnaireController extends Controller
             }
         }
 
-        // ✅ PERBAIKAN: Handle multiple choice answers dengan other_answer yang benar
         if ($request->has('multiple')) {
             foreach ($request->multiple as $questionId => $selectedOptions) {
                 if (is_array($selectedOptions) && !empty($selectedOptions)) {
                     try {
                         $question = Tb_Questions::find($questionId);
                         
-                        \Log::info('Processing multiple choice', [
-                            'question_id' => $questionId,
-                            'selected_options' => $selectedOptions
-                        ]);
+                        // \Log::info('Processing multiple choice', [
+                        //     'question_id' => $questionId,
+                        //     'selected_options' => $selectedOptions
+                        // ]);
                         
                         // Delete existing answers for this question first
                         try {
@@ -655,19 +639,18 @@ class QuestionnaireController extends Controller
                                 if ($option) {
                                     $finalAnswer = $option ? $option->option : $optionId;
                                     
-                                    // ✅ PERBAIKAN: Handle multiple other answers dengan format yang benar
                                     $multipleOtherAnswer = null;
                                     
                                     // Format yang benar: multiple_other_answers[question_id][option_id]
                                     $multipleOtherAnswer = $request->input("multiple_other_answers.{$questionId}.{$optionId}");
                                     
-                                    \Log::info('Processing multiple choice option', [
-                                        'question_id' => $questionId,
-                                        'option_id' => $optionId,
-                                        'option_text' => $finalAnswer,
-                                        'other_answer' => $multipleOtherAnswer,
-                                        'is_other_option' => $option ? $option->is_other_option : false
-                                    ]);
+                                    // \Log::info('Processing multiple choice option', [
+                                    //     'question_id' => $questionId,
+                                    //     'option_id' => $optionId,
+                                    //     'option_text' => $finalAnswer,
+                                    //     'other_answer' => $multipleOtherAnswer,
+                                    //     'is_other_option' => $option ? $option->is_other_option : false
+                                    // ]);
                                     
                                     try {
                                         $saved = Tb_User_Answer_Item::create([
@@ -677,13 +660,13 @@ class QuestionnaireController extends Controller
                                             'id_questions_options' => is_numeric($optionId) ? $optionId : null,
                                             'other_answer' => !empty($multipleOtherAnswer) ? trim($multipleOtherAnswer) : null
                                         ]);
-                                        \Log::info('Multiple choice answer saved', [
-                                            'question_id' => $questionId,
-                                            'option_id' => $optionId,
-                                            'answer' => $finalAnswer,
-                                            'other_answer' => $multipleOtherAnswer,
-                                            'id' => $saved->id_user_answer_item
-                                        ]);
+                                        // \Log::info('Multiple choice answer saved', [
+                                        //     'question_id' => $questionId,
+                                        //     'option_id' => $optionId,
+                                        //     'answer' => $finalAnswer,
+                                        //     'other_answer' => $multipleOtherAnswer,
+                                        //     'id' => $saved->id_user_answer_item
+                                        // ]);
                                         $savedCount++;
                                     } catch (\Exception $e) {
                                         \Log::error('DB error on save multiple choice, skipped', [
@@ -708,13 +691,12 @@ class QuestionnaireController extends Controller
             }
         }
 
-        // ✅ TAMBAHAN: Handle multiple_other_answers secara terpisah jika ada yang terlewat
         if ($request->has('multiple_other_answers')) {
             $multipleOtherAnswersData = $request->input('multiple_other_answers', []);
             
-            \Log::info('Processing multiple_other_answers separately', [
-                'data' => $multipleOtherAnswersData
-            ]);
+            // \Log::info('Processing multiple_other_answers separately', [
+            //     'data' => $multipleOtherAnswersData
+            // ]);
             
             foreach ($multipleOtherAnswersData as $questionId => $optionAnswers) {
                 if (is_array($optionAnswers)) {
@@ -730,12 +712,12 @@ class QuestionnaireController extends Controller
                                 if ($answerItem) {
                                     try {
                                         $answerItem->update(['other_answer' => trim($otherAnswer)]);
-                                        \Log::info('Multiple other answer updated', [
-                                            'question_id' => $questionId,
-                                            'option_id' => $optionId,
-                                            'other_answer' => $otherAnswer,
-                                            'existing_answer_id' => $answerItem->id_user_answer_item
-                                        ]);
+                                        // \Log::info('Multiple other answer updated', [
+                                        //     'question_id' => $questionId,
+                                        //     'option_id' => $optionId,
+                                        //     'other_answer' => $otherAnswer,
+                                        //     'existing_answer_id' => $answerItem->id_user_answer_item
+                                        // ]);
                                     } catch (\Exception $e) {
                                         \Log::error('DB error on update multiple other answer, skipped', [
                                             'question_id' => $questionId,
@@ -778,11 +760,11 @@ class QuestionnaireController extends Controller
                                 'id_questions_options' => null,
                                 'other_answer' => null
                             ]);
-                            \Log::info('Location answer saved', [
-                                'question_id' => $questionId,
-                                'location_data' => $locationObject,
-                                'id' => $saved->id_user_answer_item
-                            ]);
+                            // \Log::info('Location answer saved', [
+                            //     'question_id' => $questionId,
+                            //     'location_data' => $locationObject,
+                            //     'id' => $saved->id_user_answer_item
+                            // ]);
                             $savedCount++;
                         } catch (\Exception $e) {
                             \Log::error('DB error on save location answer, skipped', [
@@ -803,7 +785,7 @@ class QuestionnaireController extends Controller
             }
         }
         
-        \Log::info('Save answers complete', ['total_saved' => $savedCount]);
+        // \Log::info('Save answers complete', ['total_saved' => $savedCount]);
         return $savedCount;
     }
 
@@ -812,10 +794,10 @@ class QuestionnaireController extends Controller
      */
     public function results()
     {
-        \Log::info('Alumni accessing questionnaire results', [
-            'user_id' => auth()->id(),
-            'alumni_id' => auth()->user()->alumni->id_alumni ?? 'no_alumni'
-        ]);
+        // \Log::info('Alumni accessing questionnaire results', [
+        //     'user_id' => auth()->id(),
+        //     'alumni_id' => auth()->user()->alumni->id_alumni ?? 'no_alumni'
+        // ]);
 
         $alumni = auth()->user()->alumni;
         
@@ -832,10 +814,10 @@ class QuestionnaireController extends Controller
             ->orderBy('updated_at', 'desc')
             ->paginate(10); // Add pagination with 10 items per page
 
-        \Log::info('User answers loaded', [
-            'count' => $userAnswers->count(),
-            'user_id' => auth()->id()
-        ]);
+        // \Log::info('User answers loaded', [
+        //     'count' => $userAnswers->count(),
+        //     'user_id' => auth()->id()
+        // ]);
 
         return view('alumni.questionnaire.results', compact('userAnswers'));
     }
@@ -845,11 +827,11 @@ class QuestionnaireController extends Controller
      */
     public function responseDetail($periodeId, $userAnswerId)
     {
-        \Log::info('Alumni accessing response detail', [
-            'user_id' => auth()->id(),
-            'periode_id' => $periodeId,
-            'user_answer_id' => $userAnswerId
-        ]);
+        // \Log::info('Alumni accessing response detail', [
+        //     'user_id' => auth()->id(),
+        //     'periode_id' => $periodeId,
+        //     'user_answer_id' => $userAnswerId
+        // ]);
 
         $alumni = auth()->user()->alumni;
         
@@ -870,7 +852,6 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data jawaban tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DAN GRADUATION YEAR DEPENDENCY
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
@@ -879,12 +860,10 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get()
             ->filter(function($category) use ($alumni) {
-                // ✅ ENHANCED: Filter berdasarkan status dependency DAN graduation year dependency
                 return $category->isAccessibleByAlumni($alumni);
             })
             ->values(); // Reset array keys
 
-        // ✅ GUNAKAN STRUKTUR YANG SAMA PERSIS DENGAN COMPANY
         $questionsWithAnswers = [];
 
         foreach ($categories as $category) {
@@ -921,7 +900,6 @@ class QuestionnaireController extends Controller
                             if ($answerItem->id_questions_options) {
                                 $multipleAnswers[] = $answerItem->id_questions_options;
                                 
-                                // ✅ PERBAIKAN: Handle other answers untuk multiple choice
                                 if (!empty($answerItem->other_answer)) {
                                     $multipleOtherAnswers[$answerItem->id_questions_options] = $answerItem->other_answer;
                                     
@@ -933,11 +911,11 @@ class QuestionnaireController extends Controller
                             }
                         }
                         
-                        \Log::info('Multiple choice processed', [
-                            'question_id' => $question->id_question,
-                            'multiple_answers' => $multipleAnswers,
-                            'multiple_other_answers' => $multipleOtherAnswers
-                        ]);
+                        // \Log::info('Multiple choice processed', [
+                        //     'question_id' => $question->id_question,
+                        //     'multiple_answers' => $multipleAnswers,
+                        //     'multiple_other_answers' => $multipleOtherAnswers
+                        // ]);
                     } else {
                         // Single answer
                         $answerItem = $answerItems->first();
@@ -956,7 +934,6 @@ class QuestionnaireController extends Controller
                             }
                         } else {
                             $answer = $answerItem->answer;
-                            // ✅ PERBAIKAN: Set other_answer untuk semua jenis pertanyaan
                             if (!empty($answerItem->other_answer)) {
                                 $otherAnswer = $answerItem->other_answer;
                             }
@@ -964,19 +941,17 @@ class QuestionnaireController extends Controller
                     }
                 }
 
-                // ✅ DEBUG: Log other answer data
-                if ($otherAnswer || !empty($multipleOtherAnswers)) {
-                    \Log::info('Other Answer Found', [
-                        'question_id' => $question->id_question,
-                        'question_type' => $question->type,
-                        'other_answer' => $otherAnswer,
-                        'multiple_other_answers' => $multipleOtherAnswers,
-                        'option_id' => $answer,
-                        'option_is_other' => $otherOption ? $otherOption->is_other_option : false
-                    ]);
-                }
+                // if ($otherAnswer || !empty($multipleOtherAnswers)) {
+                //     \Log::info('Other Answer Found', [
+                //         'question_id' => $question->id_question,
+                //         'question_type' => $question->type,
+                //         'other_answer' => $otherAnswer,
+                //         'multiple_other_answers' => $multipleOtherAnswers,
+                //         'option_id' => $answer,
+                //         'option_is_other' => $otherOption ? $otherOption->is_other_option : false
+                //     ]);
+                // }
 
-                // ✅ IMPORTANT: Struktur data yang sama persis dengan company
                 $questionData = [
                     'question' => $question,
                     'hasAnswer' => $hasAnswer,
@@ -1000,34 +975,33 @@ class QuestionnaireController extends Controller
             }
         }
 
-        // ✅ DEBUG: Log dependency info dengan struktur yang benar
-        \Log::info('Alumni Response Detail - Dependency debug:', [
-            'alumni_status' => $alumni->status,
-            'alumni_graduation_year' => $alumni->graduation_year,
-            'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) use ($alumni) {
-                return [
-                    'category' => $cat['category']->category_name,
-                    'category_status_dependent' => $cat['category']->is_status_dependent,
-                    'category_required_status' => $cat['category']->required_alumni_status,
-                    'category_graduation_year_dependent' => $cat['category']->is_graduation_year_dependent,
-                    'category_required_graduation_years' => $cat['category']->required_graduation_years,
-                    'category_accessible' => $cat['category']->isAccessibleByAlumni($alumni),
-                    'questions' => collect($cat['questions'])->map(function($q) {
-                        return [
-                            'id' => $q['question']->id_question,
-                            'question' => substr($q['question']->question, 0, 50),
-                            'depends_on' => $q['question']->depends_on,
-                            'depends_value' => $q['question']->depends_value,
-                            'hasAnswer' => $q['hasAnswer'],
-                            'answer' => $q['answer'],
-                            'otherAnswer' => $q['otherAnswer'],
-                            'multipleAnswers' => $q['multipleAnswers'],
-                            'multipleOtherAnswers' => $q['multipleOtherAnswers']
-                        ];
-                    })->toArray()
-                ];
-            })->toArray()
-        ]);
+        // \Log::info('Alumni Response Detail - Dependency debug:', [
+        //     'alumni_status' => $alumni->status,
+        //     'alumni_graduation_year' => $alumni->graduation_year,
+        //     'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) use ($alumni) {
+        //         return [
+        //             'category' => $cat['category']->category_name,
+        //             'category_status_dependent' => $cat['category']->is_status_dependent,
+        //             'category_required_status' => $cat['category']->required_alumni_status,
+        //             'category_graduation_year_dependent' => $cat['category']->is_graduation_year_dependent,
+        //             'category_required_graduation_years' => $cat['category']->required_graduation_years,
+        //             'category_accessible' => $cat['category']->isAccessibleByAlumni($alumni),
+        //             'questions' => collect($cat['questions'])->map(function($q) {
+        //                 return [
+        //                     'id' => $q['question']->id_question,
+        //                     'question' => substr($q['question']->question, 0, 50),
+        //                     'depends_on' => $q['question']->depends_on,
+        //                     'depends_value' => $q['question']->depends_value,
+        //                     'hasAnswer' => $q['hasAnswer'],
+        //                     'answer' => $q['answer'],
+        //                     'otherAnswer' => $q['otherAnswer'],
+        //                     'multipleAnswers' => $q['multipleAnswers'],
+        //                     'multipleOtherAnswers' => $q['multipleOtherAnswers']
+        //                 ];
+        //             })->toArray()
+        //         ];
+        //     })->toArray()
+        // ]);
 
         return view('alumni.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers'));
     }
@@ -1037,7 +1011,6 @@ class QuestionnaireController extends Controller
         $errors = [];
         
         foreach ($questions as $question) {
-            // ✅ SKIP VALIDASI UNTUK CONDITIONAL QUESTIONS YANG TIDAK AKTIF
             if ($question->depends_on) {
                 $parentQuestionId = $question->depends_on;
                 $requiredValue = $question->depends_value;
@@ -1046,11 +1019,11 @@ class QuestionnaireController extends Controller
                 $parentAnswer = $request->input("answers.{$parentQuestionId}");
                 
                 if ($parentAnswer != $requiredValue) {
-                    \Log::info("Skipping validation for conditional question {$question->id_question} - parent answer doesn't match", [
-                        'parent_question' => $parentQuestionId,
-                        'parent_answer' => $parentAnswer,
-                        'required_value' => $requiredValue
-                    ]);
+                    // \Log::info("Skipping validation for conditional question {$question->id_question} - parent answer doesn't match", [
+                    //     'parent_question' => $parentQuestionId,
+                    //     'parent_answer' => $parentAnswer,
+                    //     'required_value' => $requiredValue
+                    // ]);
                     continue; // Skip validation untuk pertanyaan conditional yang tidak aktif
                 }
             }

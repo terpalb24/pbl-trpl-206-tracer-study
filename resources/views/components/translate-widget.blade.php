@@ -317,7 +317,6 @@ function getSavedLanguage() {
 
 function saveLanguagePreference(lang) {
     localStorage.setItem('preferred_language', lang);
-    console.log('Language preference saved:', lang);
 }
 
 // Minimize state management
@@ -327,7 +326,6 @@ function getSavedMinimizedState() {
 
 function saveMinimizedState(minimized) {
     localStorage.setItem('translate_widget_minimized', minimized.toString());
-    console.log('Minimized state saved:', minimized);
 }
 
 // Position management
@@ -339,7 +337,6 @@ function getSavedPosition() {
 function saveWidgetPosition(x, y) {
     const position = { x, y, timestamp: Date.now() };
     localStorage.setItem('translate_widget_position', JSON.stringify(position));
-    console.log('Widget position saved:', position);
 }
 
 function applySavedPosition() {
@@ -359,7 +356,6 @@ function applySavedPosition() {
         widget.style.right = 'auto';
         widget.style.bottom = 'auto';
         
-        console.log('Applied saved position:', { x, y });
     }
 }
 
@@ -373,7 +369,6 @@ function minimizeWidget() {
     
     if (!widget || isMinimized) return;
     
-    console.log('Minimizing widget...');
     
     // Close dropdown if open
     if (dropdown && !dropdown.classList.contains('hidden')) {
@@ -402,7 +397,6 @@ function minimizeWidget() {
             minimizedState.classList.remove('minimized-pulse');
         }, 4000);
         
-        console.log('Widget minimized');
     }, 150);
 }
 
@@ -413,7 +407,6 @@ function maximizeWidget() {
     
     if (!widget || !isMinimized) return;
     
-    console.log('Maximizing widget...');
     
     // Add animation class
     widget.classList.add('widget-maximizing');
@@ -426,7 +419,6 @@ function maximizeWidget() {
         isMinimized = false;
         saveMinimizedState(false);
         
-        console.log('Widget maximized');
     }, 150);
 }
 
@@ -438,7 +430,6 @@ function initializeMinimize() {
     
     if (!widget || widget.dataset.minimizable !== 'true') return;
     
-    console.log('Initializing minimize functionality...');
     
     // Apply saved minimized state
     const savedMinimized = getSavedMinimizedState();
@@ -508,7 +499,6 @@ function initializeDraggable() {
     
     if (!widget || widget.dataset.draggable !== 'true') return;
     
-    console.log('Initializing draggable functionality...');
     
     // Apply saved position on load
     setTimeout(applySavedPosition, 100);
@@ -556,7 +546,6 @@ function initializeDraggable() {
         document.body.style.userSelect = 'none';
         document.body.style.webkitUserSelect = 'none';
         
-        console.log('Drag started at:', { clientX, clientY });
         
         e.preventDefault();
     }
@@ -620,7 +609,6 @@ function initializeDraggable() {
         const rect = widget.getBoundingClientRect();
         saveWidgetPosition(rect.left, rect.top);
         
-        console.log('Drag ended, position saved:', { x: rect.left, y: rect.top });
         
         e.preventDefault();
     }
@@ -682,7 +670,6 @@ function initializeDraggable() {
             }, 2000);
         }
         
-        console.log('Widget position reset to default');
     });
 }
 
@@ -722,11 +709,8 @@ function googleTranslateElementInit() {
         const savedLang = getSavedLanguage();
         const currentDetected = detectCurrentLanguage();
         
-        console.log('Saved language:', savedLang);
-        console.log('Detected language:', currentDetected);
         
         if (savedLang === 'en' && currentDetected !== 'en') {
-            console.log('Auto-applying English translation...');
             applyTranslation('en');
         }
         
@@ -751,7 +735,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize UI with detected language
     const detectedLang = detectCurrentLanguage();
     updateUIForLanguage(detectedLang);
-    console.log('Initial language detected:', detectedLang);
 
     // Toggle dropdown
     toggleBtn.addEventListener('click', function(e) {
@@ -787,7 +770,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            console.log('User selected language:', lang);
             
             isUserAction = true;
             saveLanguagePreference(lang);
@@ -803,7 +785,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function translatePage(targetLang) {
-        console.log('Translating to:', targetLang);
         
         if (targetLang === 'id') {
             resetToIndonesian();
@@ -813,7 +794,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function resetToIndonesian() {
-        console.log('Resetting to Indonesian - Reloading page...');
         
         document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         document.cookie = 'googtrans=/auto/en; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -828,21 +808,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function applyTranslation(targetLang) {
-        console.log('Applying translation to:', targetLang);
         
         const checkGoogleTranslate = setInterval(() => {
             const googleSelect = document.querySelector('.goog-te-combo');
             if (googleSelect) {
                 clearInterval(checkGoogleTranslate);
                 
-                console.log('Google Translate element found, applying translation...');
                 
                 googleSelect.value = targetLang;
                 
                 for (let i = 0; i < googleSelect.options.length; i++) {
                     if (googleSelect.options[i].value === targetLang) {
                         googleSelect.selectedIndex = i;
-                        console.log('Selected option index:', i, 'value:', targetLang);
                         break;
                     }
                 }
@@ -859,7 +836,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             clearInterval(checkGoogleTranslate);
             if (!document.querySelector('.goog-te-combo')) {
-                console.log('Google Translate initialization timeout');
             }
             isUserAction = false;
         }, 10000);
@@ -882,7 +858,6 @@ document.addEventListener('DOMContentLoaded', function() {
             if (minimizedFlag) minimizedFlag.textContent = '🇮🇩';
         }
         
-        console.log('UI updated for language:', lang);
     }
 
     // Enhanced state monitoring
@@ -908,14 +883,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (detectedLang !== currentLang && !isUserAction) {
-            console.log('State change detected:', currentLang, '->', detectedLang);
             updateUIForLanguage(detectedLang);
             saveLanguagePreference(detectedLang);
         }
     }
 
     window.addEventListener('hashchange', () => {
-        console.log('Hash change detected');
         setTimeout(monitorTranslationState, 100);
     });
     
@@ -954,10 +927,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.addEventListener('load', function() {
-    console.log('Page loaded, checking language state...');
     setTimeout(() => {
         const detectedLang = detectCurrentLanguage();
-        console.log('Final language detection on load:', detectedLang);
     }, 1000);
 });
 </script>

@@ -9,7 +9,6 @@ class Tb_User_Answer_Item extends Model
 {
     use HasFactory;
 
-    // ✅ PERBAIKAN: Tambahkan property untuk mengatasi Laravel naming convention
     protected $table = 'tb_user_answer_item'; // Specify exact table name
     protected $primaryKey = 'id_user_answer_item';
     public $timestamps = false; // Jika tabel tidak memiliki created_at, updated_at

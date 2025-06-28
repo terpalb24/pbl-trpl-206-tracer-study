@@ -785,7 +785,6 @@
         // Get all location questions
         const locationQuestions = document.querySelectorAll('.location-question');
         
-        // ✅ PERBAIKAN: Load countries from JSON file instead of hardcoded array
         let countries = [];
         
         // Function to load countries from JSON file
@@ -798,7 +797,6 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log('Countries loaded from JSON:', data);
                     countries = data;
                     return data;
                 })
@@ -831,7 +829,6 @@
             const combinedInput = document.getElementById(`location-combined-${questionId}`);
             const initialInput = document.getElementById(`location-initial-${questionId}`);
             
-            // ✅ PERBAIKAN: Load countries from JSON and populate dropdown
             loadCountriesFromJSON().then(() => {
                 // Populate countries dropdown
                 countries.forEach(country => {
@@ -841,7 +838,6 @@
                     countrySelect.appendChild(option);
                 });
                 
-                console.log(`Populated ${countries.length} countries for question ${questionId}`);
                 
                 // Load initial values if available after countries are loaded
                 if (initialInput) {
@@ -878,7 +874,6 @@
                                     stateSelect.appendChild(option);
                                 });
                                 
-                                console.log(`Loaded ${data.states.length} states for ${this.value}`);
                             }
                             
                             // Update combined value
@@ -929,7 +924,6 @@
                                     citySelect.appendChild(option);
                                 });
                                 
-                                console.log(`Loaded ${selectedState.cities.length} cities for ${selectedState.name}`);
                             }
                             
                             // Update combined value
@@ -974,7 +968,6 @@
                 };
                 
                 combinedInput.value = JSON.stringify(combinedValue);
-                console.log('Location updated:', combinedValue);
             }
             
             // Function to load initial location values
@@ -982,7 +975,6 @@
                 try {
                     const initialData = JSON.parse(initialInput.value);
                     if (initialData) {
-                        console.log('Loading initial location data:', initialData);
                         
                         // Set country
                         if (initialData.country && initialData.country.code) {
@@ -1018,9 +1010,7 @@
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing alumni questionnaire functionality');
     
-    // ✅ PERBAIKAN: Pass data dari backend to JavaScript dengan benar
     window.questionnaireData = {
         prevAnswers: @json($prevAnswers ?? []),
         prevMultipleAnswers: @json($prevMultipleAnswers ?? []),
@@ -1033,11 +1023,8 @@ document.addEventListener('DOMContentLoaded', function() {
         progressPercentage: {{ $progressPercentage ?? 0 }}
     };
     
-    console.log('✅ Questionnaire data loaded:', window.questionnaireData);
 
-    // ✅ TAMBAHKAN FUNCTION UNTUK SCALE QUESTIONS
     function initializeScaleQuestions() {
-        console.log('Initializing scale questions styling...');
         
         // Handle scale changes dengan visual feedback
         document.querySelectorAll('.scale-radio').forEach(radio => {
@@ -1045,12 +1032,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionId = this.getAttribute('data-question-id');
                 const selectedValue = this.value;
                 
-                console.log('Scale changed:', {
-                    questionId: questionId,
-                    selectedValue: selectedValue
-                });
                 
-                // ✅ IMMEDIATE UPDATE: Update visual styling untuk semua scale options dalam pertanyaan ini
+                
                 updateScaleVisualState(questionId);
                 
                 // Handle conditional questions
@@ -1058,17 +1041,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
         
-        // ✅ Initialize visual state untuk scale questions yang sudah ada jawaban
         document.querySelectorAll('.scale-radio:checked').forEach(checkedRadio => {
             const questionId = checkedRadio.getAttribute('data-question-id');
             updateScaleVisualState(questionId);
         });
         
-        console.log('Scale questions initialization complete');
     }
     
     function updateScaleVisualState(questionId) {
-        console.log('Updating scale visual state for question:', questionId);
         
         // Ambil semua scale options untuk pertanyaan ini
         const scaleRadios = document.querySelectorAll(`input[data-question-id="${questionId}"].scale-radio`);
@@ -1079,41 +1059,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 const scaleOption = label.querySelector('.scale-option');
                 if (scaleOption) {
                     if (radio.checked) {
-                        // ✅ PERBAIKI: Style untuk yang dipilih - HIJAU dengan !important
                         scaleOption.classList.add('selected');
                         scaleOption.classList.remove('bg-white', 'border-gray-300', 'text-gray-700');
                         scaleOption.classList.add('bg-green-500', 'text-white', 'border-green-500');
                         
-                        // ✅ TAMBAHKAN INLINE STYLES UNTUK MEMASTIKAN PERUBAHAN
                         scaleOption.style.backgroundColor = '#10b981 !important'; // green-500
                         scaleOption.style.color = 'white !important';
                         scaleOption.style.borderColor = '#10b981 !important';
                         scaleOption.style.transform = 'scale(1.15)';
                         scaleOption.style.boxShadow = '0 6px 16px rgba(34, 197, 94, 0.4)';
                         
-                        console.log(`✅ Applied selected style to scale option ${radio.value} for question ${questionId}`);
                     } else {
-                        // ✅ PERBAIKI: Style untuk yang tidak dipilih
                         scaleOption.classList.remove('selected', 'bg-green-500', 'text-white', 'border-green-500');
                         scaleOption.classList.add('bg-white', 'border-gray-300', 'text-gray-700');
                         
-                        // ✅ RESET INLINE STYLES
                         scaleOption.style.backgroundColor = 'white';
                         scaleOption.style.color = '#374151'; // gray-700
                         scaleOption.style.borderColor = '#d1d5db'; // gray-300
                         scaleOption.style.transform = 'scale(1)';
                         scaleOption.style.boxShadow = 'none';
                         
-                        console.log(`❌ Applied unselected style to scale option ${radio.value} for question ${questionId}`);
                     }
                 }
             }
         });
     }
 
-    // ✅ PERBAIKAN: Load saved answers dengan benar setelah DOM ready
     function loadSavedAnswers() {
-        console.log('=== LOADING SAVED ANSWERS ===');
         
         // Load regular answers
         Object.entries(window.questionnaireData.prevAnswers).forEach(([questionId, answer]) => {
@@ -1126,7 +1098,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (input.type === 'radio' || input.type === 'checkbox') {
                     input.checked = true;
                     
-                    // ✅ KHUSUS UNTUK SCALE RADIO: Update visual state immediately
                     if (input.classList.contains('scale-radio')) {
                         const questionId = input.getAttribute('data-question-id');
                         updateScaleVisualState(questionId);
@@ -1134,7 +1105,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     input.value = answer;
                 }
-                console.log(`✅ Loaded answer for question ${questionId}:`, answer);
             }
         });
         
@@ -1144,7 +1114,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const checkbox = document.querySelector(`input[name="multiple[${questionId}][]"][value="${answer}"]`);
                 if (checkbox) {
                     checkbox.checked = true;
-                    console.log(`✅ Loaded multiple choice for question ${questionId}:`, answer);
                 }
             });
         });
@@ -1161,7 +1130,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (otherContainer) {
                     otherContainer.style.display = 'block';
                 }
-                console.log(`✅ Loaded other answer for question ${questionId}:`, otherAnswer);
             }
         });
         
@@ -1177,14 +1145,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (otherContainer) {
                         otherContainer.style.display = 'block';
                     }
-                    console.log(`✅ Loaded multiple other answer for question ${questionId}, option ${optionId}:`, otherAnswer);
                 }
             });
         });
         
         // Load location answers
         Object.entries(window.questionnaireData.prevLocationAnswers).forEach(([questionId, locationData]) => {
-            console.log(`Loading location data for question ${questionId}:`, locationData);
             
             if (locationData.province_id) {
                 const provinceSelect = document.getElementById(`province-${questionId}`);
@@ -1220,19 +1186,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // LOCATION FUNCTIONS - SIMPLIFIED VERSION
     function initializeLocationQuestions() {
-        console.log('=== INITIALIZING LOCATION QUESTIONS ===');
         
         const provinceSelects = document.querySelectorAll('.province-select');
-        console.log('Found province selects:', provinceSelects.length);
         
         if (provinceSelects.length === 0) {
-            console.log('No location questions found');
             return;
         }
         
         provinceSelects.forEach((provinceSelect, index) => {
             const questionId = provinceSelect.id.replace('province-', '');
-            console.log(`Setting up location question ${index + 1}: ${questionId}`);
             
             loadProvincesFromAPI(questionId);
             setupLocationEventListeners(questionId);
@@ -1241,7 +1203,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     
     function setupLocationEventListeners(questionId) {
-        console.log('Setting up event listeners for question:', questionId);
         
         const provinceSelect = document.getElementById(`province-${questionId}`);
         const citySelect = document.getElementById(`city-${questionId}`);
@@ -1252,32 +1213,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         provinceSelect.addEventListener('change', function() {
-            console.log('Province changed:', this.value, 'for question:', questionId);
             handleProvinceChange(questionId, this.value);
         });
         
         citySelect.addEventListener('change', function() {
-            console.log('City changed:', this.value, 'for question:', questionId);
             updateLocationDisplay(questionId);
         });
         
-        console.log('Event listeners set up successfully for question:', questionId);
     }
     
     
     function loadSavedLocationData(questionId) {
-        console.log('Loading saved location data for question:', questionId);
         
         const combinedInput = document.getElementById(`location-combined-${questionId}`);
         
         if (!combinedInput || !combinedInput.value) {
-            console.log('No saved location data found for question:', questionId);
             return;
         }
         
         try {
             const savedLocation = JSON.parse(combinedInput.value);
-            console.log('Found saved location data:', savedLocation);
             
             const provinceSelect = document.getElementById(`province-${questionId}`);
             const citySelect = document.getElementById(`city-${questionId}`);
@@ -1317,7 +1272,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // CONDITIONAL QUESTIONS FUNCTION
     function initializeConditionalQuestions() {
-        console.log('Initializing conditional questions...');
         
         // Handle radio button changes for single choice questions
         document.querySelectorAll('.option-radio').forEach(radio => {
@@ -1325,12 +1279,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionId = this.getAttribute('data-question-id');
                 const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
                 
-                console.log('Radio button changed:', {
-                    questionId: questionId,
-                    optionValue: this.value,
-                    isOther: isOther,
-                    radioElement: this
-                });
+              
                 
                 document.querySelectorAll(`[id^="other_field_${questionId}_"]`).forEach(field => {
                     field.classList.add('hidden');
@@ -1340,17 +1289,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.removeAttribute('required');
                         input.disabled = true;
                         
-                        console.log('Hidden other field:', {
-                            fieldId: field.id,
-                            inputName: input.name,
-                            disabled: input.disabled
-                        });
+                        
                     }
                 });
                 
                 if (isOther) {
                     const otherField = document.getElementById(`other_field_${questionId}_${this.value}`);
-                    console.log('Looking for other field:', `other_field_${questionId}_${this.value}`, otherField);
                     
                     if (otherField) {
                         otherField.classList.remove('hidden');
@@ -1361,17 +1305,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             otherInput.setAttribute('required', 'required');
                             otherInput.disabled = false;
                             
-                            console.log('Other input configured:', {
-                                questionId: questionId,
-                                optionValue: this.value,
-                                inputName: otherInput.getAttribute('name'),
-                                correctName: correctName,
-                                inputId: otherInput.id,
-                                hasName: otherInput.hasAttribute('name'),
-                                nameValue: otherInput.name,
-                                disabled: otherInput.disabled,
-                                required: otherInput.required
-                            });
+                         
                             
                             setTimeout(() => otherInput.focus(), 100);
                         }
@@ -1391,16 +1325,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const optionId = this.value;
                 const isOther = parseInt(this.getAttribute('data-is-other')) === 1;
                 
-                console.log('Multiple checkbox changed:', {
-                    questionId: questionId,
-                    optionId: optionId,
-                    isOther: isOther,
-                    checked: this.checked
-                });
+               
                 
                 if (isOther) {
                     const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
-                    console.log('Looking for multiple other field:', `multiple_other_field_${questionId}_${optionId}`, otherField);
                     
                     if (otherField) {
                         const otherInput = otherField.querySelector('input[type="text"]');
@@ -1413,14 +1341,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 otherInput.setAttribute('required', 'required');
                                 otherInput.disabled = false;
                                 
-                                console.log('Multiple other input enabled:', {
-                                    questionId: questionId,
-                                    optionId: optionId,
-                                    inputName: otherInput.getAttribute('name'),
-                                    correctName: correctName,
-                                    disabled: otherInput.disabled,
-                                    required: otherInput.required
-                                });
+                               
                                 
                                 setTimeout(() => otherInput.focus(), 100);
                             }
@@ -1431,12 +1352,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 otherInput.removeAttribute('required');
                                 otherInput.disabled = true;
                                 
-                                console.log('Multiple other input disabled:', {
-                                    questionId: questionId,
-                                    optionId: optionId,
-                                    inputName: otherInput.name,
-                                    disabled: otherInput.disabled
-                                });
+                              
                             }
                         }
                     } else {
@@ -1461,27 +1377,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionId = this.getAttribute('data-question-id');
                 const selectedValue = this.value;
                 
-                console.log('Rating changed:', {
-                    questionId: questionId,
-                    selectedValue: selectedValue
-                });
+               
                 
                 handleDependentQuestions(questionId, selectedValue);
             });
         });
 
-        // ✅ PERBAIKAN: Handle scale changes
         document.querySelectorAll('.scale-radio').forEach(radio => {
             radio.addEventListener('change', function() {
                 const questionId = this.getAttribute('data-question-id');
                 const selectedValue = this.value;
                 
-                console.log('Scale changed:', {
-                    questionId: questionId,
-                    selectedValue: selectedValue
-                });
+               
                 
-                // ✅ IMMEDIATE UPDATE: Update visual state saat scale berubah
                 updateScaleVisualState(questionId);
                 
                 // Handle conditional questions
@@ -1494,17 +1402,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initializeDependenciesOnLoad() {
-        console.log('=== INITIALIZING DEPENDENCIES ON LOAD ===');
         
         setTimeout(() => {
             document.querySelectorAll('.option-radio:checked, .rating-radio:checked, .scale-radio:checked').forEach(radio => {
                 const questionId = radio.getAttribute('data-question-id');
                 const selectedValue = radio.value;
                 
-                console.log('Found checked radio on load:', {
-                    questionId: questionId,
-                    selectedValue: selectedValue
-                });
+               
                 
                 handleDependentQuestions(questionId, selectedValue);
             });
@@ -1513,10 +1417,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionId = checkbox.getAttribute('data-question-id');
                 const selectedValue = checkbox.value;
                 
-                console.log('Found checked checkbox on load:', {
-                    questionId: questionId,
-                    selectedValue: selectedValue
-                });
+              
                 
                 handleDependentQuestions(questionId, selectedValue);
             });
@@ -1526,11 +1427,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const dependsValue = question.getAttribute('data-depends-value');
                 const questionId = question.id.replace('question-', '');
                 
-                console.log('Checking conditional question:', {
-                    questionId: questionId,
-                    dependsOn: dependsOn,
-                    dependsValue: dependsValue
-                });
+              
                 
                 const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
                 let parentValue = null;
@@ -1541,12 +1438,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                console.log('Parent question state:', {
-                    parentQuestionId: dependsOn,
-                    parentValue: parentValue,
-                    requiredValue: dependsValue,
-                    shouldShow: parentValue == dependsValue
-                });
+              
                 
                 if (parentValue == dependsValue) {
                     question.style.display = 'block';
@@ -1556,7 +1448,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.disabled = false;
                     });
                     
-                    console.log(`✅ Showed conditional question ${questionId} on load`);
                 } else {
                     question.style.display = 'none';
                     
@@ -1565,30 +1456,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.disabled = true;
                     });
                     
-                    console.log(`❌ Hidden conditional question ${questionId} on load`);
                 }
             });
         }, 500);
     }
 
     function handleDependentQuestions(parentQuestionId, selectedValue) {
-        console.log(`=== HANDLING DEPENDENT QUESTIONS ===`);
-        console.log(`Parent Question ID: ${parentQuestionId}, Selected Value: ${selectedValue}`);
         
         const dependentQuestions = document.querySelectorAll(`.conditional-question[data-depends-on="${parentQuestionId}"]`);
         
-        console.log(`Found ${dependentQuestions.length} dependent questions for parent ${parentQuestionId}`);
         
         dependentQuestions.forEach((dependentQuestion, index) => {
             const dependsValue = dependentQuestion.getAttribute('data-depends-value');
             const questionId = dependentQuestion.id.replace('question-', '');
             
-            console.log(`Processing dependent question ${index + 1}:`, {
-                questionId: questionId,
-                dependsValue: dependsValue,
-                selectedValue: selectedValue,
-                shouldShow: dependsValue == selectedValue
-            });
+            
             
             if (dependsValue == selectedValue) {
                 dependentQuestion.style.display = 'block';
@@ -1598,7 +1480,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.disabled = false;
                 });
                 
-                console.log(`✅ Showed dependent question ${questionId}`);
             } else {
                 dependentQuestion.style.display = 'none';
                 
@@ -1635,19 +1516,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
-                console.log(`❌ Hidden dependent question ${questionId}`);
             }
         });
     }
 
     function debugConditionalQuestions() {
-        console.log('=== DEBUG CONDITIONAL QUESTIONS ===');
         
         const allQuestions = document.querySelectorAll('.question-container');
-        console.log(`Total questions: ${allQuestions.length}`);
         
         const conditionalQuestions = document.querySelectorAll('.conditional-question');
-        console.log(`Conditional questions: ${conditionalQuestions.length}`);
         
         conditionalQuestions.forEach((question, index) => {
             const questionId = question.id.replace('question-', '');
@@ -1664,58 +1541,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
             
-            console.log(`Conditional Question ${index + 1}:`, {
-                questionId: questionId,
-                dependsOn: dependsOn,
-                dependsValue: dependsValue,
-                parentValue: parentValue,
-                isVisible: isVisible,
-                shouldBeVisible: parentValue == dependsValue
-            });
+       
         });
         
         const checkedRadios = document.querySelectorAll('input[type="radio"]:checked');
-        console.log('Currently checked radios:');
         checkedRadios.forEach(radio => {
-            console.log({
-                questionId: radio.getAttribute('data-question-id'),
-                value: radio.value,
-                name: radio.name
-            });
+        
         });
     }
 
-    // ✅ GLOBAL FORM ELEMENTS
     const form = document.getElementById('questionnaireForm');
     const formAction = document.getElementById('form-action');
 
-    // ✅ INITIALIZE ALL FUNCTIONALITY
-    console.log('Initializing all questionnaire functionality...');
     initializeLocationQuestions();
     initializeConditionalQuestions();
-    initializeScaleQuestions(); // ✅ TAMBAHAN PENTING
+    initializeScaleQuestions(); 
     
-    // ✅ LOAD SAVED ANSWERS AFTER INITIALIZATION
+   
     setTimeout(() => {
-        console.log('Loading saved answers...');
         loadSavedAnswers();
         debugConditionalQuestions();
         
-        // ✅ TAMBAHAN: Update scale visual states setelah load answers
         document.querySelectorAll('.scale-radio').forEach(radio => {
             if (radio.checked) {
                 const questionId = radio.getAttribute('data-question-id');
                 updateScaleVisualState(questionId);
-                console.log(`Updated scale visual for question ${questionId} after loading`);
             }
         });
-    }, 500); // ✅ KURANGI DELAY JADI 500ms
+    }, 500); 
     
-    console.log('Alumni questionnaire initialization complete!');
 
     // FORM SUBMISSION HANDLERS
     document.getElementById('save-draft-btn')?.addEventListener('click', function() {
-        console.log('Saving draft...');
         const actionInput = document.querySelector('input[name="action"]');
         if (actionInput) {
             actionInput.value = 'save_draft';
@@ -1724,7 +1581,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('prev-category-btn')?.addEventListener('click', function() {
-        console.log('Going to previous category...');
         const actionInput = document.querySelector('input[name="action"]');
         if (actionInput) {
             actionInput.value = 'prev_category';
@@ -1733,7 +1589,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('next-category-btn')?.addEventListener('click', function() {
-        console.log('Attempting to go to next category...');
         if (validateCurrentCategory()) {
             const actionInput = document.querySelector('input[name="action"]');
             if (actionInput) {
@@ -1744,21 +1599,17 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('submit-final-btn')?.addEventListener('click', function() {
-        console.log('Attempting final submission...');
         if (validateCurrentCategory()) {
             // Show confirmation modal
             document.getElementById('confirmation-modal').classList.remove('hidden');
         }
     });
 
-    // ✅ TAMBAHAN: Modal confirmation handlers
     document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        console.log('Final submission cancelled');
         document.getElementById('confirmation-modal').classList.add('hidden');
     });
 
     document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        console.log('Final submission confirmed');
         const actionInput = document.querySelector('input[name="action"]');
         if (actionInput) {
             actionInput.value = 'submit_final';
@@ -1767,9 +1618,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.submit();
     });
 
-    // ✅ TAMBAHKAN FUNCTION VALIDASI LENGKAP
     function validateCurrentCategory() {
-        console.log('=== VALIDATING CURRENT CATEGORY ===');
         
         const validationErrors = [];
         let hasErrors = false;
@@ -1784,35 +1633,25 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // ✅ HANYA VALIDASI PERTANYAAN YANG VISIBLE DAN TIDAK DISABLED
         const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
         
         visibleQuestions.forEach((questionContainer, index) => {
             const questionId = questionContainer.id.replace('question-', '');
             const questionTitle = questionContainer.querySelector('h5').textContent.trim();
             
-            // ✅ CEK APAKAH PERTANYAAN CONDITIONAL DAN TIDAK VISIBLE
             const isConditional = questionContainer.classList.contains('conditional-question');
             const isCurrentlyVisible = questionContainer.style.display !== 'none';
             
-            console.log(`Validating question ${index + 1}: ${questionId}`, {
-                isConditional,
-                isCurrentlyVisible,
-                displayStyle: questionContainer.style.display
-            });
+        
             
-            // ✅ SKIP VALIDASI JIKA PERTANYAAN CONDITIONAL DAN TIDAK VISIBLE
             if (isConditional && !isCurrentlyVisible) {
-                console.log(`Skipping validation for conditional question ${questionId} - not visible`);
                 return;
             }
             
-            // ✅ CEK APAKAH ADA INPUT YANG DISABLED (CONDITIONAL YANG TIDAK AKTIF)
             const allInputs = questionContainer.querySelectorAll('input, select, textarea');
             const hasDisabledInputs = Array.from(allInputs).some(input => input.disabled);
             
             if (hasDisabledInputs) {
-                console.log(`Skipping validation for question ${questionId} - has disabled inputs`);
                 return;
             }
             
@@ -1820,7 +1659,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const isRequired = true;
             
             if (!isRequired) {
-                console.log(`Question ${questionId} is not required, skipping validation`);
                 return;
             }
             
@@ -1879,7 +1717,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 isAnswered = checkedBoxes.length > 0;
                 errorMessage = 'Minimal satu pilihan harus dipilih';
                 
-                // ✅ TAMBAHAN: Validasi "other" fields untuk multiple choice
                 if (isAnswered) {
                     let allOtherFieldsValid = true;
                     
@@ -1923,13 +1760,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            console.log(`Question ${questionId} validation result:`, {
-                isRequired,
-                isAnswered,
-                errorMessage,
-                isConditional,
-                isCurrentlyVisible
-            });
+        
             
             if (isRequired && !isAnswered) {
                 hasErrors = true;
@@ -1948,7 +1779,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         if (hasErrors) {
-            console.log('Validation failed:', validationErrors);
             
             // Scroll to first error
             const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
@@ -1965,11 +1795,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         }
         
-        console.log('Validation passed!');
         return true;
     }
 
-    // ✅ TAMBAHKAN FUNCTION ALERT VALIDASI
     function showValidationAlert(errors) {
         // Remove existing alert
         const existingAlert = document.getElementById('validation-alert');

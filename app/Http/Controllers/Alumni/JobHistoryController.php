@@ -51,7 +51,6 @@ public function store(Request $request)
 
     $alumni = auth()->user()->alumni;
     
-    // ✅ VALIDASI BARU: Cek jika mencentang "sedang bekerja" tapi status bukan "bekerja"
     if ($request->has('is_current') && $alumni->status !== 'bekerja') {
         // Auto-update status alumni ke "bekerja" jika mencentang sedang bekerja
         $alumni->update(['status' => 'bekerja']);
@@ -101,7 +100,6 @@ public function store(Request $request)
 
     $message = 'Riwayat kerja berhasil ditambahkan.';
     
-    // ✅ TAMBAHAN: Notifikasi jika status berubah otomatis
     if (session('status_updated')) {
         $message .= ' Status profil Anda telah diperbarui otomatis menjadi "Bekerja" karena Anda sedang bekerja.';
     }
@@ -134,7 +132,6 @@ public function update(Request $request, Tb_jobhistory $jobHistory)
 
     $alumni = auth()->user()->alumni;
     
-    // ✅ VALIDASI BARU: Cek jika mencentang "sedang bekerja" tapi status bukan "bekerja"
     if ($request->has('is_current') && $alumni->status !== 'bekerja') {
         // Auto-update status alumni ke "bekerja" jika mencentang sedang bekerja
         $alumni->update(['status' => 'bekerja']);
@@ -173,7 +170,6 @@ public function update(Request $request, Tb_jobhistory $jobHistory)
 
     $message = 'Riwayat kerja berhasil diperbarui.';
     
-    // ✅ TAMBAHAN: Notifikasi jika status berubah otomatis
     if (session('status_updated')) {
         $message .= ' Status profil Anda telah diperbarui otomatis menjadi "Bekerja" karena Anda sedang bekerja.';
     }

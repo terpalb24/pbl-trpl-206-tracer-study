@@ -125,19 +125,19 @@ class Tb_Periode extends Model
             
             $completedCount++;
             
-            \Log::info('Auto-completed draft answer due to periode expiry', [
-                'user_answer_id' => $userAnswer->id_user_answer,
-                'periode_id' => $this->id_periode,
-                'user_id' => $userAnswer->id_user,
-                'nim' => $userAnswer->nim ?? 'N/A'
-            ]);
+            // \Log::info('Auto-completed draft answer due to periode expiry', [
+            //     'user_answer_id' => $userAnswer->id_user_answer,
+            //     'periode_id' => $this->id_periode,
+            //     'user_id' => $userAnswer->id_user,
+            //     'nim' => $userAnswer->nim ?? 'N/A'
+            // ]);
         }
         
         if ($completedCount > 0) {
-            \Log::info("Auto-completed {$completedCount} draft answers for expired periode", [
-                'periode_id' => $this->id_periode,
-                'periode_name' => $this->periode_name ?? "Periode #{$this->id_periode}"
-            ]);
+            // \Log::info("Auto-completed {$completedCount} draft answers for expired periode", [
+            //     'periode_id' => $this->id_periode,
+            //     'periode_name' => $this->periode_name ?? "Periode #{$this->id_periode}"
+            // ]);
         }
         
         return $completedCount;

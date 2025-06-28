@@ -185,12 +185,12 @@ class QuestionnaireImportExportController extends Controller
                     ];
 
                     // Add logging for debugging
-                    Log::info("Importing question", [
-                        'question_text' => $questionData['question'],
-                        'type' => $questionData['type'],
-                        'before_text' => $questionData['before_text'],
-                        'after_text' => $questionData['after_text']
-                    ]);
+                    // Log::info("Importing question", [
+                    //     'question_text' => $questionData['question'],
+                    //     'type' => $questionData['type'],
+                    //     'before_text' => $questionData['before_text'],
+                    //     'after_text' => $questionData['after_text']
+                    // ]);
 
                     // Create question with proper before/after text
                     $question = Tb_Questions::create($questionData);
@@ -205,12 +205,12 @@ class QuestionnaireImportExportController extends Controller
                         $otherBeforeTexts = $rowData[13] ? array_filter(explode('|', $rowData[13])) : []; // other before texts
                         $otherAfterTexts = $rowData[14] ? array_filter(explode('|', $rowData[14])) : []; // other after texts
 
-                        Log::info('Processing options', [
-                            'options' => $options,
-                            'otherIndexes' => $otherIndexes,
-                            'otherBeforeTexts' => $otherBeforeTexts,
-                            'otherAfterTexts' => $otherAfterTexts
-                        ]);
+                        // Log::info('Processing options', [
+                        //     'options' => $options,
+                        //     'otherIndexes' => $otherIndexes,
+                        //     'otherBeforeTexts' => $otherBeforeTexts,
+                        //     'otherAfterTexts' => $otherAfterTexts
+                        // ]);
 
                         $optionIndex = 1;
                         foreach ($options as $idx => $optionText) {
@@ -235,13 +235,13 @@ class QuestionnaireImportExportController extends Controller
                                 'other_after_text' => $afterText
                             ]);
 
-                            Log::info('Created option', [
-                                'option' => $optionText,
-                                'order' => $optionIndex,
-                                'is_other' => $isOther,
-                                'before_text' => $beforeText,
-                                'after_text' => $afterText
-                            ]);
+                            // Log::info('Created option', [
+                            //     'option' => $optionText,
+                            //     'order' => $optionIndex,
+                            //     'is_other' => $isOther,
+                            //     'before_text' => $beforeText,
+                            //     'after_text' => $afterText
+                            // ]);
                             
                             $optionIndex++;
                         }
@@ -290,12 +290,12 @@ class QuestionnaireImportExportController extends Controller
                                 'depends_value' => $dependsValueId
                             ]);
 
-                            Log::info("Updated question dependency", [
-                                'question_id' => $question->id_question,
-                                'depends_on' => $parentQuestion->id_question,
-                                'depends_value_text' => $dependsOnValue,
-                                'depends_value_id' => $dependsValueId
-                            ]);
+                            // Log::info("Updated question dependency", [
+                            //     'question_id' => $question->id_question,
+                            //     'depends_on' => $parentQuestion->id_question,
+                            //     'depends_value_text' => $dependsOnValue,
+                            //     'depends_value_id' => $dependsValueId
+                            // ]);
                         }
                     }
                 }
@@ -394,12 +394,12 @@ class QuestionnaireImportExportController extends Controller
                 ];
 
                 // Add debug logging
-                Log::info("Exporting question", [
-                    'question_id' => $question->id_question,
-                    'type' => $question->type,
-                    'before_text' => $question->before_text,
-                    'after_text' => $question->after_text
-                ]);
+                // Log::info("Exporting question", [
+                //     'question_id' => $question->id_question,
+                //     'type' => $question->type,
+                //     'before_text' => $question->before_text,
+                //     'after_text' => $question->after_text
+                // ]);
 
                 $sheet->fromArray([$questionData], NULL, 'A' . $row);
                 $row++;

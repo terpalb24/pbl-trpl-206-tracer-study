@@ -1020,7 +1020,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // SIMPLIFIED Form submission handler - minimal validation
     if (form) {
         form.addEventListener('submit', function(e) {
-            console.log('Form submitting with question type:', questionType.value);
             
             // Only validate if question type is selected
             if (!questionType.value) {
@@ -1063,7 +1062,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
             // REMOVED dependency validation - let backend handle it
             
-            console.log('Form validation passed, submitting...');
             return true; // Allow form to submit
         });
     }
@@ -1098,12 +1096,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (this.value === 'rating') {
                 if (sections.rating) {
                     sections.rating.classList.remove('hidden');
-                    console.log('Rating section shown');
                 }
             } else if (this.value === 'scale') {
                 if (sections.scale) {
                     sections.scale.classList.remove('hidden');
-                    console.log('Scale section shown');
                 }
             } else if (this.value === 'text') {
                 if (sections.text) {
@@ -1129,7 +1125,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 visibleInputs.forEach(input => input.removeAttribute('required'));
             }
             
-            console.log('Question type changed to:', this.value);
         });
     }
     // ===== ENHANCED ALERT FUNCTION =====
@@ -1355,7 +1350,6 @@ document.addEventListener('DOMContentLoaded', function() {
             optionIndex++;
         });
         
-        // ✅ PERBAIKAN: Enhanced Remove option functionality
         optionsContainer.addEventListener('click', function(e) {
             if (e.target.classList.contains('remove-option') || e.target.closest('.remove-option')) {
                 const optionItem = e.target.closest('.option-item');
@@ -1402,7 +1396,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // ✅ PERBAIKAN: Initialize previews for existing options
     document.querySelectorAll('[id^="other_config_"]').forEach(config => {
         const index = config.id.replace('other_config_', '');
         updateOtherPreview(index);
@@ -1469,7 +1462,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 dependsValueSelect.appendChild(optionEl);
             });
             
-            console.log(`✅ Populated ${questionOptionsMap[questionId].length} dependency options`);
         } else {
             const noOptionEl = document.createElement('option');
             noOptionEl.value = '';
@@ -1526,7 +1518,6 @@ window.toggleOtherConfig = function(checkbox) {
     if (configDiv) {
         configDiv.classList.toggle('hidden', !checkbox.checked);
         
-        // ✅ PERBAIKAN: Clear before/after text when hiding
         if (!checkbox.checked) {
             const beforeInput = configDiv.querySelector(`input[name="other_before_text[${index}]"]`);
             const afterInput = configDiv.querySelector(`input[name="other_after_text[${index}]"]`);
@@ -1537,7 +1528,6 @@ window.toggleOtherConfig = function(checkbox) {
     }
 };
 
-// ✅ PERBAIKAN: Enhanced dependency handling
 const toggleConditional = document.getElementById('has_dependency');
 const conditionalOptions = document.getElementById('conditional-options');
 const dependsOnSelect = document.getElementById('depends_on_select');
@@ -1547,7 +1537,6 @@ if (toggleConditional && conditionalOptions) {
     toggleConditional.addEventListener('change', function() {
         conditionalOptions.classList.toggle('hidden', !this.checked);
         
-        console.log('Dependency checkbox changed:', this.checked);
         
         // Reset dependency selects when unchecked
         if (!this.checked) {
@@ -1565,7 +1554,6 @@ if (toggleConditional && conditionalOptions) {
     });
 }
 
-// ✅ PERBAIKAN: Question options mapping for dependencies
 const questionOptionsMap = {};
 @foreach($availableQuestions as $q)
     @if(in_array($q->type, ['option', 'multiple', 'rating', 'scale']) && $q->options->count() > 0)
@@ -1580,7 +1568,6 @@ const questionOptionsMap = {};
     @endif
 @endforeach
 
-// ✅ PERBAIKAN: Populate depends value options
 function populateDependsValueOptions(questionId, selectedValue = null) {
     if (!dependsValueSelect) return;
     
@@ -1597,7 +1584,6 @@ function populateDependsValueOptions(questionId, selectedValue = null) {
             dependsValueSelect.appendChild(optionEl);
         });
         
-        console.log(`Populated ${questionOptionsMap[questionId].length} options for question ${questionId}`);
     } else {
         // If no options available, show message
         const noOptionEl = document.createElement('option');
@@ -1606,14 +1592,11 @@ function populateDependsValueOptions(questionId, selectedValue = null) {
         noOptionEl.disabled = true;
         dependsValueSelect.appendChild(noOptionEl);
         
-        console.log(`No options available for question ${questionId}`);
     }
 }
 
-// ✅ PERBAIKAN: On depends_on change
 if (dependsOnSelect && dependsValueSelect) {
     dependsOnSelect.addEventListener('change', function() {
-        console.log('Depends on changed to:', this.value);
         populateDependsValueOptions(this.value, null);
         
         // Update hidden field
@@ -1624,10 +1607,8 @@ if (dependsOnSelect && dependsValueSelect) {
     });
 }
 
-// ✅ PERBAIKAN: On depends_value change
 if (dependsValueSelect) {
     dependsValueSelect.addEventListener('change', function() {
-        console.log('Depends value changed to:', this.value);
         
         // Update hidden field
         const hiddenDependsValue = document.getElementById('hidden_depends_value');
@@ -1637,7 +1618,6 @@ if (dependsValueSelect) {
     });
 }
 
-// ✅ PERBAIKAN: Form submission validation
 const form = document.querySelector('form');
 if (form) {
     form.addEventListener('submit', function(e) {
@@ -1666,24 +1646,18 @@ if (form) {
             hiddenDependsOn.value = dependsOnSelect.value;
             hiddenDependsValue.value = dependsValueSelect.value;
             
-            console.log('Dependency enabled:', {
-                depends_on: dependsOnSelect.value,
-                depends_value: dependsValueSelect.value
-            });
+            
         } else {
             // Dependency is disabled, clear the hidden fields
             hiddenDependsOn.value = '';
             hiddenDependsValue.value = '';
             
-            console.log('Dependency disabled, clearing values');
         }
         
-        console.log('Form validation passed, submitting...');
         return true;
     });
 }
 
-// ✅ PERBAIKAN: Enhanced form handling with before/after text
 document.addEventListener('DOMContentLoaded', function() {
     const questionTypeSelect = document.getElementById('question_type');
     
@@ -1713,10 +1687,7 @@ document.addEventListener('DOMContentLoaded', function() {
         finalBeforeText.value = beforeValue;
         finalAfterText.value = afterValue;
         
-        console.log('Updated hidden fields for', questionType, ':', {
-            before: beforeValue,
-            after: afterValue
-        });
+        
     }
 
     // Handle question type change
@@ -1750,12 +1721,10 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (this.value === 'rating') {
                 if (sections.rating) {
                     sections.rating.classList.remove('hidden');
-                    console.log('Rating section shown');
                 }
             } else if (this.value === 'scale') {
                 if (sections.scale) {
                     sections.scale.classList.remove('hidden');
-                    console.log('Scale section shown');
                 }
             } else if (this.value === 'text') {
                 if (sections.text) {
@@ -1784,7 +1753,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update hidden fields when question type changes
             updateHiddenFields(this.value);
             
-            console.log('Question type changed to:', this.value);
         });
     }
     
@@ -1855,11 +1823,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle form submission to ensure hidden fields are updated
     document.querySelector('form').addEventListener('submit', function() {
         updateHiddenFields(questionTypeSelect.value);
-        console.log('Form submitting with before/after text:', {
-            question_type: questionTypeSelect.value,
-            before_text: document.getElementById('final_before_text').value,
-            after_text: document.getElementById('final_after_text').value
-        });
+       
     });
 });
 </script>

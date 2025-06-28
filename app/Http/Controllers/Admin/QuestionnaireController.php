@@ -35,13 +35,11 @@ class QuestionnaireController extends Controller
         
         $query = Tb_Periode::with('categories');
 
-        // ✅ PERBAIKAN: Filter berdasarkan tahun dibuat - handle empty values
         if ($request->filled('year') && $request->get('year') !== '' && $request->get('year') !== null) {
             $year = $request->get('year');
             $query->whereYear('created_at', $year);
         }
 
-        // ✅ PERBAIKAN: Filter berdasarkan status - handle empty values
         if ($request->filled('status') && $request->get('status') !== '' && $request->get('status') !== null) {
             $status = $request->get('status');
             $query->where('status', $status);
@@ -338,11 +336,11 @@ class QuestionnaireController extends Controller
             
             DB::commit();
             
-            Log::info('Periode questionnaire deleted successfully', [
-                'periode_id' => $id_periode,
-                'periode_name' => $periode->periode_name,
-                'deleted_by' => Auth::id()
-            ]);
+            // Log::info('Periode questionnaire deleted successfully', [
+            //     'periode_id' => $id_periode,
+            //     'periode_name' => $periode->periode_name,
+            //     'deleted_by' => Auth::id()
+            // ]);
             
             return redirect()->route('admin.questionnaire.index')
                 ->with('success', 'Periode kuesioner berhasil dihapus.');
@@ -527,7 +525,6 @@ class QuestionnaireController extends Controller
                 'question' => 'required|string|max:1000',
                 'question_type' => 'required|in:text,option,multiple,rating,scale,date,location,numeric,email',
                 'order' => 'required|integer|min:1',
-                // ✅ PERBAIKAN: Tambahkan validation untuk before/after text question
                 'before_text' => 'nullable|string|max:255',
                 'after_text' => 'nullable|string|max:255',
                 'has_dependency' => 'nullable|boolean',
@@ -579,21 +576,21 @@ class QuestionnaireController extends Controller
 
             $validated = $request->validate($rules, $messages);
             
-            \Log::info('Create Question - Validated data', [
-                'question_type' => $questionType,
-                'question' => $validated['question'],
-                'before_text' => $validated['before_text'] ?? null,
-                'after_text' => $validated['after_text'] ?? null,
-                'options' => $validated['options'] ?? null,
-                'other_options' => $validated['other_options'] ?? null,
-                'other_before_text' => $validated['other_before_text'] ?? null,
-                'other_after_text' => $validated['other_after_text'] ?? null,
-                'has_dependency' => $validated['has_dependency'] ?? null,
-                'depends_on' => $validated['depends_on'] ?? null,
-                'depends_value' => $validated['depends_value'] ?? null,
-                'hidden_depends_on' => $validated['hidden_depends_on'] ?? null,
-                'hidden_depends_value' => $validated['hidden_depends_value'] ?? null
-            ]);
+            // \Log::info('Create Question - Validated data', [
+            //     'question_type' => $questionType,
+            //     'question' => $validated['question'],
+            //     'before_text' => $validated['before_text'] ?? null,
+            //     'after_text' => $validated['after_text'] ?? null,
+            //     'options' => $validated['options'] ?? null,
+            //     'other_options' => $validated['other_options'] ?? null,
+            //     'other_before_text' => $validated['other_before_text'] ?? null,
+            //     'other_after_text' => $validated['other_after_text'] ?? null,
+            //     'has_dependency' => $validated['has_dependency'] ?? null,
+            //     'depends_on' => $validated['depends_on'] ?? null,
+            //     'depends_value' => $validated['depends_value'] ?? null,
+            //     'hidden_depends_on' => $validated['hidden_depends_on'] ?? null,
+            //     'hidden_depends_value' => $validated['hidden_depends_value'] ?? null
+            // ]);
 
             // Handle dependencies properly
             $dependsOn = null;
@@ -604,13 +601,11 @@ class QuestionnaireController extends Controller
                 $dependsValue = $request->input('hidden_depends_value') ?: $request->input('depends_value');
             }
 
-            // ✅ PERBAIKAN: Create the question dengan before/after text
             $question = Tb_Questions::create([
                 'id_category' => $id_category,
                 'question' => $validated['question'],
                 'type' => $validated['question_type'],
                 'order' => $validated['order'],
-                // ✅ PERBAIKAN: Simpan before/after text untuk question input
                 'before_text' => $validated['before_text'] ?? null,
                 'after_text' => $validated['after_text'] ?? null,
                 'depends_on' => $dependsOn,
@@ -619,13 +614,13 @@ class QuestionnaireController extends Controller
                 'scale_max_label' => $validated['scale_max_label'] ?? null
             ]);
 
-            \Log::info('Question created successfully', [
-                'question_id' => $question->id_question,
-                'question_text' => $question->question,
-                'before_text' => $question->before_text,
-                'after_text' => $question->after_text,
-                'type' => $question->type
-            ]);
+            // \Log::info('Question created successfully', [
+            //     'question_id' => $question->id_question,
+            //     'question_text' => $question->question,
+            //     'before_text' => $question->before_text,
+            //     'after_text' => $question->after_text,
+            //     'type' => $question->type
+            // ]);
 
             // Handle options for option/multiple types
             if (($questionType === 'option' || $questionType === 'multiple') && isset($validated['options'])) {
@@ -644,13 +639,13 @@ class QuestionnaireController extends Controller
                                 trim($validated['other_after_text'][$index]) : null;
                         }
                         
-                        \Log::info('Creating option with before/after text', [
-                            'option_index' => $index,
-                            'option_text' => trim($optionText),
-                            'is_other_option' => $isOtherOption,
-                            'other_before_text' => $otherBeforeText,
-                            'other_after_text' => $otherAfterText
-                        ]);
+                        // \Log::info('Creating option with before/after text', [
+                        //     'option_index' => $index,
+                        //     'option_text' => trim($optionText),
+                        //     'is_other_option' => $isOtherOption,
+                        //     'other_before_text' => $otherBeforeText,
+                        //     'other_after_text' => $otherAfterText
+                        // ]);
                         
                         Tb_Question_Options::create([
                             'id_question' => $question->id_question,
@@ -732,14 +727,14 @@ class QuestionnaireController extends Controller
      */
     public function updateQuestion(Request $request, $id_periode, $id_category, $id_question)
     {
-        Log::info('=== Question Update Request Debug ===', [
-            'all_data' => $request->all(),
-            'question_type' => $request->input('question_type'),
-            'options' => $request->input('options', []),
-            'rating_options' => $request->input('rating_options', []),
-            'scale_options' => $request->input('scale_options', []),
-            'has_dependency' => $request->input('has_dependency'),
-        ]);
+        // Log::info('=== Question Update Request Debug ===', [
+        //     'all_data' => $request->all(),
+        //     'question_type' => $request->input('question_type'),
+        //     'options' => $request->input('options', []),
+        //     'rating_options' => $request->input('rating_options', []),
+        //     'scale_options' => $request->input('scale_options', []),
+        //     'has_dependency' => $request->input('has_dependency'),
+        // ]);
 
         try {
             $questionType = $request->input('question_type');
@@ -828,7 +823,7 @@ class QuestionnaireController extends Controller
                 $updateData['depends_value'] = null;
             }
             
-            Log::info('Updating question with data:', $updateData);
+            // Log::info('Updating question with data:', $updateData);
             
             $question->update($updateData);
             
@@ -851,11 +846,11 @@ class QuestionnaireController extends Controller
                     $options = $request->input('options', []);
                 }
                 
-                Log::info('Processing updated options:', [
-                    'question_type' => $validated['question_type'],
-                    'options' => $options,
-                    'other_options' => $otherOptions
-                ]);
+                // Log::info('Processing updated options:', [
+                //     'question_type' => $validated['question_type'],
+                //     'options' => $options,
+                //     'other_options' => $otherOptions
+                // ]);
                 
                 foreach ($options as $index => $optionText) {
                     if (!empty(trim($optionText))) {
@@ -872,7 +867,7 @@ class QuestionnaireController extends Controller
                             'other_after_text' => $otherAfterText,
                         ];
                         
-                        Log::info('Creating updated option:', $optionData);
+                        // Log::info('Creating updated option:', $optionData);
                         
                         Tb_Question_Options::create($optionData);
                     }
@@ -884,7 +879,7 @@ class QuestionnaireController extends Controller
             
             DB::commit();
             
-            Log::info('Question updated successfully');
+            // Log::info('Question updated successfully');
             
             return redirect()->route('admin.questionnaire.show', $id_periode)
                 ->with('success', 'Pertanyaan berhasil diperbarui.');
@@ -1016,11 +1011,9 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Belum ada pertanyaan untuk periode ini.');
         }
         
-        // ✅ PERBAIKAN: Get user answers with proper user type detection
         $query = Tb_User_Answers::where('id_periode', $id_periode)
             ->with(['user.alumni.studyProgram', 'user.company']);
 
-        // ✅ PERBAIKAN: Apply user type filter yang lebih akurat
         if ($request->has('filter') && $request->get('filter') !== '') {
             $filter = $request->get('filter');
             if ($filter === 'alumni') {
@@ -1050,7 +1043,6 @@ class QuestionnaireController extends Controller
             ->paginate(10)
             ->appends($request->except('page'));
 
-        // ✅ PERBAIKAN: Add proper display name and user type for each user answer
         foreach ($userAnswers as $answer) {
             $user = $answer->user;
             $alumni = $user ? $user->alumni : null;
@@ -1085,7 +1077,6 @@ class QuestionnaireController extends Controller
             }
         }
         
-        // ✅ PERBAIKAN: Get category statistics for this period
         $categoryStats = [
             'alumni_categories' => Tb_Category::where('id_periode', $id_periode)
                 ->whereIn('for_type', ['alumni', 'both'])
@@ -1104,7 +1095,6 @@ class QuestionnaireController extends Controller
      */
     public function responseDetail($id_periode, $id_user_answer)
     {
-        // ✅ PERBAIKAN: Get periode first
         $periode = Tb_Periode::findOrFail($id_periode);
         
         // Get the user answer with relationships
@@ -1113,7 +1103,6 @@ class QuestionnaireController extends Controller
             ->with(['user', 'periode'])
             ->firstOrFail();
         
-        // ✅ PERBAIKAN: Determine user type and get appropriate data
         $userData = null;
         $userType = null;
         
@@ -1136,18 +1125,17 @@ class QuestionnaireController extends Controller
             }
         }
         
-        \Log::info('Response Detail - User Type Detection', [
-            'user_answer_id' => $id_user_answer,
-            'user_id' => $userAnswer->user->id_user ?? 'unknown',
-            'user_role' => $userAnswer->user->role ?? 'unknown',
-            'has_alumni_relation' => $alumni ? true : false,
-            'has_company_relation' => $company ? true : false,
-            'determined_user_type' => $userType,
-            'alumni_name' => $alumni->name ?? null,
-            'company_name' => $company->company_name ?? null
-        ]);
+        // \Log::info('Response Detail - User Type Detection', [
+        //     'user_answer_id' => $id_user_answer,
+        //     'user_id' => $userAnswer->user->id_user ?? 'unknown',
+        //     'user_role' => $userAnswer->user->role ?? 'unknown',
+        //     'has_alumni_relation' => $alumni ? true : false,
+        //     'has_company_relation' => $company ? true : false,
+        //     'determined_user_type' => $userType,
+        //     'alumni_name' => $alumni->name ?? null,
+        //     'company_name' => $company->company_name ?? null
+        // ]);
         
-        // ✅ PERBAIKAN: Get categories for this period - filter based on user type
         $categories = Tb_Category::where('id_periode', $id_periode)
             ->where(function($query) use ($userType) {
                 if ($userType === 'alumni') {
@@ -1161,19 +1149,17 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get()
             ->filter(function($category) use ($alumni) {
-                // ✅ TAMBAHAN: Filter berdasarkan status dependency seperti di fill questionnaire
                 return $category->isAccessibleByAlumni($alumni);
             })
             ->values(); 
         
-        \Log::info('Response Detail - Categories Filter', [
-            'user_type' => $userType,
-            'total_categories_for_period' => Tb_Category::where('id_periode', $id_periode)->count(),
-            'filtered_categories_count' => $categories->count(),
-            'filtered_categories' => $categories->pluck('category_name', 'for_type')->toArray()
-        ]);
+        // \Log::info('Response Detail - Categories Filter', [
+        //     'user_type' => $userType,
+        //     'total_categories_for_period' => Tb_Category::where('id_periode', $id_periode)->count(),
+        //     'filtered_categories_count' => $categories->count(),
+        //     'filtered_categories' => $categories->pluck('category_name', 'for_type')->toArray()
+        // ]);
         
-        // ✅ PERBAIKAN: Prepare questions with answers data structure (GUNAKAN LOGIC YANG SAMA DENGAN COMPANY CONTROLLER)
         $questionsWithAnswers = [];
         
         foreach ($categories as $category) {
@@ -1186,12 +1172,10 @@ class QuestionnaireController extends Controller
             $questionArray = [];
             
             foreach ($questions as $question) {
-                // ✅ PERBAIKAN: Get answer items for this question
                 $answerItems = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
                     ->where('id_question', $question->id_question)
                     ->get();
                 
-                // ✅ PERBAIKAN: Use the same processing logic as company controller
                 $processedAnswerData = $this->processAnswersForDisplay($question, $answerItems);
                 
                 $questionData = [
@@ -1214,31 +1198,29 @@ class QuestionnaireController extends Controller
             }
         }
         
-        // ✅ DEBUGGING: Log final data structure
-        if (config('app.debug')) {
-            \Log::info('Response detail data prepared', [
-                'user_type' => $userType,
-                'categories_count' => count($questionsWithAnswers),
-                'categories_shown' => collect($questionsWithAnswers)->pluck('category.category_name')->toArray(),
-                'sample_questions_with_answers' => collect($questionsWithAnswers)->take(1)->map(function($cat) {
-                    return [
-                        'category' => $cat['category']->category_name,
-                        'questions_count' => count($cat['questions']),
-                        'sample_questions' => collect($cat['questions'])->take(2)->map(function($q) {
-                            return [
-                                'question_id' => $q['question']->id_question,
-                                'question_type' => $q['question']->type,
-                                'has_answer' => $q['hasAnswer'],
-                                'answer' => $q['answer'],
-                                'multiple_answers' => $q['multipleAnswers']
-                            ];
-                        })->toArray()
-                    ];
-                })->toArray()
-            ]);
-        }
+        // if (config('app.debug')) {
+        //     \Log::info('Response detail data prepared', [
+        //         'user_type' => $userType,
+        //         'categories_count' => count($questionsWithAnswers),
+        //         'categories_shown' => collect($questionsWithAnswers)->pluck('category.category_name')->toArray(),
+        //         'sample_questions_with_answers' => collect($questionsWithAnswers)->take(1)->map(function($cat) {
+        //             return [
+        //                 'category' => $cat['category']->category_name,
+        //                 'questions_count' => count($cat['questions']),
+        //                 'sample_questions' => collect($cat['questions'])->take(2)->map(function($q) {
+        //                     return [
+        //                         'question_id' => $q['question']->id_question,
+        //                         'question_type' => $q['question']->type,
+        //                         'has_answer' => $q['hasAnswer'],
+        //                         'answer' => $q['answer'],
+        //                         'multiple_answers' => $q['multipleAnswers']
+        //                     ];
+        //                 })->toArray()
+        //             ];
+        //         })->toArray()
+        //     ]);
+        // }
         
-        // ✅ PERBAIKAN: Pass semua variabel yang diperlukan ke view
         return view('admin.questionnaire.response-detail', compact(
             'periode',              
             'userAnswer',
@@ -1279,7 +1261,6 @@ class QuestionnaireController extends Controller
             case 'option':
                 $firstAnswer = $answers->first();
                 
-                // ✅ PERBAIKAN: Cek apakah ada id_questions_options
                 if ($firstAnswer->id_questions_options) {
                     $option = Tb_Question_Options::find($firstAnswer->id_questions_options);
                     if ($option) {
@@ -1294,7 +1275,6 @@ class QuestionnaireController extends Controller
                         $result['answer'] = $firstAnswer->answer;
                     }
                 } else {
-                    // ✅ PERBAIKAN: Jika tidak ada id_questions_options, coba cari berdasarkan answer value
                     if (is_numeric($firstAnswer->answer)) {
                         // Kemungkinan answer berisi ID option
                         $option = Tb_Question_Options::find($firstAnswer->answer);
@@ -1318,7 +1298,6 @@ class QuestionnaireController extends Controller
             case 'rating':
                 $firstAnswer = $answers->first();
                 
-                // ✅ PERBAIKAN: Sama seperti option, pastikan menampilkan text bukan ID
                 if ($firstAnswer->id_questions_options) {
                     $ratingOption = Tb_Question_Options::find($firstAnswer->id_questions_options);
                     if ($ratingOption) {
@@ -1365,7 +1344,6 @@ class QuestionnaireController extends Controller
 
             case 'multiple':
                 foreach ($answers as $answer) {
-                    // ✅ PERBAIKAN: Pastikan multiple choice menampilkan text option
                     if ($answer->id_questions_options) {
                         $option = Tb_Question_Options::find($answer->id_questions_options);
                         if ($option) {
@@ -1379,7 +1357,6 @@ class QuestionnaireController extends Controller
                             $result['multipleAnswers'][] = $answer->answer;
                         }
                     } else {
-                        // ✅ PERBAIKAN: Jika tidak ada id_questions_options, cek apakah answer berisi ID
                         if (is_numeric($answer->answer)) {
                             $option = Tb_Question_Options::find($answer->answer);
                             if ($option) {
@@ -1419,19 +1396,18 @@ class QuestionnaireController extends Controller
                 break;
         }
 
-        // ✅ DEBUG: Log hasil untuk debugging
-        if (config('app.debug')) {
-            \Log::debug('processAnswersForDisplay result', [
-                'question_id' => $question->id_question,
-                'question_type' => $question->type,
-                'raw_answers_count' => $answers->count(),
-                'processed_result' => [
-                    'answer' => $result['answer'],
-                    'multipleAnswers' => $result['multipleAnswers'],
-                    'otherAnswer' => $result['otherAnswer']
-                ]
-            ]);
-        }
+        // if (config('app.debug')) {
+        //     \Log::debug('processAnswersForDisplay result', [
+        //         'question_id' => $question->id_question,
+        //         'question_type' => $question->type,
+        //         'raw_answers_count' => $answers->count(),
+        //         'processed_result' => [
+        //             'answer' => $result['answer'],
+        //             'multipleAnswers' => $result['multipleAnswers'],
+        //             'otherAnswer' => $result['otherAnswer']
+        //         ]
+        //     ]);
+        // }
 
         return $result;
     }

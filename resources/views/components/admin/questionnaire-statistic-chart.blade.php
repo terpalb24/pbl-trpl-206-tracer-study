@@ -196,7 +196,6 @@
                         <div class="text-center">
                             <div class="text-2xl font-bold text-orange-900">
                                 @php
-                                    // ✅ PERBAIKAN: Handle different data structures
                                     $totalResponders = 0;
                                     
                                     if (isset($questionnaireChartData['total_responders'])) {
@@ -367,7 +366,6 @@
                     @php
                         $categoryInfo = $categoryQuestions->first()['category'];
                         
-                        // ✅ PERBAIKAN: Hitung responden yang sudah menjawab pertanyaan dalam kategori ini
                         $questionIds = $categoryQuestions->pluck('question.id_question')->toArray();
                         
                         $categoryTotalResponses = 0;
@@ -1068,7 +1066,6 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 });
 
-// ✅ PERUBAHAN: Ganti handlePeriodeChange dengan handleYearChange
 function handleYearChange() {
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
@@ -1096,8 +1093,6 @@ function handleCategoryChange() {
     document.getElementById('questionnaire-filter-form').submit();
 }
 function handleStudyProgramChange() {
-    // ✅ PERBAIKAN: Mirip dengan handleUserTypeChange - reset category dan question
-    // tetapi pertahankan periode
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
     
@@ -1107,7 +1102,6 @@ function handleGraduationYearChange() {
     // Hanya submit tanpa reset apapun - untuk perubahan graduation year saja
     document.getElementById('questionnaire-filter-form').submit();
 }
-// ✅ ALTERNATIF: Buat function yang lebih spesifik
 function handleStudyProgramChangeOnly() {
     // Hanya submit tanpa reset apapun - untuk perubahan program studi saja
     document.getElementById('questionnaire-filter-form').submit();

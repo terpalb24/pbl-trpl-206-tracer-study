@@ -196,7 +196,6 @@
             endDateSection.style.display = isCurrent.checked ? 'none' : '';
         }
 
-        // ✅ TAMBAHAN: Konfirmasi jika status akan berubah
         const alumniStatus = '{{ $alumni->status }}';
         
         isCurrent.addEventListener('change', function() {

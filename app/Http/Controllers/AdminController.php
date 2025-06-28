@@ -13,7 +13,6 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use App\Models\Tb_Company;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
-// ✅ TAMBAHAN: Import model yang diperlukan untuk questionnaire statistics
 use App\Models\Tb_Periode;
 use App\Models\Tb_Category;
 use App\Models\Tb_Questions;
@@ -96,7 +95,6 @@ class AdminController extends Controller
             ->pluck('avg_salary', 'id_study')
             ->toArray();
 
-        // ✅ TAMBAHAN: Questionnaire Statistics
         $questionnaireStats = $this->getQuestionnaireStatistics($request);
         
         return view('admin.dashboard', array_merge([
@@ -862,7 +860,6 @@ class AdminController extends Controller
         $selectedStudyProgram = $request->input('questionnaire_study_program');
         $selectedGraduationYear = $request->input('questionnaire_graduation_year');
         
-        // ✅ PERUBAHAN BESAR: Get available years instead of periods
         $availableYears = Tb_Periode::select(DB::raw('YEAR(start_date) as year'))
             ->distinct()
             ->orderBy('year', 'desc')
@@ -874,7 +871,6 @@ class AdminController extends Controller
             $selectedYear = $availableYears[0];
         }
         
-        // ✅ Get all periods in selected year
         $periodsInYear = collect();
         if ($selectedYear) {
             $periodsInYear = Tb_Periode::whereYear('start_date', $selectedYear)
@@ -883,10 +879,8 @@ class AdminController extends Controller
                 ->get();
         }
         
-        // ✅ TAMBAHAN: Get available study programs
         $availableStudyPrograms = Tb_study_program::orderBy('study_program')->get();
         
-        // ✅ TAMBAHAN: Get available graduation years based on selected year
         $availableGraduationYears = [];
         if ($selectedYear && $periodsInYear->count() > 0) {
             // Kombinasi dari semua periode dalam tahun tersebut
@@ -1062,7 +1056,7 @@ class AdminController extends Controller
             'availableQuestions' => $availableQuestions,
             'availableStudyPrograms' => $availableStudyPrograms,
             'availableGraduationYears' => $availableGraduationYears,
-            'selectedYear' => $selectedYear, // Changed from selectedPeriode
+            'selectedYear' => $selectedYear,
             'selectedUserType' => $selectedUserType,
             'selectedCategory' => $selectedCategory,
             'selectedQuestion' => $selectedQuestion,
@@ -1072,7 +1066,7 @@ class AdminController extends Controller
             'questionnaireLabels' => $questionnaireLabels,
             'questionnaireValues' => $questionnaireValues,
             'multipleQuestionData' => $multipleQuestionData,
-            'periodsInYear' => $periodsInYear // ✅ TAMBAHAN: Info periode dalam tahun
+            'periodsInYear' => $periodsInYear 
         ];
         return $result;
     }
@@ -1104,7 +1098,7 @@ class AdminController extends Controller
         $categories = $categoryQuery->orderBy('order')->get();
         $allQuestionsData = [];
         
-        \Log::info('Getting all questions from all categories in year: ' . $year . ', user type: ' . $userType . ', study program: ' . $studyProgramId . ', graduation year: ' . $graduationYear);
+        // \Log::info('Getting all questions from all categories in year: ' . $year . ', user type: ' . $userType . ', study program: ' . $studyProgramId . ', graduation year: ' . $graduationYear);
         
         $totalResponders = $this->getTotalRespondersInYear($year, $userType, $studyProgramId, $graduationYear);
         
@@ -1368,7 +1362,7 @@ class AdminController extends Controller
                         ];
                         
                     } catch (\Exception $e) {
-                        \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
+                        // \Log::error('Error getting statistics for question ' . $question->id_question . ': ' . $e->getMessage());
                         
                         $allQuestionsData[] = [
                             'question' => $question,

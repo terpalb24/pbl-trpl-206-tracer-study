@@ -17,6 +17,8 @@
     :languages="['en', 'id']" 
     theme="light" 
 />
+<!-- Google Translate Widget CSS -->
+<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
 <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4 py-10">
 
     <div class="flex flex-col-reverse lg:flex-row items-center w-full max-w-6xl mx-auto rounded-lg shadow-lg overflow-hidden bg-white">
@@ -109,7 +111,6 @@
         }
     }
 </script>
-<!-- Google Translate Widget CSS -->
-<link rel="stylesheet" href="{{ asset('css/translate-widget.css') }}">
+
 @endsection
 

@@ -706,12 +706,10 @@
         const submitButton = document.getElementById('submit-button');
         const questionType = '{{ $question->type }}';
         
-        console.log('Page loaded, question type:', questionType);
         
         // Form submission handler
         if (form) {
             form.addEventListener('submit', function(e) {
-                console.log('Form submit triggered');
                 
                 // Basic validation
                 const questionField = document.getElementById('question');
@@ -772,10 +770,7 @@
                     hiddenDependsOn.value = dependsOnSelect.value;
                     hiddenDependsValue.value = dependsValueSelect.value;
                     
-                    console.log('Dependency enabled:', {
-                        depends_on: dependsOnSelect.value,
-                        depends_value: dependsValueSelect.value
-                    });
+                  
                 } else {
                     // Dependency is disabled, clear the hidden fields
                     hiddenDependsOn.value = '';
@@ -783,10 +778,8 @@
                     dependsOnSelect.value = '';
                     dependsValueSelect.value = '';
                     
-                    console.log('Dependency disabled, clearing values');
                 }
                 
-                console.log('Form validation passed, submitting...');
                 return true;
             });
         }
