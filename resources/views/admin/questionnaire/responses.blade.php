@@ -108,7 +108,7 @@
         <!-- Responses Card -->
         <div class="bg-white rounded-lg sm:rounded-xl shadow-md overflow-hidden">
             <!-- Header with filters -->
-            <div class="p-3 sm:p-4 border-b border-gray-200">
+            <div class="hidden lg:block p-3 sm:p-4 border-b border-gray-200">
                 <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-3 lg:space-y-0">
                     <h2 class="text-base sm:text-lg font-semibold text-gray-700 flex items-center">
                         <i class="fas fa-users mr-2 text-blue-600"></i>
@@ -166,7 +166,7 @@
                     </div>
                 </div>
             </div>
-
+            
             <!-- Table - Desktop view -->
             <div class="hidden lg:block overflow-x-auto">
                 <table class="w-full text-sm text-left">
@@ -268,76 +268,142 @@
                     </tbody>
                 </table>
             </div>
-
-            <!-- Card view - Mobile/Tablet -->
-            <div class="lg:hidden space-y-3 p-3 sm:p-4">
-                @if(count($userAnswers) > 0)
-                    @foreach($userAnswers as $index => $userAnswer)
-                        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
-                            <!-- Header -->
-                            <div class="flex justify-between items-start mb-3">
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-medium text-gray-900 truncate">{{ $userAnswer->display_name }}</h3>
-                                    <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
-                                    @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
-                                        <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
-                                    @endif
-                                    @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
-                                        <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
-                                    @endif
-                                </div>
-                                <span class="text-xs text-gray-500 ml-2">#{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</span>
-                            </div>
-
-                            <!-- Content -->
-                            <div class="grid grid-cols-2 gap-3 mb-3">
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">Tipe</p>
-                                    @if($userAnswer->user_type_text == 'Alumni')
-                                        <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
-                                            <i class="fas fa-graduation-cap mr-1"></i>Alumni
-                                        </span>
-                                    @elseif($userAnswer->user_type_text == 'Perusahaan')
-                                        <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
-                                            <i class="fas fa-building mr-1"></i>Company
-                                        </span>
-                                    @else
-                                        <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
-                                            <i class="fas fa-user mr-1"></i>User
-                                        </span>
-                                    @endif
-                                </div>
-                                <div>
-                                    <p class="text-xs text-gray-500 mb-1">Status</p>
-                                    <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
-                                        <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
-                                        {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum' }}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Footer -->
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-xs text-gray-500">Tanggal Pengisian</p>
-                                    <p class="text-sm font-medium">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y, H:i') }}</p>
-                                </div>
-                                <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
-                                   class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center transition-colors duration-200">
-                                    <i class="fas fa-eye mr-1"></i> Detail
-                                </a>
-                            </div>
-                        </div>
-                    @endforeach
-                @else
-                    <div class="text-center py-8">
-                        <div class="flex flex-col items-center">
-                            <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
-                            <p class="text-lg font-medium mb-2">Belum ada responden</p>
-                            <p class="text-sm text-gray-500">Belum ada yang mengisi kuesioner untuk periode ini.</p>
-                        </div>
+            
+            {{-- Tambahkan wrapper khusus mobile --}}
+            <div class="lg:hidden bg-gray-50 min-h-screen w-full py-2">
+                <div class="mb-4 px-2">
+                    <div class="flex flex-col gap-2">
+                        <!-- Filter buttons dan filter prodi (kode Anda sebelumnya) -->
+                        <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode]) }}"
+                            class="flex-1 px-2 py-1.5 text-xs border rounded-full text-center transition-colors duration-200 {{ !request('filter') ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-users mr-1"></i> All
+                        </a>
+                        <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode, 'filter' => 'alumni'] + request()->except(['filter', 'page'])) }}"
+                            class="flex-1 px-2 py-1.5 text-xs border rounded-full text-center transition-colors duration-200 {{ request('filter') == 'alumni' ? 'bg-indigo-100 border-indigo-300 text-indigo-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-graduation-cap mr-1"></i> Alumni
+                        </a>
+                        <a href="{{ route('admin.questionnaire.responses', ['id_periode' => $periode->id_periode, 'filter' => 'company'] + request()->except(['filter', 'page'])) }}"
+                            class="flex-1 px-2 py-1.5 text-xs border rounded-full text-center transition-colors duration-200 {{ request('filter') == 'company' ? 'bg-green-100 border-green-300 text-green-700' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }}">
+                            <i class="fas fa-building mr-1"></i> Company
+                        </a>
+                        <form method="GET" action="" id="filter-prodi-form-mobile" class="w-full">
+                            <select name="study_program" id="study_program_select_mobile"
+                                class="w-full border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 mt-1">
+                                <option value="">Semua Program Studi</option>
+                                @foreach($studyProgramss as $sp)
+                                    <option value="{{ $sp->id_study }}" {{ (string)request('study_program') === (string)$sp->id_study ? 'selected' : '' }}>
+                                        {{ $sp->study_program }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @foreach(request()->except(['study_program', 'page']) as $key => $val)
+                                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                            @endforeach
+                        </form>
+                        <script>
+                        document.getElementById('study_program_select_mobile').addEventListener('change', function() {
+                            if (this.value === '') {
+                                const form = document.getElementById('filter-prodi-form-mobile');
+                                const params = Array.from(form.elements)
+                                    .filter(el => el.name && el.name !== 'study_program' && el.value)
+                                    .map(el => encodeURIComponent(el.name) + '=' + encodeURIComponent(el.value))
+                                    .join('&');
+                                window.location = window.location.pathname + (params ? '?' + params : '');
+                            } else {
+                                this.form.submit();
+                            }
+                        });
+                        </script>
                     </div>
-                @endif
+                </div>
+                <div class="space-y-3 p-3 sm:p-4">
+                    @if(count($userAnswers) > 0)
+                        @foreach($userAnswers as $index => $userAnswer)
+                            <div class="bg-white rounded-lg p-3 sm:p-4 border border-gray-200 shadow">
+                                <!-- Header -->
+                                <div class="flex justify-between items-start mb-3">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-medium text-gray-900 truncate">{{ $userAnswer->display_name }}</h3>
+                                        <p class="text-xs text-gray-500">{{ $userAnswer->username }}</p>
+                                        @if($userAnswer->additional_info && $userAnswer->user_type_text == 'Alumni')
+                                            <p class="text-xs text-gray-500">NIM: {{ $userAnswer->additional_info }}</p>
+                                        @endif
+                                        @if($userAnswer->nim && $userAnswer->user_type_text == 'Perusahaan')
+                                            <p class="text-xs text-gray-500">NIM Alumni: {{ $userAnswer->nim }}</p>
+                                        @endif
+                                    </div>
+                                    <span class="text-xs text-gray-500 ml-2">#{{ ($userAnswers->currentPage() - 1) * $userAnswers->perPage() + $loop->iteration }}</span>
+                                </div>
+
+                                <!-- Content -->
+                                <div class="grid grid-cols-1 gap-3 mb-3">
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">Tipe</p>
+                                        @if($userAnswer->user_type_text == 'Alumni')
+                                            <span class="px-2 py-1 rounded-full text-xs bg-indigo-100 text-indigo-800">
+                                                <i class="fas fa-graduation-cap mr-1"></i>Alumni
+                                            </span>
+                                        @elseif($userAnswer->user_type_text == 'Perusahaan')
+                                            <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                                                <i class="fas fa-building mr-1"></i>Company
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">
+                                                <i class="fas fa-user mr-1"></i>User
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">Program Studi</p>
+                                        <span class="text-sm font-medium">{{ $userAnswer->study_program ?? '-' }}</span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">Alumni Dinilai</p>
+                                        @if($userAnswer->user_type_text == 'Perusahaan' && $userAnswer->nim)
+                                            @php
+                                                $alumni = \App\Models\Tb_Alumni::where('nim', $userAnswer->nim)->first();
+                                            @endphp
+                                            @if($alumni)
+                                                <span class="text-sm font-medium">{{ $alumni->name ?? $alumni->full_name ?? $alumni->nim }}</span>
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">Status</p>
+                                        <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
+                                            <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
+                                            {{ $userAnswer->status == 'completed' ? 'Selesai' : 'Belum' }}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs text-gray-500 mb-1">Tanggal Pengisian</p>
+                                        <span class="text-sm font-medium">{{ \Carbon\Carbon::parse($userAnswer->created_at)->format('d M Y, H:i') }}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Footer -->
+                                <div class="flex justify-end items-center">
+                                    <a href="{{ route('admin.questionnaire.response-detail', [$periode->id_periode, $userAnswer->id_user_answer]) }}" 
+                                    class="bg-blue-500 hover:bg-blue-700 text-white px-3 py-1.5 rounded text-xs inline-flex items-center transition-colors duration-200">
+                                        <i class="fas fa-eye mr-1"></i> Detail
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center py-8">
+                            <div class="flex flex-col items-center">
+                                <i class="fas fa-inbox text-4xl mb-3 text-gray-300"></i>
+                                <p class="text-lg font-medium mb-2">Belum ada responden</p>
+                                <p class="text-sm text-gray-500">Belum ada yang mengisi kuesioner untuk periode ini.</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
 
             <!-- Pagination -->
@@ -349,7 +415,6 @@
                             <span class="font-medium">
                                 Menampilkan {{ $userAnswers->firstItem() ?? 0 }} - {{ $userAnswers->lastItem() ?? 0 }} 
                                 dari {{ $userAnswers->total() }} responden
-                            </span>
                         </div>
                         
                         <!-- Pagination Links -->
