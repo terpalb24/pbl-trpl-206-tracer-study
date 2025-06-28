@@ -610,7 +610,7 @@ class AdminController extends Controller
 
         // Kapitalisasi nama HRD
         $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
-        $company_name = $request->company_name ? ucwords(strtolower($request->company_name)) : null;
+        $company_name = $request->company_name ? strtoupper($request->company_name) : null;
 
         // Cek jika data perusahaan sebelumnya kosong (hanya company_name, data lain null)
         $isIncomplete = !$company->company_address && !$company->company_email && !$company->company_phone_number && !$company->id_user;
