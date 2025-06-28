@@ -135,7 +135,7 @@
                                 </div>
                                 <input type="text" name="phone_number" id="phone_number" 
                                        value="{{ old('phone_number', $alumni->phone_number) }}"
-                                       class="w-full border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('phone_number') border-red-500 @enderror"
+                                    class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('phone_number') ? 'border-red-500' : 'border-gray-300' }}"
                                        placeholder="Contoh: 08123456789">
                             </div>
                             @error('phone_number')
@@ -157,7 +157,7 @@
                                 </div>
                                 <input type="email" name="email" id="email" 
                                        value="{{ old('email', $alumni->email) }}"
-                                       class="w-full border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('email') border-red-500 @enderror"
+                                       class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('email') ? 'border-red-500' : 'border-gray-300' }}"
                                        placeholder="Contoh: nama@email.com">
                             </div>
                             @error('email')
@@ -198,7 +198,7 @@
                                     <i class="fas fa-calendar-alt text-gray-400 text-sm"></i>
                                 </div>
                                 <select name="batch" id="batch" 
-                                        class="w-full border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('batch') border-red-500 @enderror appearance-none">
+                                        class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('batch') ? 'border-red-500' : 'border-gray-300' }} appearance-none">
                                     <option value="">-- Pilih Angkatan --</option>
                                     @for($y = date('Y'); $y >= 1990; $y--)
                                         <option value="{{ substr($y, -2) }}" {{ old('batch', $alumni->batch) == substr($y, -2) ? 'selected' : '' }}>
@@ -228,7 +228,7 @@
                                     <i class="fas fa-calendar-check text-gray-400 text-sm"></i>
                                 </div>
                                 <select name="graduation_year" id="graduation_year" 
-                                        class="w-full border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('graduation_year') border-red-500 @enderror appearance-none">
+                                        class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('graduation_year') ? 'border-red-500' : 'border-gray-300' }} appearance-none">
                                     <option value="">-- Pilih Tahun Lulus --</option>
                                     @for($y = date('Y'); $y >= 1990; $y--)
                                         <option value="{{ $y }}" {{ old('graduation_year', $alumni->graduation_year) == $y ? 'selected' : '' }}>
@@ -281,7 +281,7 @@
                                     <i class="fas fa-briefcase text-gray-400 text-sm"></i>
                                 </div>
                                 <select name="status" id="status"
-                                        class="w-full border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror appearance-none">
+                                        class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none {{ $errors->has('status') ? 'border-red-500' : 'border-gray-300' }}">
                                     <option value="">-- Pilih Status Pekerjaan --</option>
                                     <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
                                     <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
