@@ -134,6 +134,35 @@
                             <span class="hidden sm:inline">Perusahaan</span>
                             <span class="sm:hidden">Company</span>
                         </a>
+                        <form method="GET" action="" class="inline-block" id="filter-prodi-form">
+                            <select name="study_program" id="study_program_select" class="border rounded px-2 py-1 text-xs sm:text-sm">
+                                <option value="">Semua Program Studi</option>
+                                @foreach($studyProgramss as $sp)
+                                    <option value="{{ $sp->id_study }}" {{ (string)request('study_program') === (string)$sp->id_study ? 'selected' : '' }}>
+                                        {{ $sp->study_program }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @foreach(request()->except(['study_program', 'page']) as $key => $val)
+                                <input type="hidden" name="{{ $key }}" value="{{ $val }}">
+                            @endforeach
+                        </form>
+                        <script>
+                        document.getElementById('study_program_select').addEventListener('change', function() {
+                            if (this.value === '') {
+                                // Submit form tanpa parameter study_program
+                                const form = document.getElementById('filter-prodi-form');
+                                // Buat URL baru tanpa study_program
+                                const params = Array.from(form.elements)
+                                    .filter(el => el.name && el.name !== 'study_program' && el.value)
+                                    .map(el => encodeURIComponent(el.name) + '=' + encodeURIComponent(el.value))
+                                    .join('&');
+                                window.location = window.location.pathname + (params ? '?' + params : '');
+                            } else {
+                                this.form.submit();
+                            }
+                        });
+                        </script>
                     </div>
                 </div>
             </div>

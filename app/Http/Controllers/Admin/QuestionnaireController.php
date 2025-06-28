@@ -12,6 +12,7 @@ use App\Models\Tb_User_Answer_Item;
 use App\Models\Tb_User;
 use App\Models\Tb_Alumni;
 use App\Models\Tb_Company;
+use App\Models\Tb_study_program;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Notifications\RemindFillQuestionnaireNotification;
 use App\Jobs\SendQuestionnaireReminderJob;
+
 
 class QuestionnaireController extends Controller
 {
@@ -1029,7 +1031,21 @@ class QuestionnaireController extends Controller
                 $query->whereHas('user.company');
             }
         }
-        
+
+        if ($request->has('study_program') && $request->get('study_program') !== '') {
+            $studyProgram = $request->get('study_program');
+            $query->where(function ($q) use ($studyProgram) {
+                // Untuk alumni
+                $q->whereHas('user.alumni.studyProgram', function ($q2) use ($studyProgram) {
+                    $q2->where('id_study', $studyProgram);
+                });
+                // Untuk company: alumni yang dinilai perusahaan punya prodi tsb
+                $q->orWhereHas('user.company.alumni.studyProgram', function ($q2) use ($studyProgram) {
+                    $q2->where('id_study', $studyProgram);
+                });
+            });
+        }
+        $studyProgramss = Tb_study_program::orderBy('study_program')->get();
         $userAnswers = $query->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->except('page'));
@@ -1080,7 +1096,7 @@ class QuestionnaireController extends Controller
             'total_categories' => Tb_Category::where('id_periode', $id_periode)->count()
         ];
         
-        return view('admin.questionnaire.responses', compact('periode', 'userAnswers', 'categoryStats'));
+        return view('admin.questionnaire.responses', compact('periode', 'userAnswers', 'categoryStats', 'studyProgramss'));
     }
 
     /**
