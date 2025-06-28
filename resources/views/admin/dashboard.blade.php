@@ -47,12 +47,12 @@
         <div class="mb-4 sm:mb-6">
             <div class="grid grid-cols-1 xl:grid-cols-1 gap-4 sm:gap-6">
                 <x-admin.questionnaire-statistic-chart 
-                    :availablePeriodes="$availablePeriodes"
+                    :availableYears="$availableYears"
                     :availableCategories="$availableCategories"
                     :availableQuestions="$availableQuestions"
                     :availableStudyPrograms="$availableStudyPrograms"
                     :availableGraduationYears="$availableGraduationYears"
-                    :selectedPeriode="$selectedPeriode"
+                    :selectedYear="$selectedYear"
                     :selectedUserType="$selectedUserType"
                     :selectedCategory="$selectedCategory"
                     :selectedQuestion="$selectedQuestion"

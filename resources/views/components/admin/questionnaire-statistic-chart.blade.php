@@ -35,20 +35,31 @@
                 <input type="hidden" name="study_program_salary" value="{{ request('study_program_salary') }}">
             @endif
             
-            <!-- Periode Filter -->
+            <!-- ✅ PERUBAHAN: Tahun Filter (menggantikan Periode) -->
             <div>
-                <label for="questionnaire_periode" class="block text-sm font-medium text-gray-700 mb-1">Periode:</label>
-                <select name="questionnaire_periode" id="questionnaire_periode" 
+                <label for="questionnaire_year" class="block text-sm font-medium text-gray-700 mb-1">Tahun:</label>
+                <select name="questionnaire_year" id="questionnaire_year" 
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
-                        onchange="handlePeriodeChange()">
-                    <option value="">Pilih Periode</option>
-                    @foreach($availablePeriodes as $periode)
-                        <option value="{{ $periode->id_periode }}" 
-                                {{ $selectedPeriode == $periode->id_periode ? 'selected' : '' }}>
-                            {{ $periode->start_date->format('Y') }} - {{ $periode->end_date->format('Y') }}
+                        onchange="handleYearChange()">
+                    <option value="">Pilih Tahun</option>
+                    @foreach($availableYears as $year)
+                        <option value="{{ $year }}" 
+                                {{ $selectedYear == $year ? 'selected' : '' }}>
+                            {{ $year }}
                         </option>
                     @endforeach
                 </select>
+                @if(isset($periodsInYear) && $periodsInYear->count() > 1)
+                    <div class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        {{ $periodsInYear->count() }} periode dalam tahun ini
+                    </div>
+                @elseif(isset($periodsInYear) && $periodsInYear->count() == 1)
+                    <div class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-calendar mr-1"></i>
+                        {{ $periodsInYear->first()->periode }}
+                    </div>
+                @endif
             </div>
             
             <!-- User Type Filter -->
@@ -69,9 +80,8 @@
                 <select name="questionnaire_category" id="questionnaire_category" 
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
                         onchange="handleCategoryChange()"
-                        {{ !$selectedPeriode ? 'disabled' : '' }}>
+                        {{ !$selectedYear ? 'disabled' : '' }}>
                     <option value="">Pilih Kategori</option>
-                    <!-- ✅ TAMBAHAN: Option "Semua Kategori" -->
                     <option value="all" {{ $selectedCategory === 'all' ? 'selected' : '' }}>
                         📊 Semua Kategori
                     </option>
@@ -132,7 +142,7 @@
                 <select name="questionnaire_graduation_year" id="questionnaire_graduation_year" 
                         class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-orange-500 focus:border-orange-500"
                         onchange="handleGraduationYearChange()"
-                        {{ !$selectedPeriode ? 'disabled' : '' }}>
+                        {{ !$selectedYear ? 'disabled' : '' }}>
                     <option value="">Semua Tahun Lulus</option>
                     @if(isset($availableGraduationYears) && count($availableGraduationYears) > 0)
                         @foreach($availableGraduationYears as $year)
@@ -149,7 +159,163 @@
         </form>
     </div>
     </div>
+    
     <div class="hidden md:block">
+    <!-- Overall Summary -->
+                <div class="mt-8 mb-8 bg-orange-50 rounded-lg p-6">
+                    <h4 class="font-semibold text-orange-800 mb-4">
+                        📈 Ringkasan Keseluruhan
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-orange-900">
+                                {{ $questionnaireChartData['total_categories'] }}
+                            </div>
+                            <div class="text-xs text-orange-600">Total Kategori</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-orange-900">
+                                {{ $questionnaireChartData['total_questions'] }}
+                            </div>
+                            <div class="text-xs text-orange-600">Total Pertanyaan</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-orange-900">
+                                @php
+                                    // ✅ PERBAIKAN: Ambil total responders dari questionnaireChartData
+                                    $totalResponders = 0;
+                                    if (isset($questionnaireChartData['total_responders'])) {
+                                        $totalResponders = $questionnaireChartData['total_responders'];
+                                    } else {
+                                        // Fallback: hitung berdasarkan filter yang dipilih
+                                        if ($selectedYear) {
+                                            if ($selectedUserType === 'alumni') {
+                                                $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                    ->whereNull('nim')
+                                                    ->whereYear('created_at', $selectedYear)
+                                                    ->distinct('id_user')
+                                                    ->count('id_user');
+                                            } elseif ($selectedUserType === 'company') {
+                                                $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                    ->whereNotNull('nim')
+                                                    ->whereYear('created_at', $selectedYear)
+                                                    ->distinct('id_user')
+                                                    ->count('id_user');
+                                            } else {
+                                                $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                    ->whereYear('created_at', $selectedYear)
+                                                    ->distinct('id_user')
+                                                    ->count('id_user');
+                                            }
+                                            
+                                            // Apply study program filter if selected
+                                            if ($selectedStudyProgram) {
+                                                if ($selectedUserType === 'alumni') {
+                                                    $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('user.alumni', function($q) use ($selectedStudyProgram) {
+                                                            $q->where('id_study', $selectedStudyProgram);
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                } elseif ($selectedUserType === 'company') {
+                                                    $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNotNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('alumniByNim', function($q) use ($selectedStudyProgram) {
+                                                            $q->where('id_study', $selectedStudyProgram);
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                } else {
+                                                    // For 'all' user type with study program filter
+                                                    $alumniCount = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('user.alumni', function($q) use ($selectedStudyProgram) {
+                                                            $q->where('id_study', $selectedStudyProgram);
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                    
+                                                    $companyCount = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNotNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('alumniByNim', function($q) use ($selectedStudyProgram) {
+                                                            $q->where('id_study', $selectedStudyProgram);
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                    
+                                                    $totalResponders = $alumniCount + $companyCount;
+                                                }
+                                            }
+                                            
+                                            // Apply graduation year filter if selected
+                                            if ($selectedGraduationYear) {
+                                                if ($selectedUserType === 'alumni') {
+                                                    $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('user.alumni', function($q) use ($selectedGraduationYear, $selectedStudyProgram) {
+                                                            $q->where('graduation_year', $selectedGraduationYear);
+                                                            if ($selectedStudyProgram) {
+                                                                $q->where('id_study', $selectedStudyProgram);
+                                                            }
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                } elseif ($selectedUserType === 'company') {
+                                                    $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNotNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('alumniByNim', function($q) use ($selectedGraduationYear, $selectedStudyProgram) {
+                                                            $q->where('graduation_year', $selectedGraduationYear);
+                                                            if ($selectedStudyProgram) {
+                                                                $q->where('id_study', $selectedStudyProgram);
+                                                            }
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                } else {
+                                                    // For 'all' user type with graduation year filter
+                                                    $alumniCount = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('user.alumni', function($q) use ($selectedGraduationYear, $selectedStudyProgram) {
+                                                            $q->where('graduation_year', $selectedGraduationYear);
+                                                            if ($selectedStudyProgram) {
+                                                                $q->where('id_study', $selectedStudyProgram);
+                                                            }
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                    
+                                                    $companyCount = \App\Models\Tb_User_Answers::where('status', 'completed')
+                                                        ->whereNotNull('nim')
+                                                        ->whereYear('created_at', $selectedYear)
+                                                        ->whereHas('alumniByNim', function($q) use ($selectedGraduationYear, $selectedStudyProgram) {
+                                                            $q->where('graduation_year', $selectedGraduationYear);
+                                                            if ($selectedStudyProgram) {
+                                                                $q->where('id_study', $selectedStudyProgram);
+                                                            }
+                                                        })
+                                                        ->distinct('id_user')
+                                                        ->count('id_user');
+                                                    
+                                                    $totalResponders = $alumniCount + $companyCount;
+                                                }
+                                            }
+                                        }
+                                    }
+                                @endphp
+                                {{ $totalResponders }}
+                            </div>
+                            <div class="text-xs text-orange-600">Total Responden</div>
+                        </div>
+                    </div>
+                </div>
     <!-- Chart Display -->
     @if(!empty($questionnaireChartData))
         @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
@@ -247,7 +413,13 @@
                         </div>
                         
                         <!-- Questions Grid dalam Kategori -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 
+                            @if($categoryQuestions->count() < 2)
+                                lg:grid-cols-1 xl:grid-cols-1
+                            @else
+                                lg:grid-cols-2 xl:grid-cols-2
+                            @endif
+                            gap-4">
                             @foreach($categoryQuestions as $index => $qData)
                                 @php
                                     $globalIndex = $groupedQuestions->flatten(1)->search($qData);
@@ -277,7 +449,11 @@
                                     @if($qData['total_responses'] > 0)
                                         <!-- Mini Chart -->
                                         <div class="mb-3">
+                                            @if(isset($qData['question']->type) && in_array($qData['question']->type, ['multiple']))
+                                                <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="540"></canvas>
+                                            @else
                                             <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="150"></canvas>
+                                            @endif
                                         </div>
                                         
                                         <!-- Top Answer -->
@@ -346,64 +522,7 @@
                     </div>
                 @endforeach
                 
-                <!-- Overall Summary -->
-                <div class="mt-8 bg-orange-50 rounded-lg p-6">
-                    <h4 class="font-semibold text-orange-800 mb-4">
-                        📈 Ringkasan Keseluruhan
-                    </h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-orange-900">
-                                {{ $questionnaireChartData['total_categories'] }}
-                            </div>
-                            <div class="text-xs text-orange-600">Total Kategori</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-orange-900">
-                                {{ $questionnaireChartData['total_questions'] }}
-                            </div>
-                            <div class="text-xs text-orange-600">Total Pertanyaan</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl font-bold text-orange-900">
-                                @php
-                                    // Hitung total responden berdasarkan tb_user_answers dengan filter user type
-                                    $totalResponders = 0;
-                                    if ($selectedUserType === 'alumni') {
-                                        // Count tb_user_answers yang nim nya null (alumni)
-                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
-                                            ->whereNull('nim')
-                                            ->distinct('id_user')
-                                            ->count('id_user');
-                                    } elseif ($selectedUserType === 'company') {
-                                        // Count tb_user_answers yang nim nya ada (perusahaan)
-                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
-                                            ->whereNotNull('nim')
-                                            ->distinct('id_user')
-                                            ->count('id_user');
-                                    } else {
-                                        // Count semua tb_user_answers
-                                        $totalResponders = \App\Models\Tb_User_Answers::where('status', 'completed')
-                                            ->distinct('id_user')
-                                            ->count('id_user');
-                                    }
-                                @endphp
-                                {{ $totalResponders }}
-                            </div>
-                            <div class="text-xs text-orange-600">Total Responden</div>
-                        </div>
-                        <div class="text-center">
-                            @php
-                                $answeredQuestions = collect($questionnaireChartData['questions_data'])->where('total_responses', '>', 0)->count();
-                                $completionRate = $questionnaireChartData['total_questions'] > 0 ? round(($answeredQuestions / $questionnaireChartData['total_questions']) * 100, 1) : 0;
-                            @endphp
-                            <div class="text-2xl font-bold text-orange-900">
-                                {{ $completionRate }}%
-                            </div>
-                            <div class="text-xs text-orange-600">Completion Rate</div>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
             <!-- ✅ Display untuk multiple questions dalam satu kategori -->
@@ -425,7 +544,13 @@
                 </div>
                 
                 <!-- Questions Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 
+                            @if($categoryQuestions->count() < 2)
+                                lg:grid-cols-1 xl:grid-cols-1
+                            @else
+                                lg:grid-cols-2 xl:grid-cols-2
+                            @endif
+                            gap-4">
                     @foreach($questionnaireChartData['questions_data'] as $index => $qData)
                         <div class="border border-orange-200 rounded-lg p-4">
                             <div class="mb-4">
@@ -452,7 +577,11 @@
                             @if($qData['total_responses'] > 0)
                                 <!-- Mini Chart -->
                                 <div class="mb-4">
+                                    @if(isset($qData['question']->type) && in_array($qData['question']->type, ['multiple']))
+                                        <canvas id="miniBarChart{{ $index }}" width="300" height="550"></canvas>
+                                    @else
                                     <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
+                                    @endif
                                 </div>
                                 
                                 <!-- Detailed Options Table -->
@@ -918,17 +1047,18 @@ document.addEventListener('DOMContentLoaded', function () {
     @endif
 });
 
-function handlePeriodeChange() {
+// ✅ PERUBAHAN: Ganti handlePeriodeChange dengan handleYearChange
+function handleYearChange() {
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
-    document.getElementById('questionnaire_graduation_year').value = ''; // ✅ TAMBAHAN: Reset graduation year
+    document.getElementById('questionnaire_graduation_year').value = '';
     document.getElementById('questionnaire-filter-form').submit();
 }
 
 function handleUserTypeChange() {
     document.getElementById('questionnaire_category').value = '';
     document.getElementById('questionnaire_question').value = '';
-    document.getElementById('questionnaire_graduation_year').value = ''; // ✅ TAMBAHAN: Reset graduation year
+    document.getElementById('questionnaire_graduation_year').value = '';
     document.getElementById('questionnaire-filter-form').submit();
 }
 

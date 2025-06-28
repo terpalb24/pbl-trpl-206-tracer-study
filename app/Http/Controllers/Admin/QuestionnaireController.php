@@ -381,6 +381,8 @@ class QuestionnaireController extends Controller
             'is_status_dependent' => 'boolean',
             'required_alumni_status' => 'nullable|array',
             'required_alumni_status.*' => 'string|in:bekerja,tidak bekerja,melanjutkan studi,berwiraswasta,sedang mencari kerja',
+            'is_graduation_year_dependent' => 'boolean', // NEW
+            'required_graduation_years' => 'array' // NEW
         ]);
 
         $periode = Tb_Periode::findOrFail($id_periode);
@@ -392,7 +394,9 @@ class QuestionnaireController extends Controller
             'order' => $request->order,
             'for_type' => $request->for_type,
             'is_status_dependent' => $request->boolean('is_status_dependent'),
-            'required_alumni_status' => null
+            'required_alumni_status' => null,
+            'is_graduation_year_dependent' => $request->boolean('is_graduation_year_dependent'), // NEW
+            'required_graduation_years' => null // NEW
         ];
 
         // Only set required_alumni_status if category is for alumni and is status dependent
@@ -400,6 +404,13 @@ class QuestionnaireController extends Controller
             ($request->for_type === 'alumni' || $request->for_type === 'both') &&
             !empty($request->required_alumni_status)) {
             $categoryData['required_alumni_status'] = $request->required_alumni_status;
+        }
+
+        // NEW: Only set required_graduation_years if category is for alumni and is graduation year dependent
+        if ($request->boolean('is_graduation_year_dependent') && 
+            ($request->for_type === 'alumni' || $request->for_type === 'both') &&
+            !empty($request->required_graduation_years)) {
+            $categoryData['required_graduation_years'] = $request->required_graduation_years;
         }
 
         $category = Tb_Category::create($categoryData);
@@ -431,6 +442,8 @@ class QuestionnaireController extends Controller
             'is_status_dependent' => 'boolean',
             'required_alumni_status' => 'nullable|array',
             'required_alumni_status.*' => 'string|in:bekerja,tidak bekerja,melanjutkan studi,berwiraswasta,sedang mencari kerja',
+            'is_graduation_year_dependent' => 'boolean', // NEW
+            'required_graduation_years' => 'array'       // NEW
         ]);
 
         $category = Tb_Category::findOrFail($id_category);
@@ -440,7 +453,9 @@ class QuestionnaireController extends Controller
             'order' => $request->order,
             'for_type' => $request->for_type,
             'is_status_dependent' => $request->boolean('is_status_dependent'),
-            'required_alumni_status' => null
+            'required_alumni_status' => null,
+            'is_graduation_year_dependent' => $request->boolean('is_graduation_year_dependent'), // NEW
+            'required_graduation_years' => null // NEW
         ];
 
         // Only set required_alumni_status if category is for alumni and is status dependent
@@ -448,6 +463,13 @@ class QuestionnaireController extends Controller
             ($request->for_type === 'alumni' || $request->for_type === 'both') &&
             !empty($request->required_alumni_status)) {
             $updateData['required_alumni_status'] = $request->required_alumni_status;
+        }
+
+        // NEW: Only set required_graduation_years if category is for alumni and is graduation year dependent
+        if ($request->boolean('is_graduation_year_dependent') && 
+            ($request->for_type === 'alumni' || $request->for_type === 'both') &&
+            !empty($request->required_graduation_years)) {
+            $updateData['required_graduation_years'] = $request->required_graduation_years;
         }
 
         $category->update($updateData);

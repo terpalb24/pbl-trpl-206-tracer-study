@@ -19,12 +19,16 @@ class Tb_Category extends Model
         'order',
         'for_type',
         'is_status_dependent',
-        'required_alumni_status'
+        'required_alumni_status',
+        'is_graduation_year_dependent',  // NEW
+        'required_graduation_years'      // NEW
     ];
 
     protected $casts = [
         'required_alumni_status' => 'array',
-        'is_status_dependent' => 'boolean'
+        'required_graduation_years' => 'array', // NEW
+        'is_status_dependent' => 'boolean',
+        'is_graduation_year_dependent' => 'boolean' // NEW
     ];
 
     public function periode()
@@ -38,22 +42,32 @@ class Tb_Category extends Model
     }
 
     /**
-     * Check if this category is accessible by alumni based on their status
+     * Check if this category is accessible by alumni based on their status and graduation year
      */
     public function isAccessibleByAlumni($alumni)
     {
         // Jika kategori tidak bergantung pada status, semua alumni bisa akses
-        if (!$this->is_status_dependent || empty($this->required_alumni_status)) {
-            return true;
+        if ($this->is_status_dependent && !empty($this->required_alumni_status)) {
+            // Jika kategori bukan untuk alumni, skip dependency check
+            if ($this->for_type !== 'company') {
+                // Check apakah status alumni sesuai dengan requirement
+                if (!in_array($alumni->status, $this->required_alumni_status)) {
+                    return false;
+                }
+            }
         }
 
-        // Jika kategori bukan untuk alumni, skip dependency check
-        if ($this->for_type === 'company') {
-            return true;
+        // NEW: Check graduation year dependency
+        if ($this->is_graduation_year_dependent && !empty($this->required_graduation_years)) {
+            if ($this->for_type !== 'company') {
+                // Check apakah tahun lulus alumni sesuai dengan requirement
+                if (!in_array($alumni->graduation_year, $this->required_graduation_years)) {
+                    return false;
+                }
+            }
         }
 
-        // Check apakah status alumni sesuai dengan requirement
-        return in_array($alumni->status, $this->required_alumni_status);
+        return true;
     }
 
     /**
@@ -68,5 +82,44 @@ class Tb_Category extends Model
             'berwiraswasta' => 'Berwiraswasta',
             'sedang mencari kerja' => 'Sedang Mencari Kerja'
         ];
+    }
+
+    /**
+     * NEW: Get available graduation years from periode
+     */
+    public function getAvailableGraduationYears()
+    {
+        if (!$this->periode) {
+            return [];
+        }
+
+        $periode = $this->periode;
+        
+        // Jika semua alumni bisa akses
+        if ($periode->all_alumni || $periode->target_type === 'all') {
+            return Tb_Alumni::select('graduation_year')
+                ->distinct()
+                ->orderBy('graduation_year', 'desc')
+                ->pluck('graduation_year')
+                ->toArray();
+        }
+
+        $currentYear = now()->year;
+
+        // Jika target berdasarkan tahun lalu (years ago)
+        if ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
+            return collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                return (string)($currentYear - $yearsAgo);
+            })->toArray();
+        }
+
+        // Jika target berdasarkan tahun spesifik
+        if ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
+            return collect($periode->target_graduation_years)->map(function($year) {
+                return (string)$year;
+            })->toArray();
+        }
+
+        return [];
     }
 }

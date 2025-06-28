@@ -83,9 +83,7 @@ class QuestionnaireController extends Controller
             ])->with('info', 'Anda sudah menyelesaikan kuesioner ini.');
         }
 
-        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI SAJA DAN STATUS DEPENDENCY
-        $alumni = auth()->user()->alumni;
-        
+        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DAN GRADUATION YEAR DEPENDENCY
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
@@ -94,15 +92,35 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get()
             ->filter(function($category) use ($alumni) {
-                // Filter berdasarkan status dependency
+                // ✅ ENHANCED: Filter berdasarkan status dependency DAN graduation year dependency
                 return $category->isAccessibleByAlumni($alumni);
             })
             ->values(); // Reset array keys
 
         if ($categories->isEmpty()) {
             return redirect()->route('alumni.questionnaire.index')
-                ->with('error', 'Tidak ada kategori yang tersedia untuk alumni dengan status Anda pada kuesioner ini.');
+                ->with('error', 'Tidak ada kategori yang tersedia untuk alumni dengan status dan tahun lulus Anda pada kuesioner ini.');
         }
+
+        // ✅ DEBUG: Log kategori yang dapat diakses
+        \Log::info('Categories accessible by alumni', [
+            'alumni_id' => $alumni->id_alumni,
+            'alumni_status' => $alumni->status,
+            'alumni_graduation_year' => $alumni->graduation_year,
+            'total_categories' => $categories->count(),
+            'accessible_categories' => $categories->map(function($cat) use ($alumni) {
+                return [
+                    'id' => $cat->id_category,
+                    'name' => $cat->category_name,
+                    'for_type' => $cat->for_type,
+                    'is_status_dependent' => $cat->is_status_dependent,
+                    'required_alumni_status' => $cat->required_alumni_status,
+                    'is_graduation_year_dependent' => $cat->is_graduation_year_dependent,
+                    'required_graduation_years' => $cat->required_graduation_years,
+                    'is_accessible' => $cat->isAccessibleByAlumni($alumni)
+                ];
+            })->toArray()
+        ]);
 
         // Calculate total categories and other variables
         $totalCategories = $categories->count();
@@ -219,6 +237,13 @@ class QuestionnaireController extends Controller
 
         \Log::info('Loaded existing answers with improved structure', [
             'current_category_index' => $currentCategoryIndex,
+            'current_category_name' => $currentCategory->category_name,
+            'current_category_dependencies' => [
+                'is_status_dependent' => $currentCategory->is_status_dependent,
+                'required_alumni_status' => $currentCategory->required_alumni_status,
+                'is_graduation_year_dependent' => $currentCategory->is_graduation_year_dependent,
+                'required_graduation_years' => $currentCategory->required_graduation_years,
+            ],
             'total_categories' => $totalCategories,
             'progress_percentage' => $progressPercentage,
             'prev_answers_count' => count($prevAnswers),
@@ -289,7 +314,7 @@ class QuestionnaireController extends Controller
         try {
             DB::beginTransaction();
 
-            // ✅ VALIDASI: Pastikan kategori yang disubmit adalah untuk alumni
+            // ✅ VALIDASI: Pastikan kategori yang disubmit adalah untuk alumni DAN sesuai dependency
             if ($request->has('id_category')) {
                 $category = Tb_Category::where('id_category', $request->input('id_category'))
                     ->where('id_periode', $periodeId)
@@ -302,6 +327,12 @@ class QuestionnaireController extends Controller
                 if (!$category) {
                     return redirect()->back()
                         ->with('error', 'Kategori tidak tersedia untuk alumni.');
+                }
+
+                // ✅ ENHANCED: Validasi status dan graduation year dependency
+                if (!$category->isAccessibleByAlumni($alumni)) {
+                    return redirect()->back()
+                        ->with('error', 'Kategori ini tidak tersedia untuk status atau tahun lulus Anda.');
                 }
             }
 
@@ -330,14 +361,19 @@ class QuestionnaireController extends Controller
             } elseif ($action === 'next_category') {
                 $currentIndex = (int) session('current_category_index', 0);
                 
-                // ✅ PERBAIKAN: Filter kategori untuk alumni saja
+                // ✅ PERBAIKAN: Filter kategori untuk alumni saja DENGAN DEPENDENCY
                 $categories = Tb_Category::where('id_periode', $periodeId)
                     ->where(function($query) {
                         $query->where('for_type', 'alumni')
                               ->orWhere('for_type', 'both');
                     })
                     ->orderBy('order')
-                    ->get();
+                    ->get()
+                    ->filter(function($category) use ($alumni) {
+                        // ✅ ENHANCED: Filter berdasarkan status dan graduation year dependency
+                        return $category->isAccessibleByAlumni($alumni);
+                    })
+                    ->values(); // Reset array keys
 
                 if ($currentIndex + 1 < $categories->count()) {
                     session(['current_category_index' => $currentIndex + 1]);
@@ -834,7 +870,7 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data jawaban tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DEPENDENCY
+        // ✅ PERBAIKAN: Get categories for this period - FILTER UNTUK ALUMNI DENGAN STATUS DAN GRADUATION YEAR DEPENDENCY
         $categories = Tb_Category::where('id_periode', $periodeId)
             ->where(function($query) {
                 $query->where('for_type', 'alumni')
@@ -843,7 +879,7 @@ class QuestionnaireController extends Controller
             ->orderBy('order')
             ->get()
             ->filter(function($category) use ($alumni) {
-                // ✅ TAMBAHAN: Filter berdasarkan status dependency seperti di fill questionnaire
+                // ✅ ENHANCED: Filter berdasarkan status dependency DAN graduation year dependency
                 return $category->isAccessibleByAlumni($alumni);
             })
             ->values(); // Reset array keys
@@ -966,13 +1002,16 @@ class QuestionnaireController extends Controller
 
         // ✅ DEBUG: Log dependency info dengan struktur yang benar
         \Log::info('Alumni Response Detail - Dependency debug:', [
-            'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) {
+            'alumni_status' => $alumni->status,
+            'alumni_graduation_year' => $alumni->graduation_year,
+            'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) use ($alumni) {
                 return [
                     'category' => $cat['category']->category_name,
                     'category_status_dependent' => $cat['category']->is_status_dependent,
                     'category_required_status' => $cat['category']->required_alumni_status,
-                    'alumni_status' => auth()->user()->alumni->status ?? 'unknown',
-                    'category_accessible' => $cat['category']->isAccessibleByAlumni(auth()->user()->alumni),
+                    'category_graduation_year_dependent' => $cat['category']->is_graduation_year_dependent,
+                    'category_required_graduation_years' => $cat['category']->required_graduation_years,
+                    'category_accessible' => $cat['category']->isAccessibleByAlumni($alumni),
                     'questions' => collect($cat['questions'])->map(function($q) {
                         return [
                             'id' => $q['question']->id_question,

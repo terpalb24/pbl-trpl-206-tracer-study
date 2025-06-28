@@ -65,6 +65,11 @@
                 <p class="text-xs sm:text-sm text-gray-600 mt-1">
                     Ubah informasi kategori: {{ $category->category_name }}
                 </p>
+                <!-- Show periode target info -->
+                <div class="mt-2 text-xs text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Target periode: {{ $periode->getTargetDescription() }}
+                </div>
             </div>
 
             <form action="{{ route('admin.questionnaire.category.update', [$periode->id_periode, $category->id_category]) }}" method="POST" class="px-4 sm:px-6 py-4 sm:py-6">
@@ -127,13 +132,13 @@
                                 required
                                 class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200">
                             <option value="both" {{ old('for_type', $category->for_type) == 'both' ? 'selected' : '' }}>
-                                <i class="fas fa-users"></i> Alumni & Perusahaan
+                                Alumni & Perusahaan
                             </option>
                             <option value="alumni" {{ old('for_type', $category->for_type) == 'alumni' ? 'selected' : '' }}>
-                                <i class="fas fa-graduation-cap"></i> Alumni Saja
+                                Alumni Saja
                             </option>
                             <option value="company" {{ old('for_type', $category->for_type) == 'company' ? 'selected' : '' }}>
-                                <i class="fas fa-building"></i> Perusahaan Saja
+                                Perusahaan Saja
                             </option>
                         </select>
                         @error('for_type')
@@ -196,6 +201,100 @@
                     </div>
                 </div>
 
+                <!-- NEW: Graduation Year Dependency Section -->
+                <div class="mb-4 sm:mb-6" id="graduation-year-dependency-section">
+                    <div class="bg-blue-50 rounded-lg p-3 sm:p-4 border border-blue-200">
+                        <div class="flex items-start mb-3">
+                            <input type="checkbox" 
+                                   name="is_graduation_year_dependent" 
+                                   id="is_graduation_year_dependent" 
+                                   value="1" 
+                                   {{ old('is_graduation_year_dependent', $category->is_graduation_year_dependent) ? 'checked' : '' }}
+                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5 flex-shrink-0">
+                            <div class="ml-3">
+                                <label for="is_graduation_year_dependent" class="text-sm font-medium text-gray-700 cursor-pointer">
+                                    <i class="fas fa-graduation-cap text-blue-600 mr-1"></i>
+                                    Kategori bergantung pada tahun lulus alumni
+                                </label>
+                                <p class="text-xs text-gray-600 mt-1">
+                                    Jika diaktifkan, hanya alumni dengan tahun lulus tertentu yang dapat mengakses kategori ini
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="graduation-year-options" class="mt-4 {{ old('is_graduation_year_dependent', $category->is_graduation_year_dependent) ? '' : 'hidden' }}">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                <i class="fas fa-calendar text-blue-600 mr-1"></i>
+                                Pilih Tahun Lulus yang Dapat Mengakses Kategori Ini:
+                            </label>
+                            
+                            @php
+                                $availableGraduationYears = [];
+                                
+                                // Get available graduation years from periode
+                                if ($periode->all_alumni || $periode->target_type === 'all') {
+                                    $availableGraduationYears = \App\Models\Tb_Alumni::select('graduation_year')
+                                        ->distinct()
+                                        ->orderBy('graduation_year', 'desc')
+                                        ->pluck('graduation_year')
+                                        ->toArray();
+                                } else {
+                                    $currentYear = now()->year;
+                                    
+                                    if ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
+                                        $availableGraduationYears = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                                            return (string)($currentYear - $yearsAgo);
+                                        })->toArray();
+                                    } elseif ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
+                                        $availableGraduationYears = collect($periode->target_graduation_years)->map(function($year) {
+                                            return (string)$year;
+                                        })->toArray();
+                                    }
+                                }
+                            @endphp
+                            
+                            @if(empty($availableGraduationYears))
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                                    <div class="flex items-center">
+                                        <i class="fas fa-exclamation-triangle text-yellow-600 mr-2"></i>
+                                        <span class="text-sm text-yellow-700">
+                                            Tidak ada tahun lulus yang tersedia untuk periode ini
+                                        </span>
+                                    </div>
+                                </div>
+                            @else
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    @foreach($availableGraduationYears as $year)
+                                        <label class="flex items-center p-3 bg-white rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-50 transition-colors duration-200">
+                                            <input type="checkbox" 
+                                                   name="required_graduation_years[]" 
+                                                   id="graduation_year_{{ $year }}" 
+                                                   value="{{ $year }}"
+                                                   {{ in_array($year, old('required_graduation_years', $category->required_graduation_years ?? [])) ? 'checked' : '' }}
+                                                   class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0">
+                                            <span class="ml-3 text-sm text-gray-700 font-medium">
+                                                {{ $year }}
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                                
+                                <div class="mt-3 text-xs text-gray-500">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Tahun lulus yang tersedia berdasarkan target periode: {{ implode(', ', $availableGraduationYears) }}
+                                </div>
+                            @endif
+                            
+                            @error('required_graduation_years')
+                                <p class="text-red-500 text-xs sm:text-sm mt-2 flex items-center">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Informasi Tambahan -->
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
                     <div class="flex items-start">
@@ -206,6 +305,7 @@
                                 <li>• Perubahan urutan akan mempengaruhi tampilan kategori dalam kuesioner</li>
                                 <li>• Mengubah target pengguna mungkin mempengaruhi akses kategori yang sudah ada</li>
                                 <li>• Status dependency hanya berlaku untuk alumni, tidak untuk perusahaan</li>
+                                <li>• Tahun lulus dependency hanya berlaku untuk alumni, tidak untuk perusahaan</li>
                             </ul>
                         </div>
                     </div>
@@ -227,7 +327,7 @@
             </form>
         </div>
 
-        <!-- Preview Card -->
+        <!-- Preview Card - Updated with graduation year info -->
         <div class="bg-white rounded-lg sm:rounded-xl shadow-md border border-gray-200 mt-4 sm:mt-6">
             <div class="px-4 sm:px-6 py-4 sm:py-6 border-b border-gray-200">
                 <h3 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
@@ -256,13 +356,25 @@
                             </span>
                         </div>
                     </div>
-                    <div id="preview-status" class="text-xs sm:text-sm text-gray-600 {{ $category->is_status_dependent ? '' : 'hidden' }}">
+                    <div id="preview-status" class="text-xs sm:text-sm text-gray-600 mb-2 {{ $category->is_status_dependent ? '' : 'hidden' }}">
                         <i class="fas fa-user-check text-orange-600 mr-1"></i>
                         Terbatas untuk status: <span id="preview-status-list" class="font-medium">
                             @if($category->required_alumni_status)
                                 {{ implode(', ', array_map(function($status) {
                                     return \App\Models\Tb_Category::getAlumniStatusOptions()[$status] ?? $status;
                                 }, $category->required_alumni_status)) }}
+                            @else
+                                Tidak ada yang dipilih
+                            @endif
+                        </span>
+                    </div>
+                    <div id="preview-graduation-year" class="text-xs sm:text-sm text-gray-600 {{ $category->is_graduation_year_dependent ? '' : 'hidden' }}">
+                        <i class="fas fa-graduation-cap text-blue-600 mr-1"></i>
+                        Terbatas untuk tahun lulus: <span id="preview-graduation-year-list" class="font-medium">
+                            @if($category->required_graduation_years)
+                                {{ implode(', ', $category->required_graduation_years) }}
+                            @else
+                                Tidak ada yang dipilih
                             @endif
                         </span>
                     </div>
@@ -278,10 +390,16 @@
         const alumniStatusOptions = document.getElementById('alumni-status-options');
         const previewStatus = document.getElementById('preview-status');
         
+        // NEW: Graduation year dependency toggle
+        const isGraduationYearDependentCheckbox = document.getElementById('is_graduation_year_dependent');
+        const graduationYearOptions = document.getElementById('graduation-year-options');
+        const previewGraduationYear = document.getElementById('preview-graduation-year');
+        
         isStatusDependentCheckbox.addEventListener('change', function() {
             const isChecked = this.checked;
+            const forType = document.getElementById('for_type').value;
             
-            if (isChecked) {
+            if (isChecked && (forType === 'alumni' || forType === 'both')) {
                 alumniStatusOptions.classList.remove('hidden');
                 previewStatus.classList.remove('hidden');
             } else {
@@ -298,10 +416,56 @@
             }
         });
 
+        // NEW: Graduation year dependency toggle
+        isGraduationYearDependentCheckbox.addEventListener('change', function() {
+            const isChecked = this.checked;
+            const forType = document.getElementById('for_type').value;
+            
+            if (isChecked && (forType === 'alumni' || forType === 'both')) {
+                graduationYearOptions.classList.remove('hidden');
+                previewGraduationYear.classList.remove('hidden');
+            } else {
+                graduationYearOptions.classList.add('hidden');
+                previewGraduationYear.classList.add('hidden');
+                
+                // Uncheck all graduation year options
+                const checkboxes = graduationYearOptions.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                
+                updateGraduationYearPreview();
+            }
+        });
+
+        // For type change handler
+        const forTypeSelect = document.getElementById('for_type');
+        const statusDependencySection = document.getElementById('status-dependency-section');
+        const graduationYearDependencySection = document.getElementById('graduation-year-dependency-section');
+        
+        forTypeSelect.addEventListener('change', function() {
+            const value = this.value;
+            
+            if (value === 'company') {
+                statusDependencySection.classList.add('hidden');
+                graduationYearDependencySection.classList.add('hidden');
+                isStatusDependentCheckbox.checked = false;
+                isGraduationYearDependentCheckbox.checked = false;
+                alumniStatusOptions.classList.add('hidden');
+                graduationYearOptions.classList.add('hidden');
+                previewStatus.classList.add('hidden');
+                previewGraduationYear.classList.add('hidden');
+            } else {
+                statusDependencySection.classList.remove('hidden');
+                graduationYearDependencySection.classList.remove('hidden');
+            }
+            
+            updatePreviewTarget();
+        });
+
         // Real-time preview updates
         const categoryNameInput = document.getElementById('category_name');
         const orderInput = document.getElementById('order');
-        const forTypeSelect = document.getElementById('for_type');
         
         const previewName = document.getElementById('preview-name');
         const previewOrder = document.getElementById('preview-order');
@@ -314,9 +478,9 @@
         orderInput.addEventListener('input', function() {
             previewOrder.textContent = 'Urutan: ' + (this.value || '?');
         });
-        
-        forTypeSelect.addEventListener('change', function() {
-            const value = this.value;
+
+        function updatePreviewTarget() {
+            const value = forTypeSelect.value;
             let text, classes, icon;
             
             switch(value) {
@@ -338,7 +502,7 @@
             
             previewTarget.className = `inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${classes}`;
             previewTarget.innerHTML = `<i class="fas ${icon} mr-1"></i>${text}`;
-        });
+        }
 
         // Update status preview
         function updateStatusPreview() {
@@ -353,11 +517,53 @@
             statusList.textContent = selectedStatuses.length > 0 ? selectedStatuses.join(', ') : 'Tidak ada yang dipilih';
         }
 
+        // NEW: Update graduation year preview
+        function updateGraduationYearPreview() {
+            const graduationYearCheckboxes = document.querySelectorAll('input[name="required_graduation_years[]"]:checked');
+            const graduationYearList = document.getElementById('preview-graduation-year-list');
+            
+            const selectedYears = Array.from(graduationYearCheckboxes).map(cb => {
+                return cb.value;
+            });
+            
+            graduationYearList.textContent = selectedYears.length > 0 ? selectedYears.join(', ') : 'Tidak ada yang dipilih';
+        }
+
         // Add event listeners to status checkboxes
         const statusCheckboxes = document.querySelectorAll('input[name="required_alumni_status[]"]');
         statusCheckboxes.forEach(checkbox => {
             checkbox.addEventListener('change', updateStatusPreview);
         });
+
+        // NEW: Add event listeners to graduation year checkboxes
+        const graduationYearCheckboxes = document.querySelectorAll('input[name="required_graduation_years[]"]');
+        graduationYearCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateGraduationYearPreview);
+        });
+
+        // Initialize on page load
+        const initialForType = forTypeSelect.value;
+        const initialIsStatusDependent = isStatusDependentCheckbox.checked;
+        const initialIsGraduationYearDependent = isGraduationYearDependentCheckbox.checked;
+        
+        if (initialForType === 'company') {
+            statusDependencySection.classList.add('hidden');
+            graduationYearDependencySection.classList.add('hidden');
+        }
+        
+        if (initialIsStatusDependent && (initialForType === 'alumni' || initialForType === 'both')) {
+            alumniStatusOptions.classList.remove('hidden');
+            previewStatus.classList.remove('hidden');
+        }
+        
+        if (initialIsGraduationYearDependent && (initialForType === 'alumni' || initialForType === 'both')) {
+            graduationYearOptions.classList.remove('hidden');
+            previewGraduationYear.classList.remove('hidden');
+        }
+        
+        updatePreviewTarget();
+        updateStatusPreview();
+        updateGraduationYearPreview();
     });
     </script>
 

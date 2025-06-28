@@ -850,106 +850,83 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Update logic untuk "Semua Kategori" = semua pertanyaan dari semua kategori
+     * ✅ PERBAIKAN: Update method getQuestionnaireStatistics untuk filter per tahun
      */
     private function getQuestionnaireStatistics(Request $request)
     {
         // Filter parameters
-        $selectedPeriode = $request->input('questionnaire_periode');
+        $selectedYear = $request->input('questionnaire_year'); // Changed from periode to year
         $selectedUserType = $request->input('questionnaire_user_type', 'all');
         $selectedCategory = $request->input('questionnaire_category');
         $selectedQuestion = $request->input('questionnaire_question');
         $selectedStudyProgram = $request->input('questionnaire_study_program');
         $selectedGraduationYear = $request->input('questionnaire_graduation_year');
         
-        // Get all periods (not just active)
-        $availablePeriodes = Tb_Periode::orderBy('start_date', 'desc')->get();
+        // ✅ PERUBAHAN BESAR: Get available years instead of periods
+        $availableYears = Tb_Periode::select(DB::raw('YEAR(start_date) as year'))
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->toArray();
         
-        // ✅ PERBAIKAN: Get all study programs dengan cek kolom yang benar
-        try {
-            $availableStudyPrograms = Tb_study_program::select('id_study', 'study_program')
-                ->orderBy('study_program')
-                ->get();
-                
-            \Log::info('Study programs query successful, count: ' . $availableStudyPrograms->count());
-            
-            if ($availableStudyPrograms->count() > 0) {
-                \Log::info('First study program data: ', $availableStudyPrograms->first()->toArray());
-            }
-            
-        } catch (\Exception $e) {
-            \Log::error('Error getting study programs: ' . $e->getMessage());
-            $availableStudyPrograms = collect(); // Empty collection sebagai fallback
+        // Set default year ke yang terbaru jika belum dipilih
+        if (!$selectedYear && count($availableYears) > 0) {
+            $selectedYear = $availableYears[0];
         }
         
-        // ✅ TAMBAHAN: Get available graduation years based on selected period
+        // ✅ Get all periods in selected year
+        $periodsInYear = collect();
+        if ($selectedYear) {
+            $periodsInYear = Tb_Periode::whereYear('start_date', $selectedYear)
+                ->orWhereYear('end_date', $selectedYear)
+                ->orderBy('start_date')
+                ->get();
+        }
+        
+        // ✅ TAMBAHAN: Get available study programs
+        $availableStudyPrograms = Tb_study_program::orderBy('study_program')->get();
+        
+        // ✅ TAMBAHAN: Get available graduation years based on selected year
         $availableGraduationYears = [];
-        if ($selectedPeriode) {
-            $periode = Tb_Periode::find($selectedPeriode);
-            if ($periode) {
+        if ($selectedYear && $periodsInYear->count() > 0) {
+            // Kombinasi dari semua periode dalam tahun tersebut
+            $allGraduationYears = [];
+            
+            foreach ($periodsInYear as $periode) {
                 if ($periode->all_alumni || $periode->target_type === 'all') {
-                    // Jika untuk semua alumni, ambil semua tahun lulus yang ada
-                    $availableGraduationYears = Tb_Alumni::select('graduation_year')
+                    $yearGraduation = Tb_Alumni::select('graduation_year')
                         ->distinct()
                         ->whereNotNull('graduation_year')
                         ->where('graduation_year', '!=', '')
                         ->orderBy('graduation_year', 'desc')
                         ->pluck('graduation_year')
                         ->toArray();
+                    $allGraduationYears = array_merge($allGraduationYears, $yearGraduation);
                 } elseif ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
-                    // Berdasarkan years_ago_list
                     $currentYear = now()->year;
-                    $availableGraduationYears = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
+                    $yearGraduation = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
                         return (string)($currentYear - $yearsAgo);
-                    })->sort()->reverse()->values()->toArray();
+                    })->toArray();
+                    $allGraduationYears = array_merge($allGraduationYears, $yearGraduation);
                 } elseif ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
-                    // Berdasarkan target_graduation_years
-                    $availableGraduationYears = collect($periode->target_graduation_years)
+                    $yearGraduation = collect($periode->target_graduation_years)
                         ->map(function($year) { return (string)$year; })
-                        ->sort()
-                        ->reverse()
-                        ->values()
                         ->toArray();
+                    $allGraduationYears = array_merge($allGraduationYears, $yearGraduation);
                 }
             }
-        }
-        // Set default periode ke yang pertama jika belum dipilih
-        if (!$selectedPeriode && $availablePeriodes->count() > 0) {
-            $selectedPeriode = $availablePeriodes->first()->id_periode;
-
-            // ✅ TAMBAHAN: Refresh graduation years setelah set default periode
-            if ($selectedPeriode) {
-                $periode = Tb_Periode::find($selectedPeriode);
-                if ($periode) {
-                    if ($periode->all_alumni || $periode->target_type === 'all') {
-                        $availableGraduationYears = Tb_Alumni::select('graduation_year')
-                            ->distinct()
-                            ->whereNotNull('graduation_year')
-                            ->where('graduation_year', '!=', '')
-                            ->orderBy('graduation_year', 'desc')
-                            ->pluck('graduation_year')
-                            ->toArray();
-                    } elseif ($periode->target_type === 'years_ago' && !empty($periode->years_ago_list)) {
-                        $currentYear = now()->year;
-                        $availableGraduationYears = collect($periode->years_ago_list)->map(function($yearsAgo) use ($currentYear) {
-                            return (string)($currentYear - $yearsAgo);
-                        })->sort()->reverse()->values()->toArray();
-                    } elseif ($periode->target_type === 'specific_years' && !empty($periode->target_graduation_years)) {
-                        $availableGraduationYears = collect($periode->target_graduation_years)
-                            ->map(function($year) { return (string)$year; })
-                            ->sort()
-                            ->reverse()
-                            ->values()
-                            ->toArray();
-                    }
-                }
-            }
+            
+            $availableGraduationYears = array_unique($allGraduationYears);
+            sort($availableGraduationYears);
+            $availableGraduationYears = array_reverse($availableGraduationYears);
         }
         
-        // Get categories based on selected period and user type
+        // Get categories based on selected year and user type
         $availableCategories = collect();
-        if ($selectedPeriode) {
-            $categoryQuery = Tb_Category::where('id_periode', $selectedPeriode);
+        if ($selectedYear && $periodsInYear->count() > 0) {
+            $periodIds = $periodsInYear->pluck('id_periode')->toArray();
+            
+            $categoryQuery = Tb_Category::whereIn('id_periode', $periodIds);
             
             if ($selectedUserType === 'alumni') {
                 $categoryQuery->whereIn('for_type', ['alumni', 'both']);
@@ -967,13 +944,15 @@ class AdminController extends Controller
         
         // Get questions based on selected category
         $availableQuestions = collect();
+        $questionnaireChartData = [];
+        
         if ($selectedCategory) {
             if ($selectedCategory === 'all') {
-                // ✅ PERBAIKAN: Jika "Semua Kategori", ambil semua questions dari semua kategori DENGAN PARAMETER GRADUATION YEAR
-                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                // Jika "Semua Kategori", ambil semua questions dari semua kategori dalam tahun tersebut
+                $allQuestionsResult = $this->getAllQuestionsFromAllCategoriesInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'all_questions_all_categories',
-                    'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
+                    'period_name' => 'Tahun ' . $selectedYear,
                     'questions_data' => $allQuestionsResult['questions_data'],
                     'total_questions' => count($allQuestionsResult['questions_data']),
                     'total_categories' => $availableCategories->count(),
@@ -1000,13 +979,12 @@ class AdminController extends Controller
                 ->get();
         }
 
-        // ✅ PERBAIKAN: Set default question ke "all" jika belum dipilih dan ada kategori
+        // Set default question ke "all" jika belum dipilih dan ada kategori
         if (!$selectedQuestion && $selectedCategory) {
             $selectedQuestion = 'all';
         }
 
         // Generate statistics data
-        $questionnaireChartData = [];
         $questionnaireLabels = [];
         $questionnaireValues = [];
         $multipleQuestionData = [];
@@ -1014,11 +992,11 @@ class AdminController extends Controller
         if ($selectedQuestion) {
             if ($selectedQuestion === 'all') {
                 if ($selectedCategory === 'all') {
-                    // ✅ PERBAIKAN: Handle "Semua Kategori" = semua pertanyaan dari semua kategori DENGAN GRADUATION YEAR
-                    $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                    // Handle "Semua Kategori" = semua pertanyaan dari semua kategori dalam tahun
+                    $allQuestionsResult = $this->getAllQuestionsFromAllCategoriesInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                     $questionnaireChartData = [
                         'type' => 'all_questions_all_categories',
-                        'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
+                        'period_name' => 'Tahun ' . $selectedYear,
                         'questions_data' => $allQuestionsResult['questions_data'],
                         'total_questions' => count($allQuestionsResult['questions_data']),
                         'total_categories' => $availableCategories->count(),
@@ -1029,33 +1007,33 @@ class AdminController extends Controller
                     ];
                 } else {
                     // Handle "Semua Pertanyaan" dalam kategori tertentu
-                    $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                    $multipleQuestionData = $this->getAllQuestionsStatisticsInYear($selectedCategory, $selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                     $questionnaireChartData = [
                         'type' => 'multiple',
                         'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
                         'questions_data' => $multipleQuestionData,
                         'total_questions' => count($multipleQuestionData),
-                        'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                        'total_responders' => $this->getTotalRespondersInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
                         'study_program_filter' => $selectedStudyProgram,
                         'graduation_year_filter' => $selectedGraduationYear
                     ];
                 }
             } else {
                 // Handle single question
-                $singleQuestionData = $this->getSingleQuestionStatistics($selectedQuestion, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                $singleQuestionData = $this->getSingleQuestionStatisticsInYear($selectedQuestion, $selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = array_merge($singleQuestionData, [
-                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                    'total_responders' => $this->getTotalRespondersInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
                     'study_program_filter' => $selectedStudyProgram,
                     'graduation_year_filter' => $selectedGraduationYear
                 ]);
             }
         } elseif ($selectedCategory) {
-            // ✅ PERBAIKAN: Jika ada kategori tapi belum ada question, otomatis tampilkan semua pertanyaan DENGAN GRADUATION YEAR
+            // Jika ada kategori tapi belum ada question, otomatis tampilkan semua pertanyaan
             if ($selectedCategory === 'all') {
-                $allQuestionsResult = $this->getAllQuestionsFromAllCategories($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                $allQuestionsResult = $this->getAllQuestionsFromAllCategoriesInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'all_questions_all_categories',
-                    'period_name' => $availablePeriodes->where('id_periode', $selectedPeriode)->first()->periode ?? 'Periode',
+                    'period_name' => 'Tahun ' . $selectedYear,
                     'questions_data' => $allQuestionsResult['questions_data'],
                     'total_questions' => count($allQuestionsResult['questions_data']),
                     'total_categories' => $availableCategories->count(),
@@ -1065,13 +1043,13 @@ class AdminController extends Controller
                     'graduation_year_filter' => $selectedGraduationYear
                 ];
             } else {
-                $multipleQuestionData = $this->getAllQuestionsStatistics($selectedCategory, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
+                $multipleQuestionData = $this->getAllQuestionsStatisticsInYear($selectedCategory, $selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear);
                 $questionnaireChartData = [
                     'type' => 'multiple',
                     'category_name' => $availableCategories->where('id_category', $selectedCategory)->first()->category_name ?? 'Kategori',
                     'questions_data' => $multipleQuestionData,
                     'total_questions' => count($multipleQuestionData),
-                    'total_responders' => $this->getTotalResponders($selectedPeriode, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
+                    'total_responders' => $this->getTotalRespondersInYear($selectedYear, $selectedUserType, $selectedStudyProgram, $selectedGraduationYear),
                     'study_program_filter' => $selectedStudyProgram,
                     'graduation_year_filter' => $selectedGraduationYear
                 ];
@@ -1079,46 +1057,56 @@ class AdminController extends Controller
         }
 
         $result = [
-            'availablePeriodes' => $availablePeriodes,
+            'availableYears' => $availableYears, // Changed from availablePeriodes
             'availableCategories' => $availableCategories,
             'availableQuestions' => $availableQuestions,
-            'availableStudyPrograms' => $availableStudyPrograms, // ✅ PASTIKAN INI ADA
+            'availableStudyPrograms' => $availableStudyPrograms,
             'availableGraduationYears' => $availableGraduationYears,
-            'selectedPeriode' => $selectedPeriode,
+            'selectedYear' => $selectedYear, // Changed from selectedPeriode
             'selectedUserType' => $selectedUserType,
             'selectedCategory' => $selectedCategory,
             'selectedQuestion' => $selectedQuestion,
-            'selectedStudyProgram' => $selectedStudyProgram, // ✅ PASTIKAN INI ADA
-            'selectedGraduationYear' => $selectedGraduationYear, // ✅ PASTIKAN INI ADA
+            'selectedStudyProgram' => $selectedStudyProgram,
+            'selectedGraduationYear' => $selectedGraduationYear,
             'questionnaireChartData' => $questionnaireChartData,
             'questionnaireLabels' => $questionnaireLabels,
             'questionnaireValues' => $questionnaireValues,
-            'multipleQuestionData' => $multipleQuestionData
+            'multipleQuestionData' => $multipleQuestionData,
+            'periodsInYear' => $periodsInYear // ✅ TAMBAHAN: Info periode dalam tahun
         ];
         return $result;
     }
 
     /**
-     * ✅ PERBAIKAN: Method baru untuk mendapatkan semua pertanyaan dari semua kategori dengan parameter study program dan graduation year
+     * ✅ NEW METHOD: Get all questions from all categories in a specific year
      */
-    private function getAllQuestionsFromAllCategories($periodeId, $userType, $studyProgramId = null, $graduationYear = null)
+    private function getAllQuestionsFromAllCategoriesInYear($year, $userType, $studyProgramId = null, $graduationYear = null)
     {
-        $categoryQuery = Tb_Category::where('id_periode', $periodeId);
+        // Get all periods in the year
+        $periodsInYear = Tb_Periode::whereYear('start_date', $year)
+            ->orWhereYear('end_date', $year)
+            ->get();
+        
+        if ($periodsInYear->count() === 0) {
+            return ['questions_data' => [], 'total_responders' => 0];
+        }
+        
+        $periodIds = $periodsInYear->pluck('id_periode')->toArray();
+        
+        $categoryQuery = Tb_Category::whereIn('id_periode', $periodIds);
         
         if ($userType === 'alumni') {
             $categoryQuery->whereIn('for_type', ['alumni', 'both']);
         } elseif ($userType === 'company') {
             $categoryQuery->whereIn('for_type', ['company', 'both']);
         }
-        // Jika $userType === 'all', tidak ada filter kategori
         
         $categories = $categoryQuery->orderBy('order')->get();
         $allQuestionsData = [];
         
-        \Log::info('Getting all questions from all categories in period: ' . $periodeId . ', user type: ' . $userType . ', study program: ' . $studyProgramId . ', graduation year: ' . $graduationYear);
+        \Log::info('Getting all questions from all categories in year: ' . $year . ', user type: ' . $userType . ', study program: ' . $studyProgramId . ', graduation year: ' . $graduationYear);
         
-        // ✅ PERBAIKAN: Hitung total responders untuk periode dengan filter study program dan graduation year
-        $totalResponders = $this->getTotalResponders($periodeId, $userType, $studyProgramId, $graduationYear);
+        $totalResponders = $this->getTotalRespondersInYear($year, $userType, $studyProgramId, $graduationYear);
         
         foreach ($categories as $category) {
             try {
@@ -1131,10 +1119,9 @@ class AdminController extends Controller
                 
                 foreach ($questions as $question) {
                     try {
-                        // ✅ PERBAIKAN: Hitung total responders untuk pertanyaan ini dengan filter study program dan graduation year
-                        $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question, $studyProgramId, $userType, $graduationYear);
+                        $questionTotalResponses = $this->getQuestionTotalRespondersInYear($question->id_question, $year, $studyProgramId, $userType, $graduationYear);
                         
-                        // ✅ PERBAIKAN BESAR: Ambil jawaban dengan filter study program, user type, dan graduation year
+                        // Build query for answers in the specific year
                         $answersBaseQuery = "
                             SELECT DISTINCT 
                                 tai.*, 
@@ -1146,19 +1133,18 @@ class AdminController extends Controller
                             INNER JOIN tb_user u ON tua.id_user = u.id_user
                             WHERE tai.id_question = ? 
                             AND tua.status = 'completed'
+                            AND YEAR(tua.created_at) = ?
                         ";
                         
-                        $queryParams = [$question->id_question];
+                        $queryParams = [$question->id_question, $year];
                         
-                        // ✅ PERBAIKAN: Logika filter yang lebih konsisten
+                        // Apply user type filters
                         if ($userType === 'company') {
-                            // Hanya responden perusahaan
                             $answersBaseQuery .= " AND EXISTS (
                                 SELECT 1 FROM tb_company 
                                 WHERE tb_company.id_user = u.id_user
                             )";
                             
-                            // Jika ada filter study program untuk company
                             if ($studyProgramId) {
                                 $answersBaseQuery .= " AND tua.nim IS NOT NULL 
                                     AND EXISTS (
@@ -1169,7 +1155,6 @@ class AdminController extends Controller
                                 $queryParams[] = $studyProgramId;
                             }
                             
-                            // ✅ TAMBAHAN: Filter graduation year untuk company (berdasarkan alumni yang dinilai)
                             if ($graduationYear) {
                                 $answersBaseQuery .= " AND tua.nim IS NOT NULL 
                                     AND EXISTS (
@@ -1181,13 +1166,11 @@ class AdminController extends Controller
                             }
                             
                         } elseif ($userType === 'alumni') {
-                            // ✅ PERBAIKAN: Hanya responden alumni yang mengisi kuesioner sendiri
                             $answersBaseQuery .= " AND EXISTS (
                                 SELECT 1 FROM tb_alumni 
                                 WHERE tb_alumni.id_user = u.id_user
                             ) AND tua.nim IS NULL";
                             
-                            // Jika ada filter study program untuk alumni
                             if ($studyProgramId) {
                                 $answersBaseQuery .= " AND EXISTS (
                                     SELECT 1 FROM tb_alumni 
@@ -1197,7 +1180,6 @@ class AdminController extends Controller
                                 $queryParams[] = $studyProgramId;
                             }
                             
-                            // ✅ TAMBAHAN: Filter graduation year untuk alumni
                             if ($graduationYear) {
                                 $answersBaseQuery .= " AND EXISTS (
                                     SELECT 1 FROM tb_alumni 
@@ -1208,7 +1190,7 @@ class AdminController extends Controller
                             }
                             
                         } else {
-                            // $userType === 'all' - include both alumni and company
+                            // $userType === 'all'
                             $answersBaseQuery .= " AND (
                                 (EXISTS (
                                     SELECT 1 FROM tb_alumni 
@@ -1242,7 +1224,6 @@ class AdminController extends Controller
                                 $queryParams[] = $studyProgramId;
                             }
                             
-                            // ✅ TAMBAHAN: Filter graduation year untuk all
                             if ($graduationYear) {
                                 $answersBaseQuery .= " AND (
                                     (EXISTS (
@@ -1269,27 +1250,24 @@ class AdminController extends Controller
                         
                         $answers = DB::select($answersBaseQuery, $queryParams);
                         
-                        // Count answers by option dengan filter yang sama
+                        // Process answers
                         $answerCounts = [];
                         $labels = [];
                         $values = [];
                         $otherAnswers = [];
                         
                         if ($question->options && $question->options->count() > 0) {
-                            // Initialize all options with 0 count
                             foreach ($question->options as $option) {
                                 $answerCounts[$option->id_questions_options] = [
                                     'option_text' => $option->option,
                                     'count' => 0,
                                     'is_other' => $option->is_other_option ?? false
-                                ];
+                            ];
                             }
                             
-                            // Logic counting sama dengan filter
                             foreach ($answers as $answer) {
                                 $counted = false;
                                 
-                                // Prioritas 1: id_questions_options
                                 if (!empty($answer->id_questions_options)) {
                                     if (isset($answerCounts[$answer->id_questions_options])) {
                                         $answerCounts[$answer->id_questions_options]['count']++;
@@ -1304,7 +1282,6 @@ class AdminController extends Controller
                                     }
                                 }
                                 
-                                // Continue dengan prioritas lainnya seperti sebelumnya...
                                 if (!$counted && !empty($answer->answer)) {
                                     $option = $question->options->where('option', $answer->answer)->first();
                                     if ($option && isset($answerCounts[$option->id_questions_options])) {
@@ -1348,14 +1325,12 @@ class AdminController extends Controller
                                 }
                             }
                             
-                            // Prepare chart data for this question
                             foreach ($answerCounts as $data) {
                                 $labels[] = $data['option_text'];
                                 $values[] = $data['count'];
                             }
                             
                         } else {
-                            // Question tanpa options - group by answer values
                             $answerGroups = [];
                             foreach ($answers as $answer) {
                                 $answerValue = trim($answer->answer);
@@ -1380,15 +1355,12 @@ class AdminController extends Controller
                             }
                         }
                         
-                        // ✅ PERBAIKAN: total_responses dengan filter yang sama
-                        $totalResponses = $questionTotalResponses;
-                        
                         $allQuestionsData[] = [
                             'question' => $question,
                             'category' => $category,
                             'labels' => $labels,
                             'values' => $values,
-                            'total_responses' => $totalResponses,
+                            'total_responses' => $questionTotalResponses,
                             'answer_counts' => $answerCounts,
                             'other_answers' => $otherAnswers,
                             'question_type' => $question->type,
@@ -1424,13 +1396,12 @@ class AdminController extends Controller
     }
 
     /**
-     * ✅ PERBAIKAN: Method untuk menghitung responders per pertanyaan dengan filter study program, user type, dan graduation year
+     * ✅ NEW METHOD: Get question total responders in a specific year
      */
-    private function getQuestionTotalResponders($questionId, $studyProgramId = null, $userType = null, $graduationYear = null)
+    private function getQuestionTotalRespondersInYear($questionId, $year, $studyProgramId = null, $userType = null, $graduationYear = null)
     {
         try {
             if ($userType === 'company') {
-                // Hanya perusahaan yang mengisi kuesioner
                 $answersQuery = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
@@ -1438,14 +1409,14 @@ class AdminController extends Controller
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tai.id_question = ?
                     AND tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND EXISTS (
                         SELECT 1 FROM tb_company 
                         WHERE tb_company.id_user = u.id_user
                     )
                 ";
-                $queryParams = [$questionId];
+                $queryParams = [$questionId, $year];
                 
-                // Filter berdasarkan study program alumni yang dinilai perusahaan
                 if ($studyProgramId) {
                     $answersQuery .= " AND tua.nim IS NOT NULL 
                         AND EXISTS (
@@ -1456,7 +1427,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $answersQuery .= " AND tua.nim IS NOT NULL 
                         AND EXISTS (
@@ -1468,7 +1438,6 @@ class AdminController extends Controller
                 }
                 
             } elseif ($userType === 'alumni') {
-                // ✅ PERBAIKAN: Hanya alumni yang mengisi kuesioner
                 $answersQuery = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
@@ -1476,15 +1445,15 @@ class AdminController extends Controller
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tai.id_question = ?
                     AND tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND EXISTS (
                         SELECT 1 FROM tb_alumni 
                         WHERE tb_alumni.id_user = u.id_user
                     )
                     AND tua.nim IS NULL
                 ";
-                $queryParams = [$questionId];
+                $queryParams = [$questionId, $year];
                 
-                // Filter berdasarkan study program alumni
                 if ($studyProgramId) {
                     $answersQuery .= " AND EXISTS (
                         SELECT 1 FROM tb_alumni 
@@ -1494,7 +1463,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $answersQuery .= " AND EXISTS (
                         SELECT 1 FROM tb_alumni 
@@ -1505,7 +1473,6 @@ class AdminController extends Controller
                 }
                 
             } else {
-                // $userType === 'all' - include both alumni and company
                 $answersQuery = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
@@ -1513,6 +1480,7 @@ class AdminController extends Controller
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tai.id_question = ?
                     AND tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND (
                         (EXISTS (
                             SELECT 1 FROM tb_alumni 
@@ -1525,7 +1493,7 @@ class AdminController extends Controller
                         ) AND tua.nim IS NOT NULL)
                     )
                 ";
-                $queryParams = [$questionId];
+                $queryParams = [$questionId, $year];
                 
                 if ($studyProgramId) {
                     $answersQuery .= " AND (
@@ -1548,7 +1516,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $answersQuery .= " AND (
                         (EXISTS (
@@ -1575,31 +1542,31 @@ class AdminController extends Controller
             return $result[0]->total_responders ?? 0;
             
         } catch (\Exception $e) {
-            \Log::error('Error counting total question responders: ' . $e->getMessage());
+            \Log::error('Error counting total question responders in year: ' . $e->getMessage());
             return 0;
         }
     }
 
     /**
-     * ✅ PERBAIKAN: Method untuk menghitung total responders berdasarkan user type, study program, dan graduation year
+     * ✅ NEW METHOD: Get total responders in a specific year
      */
-    private function getTotalResponders($periodeId, $userType, $studyProgramId = null, $graduationYear = null)
+    private function getTotalRespondersInYear($year, $userType, $studyProgramId = null, $graduationYear = null)
     {
         try {
             if ($userType === 'company') {
-                // Hanya perusahaan yang mengisi kuesioner
                 $query = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND EXISTS (
                         SELECT 1 FROM tb_company 
                         WHERE tb_company.id_user = u.id_user
                     )
                     AND tua.nim IS NOT NULL
                 ";
-                $queryParams = [];
+                $queryParams = [$year];
                 
                 if ($studyProgramId) {
                     $query .= " AND EXISTS (
@@ -1610,7 +1577,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $query .= " AND EXISTS (
                         SELECT 1 FROM tb_alumni 
@@ -1621,21 +1587,20 @@ class AdminController extends Controller
                 }
                 
             } elseif ($userType === 'alumni') {
-                // ✅ PERBAIKAN: Hanya alumni yang mengisi kuesioner
                 $query = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND EXISTS (
                         SELECT 1 FROM tb_alumni 
                         WHERE tb_alumni.id_user = u.id_user
                     )
                     AND tua.nim IS NULL
                 ";
-                $queryParams = [];
+                $queryParams = [$year];
                 
-                // Filter berdasarkan study program alumni
                 if ($studyProgramId) {
                     $query .= " AND EXISTS (
                         SELECT 1 FROM tb_alumni 
@@ -1645,7 +1610,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $query .= " AND EXISTS (
                         SELECT 1 FROM tb_alumni 
@@ -1656,12 +1620,12 @@ class AdminController extends Controller
                 }
                 
             } else {
-                // $userType === 'all' - include both alumni and company
                 $query = "
                     SELECT COUNT(DISTINCT tua.id_user) as total_responders
                     FROM tb_user_answers tua
                     INNER JOIN tb_user u ON tua.id_user = u.id_user
                     WHERE tua.status = 'completed'
+                    AND YEAR(tua.created_at) = ?
                     AND (
                         (EXISTS (
                             SELECT 1 FROM tb_alumni 
@@ -1674,7 +1638,7 @@ class AdminController extends Controller
                         ) AND tua.nim IS NOT NULL)
                     )
                 ";
-                $queryParams = [];
+                $queryParams = [$year];
                 
                 if ($studyProgramId) {
                     $query .= " AND (
@@ -1697,7 +1661,6 @@ class AdminController extends Controller
                     $queryParams[] = $studyProgramId;
                 }
                 
-                // ✅ TAMBAHAN: Filter graduation year
                 if ($graduationYear) {
                     $query .= " AND (
                         (EXISTS (
@@ -1720,28 +1683,19 @@ class AdminController extends Controller
                 }
             }
             
-            if ($periodeId) {
-                $periode = Tb_Periode::find($periodeId);
-                if ($periode) {
-                    $query .= " AND tua.created_at BETWEEN ? AND ?";
-                    $queryParams[] = $periode->start_date;
-                    $queryParams[] = $periode->end_date;
-                }
-            }
-            
             $result = DB::select($query, $queryParams);
             return $result[0]->total_responders ?? 0;
             
         } catch (\Exception $e) {
-            \Log::error('Error counting total responders: ' . $e->getMessage());
+            \Log::error('Error counting total responders in year: ' . $e->getMessage());
             return 0;
         }
     }
 
     /**
-     * ✅ TAMBAHAN: Update method getAllQuestionsStatistics untuk mendukung graduation year filter
+     * ✅ NEW METHOD: Get all questions statistics in a specific year for a category
      */
-    private function getAllQuestionsStatistics($categoryId, $userType, $studyProgramId = null, $graduationYear = null)
+    private function getAllQuestionsStatisticsInYear($categoryId, $year, $userType, $studyProgramId = null, $graduationYear = null)
     {
         try {
             $questions = Tb_Questions::where('id_category', $categoryId)
@@ -1755,10 +1709,9 @@ class AdminController extends Controller
             
             foreach ($questions as $question) {
                 try {
-                    // Hitung total responders untuk pertanyaan ini dengan filter
-                    $questionTotalResponses = $this->getQuestionTotalResponders($question->id_question, $studyProgramId, $userType, $graduationYear);
+                    $questionTotalResponses = $this->getQuestionTotalRespondersInYear($question->id_question, $year, $studyProgramId, $userType, $graduationYear);
                     
-                    // Ambil jawaban dengan filter yang sama seperti di getAllQuestionsFromAllCategories
+                    // Build query for answers in the specific year
                     $answersBaseQuery = "
                         SELECT DISTINCT 
                             tai.*, 
@@ -1770,11 +1723,12 @@ class AdminController extends Controller
                         INNER JOIN tb_user u ON tua.id_user = u.id_user
                         WHERE tai.id_question = ? 
                         AND tua.status = 'completed'
+                        AND YEAR(tua.created_at) = ?
                     ";
                     
-                    $queryParams = [$question->id_question];
+                    $queryParams = [$question->id_question, $year];
                     
-                    // Apply same filter logic as in getAllQuestionsFromAllCategories
+                    // Apply user type filters (same logic as in getAllQuestionsFromAllCategoriesInYear)
                     if ($userType === 'company') {
                         $answersBaseQuery .= " AND EXISTS (
                             SELECT 1 FROM tb_company 
@@ -1885,14 +1839,13 @@ class AdminController extends Controller
                     $answersBaseQuery .= " ORDER BY tua.created_at DESC";
                     $answers = DB::select($answersBaseQuery, $queryParams);
                     
-                    // Process answers the same way as in getAllQuestionsFromAllCategories
+                    // Process answers (same logic as in getAllQuestionsFromAllCategoriesInYear)
                     $answerCounts = [];
                     $labels = [];
                     $values = [];
                     $otherAnswers = [];
                     
                     if ($question->options && $question->options->count() > 0) {
-                        // Initialize all options with 0 count
                         foreach ($question->options as $option) {
                             $answerCounts[$option->id_questions_options] = [
                                 'option_text' => $option->option,
@@ -1901,11 +1854,9 @@ class AdminController extends Controller
                             ];
                         }
                         
-                        // Logic counting sama dengan filter
                         foreach ($answers as $answer) {
                             $counted = false;
                             
-                            // Prioritas 1: id_questions_options
                             if (!empty($answer->id_questions_options)) {
                                 if (isset($answerCounts[$answer->id_questions_options])) {
                                     $answerCounts[$answer->id_questions_options]['count']++;
@@ -1920,7 +1871,6 @@ class AdminController extends Controller
                                 }
                             }
                             
-                            // Prioritas 2: answer text
                             if (!$counted && !empty($answer->answer)) {
                                 $option = $question->options->where('option', $answer->answer)->first();
                                 if ($option && isset($answerCounts[$option->id_questions_options])) {
@@ -1936,7 +1886,6 @@ class AdminController extends Controller
                                 }
                             }
                             
-                            // Prioritas 3: numeric ID dalam answer
                             if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
                                 $optionId = (int)$answer->answer;
                                 if (isset($answerCounts[$optionId])) {
@@ -1952,7 +1901,6 @@ class AdminController extends Controller
                                 }
                             }
                             
-                            // Prioritas 4: virtual option
                             if (!$counted && !empty($answer->answer)) {
                                 $answerValue = $answer->answer;
                                 if (!isset($answerCounts[$answerValue])) {
@@ -1966,14 +1914,12 @@ class AdminController extends Controller
                             }
                         }
                         
-                        // Prepare chart data for this question
                         foreach ($answerCounts as $data) {
                             $labels[] = $data['option_text'];
                             $values[] = $data['count'];
                         }
                         
                     } else {
-                        // Question tanpa options - group by answer values
                         $answerGroups = [];
                         foreach ($answers as $answer) {
                             $answerValue = trim($answer->answer);
@@ -2028,15 +1974,15 @@ class AdminController extends Controller
             return $allQuestionsData;
             
         } catch (\Exception $e) {
-            \Log::error('Error getting all questions statistics: ' . $e->getMessage());
+            \Log::error('Error getting all questions statistics in year: ' . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * ✅ TAMBAHAN: Update method getSingleQuestionStatistics untuk mendukung graduation year filter
+     * ✅ NEW METHOD: Get single question statistics in a specific year
      */
-    private function getSingleQuestionStatistics($questionId, $userType, $studyProgramId = null, $graduationYear = null)
+    private function getSingleQuestionStatisticsInYear($questionId, $year, $userType, $studyProgramId = null, $graduationYear = null)
     {
         try {
             $question = Tb_Questions::with('options')->find($questionId);
@@ -2044,10 +1990,9 @@ class AdminController extends Controller
                 return ['error' => 'Question not found'];
             }
             
-            // Apply same filter logic as in other methods
-            $questionTotalResponses = $this->getQuestionTotalResponders($questionId, $studyProgramId, $userType, $graduationYear);
+            $questionTotalResponses = $this->getQuestionTotalRespondersInYear($questionId, $year, $studyProgramId, $userType, $graduationYear);
             
-            // Get answers with filters
+            // Build query for answers in the specific year
             $answersBaseQuery = "
                 SELECT DISTINCT 
                     tai.*, 
@@ -2059,11 +2004,12 @@ class AdminController extends Controller
                 INNER JOIN tb_user u ON tua.id_user = u.id_user
                 WHERE tai.id_question = ? 
                 AND tua.status = 'completed'
+                AND YEAR(tua.created_at) = ?
             ";
             
-            $queryParams = [$questionId];
+            $queryParams = [$questionId, $year];
             
-            // Apply same filter logic as in getAllQuestionsFromAllCategories
+            // Apply user type filters (same logic as above)
             if ($userType === 'company') {
                 $answersBaseQuery .= " AND EXISTS (
                     SELECT 1 FROM tb_company 
@@ -2174,13 +2120,110 @@ class AdminController extends Controller
             $answersBaseQuery .= " ORDER BY tua.created_at DESC";
             $answers = DB::select($answersBaseQuery, $queryParams);
             
-            // Process answers the same way as in other methods
+            // Process answers (same logic as above)
             $answerCounts = [];
             $labels = [];
             $values = [];
             $otherAnswers = [];
             
-            // [Same logic as in getAllQuestionsFromAllCategories for processing answers]
+            if ($question->options && $question->options->count() > 0) {
+                foreach ($question->options as $option) {
+                    $answerCounts[$option->id_questions_options] = [
+                        'option_text' => $option->option,
+                        'count' => 0,
+                        'is_other' => $option->is_other_option ?? false
+                    ];
+                }
+                
+                foreach ($answers as $answer) {
+                    $counted = false;
+                    
+                    if (!empty($answer->id_questions_options)) {
+                        if (isset($answerCounts[$answer->id_questions_options])) {
+                            $answerCounts[$answer->id_questions_options]['count']++;
+                            $counted = true;
+                            
+                            if ($answerCounts[$answer->id_questions_options]['is_other'] && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                    $otherAnswers[$answer->id_questions_options] = [];
+                                }
+                                $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                            }
+                        }
+                    }
+                    
+                    if (!$counted && !empty($answer->answer)) {
+                        $option = $question->options->where('option', $answer->answer)->first();
+                        if ($option && isset($answerCounts[$option->id_questions_options])) {
+                            $answerCounts[$option->id_questions_options]['count']++;
+                            $counted = true;
+                            
+                            if ($option->is_other_option && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$answer->id_questions_options])) {
+                                    $otherAnswers[$answer->id_questions_options] = [];
+                                }
+                                $otherAnswers[$answer->id_questions_options][] = $answer->other_answer;
+                            }
+                        }
+                    }
+                    
+                    if (!$counted && !empty($answer->answer) && is_numeric($answer->answer)) {
+                        $optionId = (int)$answer->answer;
+                        if (isset($answerCounts[$optionId])) {
+                            $answerCounts[$optionId]['count']++;
+                            $counted = true;
+                            
+                            if ($answerCounts[$optionId]['is_other'] && !empty($answer->other_answer)) {
+                                if (!isset($otherAnswers[$optionId])) {
+                                    $otherAnswers[$optionId] = [];
+                                }
+                                $otherAnswers[$optionId][] = $answer->other_answer;
+                            }
+                        }
+                    }
+                    
+                    if (!$counted && !empty($answer->answer)) {
+                        $answerValue = $answer->answer;
+                        if (!isset($answerCounts[$answerValue])) {
+                            $answerCounts[$answerValue] = [
+                                'option_text' => $answerValue,
+                                'count' => 0,
+                                'is_other' => false
+                            ];
+                        }
+                        $answerCounts[$answerValue]['count']++;
+                    }
+                }
+                
+                foreach ($answerCounts as $data) {
+                    $labels[] = $data['option_text'];
+                    $values[] = $data['count'];
+                }
+                
+            } else {
+                $answerGroups = [];
+                foreach ($answers as $answer) {
+                    $answerValue = trim($answer->answer);
+                    if (!empty($answerValue)) {
+                        if (!isset($answerGroups[$answerValue])) {
+                            $answerGroups[$answerValue] = 0;
+                        }
+                        $answerGroups[$answerValue]++;
+                    }
+                }
+                
+                arsort($answerGroups);
+                
+                foreach ($answerGroups as $answerText => $count) {
+                    $labels[] = $answerText;
+                    $values[] = $count;
+                    $answerCounts[$answerText] = [
+                        'option_text' => $answerText,
+                        'count' => $count,
+                        'is_other' => false
+                    ];
+                }
+            }
             
             return [
                 'question' => $question,
@@ -2194,9 +2237,8 @@ class AdminController extends Controller
             ];
             
         } catch (\Exception $e) {
-            \Log::error('Error getting single question statistics: ' . $e->getMessage());
+            \Log::error('Error getting single question statistics in year: ' . $e->getMessage());
             return ['error' => 'Error loading question data'];
         }
     }
 }
-
