@@ -1016,7 +1016,7 @@ class QuestionnaireController extends Controller
         
         // ✅ PERBAIKAN: Get user answers with proper user type detection
         $query = Tb_User_Answers::where('id_periode', $id_periode)
-            ->with(['user.alumni', 'user.company']);
+            ->with(['user.alumni.studyProgram', 'user.company']);
 
         // ✅ PERBAIKAN: Apply user type filter yang lebih akurat
         if ($request->has('filter') && $request->get('filter') !== '') {
@@ -1046,11 +1046,15 @@ class QuestionnaireController extends Controller
                 $answer->user_type_text = 'Alumni';
                 $answer->user_type = 'alumni';
                 $answer->additional_info = $alumni->nim ?? '';
+                $answer->study_program = $alumni->studyProgram->study_program ?? '-';
             } elseif ($company) {
                 $answer->display_name = $company->company_name ?? $user->name;
                 $answer->user_type_text = 'Perusahaan';
                 $answer->user_type = 'company';
                 $answer->additional_info = $company->email ?? '';
+                $alumniList = $company->alumni()->with('studyProgram')->get();
+        $studyPrograms = $alumniList->pluck('studyProgram.study_program')->filter()->unique()->values();
+        $answer->study_program = $studyPrograms->isNotEmpty() ? $studyPrograms->implode(', ') : '-';
             } else {
                 // Fallback
                 $answer->display_name = $user ? $user->name : 'Unknown User';

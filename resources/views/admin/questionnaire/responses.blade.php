@@ -146,6 +146,8 @@
                             <th class="px-4 py-3">No</th>
                             <th class="px-4 py-3">Nama</th>
                             <th class="px-4 py-3">Tipe</th>
+                            <th class="px-4 py-3">Program Studi</th> 
+                            <th class="px-4 py-3">Alumni Dinilai</th>
                             <th class="px-4 py-3">Status</th>
                             <th class="px-4 py-3">Tanggal Pengisian</th>
                             <th class="px-4 py-3">Aksi</th>
@@ -185,7 +187,22 @@
                                             </span>
                                         @endif
                                     </td>
-                                    
+                                    <td>{{ $userAnswer->study_program ?? '-' }}</td>
+                                    <td>
+                                        @if($userAnswer->user_type_text == 'Perusahaan' && $userAnswer->nim)
+                                            @php
+                                                // Ambil alumni yang dinilai pada baris ini saja (berdasarkan NIM)
+                                                $alumni = \App\Models\Tb_Alumni::where('nim', $userAnswer->nim)->first();
+                                            @endphp
+                                            @if($alumni)
+                                                {{ $alumni->name ?? $alumni->full_name ?? $alumni->nim }}
+                                            @else
+                                                <span class="text-gray-400">-</span>
+                                            @endif
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3">
                                         <span class="px-2 py-1 rounded-full text-xs {{ $userAnswer->status == 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' }}">
                                             <i class="fas {{ $userAnswer->status == 'completed' ? 'fa-check-circle' : 'fa-clock' }} mr-1"></i>
