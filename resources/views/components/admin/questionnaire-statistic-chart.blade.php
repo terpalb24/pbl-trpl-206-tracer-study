@@ -169,23 +169,40 @@
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                         <div class="text-center">
                             <div class="text-2xl font-bold text-orange-900">
-                                {{ $questionnaireChartData['total_categories'] }}
+                                @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
+                                    {{ $questionnaireChartData['total_categories'] }}
+                                @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
+                                    1
+                                @else
+                                    {{ isset($questionnaireChartData['total_categories']) ? $questionnaireChartData['total_categories'] : 1 }}
+                                @endif
                             </div>
                             <div class="text-xs text-orange-600">Total Kategori</div>
                         </div>
                         <div class="text-center">
                             <div class="text-2xl font-bold text-orange-900">
-                                {{ $questionnaireChartData['total_questions'] }}
+                                @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
+                                    {{ $questionnaireChartData['total_questions'] }}
+                                @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
+                                    {{ $questionnaireChartData['total_questions'] }}
+                                @elseif(isset($questionnaireChartData['question']))
+                                    1
+                                @else
+                                    {{ isset($questionnaireChartData['total_questions']) ? $questionnaireChartData['total_questions'] : 0 }}
+                                @endif
                             </div>
                             <div class="text-xs text-orange-600">Total Pertanyaan</div>
                         </div>
                         <div class="text-center">
                             <div class="text-2xl font-bold text-orange-900">
                                 @php
-                                    // ✅ PERBAIKAN: Ambil total responders dari questionnaireChartData
+                                    // ✅ PERBAIKAN: Handle different data structures
                                     $totalResponders = 0;
+                                    
                                     if (isset($questionnaireChartData['total_responders'])) {
                                         $totalResponders = $questionnaireChartData['total_responders'];
+                                    } elseif (isset($questionnaireChartData['total_responses'])) {
+                                        $totalResponders = $questionnaireChartData['total_responses'];
                                     } else {
                                         // Fallback: hitung berdasarkan filter yang dipilih
                                         if ($selectedYear) {
@@ -544,8 +561,11 @@
                 </div>
                 
                 <!-- Questions Grid -->
+                @php
+                    $questionsCount = count($questionnaireChartData['questions_data']);
+                @endphp
                 <div class="grid grid-cols-1 
-                            @if($categoryQuestions->count() < 2)
+                            @if($questionsCount < 2)
                                 lg:grid-cols-1 xl:grid-cols-1
                             @else
                                 lg:grid-cols-2 xl:grid-cols-2
@@ -998,7 +1018,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     data: {
                         labels: chartLabels,
                         datasets: [{
-                            label: 'Jumlah Responden',
+                            label: 'Responden',
                             data: chartValues,
                             backgroundColor: colors.slice(0, chartLabels.length).map(color => color + '80'),
                             borderColor: colors.slice(0, chartLabels.length),
@@ -1008,7 +1028,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     },
                     options: {
                         responsive: true,
-                        plugins: {
+                        maintainAspectRatio: false,
+                        plugins: { 
                             legend: { display: false },
                             tooltip: {
                                 callbacks: {
