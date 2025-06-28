@@ -98,7 +98,7 @@ class EksportRespondenController extends Controller
                 // Tambahkan kolom NIM Alumni dan Nama Alumni untuk perusahaan
                 $staticHeaders = array_merge(
                     array_slice($headers, 0, 4),
-                    ['NIM Alumni yang dinilai', 'Nama Alumni yang dinilai'],
+                    ['NIM Alumni yang dinilai', 'Nama Alumni yang dinilai','Prodi Alumni yang dinilai'],
                     array_slice($headers, 4)
                 );
             }
@@ -119,6 +119,14 @@ class EksportRespondenController extends Controller
                 $sheet->getStyle($colLetter . $headerRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $col++;
             }
+         if ($type === 'company') {
+            $answers = $answers->sortBy(function($ua) {
+            $nimAlumni = $ua->nim ?? null;
+            if (!$nimAlumni) return '';
+              $alumni = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
+              return $alumni && $alumni->studyProgram ? $alumni->studyProgram->study_program : '';
+             })->values();
+          }
 
             // Fill data
             $row = $headerRow + 1;
@@ -144,13 +152,17 @@ class EksportRespondenController extends Controller
                     // Tampilkan NIM Alumni dan Nama Alumni yang dinilai perusahaan
                     $nimAlumni = $userAnswer->nim ?? '';
                     $namaAlumni = '';
+                    $prodiAlumni ='-';
                     if ($nimAlumni) {
-                        $alumniObj = \App\Models\Tb_Alumni::where('nim', $nimAlumni)->first();
-                        $namaAlumni = $alumniObj ? $alumniObj->name : '';
-                    }
-                    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
-                    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
-                }
+                     $alumniObj = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
+                     $namaAlumni = $alumniObj ? $alumniObj->name : '';
+                     $prodiAlumni = $alumniObj && $alumniObj->studyProgram ? $alumniObj->studyProgram->study_program : '-';
+              }
+
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiAlumni);
+}
 
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tanggalIsi);
 

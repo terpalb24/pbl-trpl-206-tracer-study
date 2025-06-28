@@ -244,7 +244,41 @@
             input.style.display = 'none';
             document.getElementById('new_company_name').value = '';
         }
+
+        
     }
+    document.addEventListener("DOMContentLoaded", function () {
+    // Toggle sidebar
+    const toggleSidebar = document.getElementById("toggle-sidebar");
+    const closeSidebar = document.getElementById("close-sidebar");
+    const sidebar = document.getElementById("sidebar");
+    if (toggleSidebar && sidebar) {
+        toggleSidebar.addEventListener("click", function () {
+            sidebar.classList.toggle("-translate-x-full");
+        });
+    }
+    if (closeSidebar && sidebar) {
+        closeSidebar.addEventListener("click", function () {
+            sidebar.classList.add("-translate-x-full");
+        });
+    }
+
+    // Profile dropdown toggle
+    const profileToggle = document.getElementById("profile-toggle");
+    const profileDropdown = document.getElementById("profile-dropdown");
+    if (profileToggle && profileDropdown) {
+        profileToggle.addEventListener("click", function () {
+            profileDropdown.classList.toggle("hidden");
+        });
+        document.addEventListener("click", function (event) {
+            if (
+                !profileDropdown.contains(event.target) &&
+                !profileToggle.contains(event.target)
+            ) {
+                profileDropdown.classList.add("hidden");
+            }
+        });
+    }
+    });
 </script>
-<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection

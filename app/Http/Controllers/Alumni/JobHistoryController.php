@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Alumni;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Tb_Company;
-use App\Models\Tb_jobhistory as JobHistory;
+use App\Models\Tb_jobhistory ;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Carbon\Carbon;
@@ -27,14 +27,14 @@ class JobHistoryController extends Controller
     }
 
     // Ambil data job histories berdasarkan nim
-    $jobHistories = JobHistory::where('nim', $nim)->get();
+    $jobHistories = Tb_jobhistory::where('nim', $nim)->get();
 
     return view('alumni.job-history.index', compact('jobHistories'));
 }
 
     public function create()
     {
-        $companies = \App\Models\Tb_Company::all();
+        $companies = Tb_Company::all();
         return view('alumni.job-history.create', compact('companies'));
     }
 
@@ -63,7 +63,7 @@ public function store(Request $request)
     $id_company = $request->id_company;
     // Jika alumni mengisi nama perusahaan baru
     if (!$id_company && $request->filled('new_company_name')) {
-        $company = \App\Models\Tb_Company::create([
+        $company = Tb_Company::create([
             'company_name' => $request->new_company_name,
             'company_address' => null,
             'company_email' => null,
@@ -73,8 +73,8 @@ public function store(Request $request)
         $id_company = $company->id_company;
     }
 
-    $startDate = \Carbon\Carbon::parse($request->start_date);
-    $endDate = $request->end_date ? \Carbon\Carbon::parse($request->end_date)->endOfMonth() : null;
+    $startDate = Carbon::parse($request->start_date);
+    $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfMonth() : null;
 
     $duration = null;
     if ($endDate) {
@@ -89,7 +89,7 @@ public function store(Request $request)
         $duration = 'Masih bekerja';
     }
 
-    JobHistory::create([
+    Tb_jobhistory::create([
         'nim' => auth()->user()->alumni->nim,
         'id_company' => $id_company,
         'position' => $request->position,
@@ -112,7 +112,7 @@ public function store(Request $request)
 
     public function edit($id)
     {
-        $jobHistory = JobHistory::findOrFail($id);
+        $jobHistory = Tb_jobhistory::findOrFail($id);
         $companies = Tb_Company::all(); // Ambil semua perusahaan
 
         return view('alumni.job-history.edit', compact('jobHistory', 'companies'));
@@ -120,7 +120,7 @@ public function store(Request $request)
 
   
 
-public function update(Request $request, JobHistory $jobHistory)
+public function update(Request $request, Tb_jobhistory $jobHistory)
 {
     $request->validate([
         'id_company' => 'required|exists:tb_company,id_company',
@@ -184,7 +184,7 @@ public function update(Request $request, JobHistory $jobHistory)
 
 
 
-    public function destroy(JobHistory $jobHistory)
+    public function destroy(Tb_jobhistory $jobHistory)
     {
         $jobHistory->delete();
 
