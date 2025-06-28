@@ -61,45 +61,45 @@ class EksportRespondenController extends Controller
             return $ua->user && $ua->user->company;
         })->values();
 
-    $fillCategorySheet = function($sheet, $answers, $headers, $category, $periode, $type = 'alumni') {
+                $fillCategorySheet = function($sheet, $answers, $headers, $category, $periode, $type = 'alumni') {
 
-    // === Tambahkan Logo ===
-    $drawing = new Drawing();
-    $drawing->setName('Logo Kampus');
-    $drawing->setDescription('Logo');
-    $drawing->setPath(public_path('assets/images/polteklogo.png')); // Ganti backslash ke slash
-    $drawing->setHeight(80); // Sesuaikan ukuran jika perlu
-    $drawing->setCoordinates('A1'); // Letakkan di kiri atas
-    $drawing->setOffsetX(10); // Jarak dari kiri cell
-    $drawing->setOffsetY(5);  // Jarak dari atas cell
-    $drawing->setWorksheet($sheet);
+                // === Tambahkan Logo ===
+                $drawing = new Drawing();
+                $drawing->setName('Logo Kampus');
+                $drawing->setDescription('Logo');
+                $drawing->setPath(public_path('assets/images/polteklogo.png')); // Ganti backslash ke slash
+                $drawing->setHeight(80); // Sesuaikan ukuran jika perlu
+                $drawing->setCoordinates('A1'); // Letakkan di kiri atas
+                $drawing->setOffsetX(10); // Jarak dari kiri cell
+                $drawing->setOffsetY(5);  // Jarak dari atas cell
+                $drawing->setWorksheet($sheet);
 
-    // === Judul Utama ===
-    $sheet->mergeCells('B1:H1'); // Span beberapa kolom agar judul besar
-    $sheet->setCellValue('B1', 'Laporan Hasil Kuesioner Tracer Study');
-    $sheet->getStyle('B1')->getFont()->setSize(16)->setBold(true);
-    $sheet->getStyle('B1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-    $sheet->getRowDimension('1')->setRowHeight(40); // Tinggikan baris judul
+                // === Judul Utama ===
+                $sheet->mergeCells('B1:H1'); // Span beberapa kolom agar judul besar
+                $sheet->setCellValue('B1', 'Laporan Hasil Kuesioner Tracer Study');
+                $sheet->getStyle('B1')->getFont()->setSize(16)->setBold(true);
+                $sheet->getStyle('B1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getRowDimension('1')->setRowHeight(40); // Tinggikan baris judul
 
-    // === Informasi Periode (Baris 4–6) ===
-    $sheet->setCellValue('A4', 'Periode Kuesioner');
-    $sheet->setCellValue('B4', $periode->periode_name);
-    $sheet->setCellValue('A5', 'Tanggal Mulai');
-    $sheet->setCellValue('B5', $periode->start_date);
-    $sheet->setCellValue('A6', 'Tanggal Selesai');
-    $sheet->setCellValue('B6', $periode->end_date);
+                // === Informasi Periode (Baris 4–6) ===
+                $sheet->setCellValue('A4', 'Periode Kuesioner');
+                $sheet->setCellValue('B4', $periode->periode_name);
+                $sheet->setCellValue('A5', 'Tanggal Mulai');
+                $sheet->setCellValue('B5', $periode->start_date);
+                $sheet->setCellValue('A6', 'Tanggal Selesai');
+                $sheet->setCellValue('B6', $periode->end_date);
 
-    // Header tabel dimulai dari baris ke-8 agar cukup ruang
-    $headerRow = 8;
+                // Header tabel dimulai dari baris ke-8 agar cukup ruang
+                $headerRow = 8;
 
-           if ($type === 'alumni') {
-    $staticHeaders = ['No', 'Nama', 'Program Studi', 'Tipe', 'NIM', 'Tanggal Isi'];
-} elseif ($type === 'company') {
-    $staticHeaders = [
-        'No', 'Prodi Alumni yang dinilai', 'Nama Perusahaan', 'Tipe',
-        'NIM Alumni yang dinilai', 'Nama Alumni yang dinilai', 'Tanggal Isi'
-    ];
-}
+                    if ($type === 'alumni') {
+                $staticHeaders = ['No', 'Nama', 'Program Studi', 'Tipe', 'NIM', 'Tanggal Isi'];
+            } elseif ($type === 'company') {
+                $staticHeaders = [
+                    'No', 'Prodi Alumni yang dinilai', 'Nama Perusahaan', 'Tipe',
+                    'NIM Alumni yang dinilai', 'Nama Alumni yang dinilai', 'Tanggal Isi'
+                ];
+            }
 
             foreach ($staticHeaders as $col => $header) {
                 $colLetter = Coordinate::stringFromColumnIndex($col + 1);
@@ -143,28 +143,28 @@ class EksportRespondenController extends Controller
                 $colIdx = 1;
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $idx + 1);
              if ($type === 'alumni') {
-    // Alumni: Nama - Prodi - Tipe - NIM - Tanggal Isi
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
-} elseif ($type === 'company') {
-    // Company: Prodi alumni yang dinilai (kolom 2), nama perusahaan, tipe, nim alumni, nama alumni
-    $nimAlumni = $userAnswer->nim ?? '';
-    $namaAlumni = '';
-    $prodiAlumni = '-';
-    if ($nimAlumni) {
-        $alumniObj = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
-        $namaAlumni = $alumniObj ? $alumniObj->name : '';
-        $prodiAlumni = $alumniObj && $alumniObj->studyProgram ? $alumniObj->studyProgram->study_program : '-';
-    }
+                // Alumni: Nama - Prodi - Tipe - NIM - Tanggal Isi
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
+            } elseif ($type === 'company') {
+                // Company: Prodi alumni yang dinilai (kolom 2), nama perusahaan, tipe, nim alumni, nama alumni
+                $nimAlumni = $userAnswer->nim ?? '';
+                $namaAlumni = '';
+                $prodiAlumni = '-';
+                if ($nimAlumni) {
+                    $alumniObj = \App\Models\Tb_Alumni::with('studyProgram')->where('nim', $nimAlumni)->first();
+                    $namaAlumni = $alumniObj ? $alumniObj->name : '';
+                    $prodiAlumni = $alumniObj && $alumniObj->studyProgram ? $alumniObj->studyProgram->study_program : '-';
+                }
 
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiAlumni); // kolom 2
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name); // nama perusahaan
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
-    $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
-}
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiAlumni); // kolom 2
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name); // nama perusahaan
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimAlumni);
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $namaAlumni);
+            }
 
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tanggalIsi);
 
@@ -218,27 +218,19 @@ class EksportRespondenController extends Controller
                                     $val = '';
                                      // tampilkan juga answer aslinya jika ada dan berbeda dari $main
                                    
-                                     if (!empty($item->answer) && $item->answer !== $main) {
-                                        $val .=  $item->answer ;
+                                    // Build value with consistent bracket logic
+                                    if (!empty($item->answer) && $item->answer !== $main) {
+                                        $val .= $item->answer;
                                     }
+                                    $val .= '[';
                                     if ($optionBefore !== '') {
-                                        $val .= '['. $optionBefore . ' ';
+                                        $val .= $optionBefore . ' ';
                                     }
-                                    if (!$optionBefore && !$optionAfter) {
-                                        $val .='[' . $main . ']';
-                                    }
-                                    if ($optionBefore && $optionAfter) {
-                                        $val .= $main;
-                                    }
-                                    if (!$optionBefore && $optionAfter) {
-                                        $val .='[' . $main;
-                                    }
-                                    if (!$optionAfter && $optionBefore) {
-                                        $val .=$main . ']';
-                                    }
+                                    $val .= $main;
                                     if ($optionAfter !== '') {
-                                        $val .= ' ' . $optionAfter . ']';
+                                        $val .= ' ' . $optionAfter;
                                     }
+                                    $val .= ']';
                                     
                                 } else {
                                     if ($opt) {
@@ -295,23 +287,18 @@ class EksportRespondenController extends Controller
                                     $answerText .=  $item->answer ;
                                 }
                                 // before_text (dari kolom option)
-                                if (!$optionBefore && !$optionAfter) {
+                                if ($optionBefore !== '' || $optionAfter !== '') {
+                                    $answerText .= '[';
+                                    if ($optionBefore !== '') {
+                                        $answerText .= $optionBefore . ' ';
+                                    }
+                                    $answerText .= $main;
+                                    if ($optionAfter !== '') {
+                                        $answerText .= ' ' . $optionAfter;
+                                    }
+                                    $answerText .= ']';
+                                } else {
                                     $answerText .= '[' . $main . ']';
-                                }
-                                if ($optionBefore && $optionAfter) {
-                                    $answerText .=$main;
-                                }
-                                if (!$optionBefore && $optionAfter) {
-                                    $answerText .= '[' . $main;
-                                }
-                                if (!$optionAfter && $optionBefore) {
-                                    $answerText .= $main . ']';
-                                }
-                                if ($optionBefore !== '') {
-                                    $answerText .= ' ['. $optionBefore . ' ';
-                                }
-                                if ($optionAfter !== '') {
-                                    $answerText .= ' ' . $optionAfter . ']';
                                 }
                                
                             } else {
