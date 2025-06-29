@@ -181,6 +181,7 @@
                                        value="{{ $alumni->studyProgram->study_program ?? 'Program Studi tidak ditemukan' }}" 
                                        disabled 
                                        class="w-full bg-gray-50 border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base text-gray-500">
+                                <input type="hidden" name="id_study" value="{{ $alumni->id_study }}">
                                 <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
                                     <i class="fas fa-lock text-gray-400 text-sm"></i>
                                 </div>
@@ -270,7 +271,10 @@
                                 </p>
                             @enderror
                         </div>
-
+                        @php
+                            // Cek apakah ada jobhistory dengan 'duration' = "Masih bekerja"
+                            $hasCurrentJob = $alumni->jobHistories()->where('duration', "Masih bekerja")->exists();
+                        @endphp
                         <!-- Status Pekerjaan -->
                         <div class="space-y-1 sm:space-y-2">
                             <label for="status" class="block text-sm sm:text-base font-semibold text-gray-700">
@@ -280,19 +284,36 @@
                                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
                                     <i class="fas fa-briefcase text-gray-400 text-sm"></i>
                                 </div>
-                                <select name="status" id="status"
-                                        class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none {{ $errors->has('status') ? 'border-red-500' : 'border-gray-300' }}">
-                                    <option value="">-- Pilih Status Pekerjaan --</option>
-                                    <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
-                                    <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
-                                    <option value="melanjutkan studi" {{ old('status', $alumni->status) == 'melanjutkan studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
-                                    <option value="berwiraswasta" {{ old('status', $alumni->status) == 'berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
-                                    <option value="sedang mencari kerja" {{ old('status', $alumni->status) == 'sedang mencari kerja' ? 'selected' : '' }}>Sedang Mencari Kerja</option>
-                                </select>
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                                    <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
-                                </div>
+                                @if($hasCurrentJob)
+                                    <input type="text"
+                                           value="{{ ucfirst($alumni->status) }}"
+                                           disabled
+                                           class="w-full bg-gray-50 border border-gray-300 pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base text-gray-500">
+                                    <input type="hidden" name="status" value="{{ $alumni->status }}">
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <i class="fas fa-lock text-gray-400 text-sm"></i>
+                                    </div>
+                                @else
+                                    <select name="status" id="status"
+                                            class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none {{ $errors->has('status') ? 'border-red-500' : 'border-gray-300' }}">
+                                        <option value="">-- Pilih Status Pekerjaan --</option>
+                                        <option value="bekerja" {{ old('status', $alumni->status) == 'bekerja' ? 'selected' : '' }}>Bekerja</option>
+                                        <option value="tidak bekerja" {{ old('status', $alumni->status) == 'tidak bekerja' ? 'selected' : '' }}>Tidak Bekerja</option>
+                                        <option value="melanjutkan studi" {{ old('status', $alumni->status) == 'melanjutkan studi' ? 'selected' : '' }}>Melanjutkan Studi</option>
+                                        <option value="berwiraswasta" {{ old('status', $alumni->status) == 'berwiraswasta' ? 'selected' : '' }}>Berwiraswasta</option>
+                                        <option value="sedang mencari kerja" {{ old('status', $alumni->status) == 'sedang mencari kerja' ? 'selected' : '' }}>Sedang Mencari Kerja</option>
+                                    </select>
+                                    <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-chevron-down text-gray-400 text-sm"></i>
+                                    </div>
+                                @endif
                             </div>
+                            @if($hasCurrentJob)
+                                <p class="text-xs text-blue-600 mt-1 flex items-center">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Status pekerjaan tidak dapat diubah karena Anda menandai "Saya saat ini sedang bekerja di perusahaan ini" pada riwayat pekerjaan.
+                                </p>
+                            @endif
                             @error('status')
                                 <p class="text-red-500 text-xs flex items-center mt-1">
                                     <i class="fas fa-exclamation-circle mr-1"></i>
@@ -300,32 +321,31 @@
                                 </p>
                             @enderror
                         </div>
-                    </div>
 
-                    {{-- Required Fields Notice --}}
-                    <div class="mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <div class="flex items-start">
-                            <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5 flex-shrink-0"></i>
-                            <div class="text-sm text-blue-800">
-                                <p class="font-medium">Informasi Penting:</p>
-                                <p class="mt-1">Field yang ditandai dengan tanda <span class="text-red-500 font-bold">*</span> wajib diisi. Pastikan semua informasi yang Anda masukkan sudah benar.</p>
+                        {{-- Required Fields Notice --}}
+                        <div class="mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                                <div class="text-sm text-blue-800">
+                                    <p class="font-medium">Informasi Penting:</p>
+                                    <p class="mt-1">Field yang ditandai dengan tanda <span class="text-red-500 font-bold">*</span> wajib diisi. Pastikan semua informasi yang Anda masukkan sudah benar.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {{-- Tombol Aksi --}}
-                    <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
-                        <a href="{{ route('dashboard.alumni') }}"
-                            class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base">
-                            <i class="fas fa-arrow-left mr-2"></i>
-                            <span>Kembali</span>
-                        </a>
-                        <button type="submit"
-                                class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base">
-                            <i class="fas fa-save mr-2"></i>
-                            <span>Simpan Perubahan</span>
-                        </button>
-                    </div>
+                        {{-- Tombol Aksi --}}
+                        <div class="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+                            <a href="{{ route('dashboard.alumni') }}"
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                <span>Kembali</span>
+                            </a>
+                            <button type="submit"
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 text-sm sm:text-base">
+                                <i class="fas fa-save mr-2"></i>
+                                <span>Simpan Perubahan</span>
+                            </button>
+                        </div>
                 </form>
             </div>
         </div>

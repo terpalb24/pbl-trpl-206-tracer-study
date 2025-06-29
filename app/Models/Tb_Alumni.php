@@ -54,7 +54,7 @@ class Tb_Alumni extends Authenticatable
 
     public function jobHistories()
     {
-        return $this->hasMany(Tb_JobHistory::class, 'nim', 'nim');
+        return $this->hasMany(Tb_jobhistory::class, 'nim', 'nim');
     }
 
     

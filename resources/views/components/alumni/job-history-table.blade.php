@@ -55,43 +55,6 @@
                                 <i class="fas fa-info-circle text-xs sm:text-sm"></i>
                             </button>
                         </div>
-                        <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 items-center justify-center backdrop-blur-sm bg-black/50 hidden p-4">
-                            <div class="bg-white rounded-lg shadow-xl p-4 sm:p-6 lg:p-8 w-full max-w-xs sm:max-w-md lg:max-w-2xl relative max-h-screen overflow-y-auto">
-                                <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
-                                        class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
-                                    <i class="fas fa-times text-lg sm:text-xl"></i>
-                                </button>
-                                <h2 class="text-lg sm:text-xl lg:text-2xl font-semibold mb-4 sm:mb-6 text-blue-800 pr-8">Detail Riwayat Kerja</h2>
-                                <div class="space-y-3 sm:space-y-4">
-                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
-                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Nama Perusahaan</span>
-                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->company->company_name ?? '-' }}</div>
-                                    </div>
-                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
-                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Posisi</span>
-                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->position }}</div>
-                                    </div>
-                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
-                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Gaji</span>
-                                        <div class="text-sm sm:text-base text-gray-900 mt-1">Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Durasi</span>
-                                        <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->duration }}</div>
-                                    </div>
-                                    <div class="border-b border-gray-100 pb-2 sm:pb-3">
-                                        <span class="text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wide">Periode Bekerja</span>
-                                        <div class="text-sm sm:text-base text-gray-900 mt-1">
-                                            @php
-                                                $start = $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->translatedFormat('F Y') : '-';
-                                                $end = $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->translatedFormat('F Y') : 'Sekarang';
-                                            @endphp
-                                            {{ $start }} - {{ $end }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </td>
                 </tr>
                 @endforeach
@@ -147,44 +110,6 @@
                     {{ $start }} - {{ $end }}
                 </span>
             </div>
-            {{-- Modal Detail --}}
-            <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 items-center justify-center backdrop-blur-sm bg-black/50 hidden p-4">
-                <div class="bg-white rounded-lg shadow-xl p-4 w-full max-w-xs relative max-h-screen overflow-y-auto">
-                    <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
-                            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
-                        <i class="fas fa-times text-lg"></i>
-                    </button>
-                    <h2 class="text-lg font-semibold mb-4 text-blue-800 pr-8">Detail Riwayat Kerja</h2>
-                    <div class="space-y-3">
-                        <div class="border-b border-gray-100 pb-2">
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Nama Perusahaan</span>
-                            <div class="text-sm text-gray-900 mt-1">{{ $jobHistory->company->company_name ?? '-' }}</div>
-                        </div>
-                        <div class="border-b border-gray-100 pb-2">
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Posisi</span>
-                            <div class="text-sm text-gray-900 mt-1">{{ $jobHistory->position }}</div>
-                        </div>
-                        <div class="border-b border-gray-100 pb-2">
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Gaji</span>
-                            <div class="text-sm text-gray-900 mt-1">Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
-                        </div>
-                        <div>
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Durasi</span>
-                            <div class="text-sm text-gray-900 mt-1">{{ $jobHistory->duration }}</div>
-                        </div>
-                        <div class="border-b border-gray-100 pb-2">
-                            <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Periode Bekerja</span>
-                            <div class="text-sm text-gray-900 mt-1">
-                                @php
-                                    $start = $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->translatedFormat('F Y') : '-';
-                                    $end = $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->translatedFormat('F Y') : 'Sekarang';
-                                @endphp
-                                {{ $start }} - {{ $end }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
         @endforeach
     </div>
@@ -201,6 +126,47 @@
 @else
     <x-alumni.job-history-empty />
 @endif
+
+@foreach($jobHistories as $index => $jobHistory)
+    {{-- Modal Detail (letakkan di sini, di luar card/table, cukup satu per data) --}}
+    <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 hidden flex items-center justify-center backdrop-blur-sm bg-black/50 p-2 sm:p-4">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-xs sm:max-w-md lg:max-w-2xl p-4 sm:p-8 relative max-h-screen overflow-y-auto">
+            <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
+                    class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1 sm:p-2">
+                <i class="fas fa-times text-lg sm:text-xl"></i>
+            </button>
+            <h2 class="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-blue-800 text-center">Detail Riwayat Kerja</h2>
+            <div class="space-y-4">
+                <div>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Nama Perusahaan</span>
+                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->company->company_name ?? '-' }}</div>
+                </div>
+                <div>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Posisi</span>
+                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->position }}</div>
+                </div>
+                <div>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Gaji</span>
+                    <div class="text-sm sm:text-base text-gray-900 mt-1">Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
+                </div>
+                <div>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Durasi</span>
+                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->duration }}</div>
+                </div>
+                <div>
+                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Periode Bekerja</span>
+                    <div class="text-sm sm:text-base text-gray-900 mt-1">
+                        @php
+                            $start = $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->translatedFormat('F Y') : '-';
+                            $end = $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->translatedFormat('F Y') : 'Sekarang';
+                        @endphp
+                        {{ $start }} - {{ $end }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 <script>
 function showDetail(id) {

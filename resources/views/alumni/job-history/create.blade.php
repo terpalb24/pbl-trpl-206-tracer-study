@@ -24,7 +24,7 @@
                                     Status profil Anda saat ini: <strong>"{{ ucfirst($alumni->status) }}"</strong>
                                 </p>
                                 <p class="text-sm text-amber-700">
-                                    Jika Anda mencentang "Saya saat ini sedang bekerja di peran ini", 
+                                    Jika Anda mencentang "Saya saat ini sedang bekerja di perusahaan ini", 
                                     status profil akan otomatis diperbarui menjadi <strong>"Bekerja"</strong>.
                                 </p>
                             </div>
@@ -70,7 +70,7 @@
                             <div class="flex items-start">
                                 <input type="checkbox" id="is_current" name="is_current" {{ old('is_current') ? 'checked' : '' }} class="mt-1">
                                 <div class="ml-2">
-                                    <label for="is_current" class="text-base font-medium">Saya saat ini sedang bekerja di peran ini</label>
+                                    <label for="is_current" class="text-base font-medium">Saya saat ini sedang bekerja di perusahaan ini</label>
                                     @if($alumni->status !== 'bekerja')
                                         <p class="text-sm text-amber-600 mt-1">
                                             <i class="fas fa-info-circle mr-1"></i>
