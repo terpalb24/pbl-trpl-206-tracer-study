@@ -171,10 +171,10 @@
                             <div class="text-2xl font-bold text-orange-900">
                                 @if(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'all_questions_all_categories')
                                     {{ $questionnaireChartData['total_categories'] }}
-                                @elseif(isset($questionnaireChartData['type']) && $questionnaireChartData['type'] === 'multiple')
-                                    1
+                                @elseif(isset($questionnaireChartData['total_categories']) == 0)
+                                    0
                                 @else
-                                    {{ isset($questionnaireChartData['total_categories']) ? $questionnaireChartData['total_categories'] : 1 }}
+                                    {{ isset($questionnaireChartData['total_categories']) ? $questionnaireChartData['total_categories'] : 0 }}
                                 @endif
                             </div>
                             <div class="text-xs text-orange-600">Total Kategori</div>
