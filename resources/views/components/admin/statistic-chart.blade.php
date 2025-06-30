@@ -54,31 +54,20 @@
             </div>
         </div>
 
-        <!-- Kuesioner & Pendapatan -->
-        <div class="flex flex-col gap-6">
-            <div class="bg-white rounded-2xl shadow-md p-4 flex flex-col">
-                <div class="text-blue-800 font-semibold text-base sm:text-lg mb-2">Alumni Mengisi Kuesioner</div>
-                <div class="text-3xl font-bold text-blue-700 text-center">
-                    {{ isset($respondedPerStudy) && request('study_program') ? ($respondedPerStudy[request('study_program')] ?? 0) : (isset($respondedPerStudy) ? array_sum($respondedPerStudy) : 0) }}
-                </div>
+        <!-- Diagram Bar Rata-rata Pendapatan Alumni per Range -->
+        <div class="bg-white rounded-2xl shadow-md p-4 flex flex-col justify-between">
+            <div class="text-blue-800 font-semibold text-center text-base sm:text-lg mb-4">Distribusi Rentang Gaji Alumni</div>
+            <div class="w-full h-64 sm:h-72 lg:h-80">
+                <canvas id="salaryRangeChart" class="w-full h-full"></canvas>
             </div>
+        </div>
+    </div>
 
-            <div class="bg-white rounded-2xl shadow-md p-4 flex flex-col">
-                <div class="text-blue-800 font-semibold text-base sm:text-lg mb-2">Rata-rata Pendapatan Alumni</div>
-                <div class="text-2xl font-bold text-green-700 text-center break-words">
-                    @php
-                        $salary = 0;
-                        if (isset($salaryPerStudy)) {
-                            if (request('study_program')) {
-                                $salary = round($salaryPerStudy[request('study_program')] ?? 0);
-                            } else {
-                                $salary = count($salaryPerStudy) ? round(array_sum($salaryPerStudy) / count($salaryPerStudy)) : 0;
-                            }
-                        }
-                    @endphp
-                    Rp {{ number_format($salary, 0, ',', '.') }}
-                </div>
-            </div>
+    <!-- Total Alumni Mengisi Kuesioner -->
+    <div class="mt-6 bg-white rounded-2xl shadow-md p-4 flex flex-col items-center justify-center">
+        <div class="text-blue-800 font-semibold text-base sm:text-lg mb-2">Total Alumni Mengisi Kuesioner</div>
+        <div class="text-3xl font-bold text-blue-700">
+            {{ $answerCountAlumni ?? 0 }}
         </div>
     </div>
 </div>
@@ -87,13 +76,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Filter auto-submit
     const form = document.getElementById('global-filter-form');
     form.querySelectorAll('select').forEach(select => {
         select.addEventListener('change', () => form.submit());
     });
 
-    // Bar Chart
+    // Bar Chart: Status Alumni
     const barCtx = document.getElementById('statistikChart').getContext('2d');
     const chartData = [
         {{ $statisticData['bekerja'] ?? 0 }},
@@ -144,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Pie Chart
+    // Pie Chart: Tahun Lulus
     const pieCtx = document.getElementById('graduationYearPieChart').getContext('2d');
     const pieLabels = {!! json_encode(array_keys($graduationYearStatisticData ?? [])) !!};
     const pieValues = {!! json_encode(array_values($graduationYearStatisticData ?? [])) !!};
@@ -168,6 +156,47 @@ document.addEventListener('DOMContentLoaded', function () {
                     labels: {
                         font: { size: window.innerWidth < 640 ? 10 : 12 },
                         padding: window.innerWidth < 640 ? 10 : 15
+                    }
+                }
+            }
+        }
+    });
+
+    // Bar Chart: Rentang Gaji
+    const salaryCtx = document.getElementById('salaryRangeChart').getContext('2d');
+    const salaryLabels = {!! json_encode(array_keys($salaryRanges ?? [])) !!};
+    const salaryValues = {!! json_encode(array_values($salaryRanges ?? [])) !!};
+
+    new Chart(salaryCtx, {
+        type: 'bar',
+        data: {
+            labels: salaryLabels,
+            datasets: [{
+                label: 'Jumlah Alumni',
+                data: salaryValues,
+                backgroundColor: '#AAD8E6',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0,
+                        stepSize: 1,
+                        callback: val => Number.isInteger(val) ? val : ''
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 10 },
+                        autoSkip: false
                     }
                 }
             }

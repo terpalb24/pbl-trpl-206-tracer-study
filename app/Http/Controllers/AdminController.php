@@ -86,24 +86,70 @@ class AdminController extends Controller
         ->pluck('total', 'id_study')
         ->toArray();
 
-    // Rata-rata pendapatan per prodi (alumni status bekerja)
-    $salaryQuery = Tb_Alumni::select('tb_alumni.id_study', DB::raw('AVG(CAST(tb_jobhistory.salary AS UNSIGNED)) as avg_salary'))
-        ->join('tb_jobhistory', 'tb_alumni.nim', '=', 'tb_jobhistory.nim')
-        ->where('tb_alumni.status', 'bekerja');
+  // Distribusi Rentang Gaji Alumni
+$salaryRanges = [
+    '0 - 3jt' => 0,
+    '3jt - 4.5jt' => 0,
+    '4.5jt - 5jt' => 0,
+    '5jt - 5.5jt' => 0,
+    '6jt - 6.5jt' => 0,
+    '6.5jt - 7jt' => 0,
+    '7jt - 8jt' => 0,
+    '8jt - 9jt' => 0,
+    '9jt - 10jt' => 0,
+    '10jt - 12jt' => 0,
+    '12jt - 15jt' => 0,
+    '15jt - 20jt' => 0,
+    '> 20jt' => 0,
+];
 
-    if ($studyProgram) {
-        $salaryQuery->where('tb_alumni.id_study', $studyProgram);
-    }
-    if ($graduationYear) {
-        $salaryQuery->where('tb_alumni.graduation_year', $graduationYear);
-    }
+$salaryBaseQuery = DB::table('tb_jobhistory')
+    ->join('tb_alumni', 'tb_alumni.nim', '=', 'tb_jobhistory.nim')
+    ->where('tb_alumni.status', 'bekerja');
 
-    $salaryPerStudy = $salaryQuery
-        ->groupBy('tb_alumni.id_study')
-        ->pluck('avg_salary', 'id_study')
-        ->toArray();
+if ($studyProgram) {
+    $salaryBaseQuery->where('tb_alumni.id_study', $studyProgram);
+}
+if ($graduationYear) {
+    $salaryBaseQuery->where('tb_alumni.graduation_year', $graduationYear);
+}
+
+$salaries = $salaryBaseQuery->pluck('tb_jobhistory.salary')->map(fn($s) => (int) $s);
+
+foreach ($salaries as $salary) {
+    if ($salary < 3000000) $salaryRanges['0 - 3jt']++;
+    elseif ($salary < 4500000) $salaryRanges['3jt - 4.5jt']++;
+    elseif ($salary < 5000000) $salaryRanges['4.5jt - 5jt']++;
+    elseif ($salary < 5500000) $salaryRanges['5jt - 5.5jt']++;
+    elseif ($salary < 6500000) $salaryRanges['6jt - 6.5jt']++;
+    elseif ($salary < 7000000) $salaryRanges['6.5jt - 7jt']++;
+    elseif ($salary < 8000000) $salaryRanges['7jt - 8jt']++;
+    elseif ($salary < 9000000) $salaryRanges['8jt - 9jt']++;
+    elseif ($salary < 10000000) $salaryRanges['9jt - 10jt']++;
+    elseif ($salary < 12000000) $salaryRanges['10jt - 12jt']++;
+    elseif ($salary < 15000000) $salaryRanges['12jt - 15jt']++;
+    elseif ($salary < 20000000) $salaryRanges['15jt - 20jt']++;
+    else $salaryRanges['> 20jt']++;
+}
+    $salaryPerStudy = [];
 
     $questionnaireStats = $this->getQuestionnaireStatistics($request);
+
+    $completedAnswersQuery = DB::table('tb_user_answers')
+    ->join('tb_alumni', 'tb_user_answers.id_user', '=', 'tb_alumni.id_user')
+    ->where('tb_user_answers.status', 'completed');
+
+if ($studyProgram) {
+    $completedAnswersQuery->where('tb_alumni.id_study', $studyProgram);
+}
+
+
+if ($graduationYear) {
+    $completedAnswersQuery->where('tb_alumni.graduation_year', $graduationYear);
+}
+
+$answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')->count();
+
 
     return view('admin.dashboard', array_merge([
         'alumniCount' => $alumniCount,
@@ -115,12 +161,15 @@ class AdminController extends Controller
         'respondedPerStudy' => $respondedPerStudy,
         'salaryPerStudy' => $salaryPerStudy,
         'allGraduationYears' => $allGraduationYears,
-        'filterGraduationYear' => $graduationYear
+        'filterGraduationYear' => $graduationYear,
+        'salaryRanges' => $salaryRanges,
+        'answerCountAlumni' => $answerCountAlumni,
+        
     ], $questionnaireStats));
 }
 
 
-    // Tampilkan semua alumni
+    // Tampilkan semua alumni\
     public function alumniIndex(Request $request)
     {
         $query = Tb_alumni::with('studyProgram');

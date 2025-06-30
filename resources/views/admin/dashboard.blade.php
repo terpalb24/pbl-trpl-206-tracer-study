@@ -39,6 +39,8 @@
                     :salaryPerStudy="$salaryPerStudy"
                     :allGraduationYears="$allGraduationYears"
                     :filterGraduationYear="$filterGraduationYear"
+                    :salaryRanges="$salaryRanges"
+                    :answerCountAlumni="$answerCountAlumni"
                 />
             </div>
         </div>
@@ -61,6 +63,7 @@
                     :questionnaireChartData="$questionnaireChartData"
                     :questionnaireLabels="$questionnaireLabels"
                     :questionnaireValues="$questionnaireValues"
+                
                 />
             </div>
         </div>
