@@ -396,21 +396,23 @@
                             </div>
                             
                             <div class="flex gap-2 pt-2 border-t border-gray-100">
-                                <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                    class="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200">
-                                    <i class="bi bi-pencil-square"></i>
-                                    <span>Edit Alumni</span>
+                                <a href="{{ route('admin.alumni.edit', $item->nim) }}"
+                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 transition-colors duration-200"
+                                title="Edit Alumni">
+                                <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
                                 <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
                                     onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
                                     class="flex-1">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
-                                        class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200">
-                                        <i class="bi bi-trash"></i>
-                                        <span>Hapus Alumni</span>
-                                    </button>
+                                    <!-- Delete Button pakai modal -->
+                                 <button type="button"
+                                     onclick="openDeleteModal({{ $item->id_user }})"
+                                     class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                     title="Hapus Alumni">
+                                    <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                 </button>
                                 </form>
                             </div>
                         </div>
