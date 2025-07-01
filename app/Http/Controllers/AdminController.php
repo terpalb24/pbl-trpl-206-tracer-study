@@ -323,6 +323,7 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
 
     public function import(Request $request)
     {
+        set_time_limit(300);
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls'
         ]);
@@ -719,6 +720,7 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
 
     public function companyImport(Request $request)
     {
+        set_time_limit(300);
         $request->validate([
             'file' => 'required|file|mimes:xlsx,xls'
         ]);

@@ -95,7 +95,7 @@
                     <textarea name="question" 
                               id="question" 
                               rows="3" 
-                            class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $errors->has('question') ? 'border-red-500' : 'border-gray-300' }}"
+                              class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 {{ $errors->has('question') ? 'border-red-500' : 'border-gray-300' }}"
                               required>{{ old('question', $question->question) }}</textarea>
                     @error('question')
                         <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">

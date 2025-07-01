@@ -95,6 +95,7 @@ class QuestionnaireImportExportController extends Controller
 
     public function import(Request $request) 
     {
+        set_time_limit(300);
         $validator = Validator::make($request->all(), [
             'periode_id' => 'required|exists:tb_periode,id_periode',
             'file' => 'required|file|mimes:xlsx,xls'
