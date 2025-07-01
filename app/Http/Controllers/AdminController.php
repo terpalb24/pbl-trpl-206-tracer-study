@@ -19,6 +19,7 @@ use App\Models\Tb_Questions;
 use App\Models\Tb_User_Answer_Item;
 use App\Models\Tb_User_Answers;
 
+
 class AdminController extends Controller
 {
     public function dashboard(Request $request)
@@ -2293,4 +2294,54 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
             return ['error' => 'Error loading question data'];
         }
     }
+  public function storeStudyProgram(Request $request)
+{
+    $request->validate([
+        'study_program' => 'required|string|max:255|unique:tb_study_program,study_program',
+    ]);
+
+    Tb_study_program::create([
+        'study_program' => $request->study_program,
+    ]);
+
+    return redirect()->back()->with('success', 'Program Studi berhasil ditambahkan.');
+}
+
+public function updateStudyProgram(Request $request)
+{
+    $request->validate([
+        'id_study' => 'required|exists:tb_study_program,id_study',
+        'study_program' => 'required|string|max:255|unique:tb_study_program,study_program,' . $request->id_study . ',id_study',
+    ]);
+
+    $prodi =Tb_study_program ::where('id_study', $request->id_study)->first();
+
+    if (!$prodi) {
+        return back()->with('error', 'Program Studi tidak ditemukan.');
+    }
+
+    $prodi->study_program = $request->study_program;
+    $prodi->save();
+
+    return redirect()->back()->with('success', 'Program Studi berhasil diperbarui.');
+}
+
+
+public function deleteStudyProgramBySelect(Request $request)
+{
+    $request->validate([
+        'id_study' => 'required|exists:tb_study_program,id_study',
+    ]);
+
+    $prodi = Tb_study_program::where('id_study', $request->id_study)->first();
+
+    if (!$prodi) {
+        return redirect()->back()->with('error', 'Program Studi tidak ditemukan.');
+    }
+
+    $prodi->delete();
+
+    return redirect()->back()->with('success', 'Program Studi berhasil dihapus.');
+}
+
 }
