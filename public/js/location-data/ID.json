@@ -48,11 +48,13 @@
       "code": "ID-KR",
       "name": "Kepulauan Riau",
       "cities": [
-        {"code": "ID-KR-TPN", "name": "Tanjung Pinang"},
-        {"code": "ID-KR-BTM", "name": "Batam"},
-        {"code": "ID-KR-BIN", "name": "Bintan"},
-        {"code": "ID-KR-KRM", "name": "Karimun"},
-        {"code": "ID-KR-LGA", "name": "Lingga"}
+        {"code": "ID-KR-BTM", "name": "Kota Batam"},
+        {"code": "ID-KR-TPN", "name": "Kota Tanjung Pinang"},
+        {"code": "ID-KR-NAT", "name": "Kabupaten Natuna"},
+        {"code": "ID-KR-BIN", "name": "Kabupaten Bintan"},
+        {"code": "ID-KR-TBA", "name": "Kabupaten Karimun"},
+        {"code": "ID-KR-ANJ", "name": "Kabupaten Kepulauan Anambas"},
+        {"code": "ID-KR-LGA", "name": "Kabupaten Lingga"}
       ]
     },
     {

@@ -493,7 +493,7 @@
                 <div class="mb-4 sm:mb-6 border border-gray-200 p-3 sm:p-4 rounded-lg">
                     <div class="flex items-start mb-3">
                         <input type="checkbox" 
-                               id="toggle-conditional" 
+                               id="has_dependency" 
                                name="has_dependency" 
                                value="1" 
                                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5 flex-shrink-0" 
@@ -943,75 +943,68 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // SIMPLIFIED Dependency handling - basic functionality only
-    const questionOptionsMap = {
-        @if(isset($availableQuestions) && count($availableQuestions) > 0)
-            @foreach($availableQuestions as $q)
-                @if(($q->type === 'option' || $q->type === 'multiple') && isset($q->options) && count($q->options) > 0)
-                    "{{ $q->id_question }}": [
-                        @foreach($q->options as $opt)
-                            { 
-                                id: "{{ $opt->id_questions_options }}", 
-                                text: @json($opt->option)
-                            },
-                        @endforeach
-                    ],
-                @endif
-            @endforeach
-        @endif
-    };
+    // // SIMPLIFIED Dependency handling - basic functionality only
+    // const questionOptionsMap = {
+    //     @if(isset($availableQuestions) && count($availableQuestions) > 0)
+    //         @foreach($availableQuestions as $q)
+    //             @if(in_array($q->type, ['option', 'multiple', 'rating', 'scale']) && $q->options->count() > 0)
+    //                 "{{ $q->id_question }}": [
+    //                     @foreach($q->options as $option)
+    //                         {
+    //                             id: "{{ $option->id_questions_options }}",
+    //                             text: @json($option->option)
+    //                         },
+    //                     @endforeach
+    //                 ],
+    //             @endif
+    //         @endforeach
+    //     @endif
+    // };
 
-    const dependsOnSelect = document.getElementById('depends_on');
-    const dependsValueSelect = document.getElementById('depends_value');
-    const selectedDependsOn = "{{ old('depends_on') }}";
-    const selectedDependsValue = "{{ old('depends_value') }}";
+    // const dependsOnSelect = document.getElementById('depends_on');
+    // const dependsValueSelect = document.getElementById('depends_value');
+    // const selectedDependsOn = "{{ old('depends_on') }}";
+    // const selectedDependsValue = "{{ old('depends_value') }}";
 
-    function populateDependsValueOptions(questionId, selectedValue = null) {
-        if (!dependsValueSelect) return;
+    // // ===== ENHANCED DEPENDENCY FUNCTIONS =====
+    // function populateDependsValueOptions(questionId, selectedValue = null) {
+    //     const dependsValueSelect = document.getElementById('depends_value_select');
+    //     if (!dependsValueSelect) return;
         
-        dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+    //     // Clear existing options
+    //     dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
         
-        if (questionOptionsMap[questionId] && questionOptionsMap[questionId].length > 0) {
-            questionOptionsMap[questionId].forEach(opt => {
-                const optionEl = document.createElement('option');
-                optionEl.value = opt.id;
-                optionEl.textContent = opt.text;
-                if (selectedValue && selectedValue == opt.id) {
-                    optionEl.selected = true;
-                }
-                dependsValueSelect.appendChild(optionEl);
-            });
+    //     if (questionOptionsMap[questionId] && questionOptionsMap[questionId].length > 0) {
+    //         questionOptionsMap[questionId].forEach(opt => {
+    //             const optionEl = document.createElement('option');
+    //             optionEl.value = opt.id;
+    //             optionEl.textContent = opt.text;
+    //             if (selectedValue && selectedValue == opt.id) {
+    //                 optionEl.selected = true;
+    //             }
+    //             dependsValueSelect.appendChild(optionEl);
+    //         });
             
-            console.log(`Populated ${questionOptionsMap[questionId].length} options for question ${questionId}`);
-        } else {
-            // If no options available, show message
-            const noOptionEl = document.createElement('option');
-            noOptionEl.value = '';
-            noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
-            noOptionEl.disabled = true;
-            dependsValueSelect.appendChild(noOptionEl);
-            
-            console.log(`No options available for question ${questionId}`);
-        }
-        
-        // Update hidden field
-        const hiddenDependsValue = document.getElementById('hidden_depends_value');
-        if (hiddenDependsValue && selectedValue) {
-            hiddenDependsValue.value = selectedValue;
-        }
-    }
+    //     } else {
+    //         const noOptionEl = document.createElement('option');
+    //         noOptionEl.value = '';
+    //         noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
+    //         noOptionEl.disabled = true;
+    //         dependsValueSelect.appendChild(noOptionEl);
+    //     }
+    // }
     
-    // On page load, if there's old input, populate options
-    if (selectedDependsOn && dependsOnSelect && dependsValueSelect) {
-        populateDependsValueOptions(selectedDependsOn, selectedDependsValue);
-    }
+    // // On page load, if there's old input, populate options
+    // if (selectedDependsOn && dependsOnSelect && dependsValueSelect) {
+    //     populateDependsValueOptions(selectedDependsOn, selectedDependsValue);
+    // }
 
-    // On dependency question change
-    if (dependsOnSelect) {
-        dependsOnSelect.addEventListener('change', function() {
-            populateDependsValueOptions(this.value, null);
-        });
-    }
+    // // On dependency question change
+    // if (dependsOnSelect) {
+    //     dependsOnSelect.addEventListener('change', function() {
+    //         populateDependsValueOptions(this.value, null);
+    //     });
+    // }
     
     // Add support for location type
     document.addEventListener('DOMContentLoaded', function() {
