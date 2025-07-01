@@ -192,11 +192,20 @@
                 </div>
                 <p class="text-sm sm:text-base text-gray-600 font-medium mb-4">Tambah Kategori</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}" 
-                       class="inline-flex items-center px-3 sm:px-4 py-2 bg-gray-600 text-white rounded-md text-sm hover:bg-gray-700 transition-colors duration-200">
-                        <i class="fas fa-plus mr-2"></i>
-                        <span class="hidden sm:inline">Kategori Baru</span>
-                        <span class="sm:hidden">Baru</span>
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=both" 
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+                        <i class="fas fa-users mr-2"></i>
+                        Kategori Umum
+                    </a>
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                        <i class="fas fa-graduation-cap mr-2"></i>
+                        Kategori Alumni
+                    </a>
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                       class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                        <i class="fas fa-building mr-2"></i>
+                        Kategori Perusahaan
                     </a>
                 </div>
             </div>
@@ -435,22 +444,34 @@
                             @endif
                         </div>
                     @endforeach
-                @else
-                    <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-6 sm:p-8 text-center">
-                        <div class="text-gray-400 mb-4">
-                            <i class="fas fa-graduation-cap text-4xl sm:text-6xl"></i>
+
+                        <!-- Add Alumni Category Button -->
+                        <div class="bg-white rounded-xl shadow-md p-6 text-center border-2 border-dashed border-blue-300 hover:border-blue-400 transition-colors">
+                            <div class="text-blue-500 mb-2">
+                                <i class="fas fa-plus-circle text-3xl"></i>
+                            </div>
+                            <p class="text-blue-600 font-medium mb-4">Tambah Kategori untuk Alumni</p>
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                                <i class="fas fa-graduation-cap mr-2"></i>
+                                Buat Kategori Alumni
+                            </a>
                         </div>
-                        <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Alumni</h3>
-                        <p class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Buat kategori pertama untuk kuesioner alumni.</p>
-                        <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
-                           class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-md text-sm sm:text-base hover:bg-blue-700 transition-colors duration-200">
-                            <i class="fas fa-plus mr-2"></i>
-                            <span class="hidden sm:inline">Buat Kategori Alumni</span>
-                            <span class="sm:hidden">Buat Kategori</span>
-                        </a>
-                    </div>
-                @endif
-            </div>
+                    @else
+                        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                            <div class="text-gray-400 mb-4">
+                                <i class="fas fa-graduation-cap text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Alumni</h3>
+                            <p class="text-gray-500 mb-6">Buat kategori pertama untuk kuesioner alumni.</p>
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
+                                <i class="fas fa-plus mr-2"></i>
+                                Buat Kategori Alumni
+                            </a>
+                        </div>
+                    @endif
+                </div>
 
             <!-- Company Tab Content -->
             <div id="company-content" class="tab-content {{ $hasAlumniCategories ? 'hidden' : '' }}">
@@ -687,22 +708,34 @@
                             @endif
                         </div>
                     @endforeach
-                @else
-                    <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-6 sm:p-8 text-center">
-                        <div class="text-gray-400 mb-4">
-                            <i class="fas fa-building text-4xl sm:text-6xl"></i>
+
+                        <!-- Add Company Category Button -->
+                        <div class="bg-white rounded-xl shadow-md p-6 text-center border-2 border-dashed border-green-300 hover:border-green-400 transition-colors">
+                            <div class="text-green-500 mb-2">
+                                <i class="fas fa-plus-circle text-3xl"></i>
+                            </div>
+                            <p class="text-green-600 font-medium mb-4">Tambah Kategori untuk Perusahaan</p>
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                                <i class="fas fa-building mr-2"></i>
+                                Buat Kategori Perusahaan
+                            </a>
                         </div>
-                        <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Perusahaan</h3>
-                        <p class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Buat kategori pertama untuk kuesioner perusahaan.</p>
-                        <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
-                           class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-md text-sm sm:text-base hover:bg-green-700 transition-colors duration-200">
-                            <i class="fas fa-plus mr-2"></i>
-                            <span class="hidden sm:inline">Buat Kategori Perusahaan</span>
-                            <span class="sm:hidden">Buat Kategori</span>
-                        </a>
-                    </div>
-                @endif
-            </div>
+                    @else
+                        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+                            <div class="text-gray-400 mb-4">
+                                <i class="fas fa-building text-6xl"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Perusahaan</h3>
+                            <p class="text-gray-500 mb-6">Buat kategori pertama untuk kuesioner perusahaan.</p>
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                               class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
+                                <i class="fas fa-plus mr-2"></i>
+                                Buat Kategori Perusahaan
+                            </a>
+                        </div>
+                    @endif
+                </div>
 
             
         @else
