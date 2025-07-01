@@ -598,7 +598,7 @@ class QuestionnaireController extends Controller
             
             if ($request->has('has_dependency') && $request->input('has_dependency') == '1') {
                 $dependsOn = $request->input('hidden_depends_on') ?: $request->input('depends_on');
-                $dependsValue = $request->input('depends_value') ? json_encode($request->input('depends_value')) : null;
+                $dependsValue = $request->input('hidden_depends_value') ?: $request->input('depends_value');
             }
 
             $question = Tb_Questions::create([
