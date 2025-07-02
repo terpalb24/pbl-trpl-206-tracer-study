@@ -538,27 +538,65 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Pilih jawaban yang memicu pertanyaan ini:
-                            </label>
-                            <select name="depends_value" 
-                                    id="depends_value_select" 
-                                    class="w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('depends_value') border-red-500 @enderror">
-                                <option value="">-- Pilih Jawaban --</option>
-                            </select>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Pilih jawaban yang memicu pertanyaan ini:
+                                </label>
+                                <button type="button" id="add-dependency-answer" 
+                                        class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition-colors" 
+                                        style="display: none;">
+                                    <i class="fas fa-plus mr-1"></i> Tambah Jawaban
+                                </button>
+                            </div>
+                            
+                            <div id="dependency-answers-container">
+                                <!-- First dependency answer (always present) -->
+                                <div class="dependency-answer-item flex items-center mb-2" data-index="0">
+                                    <select name="depends_value[]" 
+                                            class="depends-value-select flex-grow px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2 @error('depends_value.0') border-red-500 @enderror">
+                                        <option value="">-- Pilih Jawaban --</option>
+                                    </select>
+                                    <span class="text-gray-400 text-sm">(Minimal 1)</span>
+                                </div>
+                                
+                                @if(old('depends_value') && count(old('depends_value')) > 1)
+                                    @for($i = 1; $i < count(old('depends_value')); $i++)
+                                        <div class="dependency-answer-item flex items-center mb-2" data-index="{{ $i }}">
+                                            <select name="depends_value[]" 
+                                                    class="depends-value-select flex-grow px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2">
+                                                <option value="">-- Pilih Jawaban --</option>
+                                            </select>
+                                            <button type="button" class="remove-dependency-answer text-red-500 hover:text-red-700 px-2">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    @endfor
+                                @endif
+                            </div>
+                            
                             @error('depends_value')
                                 <p class="text-red-500 text-xs mt-1 flex items-center">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
+                            @error('depends_value.*')
+                                <p class="text-red-500 text-xs mt-1 flex items-center">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                            
+                            <div class="mt-2 bg-blue-50 p-2 rounded text-xs text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Logika:</strong> Pertanyaan ini akan muncul jika <strong>SALAH SATU</strong> dari jawaban yang dipilih di atas terpilih (OR logic)
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Hidden fields for dependency -->
                 <input type="hidden" id="hidden_depends_on" name="hidden_depends_on" value="{{ old('depends_on') }}">
-                <input type="hidden" id="hidden_depends_value" name="hidden_depends_value" value="{{ old('depends_value') }}">
 
                 <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
                     <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
@@ -1125,246 +1163,202 @@ function populateDependsValueOptions(questionId, selectedValue = null) {
     }
 }
 
-// ✅ PERBAIKAN: On depends_on change
-if (dependsOnSelect && dependsValueSelect) {
-    dependsOnSelect.addEventListener('change', function() {
-        console.log('Depends on changed to:', this.value);
-        populateDependsValueOptions(this.value, null);
-        
-        // Update hidden field
-        const hiddenDependsOn = document.getElementById('hidden_depends_on');
-        if (hiddenDependsOn) {
-            hiddenDependsOn.value = this.value;
+// On page load, populate depends_value options if depends_on is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const dependsOnSelect = document.getElementById('depends_on_select');
+    const dependsValueSelect = document.getElementById('depends_value_select');
+    const hiddenDependsOn = document.getElementById('hidden_depends_on');
+    const hiddenDependsValue = document.getElementById('hidden_depends_value');
+    
+    if (dependsOnSelect && hiddenDependsOn) {
+        // Populate on page load if there's old input
+        if ("{{ old('depends_on') }}") {
+            dependsOnSelect.value = "{{ old('depends_on') }}";
+            populateDependsValueOptions("{{ old('depends_on') }}", "{{ old('depends_value') }}");
         }
-    });
-}
-
-// ✅ PERBAIKAN: On depends_value change
-if (dependsValueSelect) {
-    dependsValueSelect.addEventListener('change', function() {
-        console.log('Depends value changed to:', this.value);
         
-        // Update hidden field
-        const hiddenDependsValue = document.getElementById('hidden_depends_value');
-        if (hiddenDependsValue) {
-            hiddenDependsValue.value = this.value;
-        }
-    });
-}
+        // On change, populate depends_value options
+        dependsOnSelect.addEventListener('change', function() {
+            populateDependsValueOptions(this.value);
+        });
+    }
+});
 
-// ✅ PERBAIKAN: Form submission validation
-const form = document.querySelector('form');
-if (form) {
-    form.addEventListener('submit', function(e) {
-        // Handle dependency fields before submission
-        const toggleConditional = document.getElementById('has_dependency');
-        const dependsOnSelect = document.getElementById('depends_on_select');
-        const dependsValueSelect = document.getElementById('depends_value_select');
-        const hiddenDependsOn = document.getElementById('hidden_depends_on');
-        const hiddenDependsValue = document.getElementById('hidden_depends_value');
-        
-        if (toggleConditional && toggleConditional.checked) {
-            // Dependency is enabled, validate the selections
-            if (!dependsOnSelect.value) {
-                e.preventDefault();
-                alert('Pilih pertanyaan yang menjadi dependensi!');
-                return false;
+// Enhanced dependency handling untuk multiple answers
+document.addEventListener('DOMContentLoaded', function() {
+    const addDependencyAnswerBtn = document.getElementById('add-dependency-answer');
+    const dependencyAnswersContainer = document.getElementById('dependency-answers-container');
+    const dependsOnSelect = document.getElementById('depends_on_select');
+    
+    let dependencyAnswerIndex = document.querySelectorAll('.dependency-answer-item').length;
+    
+    // Show/hide add button based on question selection
+    if (dependsOnSelect) {
+        dependsOnSelect.addEventListener('change', function() {
+            const addBtn = document.getElementById('add-dependency-answer');
+            if (this.value) {
+                addBtn.style.display = 'inline-block';
+                // Populate all existing dependency answer selects
+                populateAllDependencyAnswers(this.value);
+            } else {
+                addBtn.style.display = 'none';
+                // Clear all dependency answer selects
+                clearAllDependencyAnswers();
+            }
+        });
+    }
+    
+    // Add new dependency answer
+    if (addDependencyAnswerBtn && dependencyAnswersContainer) {
+        addDependencyAnswerBtn.addEventListener('click', function() {
+            const newAnswerDiv = document.createElement('div');
+            newAnswerDiv.className = 'dependency-answer-item flex items-center mb-2';
+            newAnswerDiv.setAttribute('data-index', dependencyAnswerIndex);
+            
+            newAnswerDiv.innerHTML = `
+                <select name="depends_value[]" 
+                        class="depends-value-select flex-grow px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2">
+                    <option value="">-- Pilih Jawaban --</option>
+                </select>
+                <button type="button" class="remove-dependency-answer text-red-500 hover:text-red-700 px-2">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            
+            dependencyAnswersContainer.appendChild(newAnswerDiv);
+            
+            // Populate the new select with options
+            const questionId = dependsOnSelect.value;
+            if (questionId) {
+                populateDependencyAnswerSelect(newAnswerDiv.querySelector('.depends-value-select'), questionId);
             }
             
-            if (!dependsValueSelect.value) {
-                e.preventDefault();
-                alert('Pilih jawaban yang memicu pertanyaan ini!');
-                return false;
+            dependencyAnswerIndex++;
+        });
+        
+        // Remove dependency answer
+        dependencyAnswersContainer.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-dependency-answer') || e.target.closest('.remove-dependency-answer')) {
+                const answerItem = e.target.closest('.dependency-answer-item');
+                if (answerItem && document.querySelectorAll('.dependency-answer-item').length > 1) {
+                    answerItem.remove();
+                }
             }
-            
-            // Copy values to hidden fields for submission
-            hiddenDependsOn.value = dependsOnSelect.value;
-            hiddenDependsValue.value = dependsValueSelect.value;
-            
-            console.log('Dependency enabled:', {
-                depends_on: dependsOnSelect.value,
-                depends_value: dependsValueSelect.value
+        });
+    }
+    
+    // Function to populate single dependency answer select
+    function populateDependencyAnswerSelect(selectElement, questionId, selectedValue = null) {
+        if (!selectElement) return;
+        
+        selectElement.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+        
+        if (questionOptionsMap[questionId] && questionOptionsMap[questionId].length > 0) {
+            questionOptionsMap[questionId].forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt.id;
+                optionEl.textContent = opt.text;
+                if (selectedValue && selectedValue == opt.id) {
+                    optionEl.selected = true;
+                }
+                selectElement.appendChild(optionEl);
             });
         } else {
-            // Dependency is disabled, clear the hidden fields
-            hiddenDependsOn.value = '';
-            hiddenDependsValue.value = '';
-            
-            console.log('Dependency disabled, clearing values');
+            const noOptionEl = document.createElement('option');
+            noOptionEl.value = '';
+            noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
+            noOptionEl.disabled = true;
+            selectElement.appendChild(noOptionEl);
         }
-        
-        console.log('Form validation passed, submitting...');
-        return true;
-    });
-}
-
-// ✅ PERBAIKAN: Enhanced form handling with before/after text
-document.addEventListener('DOMContentLoaded', function() {
-    const questionTypeSelect = document.getElementById('question_type');
-    
-    // Function to update hidden fields with correct before/after text
-    function updateHiddenFields(questionType) {
-        const finalBeforeText = document.getElementById('final_before_text');
-        const finalAfterText = document.getElementById('final_after_text');
-        
-        let beforeValue = '';
-        let afterValue = '';
-        
-        switch(questionType) {
-            case 'text':
-                beforeValue = document.getElementById('text_before').value || '';
-                afterValue = document.getElementById('text_after').value || '';
-                break;
-            case 'email':
-                beforeValue = document.getElementById('email_before').value || '';
-                afterValue = document.getElementById('email_after').value || '';
-                break;
-            case 'numeric':
-                beforeValue = document.getElementById('numeric_before').value || '';
-                afterValue = document.getElementById('numeric_after').value || '';
-                break;
-        }
-        
-        finalBeforeText.value = beforeValue;
-        finalAfterText.value = afterValue;
-        
-        console.log('Updated hidden fields for', questionType, ':', {
-            before: beforeValue,
-            after: afterValue
-        });
     }
-
-    // Handle question type change
-    if (questionTypeSelect) {
-        questionTypeSelect.addEventListener('change', function() {
-            // Toggle sections based on question type
-            // Get all sections - use safe access
-            const sections = {
-                options: document.getElementById('options-section'),
-                rating: document.getElementById('rating-options-section'),
-                scale: document.getElementById('scale-options-section'),
-                text: document.getElementById('text-options-section'),
-                numeric: document.getElementById('numeric-options-section'),
-                email: document.getElementById('email-options-section'),
-                location: document.getElementById('location-options-section'),
-            };
-            
-            // Hide all sections first
-            Object.values(sections).forEach(section => {
-                if (section) section.classList.add('hidden');
-            });
-            
-            // Show appropriate section based on type
-            if (this.value === 'option' || this.value === 'multiple') {
-                if (sections.options) {
-                    sections.options.classList.remove('hidden');
-                    // Set required attribute for visible option inputs only
-                    const visibleInputs = sections.options.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
-                    visibleInputs.forEach(input => input.setAttribute('required', 'required'));
-                }
-            } else if (this.value === 'rating') {
-                if (sections.rating) {
-                    sections.rating.classList.remove('hidden');
-                    console.log('Rating section shown');
-                }
-            } else if (this.value === 'scale') {
-                if (sections.scale) {
-                    sections.scale.classList.remove('hidden');
-                    console.log('Scale section shown');
-                }
-            } else if (this.value === 'text') {
-                if (sections.text) {
-                    sections.text.classList.remove('hidden');
-                }
-            } else if (this.value === 'numeric') {
-                if (sections.numeric) {
-                    sections.numeric.classList.remove('hidden');
-                }
-            } else if (this.value === 'email') {
-                if (sections.email) {
-                    sections.email.classList.remove('hidden');
-                }
-            } else if (this.value === 'location') {
-                if (sections.location) {
-                    sections.location.classList.remove('hidden');
-                }
-            }
-
-            // Remove required from option inputs when not option/multiple type
-            if (this.value !== 'option' && this.value !== 'multiple' && sections.options) {
-                const visibleInputs = sections.options.querySelectorAll('input[name="options[]"]:not([type="hidden"])');
-                visibleInputs.forEach(input => input.removeAttribute('required'));
-            }
-            
-            // Update hidden fields when question type changes
-            updateHiddenFields(this.value);
-            
-            console.log('Question type changed to:', this.value);
+    
+    // Function to populate all dependency answer selects
+    function populateAllDependencyAnswers(questionId) {
+        const allSelects = document.querySelectorAll('.depends-value-select');
+        const oldValues = @json(old('depends_value', []));
+        
+        allSelects.forEach((select, index) => {
+            const selectedValue = oldValues[index] || null;
+            populateDependencyAnswerSelect(select, questionId, selectedValue);
         });
     }
     
-    // Handle input changes for before/after text fields
-    ['text_before', 'text_after', 'email_before', 'email_after', 'numeric_before', 'numeric_after'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) {
-            input.addEventListener('input', function() {
-                updateHiddenFields(questionTypeSelect.value);
-                updatePreview();
-            });
-        }
-    });
-
-    // Update preview text
-    function updatePreview() {
-        // Text preview
-        const textBefore = document.getElementById('text_before');
-        const textAfter = document.getElementById('text_after');
-        const textBeforePreview = document.getElementById('text-before-preview');
-        const textAfterPreview = document.getElementById('text-after-preview');
-        
-        if (textBefore && textAfter && textBeforePreview && textAfterPreview) {
-            textBeforePreview.textContent = textBefore.value || '';
-            textAfterPreview.textContent = textAfter.value || '';
-        }
-        
-        // Email preview  
-        const emailBefore = document.getElementById('email_before');
-        const emailAfter = document.getElementById('email_after');
-        const emailBeforePreview = document.getElementById('email-before-preview');
-        const emailAfterPreview = document.getElementById('email-after-preview');
-        
-        if (emailBefore && emailAfter && emailBeforePreview && emailAfterPreview) {
-            emailBeforePreview.textContent = emailBefore.value || '';
-            emailAfterPreview.textContent = emailAfter.value || '';
-        }
-        
-        // Numeric preview
-        const numericBefore = document.getElementById('numeric_before');
-        const numericAfter = document.getElementById('numeric_after');
-        const numericBeforePreview = document.getElementById('numeric-before-preview');
-        const numericAfterPreview = document.getElementById('numeric-after-preview');
-        
-        if (numericBefore && numericAfter && numericBeforePreview && numericAfterPreview) {
-            numericBeforePreview.textContent = numericBefore.value || '';
-            numericAfterPreview.textContent = numericAfter.value || '';
-        }
-    }
-
-    // Initialize on page load
-    if (questionTypeSelect.value) {
-        updateHiddenFields(questionTypeSelect.value);
-        updatePreview();
-    }
-
-    // Handle form submission to ensure hidden fields are updated
-    document.querySelector('form').addEventListener('submit', function() {
-        updateHiddenFields(questionTypeSelect.value);
-        console.log('Form submitting with before/after text:', {
-            question_type: questionTypeSelect.value,
-            before_text: document.getElementById('final_before_text').value,
-            after_text: document.getElementById('final_after_text').value
+    // Function to clear all dependency answer selects
+    function clearAllDependencyAnswers() {
+        const allSelects = document.querySelectorAll('.depends-value-select');
+        allSelects.forEach(select => {
+            select.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
         });
-    });
+    }
+    
+    // Enhanced form validation for multiple dependency answers
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const toggleConditional = document.getElementById('has_dependency');
+            const dependsOnSelect = document.getElementById('depends_on_select');
+            const dependsValueSelects = document.querySelectorAll('.depends-value-select');
+            
+            if (toggleConditional && toggleConditional.checked) {
+                // Validate dependency question selection
+                if (!dependsOnSelect.value) {
+                    e.preventDefault();
+                    alert('Pilih pertanyaan yang menjadi dependensi!');
+                    return false;
+                }
+                
+                // Validate at least one dependency answer is selected
+                let hasSelectedAnswer = false;
+                dependsValueSelects.forEach(select => {
+                    if (select.value) {
+                        hasSelectedAnswer = true;
+                    }
+                });
+                
+                if (!hasSelectedAnswer) {
+                    e.preventDefault();
+                    alert('Pilih minimal satu jawaban yang memicu pertanyaan ini!');
+                    return false;
+                }
+                
+                // Validate no duplicate answers selected
+                const selectedValues = [];
+                let hasDuplicate = false;
+                
+                dependsValueSelects.forEach(select => {
+                    if (select.value) {
+                        if (selectedValues.includes(select.value)) {
+                            hasDuplicate = true;
+                        } else {
+                            selectedValues.push(select.value);
+                        }
+                    }
+                });
+                
+                if (hasDuplicate) {
+                    e.preventDefault();
+                    alert('Tidak boleh memilih jawaban yang sama lebih dari sekali!');
+                    return false;
+                }
+                
+                console.log('Multiple dependency validation passed:', {
+                    depends_on: dependsOnSelect.value,
+                    depends_values: selectedValues
+                });
+            }
+            
+            return true;
+        });
+    }
+    
+    // Initialize on page load if old values exist
+    const oldDependsOn = "{{ old('depends_on') }}";
+    if (oldDependsOn && dependsOnSelect) {
+        // Show add button
+        document.getElementById('add-dependency-answer').style.display = 'inline-block';
+        // Populate existing selects
+        populateAllDependencyAnswers(oldDependsOn);
+    }
 });
 </script>
     <script src="{{ asset('js/script.js') }}"></script>

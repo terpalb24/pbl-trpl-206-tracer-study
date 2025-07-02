@@ -660,27 +660,63 @@
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">
-                                Pilih jawaban yang memicu pertanyaan ini:
-                            </label>
-                            <select name="depends_value" 
-                                    id="depends_value_select" 
-                                    class="w-full px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('depends_value') ? 'border-red-500' : 'border-gray-300' }}">
-                                <option value="">-- Pilih Jawaban --</option>
-                            </select>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="block text-sm font-medium text-gray-700">
+                                    Pilih jawaban yang memicu pertanyaan ini:
+                                </label>
+                                <button type="button" id="add-dependency-answer" 
+                                        class="px-3 py-1 bg-green-600 text-white rounded-md text-xs hover:bg-green-700 transition-colors" 
+                                        style="display: {{ $question->depends_on ? 'inline-block' : 'none' }};">
+                                    <i class="fas fa-plus mr-1"></i> Tambah Jawaban
+                                </button>
+                            </div>
+                            
+                            <div id="dependency-answers-container">
+                                @php
+                                    $existingDependsValues = old('depends_value') ?: 
+                                        ($question->depends_value ? explode(',', $question->depends_value) : ['']);
+                                @endphp
+                                
+                                @foreach($existingDependsValues as $index => $dependsValue)
+                                    <div class="dependency-answer-item flex items-center mb-2" data-index="{{ $index }}">
+                                        <select name="depends_value[]" 
+                                                class="depends-value-select flex-grow px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2 {{ $errors->has('depends_value.'.$index) ? 'border-red-500' : 'border-gray-300' }}">
+                                            <option value="">-- Pilih Jawaban --</option>
+                                        </select>
+                                        @if($index === 0)
+                                            <span class="text-gray-400 text-sm">(Minimal 1)</span>
+                                        @else
+                                            <button type="button" class="remove-dependency-answer text-red-500 hover:text-red-700 px-2">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                            
                             @error('depends_value')
                                 <p class="text-red-500 text-xs mt-1 flex items-center">
                                     <i class="fas fa-exclamation-triangle mr-1"></i>
                                     {{ $message }}
                                 </p>
                             @enderror
+                            @error('depends_value.*')
+                                <p class="text-red-500 text-xs mt-1 flex items-center">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                            
+                            <div class="mt-2 bg-blue-50 p-2 rounded text-xs text-blue-700">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                <strong>Logika:</strong> Pertanyaan ini akan muncul jika <strong>SALAH SATU</strong> dari jawaban yang dipilih di atas terpilih (OR logic)
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Hidden fields for dependency -->
                 <input type="hidden" id="hidden_depends_on" name="hidden_depends_on" value="{{ old('depends_on', $question->depends_on) }}">
-                <input type="hidden" id="hidden_depends_value" name="hidden_depends_value" value="{{ old('depends_value', $question->depends_value) }}">
 
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 pt-4 sm:pt-6 border-t border-gray-200">
@@ -706,11 +742,55 @@
         const submitButton = document.getElementById('submit-button');
         const questionType = '{{ $question->type }}';
         
+        // Enhanced dependency handling untuk multiple answers
+        const addDependencyAnswerBtn = document.getElementById('add-dependency-answer');
+        const dependencyAnswersContainer = document.getElementById('dependency-answers-container');
+        const dependsOnSelect = document.getElementById('depends_on_select');
+        
+        let dependencyAnswerIndex = document.querySelectorAll('.dependency-answer-item').length;
+        
+        // Add new dependency answer
+        if (addDependencyAnswerBtn && dependencyAnswersContainer) {
+            addDependencyAnswerBtn.addEventListener('click', function() {
+                const newAnswerDiv = document.createElement('div');
+                newAnswerDiv.className = 'dependency-answer-item flex items-center mb-2';
+                newAnswerDiv.setAttribute('data-index', dependencyAnswerIndex);
+                
+                newAnswerDiv.innerHTML = `
+                    <select name="depends_value[]" 
+                            class="depends-value-select flex-grow px-3 py-2 text-sm border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 mr-2">
+                        <option value="">-- Pilih Jawaban --</option>
+                    </select>
+                    <button type="button" class="remove-dependency-answer text-red-500 hover:text-red-700 px-2">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                
+                dependencyAnswersContainer.appendChild(newAnswerDiv);
+                
+                // Populate the new select with options
+                const questionId = dependsOnSelect.value;
+                if (questionId) {
+                    populateDependencyAnswerSelect(newAnswerDiv.querySelector('.depends-value-select'), questionId);
+                }
+                
+                dependencyAnswerIndex++;
+            });
+            
+            // Remove dependency answer
+            dependencyAnswersContainer.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-dependency-answer') || e.target.closest('.remove-dependency-answer')) {
+                    const answerItem = e.target.closest('.dependency-answer-item');
+                    if (answerItem && document.querySelectorAll('.dependency-answer-item').length > 1) {
+                        answerItem.remove();
+                    }
+                }
+            });
+        }
         
         // Form submission handler
         if (form) {
             form.addEventListener('submit', function(e) {
-                
                 // Basic validation
                 const questionField = document.getElementById('question');
                 const orderField = document.getElementById('order');
@@ -745,12 +825,11 @@
                     }
                 }
                 
-                // Handle dependency fields before submission
+                // ✅ Enhanced dependency validation for multiple answers
                 const toggleConditional = document.getElementById('toggle-conditional');
                 const dependsOnSelect = document.getElementById('depends_on_select');
-                const dependsValueSelect = document.getElementById('depends_value_select');
+                const dependsValueSelects = document.querySelectorAll('.depends-value-select'); // ✅ Fixed: Define here
                 const hiddenDependsOn = document.getElementById('hidden_depends_on');
-                const hiddenDependsValue = document.getElementById('hidden_depends_value');
                 
                 if (toggleConditional && toggleConditional.checked) {
                     // Dependency is enabled, validate the selections
@@ -759,25 +838,55 @@
                         alert('Pilih pertanyaan yang menjadi dependensi!');
                         return false;
                     }
-                    
-                    if (!dependsValueSelect.value) {
+
+                    // Validate at least one dependency answer is selected
+                    let hasSelectedAnswer = false;
+                    dependsValueSelects.forEach(select => {
+                        if (select.value) {
+                            hasSelectedAnswer = true;
+                        }
+                    });
+
+                    if (!hasSelectedAnswer) {
                         e.preventDefault();
-                        alert('Pilih jawaban yang memicu pertanyaan ini!');
+                        alert('Pilih minimal satu jawaban yang memicu pertanyaan ini!');
+                        return false;
+                    }
+                    
+                    // Validate no duplicate answers selected
+                    const selectedValues = [];
+                    let hasDuplicate = false;
+                    
+                    dependsValueSelects.forEach(select => {
+                        if (select.value) {
+                            if (selectedValues.includes(select.value)) {
+                                hasDuplicate = true;
+                            } else {
+                                selectedValues.push(select.value);
+                            }
+                        }
+                    });
+                    
+                    if (hasDuplicate) {
+                        e.preventDefault();
+                        alert('Tidak boleh memilih jawaban yang sama lebih dari sekali!');
                         return false;
                     }
                     
                     // Copy values to hidden fields for submission
                     hiddenDependsOn.value = dependsOnSelect.value;
-                    hiddenDependsValue.value = dependsValueSelect.value;
                     
-                  
+                    console.log('Multiple dependency validation passed:', {
+                        depends_on: dependsOnSelect.value,
+                        depends_values: selectedValues
+                    });
                 } else {
                     // Dependency is disabled, clear the hidden fields
                     hiddenDependsOn.value = '';
-                    hiddenDependsValue.value = '';
                     dependsOnSelect.value = '';
-                    dependsValueSelect.value = '';
-                    
+                    dependsValueSelects.forEach(select => {
+                        select.value = '';
+                    });
                 }
                 
                 return true;
@@ -850,16 +959,22 @@
         if (toggleConditional && conditionalOptions) {
             toggleConditional.addEventListener('change', function() {
                 conditionalOptions.style.display = this.checked ? 'block' : 'none';
-                
-                // Reset dependency selects when unchecked
-                if (!this.checked) {
+                const addBtn = document.getElementById('add-dependency-answer');
+            
+                if (this.checked) {
+                    if (addBtn) addBtn.style.display = 'inline-block';
+                } else {
+                    if (addBtn) addBtn.style.display = 'none';
+                    
+                    // Reset dependency selects when unchecked
                     const dependsOnSelect = document.getElementById('depends_on_select');
-                    const dependsValueSelect = document.getElementById('depends_value_select');
+                    const dependsValueSelects = document.querySelectorAll('.depends-value-select');
+                    
                     if (dependsOnSelect) dependsOnSelect.value = '';
-                    if (dependsValueSelect) {
-                        dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
-                        dependsValueSelect.value = '';
-                    }
+                    dependsValueSelects.forEach(select => {
+                        select.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+                        select.value = '';
+                    });
                 }
             });
         }
@@ -955,7 +1070,7 @@
             }
         }
         
-        // Dependency options handling
+        // Enhanced dependency options handling
         const questionOptionsMap = {
             @if(isset($availableQuestions) && count($availableQuestions) > 0)
                 @foreach($availableQuestions as $q)
@@ -973,38 +1088,93 @@
             @endif
         };
 
-        const dependsOnSelect = document.getElementById('depends_on_select');
-        const dependsValueSelect = document.getElementById('depends_value_select');
-        const selectedDependsOn = "{{ old('depends_on', $question->depends_on ?? '') }}";
-        const selectedDependsValue = "{{ old('depends_value', $question->depends_value ?? '') }}";
+        // ✅ Debug: Check if data is loaded correctly
+        console.log('Question Options Map:', questionOptionsMap);
 
-        function populateDependsValueOptions(questionId, selectedValue = null) {
-            if (!dependsValueSelect) return;
+        const selectedDependsOn = "{{ old('depends_on', $question->depends_on ?? '') }}";
+        // ✅ Enhanced parsing untuk multiple dependency values
+        let selectedDependsValues = @json(old('depends_value') ?: ($question->depends_value ? explode(',', $question->depends_value) : []));
+
+        // ✅ Handle case dimana explode PHP belum sempurna atau ada formatting issue
+        if (selectedDependsValues.length === 1 && typeof selectedDependsValues[0] === 'string' && selectedDependsValues[0].includes(',')) {
+            selectedDependsValues = selectedDependsValues[0].split(',').map(val => val.trim()).filter(val => val !== '');
+        }
+
+        // ✅ Ensure values are strings
+        selectedDependsValues = selectedDependsValues.map(val => String(val).trim()).filter(val => val !== '');
+
+        console.log('Selected Depends On:', selectedDependsOn);
+        console.log('Processed Selected Depends Values:', selectedDependsValues);
+
+        // Function to populate single dependency answer select
+        function populateDependencyAnswerSelect(selectElement, questionId, selectedValue = null) {
+            if (!selectElement) return;
             
-            dependsValueSelect.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+            console.log('Populating select for question:', questionId, 'with selected value:', selectedValue);
+            
+            selectElement.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
             
             if (questionOptionsMap[questionId] && questionOptionsMap[questionId].length > 0) {
                 questionOptionsMap[questionId].forEach(opt => {
                     const optionEl = document.createElement('option');
                     optionEl.value = opt.id;
                     optionEl.textContent = opt.text;
-                    if (selectedValue && selectedValue == opt.id) {
+                    // ✅ Enhanced comparison - ensure both are strings
+                    if (selectedValue && String(selectedValue).trim() === String(opt.id).trim()) {
                         optionEl.selected = true;
+                        console.log('✅ Matched and selected option:', opt.text, 'with ID:', opt.id);
                     }
-                    dependsValueSelect.appendChild(optionEl);
+                    selectElement.appendChild(optionEl);
                 });
+            } else {
+                const noOptionEl = document.createElement('option');
+                noOptionEl.value = '';
+                noOptionEl.textContent = '-- Tidak ada opsi tersedia --';
+                noOptionEl.disabled = true;
+                selectElement.appendChild(noOptionEl);
+                console.log('❌ No options available for question:', questionId);
             }
         }
 
+        // Function to populate all dependency answer selects
+        function populateAllDependencyAnswers(questionId) {
+            const allSelects = document.querySelectorAll('.depends-value-select');
+            console.log('Populating all selects, found:', allSelects.length, 'selects');
+            console.log('Available values to populate:', selectedDependsValues);
+            
+            allSelects.forEach((select, index) => {
+                const selectedValue = selectedDependsValues[index] || null;
+                console.log(`Populating select ${index} with value:`, selectedValue);
+                populateDependencyAnswerSelect(select, questionId, selectedValue);
+            });
+        }
+
         // On page load, if editing and has dependency, populate options
-        if (selectedDependsOn && dependsOnSelect && dependsValueSelect) {
-            populateDependsValueOptions(selectedDependsOn, selectedDependsValue);
+        if (selectedDependsOn && dependsOnSelect) {
+            console.log('Initializing dependency selects on page load'); // ✅ Debug
+            populateAllDependencyAnswers(selectedDependsOn);
+            
+            // Show add button if dependency is enabled
+            const addBtn = document.getElementById('add-dependency-answer');
+            if (addBtn) addBtn.style.display = 'inline-block';
         }
 
         // On depends_on change
-        if (dependsOnSelect && dependsValueSelect) {
+        if (dependsOnSelect) {
             dependsOnSelect.addEventListener('change', function() {
-                populateDependsValueOptions(this.value, null);
+                const addBtn = document.getElementById('add-dependency-answer');
+                
+                if (this.value) {
+                    if (addBtn) addBtn.style.display = 'inline-block';
+                    populateAllDependencyAnswers(this.value);
+                } else {
+                    if (addBtn) addBtn.style.display = 'none';
+                    // Clear all dependency answer selects
+                    const allSelects = document.querySelectorAll('.depends-value-select');
+                    allSelects.forEach(select => {
+                        select.innerHTML = '<option value="">-- Pilih Jawaban --</option>';
+                    });
+                }
                 
                 const hiddenDependsOn = document.getElementById('hidden_depends_on');
                 if (hiddenDependsOn) {
@@ -1012,17 +1182,11 @@
                 }
             });
         }
-        
-        // On depends_value change
-        if (dependsValueSelect) {
-            dependsValueSelect.addEventListener('change', function() {
-                const hiddenDependsValue = document.getElementById('hidden_depends_value');
-                if (hiddenDependsValue) {
-                    hiddenDependsValue.value = this.value;
-                }
-            });
-        }
-        
+
+        // Make functions global for other scripts
+        window.populateDependencyAnswerSelect = populateDependencyAnswerSelect;
+        window.populateAllDependencyAnswers = populateAllDependencyAnswers;
+
         // Enhanced toggle function for other option configuration
         function toggleOtherConfig(checkbox) {
             const index = checkbox.value;

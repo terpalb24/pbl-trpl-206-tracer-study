@@ -529,7 +529,8 @@ class QuestionnaireController extends Controller
                 'after_text' => 'nullable|string|max:255',
                 'has_dependency' => 'nullable|boolean',
                 'depends_on' => 'nullable|integer|exists:tb_questions,id_question',
-                'depends_value' => 'nullable|string|max:255',
+                'depends_value' => 'nullable|array', // ✅ Changed to array
+                'depends_value.*' => 'nullable|string|max:255', // ✅ Validate each dependency value
                 'hidden_depends_on' => 'nullable|integer|exists:tb_questions,id_question',
                 'hidden_depends_value' => 'nullable|string|max:255',
                 'other_options' => 'nullable|array',
@@ -572,6 +573,9 @@ class QuestionnaireController extends Controller
                 'scale_options.required' => 'Pilihan skala wajib diisi.',
                 'before_text.max' => 'Teks sebelum input maksimal 255 karakter.',
                 'after_text.max' => 'Teks setelah input maksimal 255 karakter.',
+                // ✅ Added validation messages for dependency
+                'depends_value.array' => 'Nilai dependency harus berupa array.',
+                'depends_value.*.string' => 'Setiap nilai dependency harus berupa string.',
             ];
 
             $validated = $request->validate($rules, $messages);
@@ -598,7 +602,25 @@ class QuestionnaireController extends Controller
             
             if ($request->has('has_dependency') && $request->input('has_dependency') == '1') {
                 $dependsOn = $request->input('hidden_depends_on') ?: $request->input('depends_on');
-                $dependsValue = $request->input('hidden_depends_value') ?: $request->input('depends_value');
+                
+                // ✅ Handle multiple dependency values
+                $dependsValueArray = $request->input('depends_value', []);
+                if (!empty($dependsValueArray)) {
+                    // Filter out empty values and convert to comma-separated string
+                    $filteredValues = array_filter($dependsValueArray, function($value) {
+                        return !empty(trim($value));
+                    });
+                    
+                    if (!empty($filteredValues)) {
+                        $dependsValue = implode(',', $filteredValues);
+                    }
+                }
+                
+                // ✅ Validation: ensure at least one dependency value if dependency is enabled
+                if ($dependsOn && empty($dependsValue)) {
+                    return back()->withErrors(['depends_value' => 'Pilih minimal satu jawaban yang memicu pertanyaan ini.'])
+                            ->withInput();
+                }
             }
 
             $question = Tb_Questions::create([
@@ -748,7 +770,8 @@ class QuestionnaireController extends Controller
                 'after_text' => 'nullable|string|max:255',
                 'has_dependency' => 'nullable|boolean',
                 'depends_on' => 'nullable|integer|exists:tb_questions,id_question',
-                'depends_value' => 'nullable|string|max:255',
+                'depends_value' => 'nullable|array', // ✅ Changed to array
+                'depends_value.*' => 'nullable|string|max:255', // ✅ Validate each dependency value
                 'hidden_depends_on' => 'nullable|integer|exists:tb_questions,id_question',
                 'hidden_depends_value' => 'nullable|string|max:255',
                 'other_options' => 'nullable|array',
@@ -814,10 +837,26 @@ class QuestionnaireController extends Controller
                 'order' => $validated['order'],
             ];
 
-            // Handle dependencies using hidden fields to ensure they're always submitted
+            // ✅ Enhanced dependencies handling for update
             if ($request->has('has_dependency') && $request->input('has_dependency') == '1') {
                 $updateData['depends_on'] = $request->input('hidden_depends_on') ?: $request->input('depends_on');
-                $updateData['depends_value'] = $request->input('hidden_depends_value') ?: $request->input('depends_value');
+                
+                // ✅ Handle multiple dependency values
+                $dependsValueArray = $request->input('depends_value', []);
+                if (!empty($dependsValueArray)) {
+                    // Filter out empty values and convert to comma-separated string
+                    $filteredValues = array_filter($dependsValueArray, function($value) {
+                        return !empty(trim($value));
+                    });
+                    
+                    if (!empty($filteredValues)) {
+                        $updateData['depends_value'] = implode(',', $filteredValues);
+                    } else {
+                        $updateData['depends_value'] = null;
+                    }
+                } else {
+                    $updateData['depends_value'] = null;
+                }
             } else {
                 $updateData['depends_on'] = null;
                 $updateData['depends_value'] = null;
