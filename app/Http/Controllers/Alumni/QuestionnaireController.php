@@ -529,7 +529,8 @@ class QuestionnaireController extends Controller
                             'error' => $e->getMessage(),
                             'trace' => $e->getTraceAsString()
                         ]);
-                        // skip error
+                        // Tambahkan notifikasi error ke session flash
+                        session()->flash('error', 'Gagal menyimpan jawaban untuk pertanyaan tertentu. Silakan cek kembali atau hubungi admin.');
                         continue;
                     }
                 }
