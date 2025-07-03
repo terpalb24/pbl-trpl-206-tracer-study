@@ -546,7 +546,7 @@
 </div>
 
 <!-- Enhanced Confirmation Modal Responsive -->
-<div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4" style="display: none;">
+<div id="confirmation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50 p-4 hidden">
     <div class="bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-w-md w-full mx-4">
         <div class="text-center">
             <div class="mx-auto flex items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-green-100 mb-3 sm:mb-4">
@@ -1719,23 +1719,64 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('submit-final-btn')?.addEventListener('click', function() {
+        console.log('Submit final button clicked');
         if (validateCurrentCategory()) {
+            console.log('Validation passed, showing modal');
             // Show confirmation modal
-            document.getElementById('confirmation-modal').classList.remove('hidden');
+            const modal = document.getElementById('confirmation-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                console.log('Modal displayed');
+            } else {
+                console.error('Modal not found');
+            }
+        } else {
+            console.log('Validation failed');
         }
     });
 
     document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        document.getElementById('confirmation-modal').classList.add('hidden');
+        console.log('Modal cancel clicked');
+        const modal = document.getElementById('confirmation-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
     });
 
     document.getElementById('modal-confirm')?.addEventListener('click', function() {
+        console.log('Modal confirm clicked');
         const actionInput = document.querySelector('input[name="action"]');
         if (actionInput) {
             actionInput.value = 'submit_final';
+            console.log('Action set to submit_final');
+        } else {
+            console.error('Action input not found');
         }
-        document.getElementById('confirmation-modal').classList.add('hidden');
+        
+        const modal = document.getElementById('confirmation-modal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        
+        console.log('Submitting form');
         form.submit();
+    });
+
+    // Add click outside modal to close
+    document.getElementById('confirmation-modal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+
+    // Add escape key to close modal
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('confirmation-modal');
+            if (modal && modal.style.display === 'flex') {
+                modal.style.display = 'none';
+            }
+        }
     });
 
     function validateCurrentCategory() {
