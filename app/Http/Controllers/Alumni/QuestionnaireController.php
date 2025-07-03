@@ -1015,17 +1015,51 @@ class QuestionnaireController extends Controller
             if ($question->depends_on) {
                 $parentQuestionId = $question->depends_on;
                 $requiredValue = $question->depends_value;
+                // ✅ Enhanced multiple dependency values handling
+                $requiredValueArray = [];
+                if ($requiredValues && strpos($requiredValues, ',') !== false) {
+                    // Multiple dependency values
+                    $requiredValueArray = array_map('trim', explode(',', $requiredValues));
+                } else {
+                    // Single dependency value
+                    $requiredValueArray = [$requiredValues];
+                }
                 
-                // Cek apakah parent question dijawab dengan nilai yang sesuai
-                $parentAnswer = $request->input("answers.{$parentQuestionId}");
+                // Check parent question answer(s)
+                $parentAnswers = [];
                 
-                if ($parentAnswer != $requiredValue) {
-                    // \Log::info("Skipping validation for conditional question {$question->id_question} - parent answer doesn't match", [
-                    //     'parent_question' => $parentQuestionId,
-                    //     'parent_answer' => $parentAnswer,
-                    //     'required_value' => $requiredValue
-                    // ]);
-                    continue; // Skip validation untuk pertanyaan conditional yang tidak aktif
+                // Check for single answer (radio, option, rating, scale)
+                $parentSingleAnswer = $request->input("answers.{$parentQuestionId}");
+                if ($parentSingleAnswer) {
+                    $parentAnswers[] = $parentSingleAnswer;
+                }
+                
+                // Check for multiple answers (checkbox)
+                $parentMultipleAnswers = $request->input("multiple.{$parentQuestionId}", []);
+                if (is_array($parentMultipleAnswers)) {
+                    $parentAnswers = array_merge($parentAnswers, $parentMultipleAnswers);
+                }
+                
+                // Check if any parent answer matches required values
+                $conditionMet = false;
+                foreach ($parentAnswers as $parentAnswer) {
+                    if (in_array(trim($parentAnswer), $requiredValueArray)) {
+                        $conditionMet = true;
+                        break;
+                    }
+                }
+                
+                \Log::info("Enhanced dependency validation", [
+                    'question_id' => $question->id_question,
+                    'parent_question' => $parentQuestionId,
+                    'required_values' => $requiredValueArray,
+                    'parent_answers' => $parentAnswers,
+                    'condition_met' => $conditionMet
+                ]);
+                
+                if (!$conditionMet) {
+                    // Skip validation for conditional question that should be hidden
+                    continue;
                 }
             }
             

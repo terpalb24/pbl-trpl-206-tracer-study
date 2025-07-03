@@ -850,7 +850,58 @@ class QuestionnaireController extends Controller
     {
         $questionId = $question->id_question;
         $questionType = $question->type; // Gunakan 'type' sesuai database
-
+        // ✅ Enhanced conditional question validation
+        if ($question->depends_on) {
+            $parentQuestionId = $question->depends_on;
+            $requiredValues = $question->depends_value;
+            
+            // Enhanced multiple dependency values handling
+            $requiredValueArray = [];
+            if ($requiredValues && strpos($requiredValues, ',') !== false) {
+                // Multiple dependency values
+                $requiredValueArray = array_map('trim', explode(',', $requiredValues));
+            } else {
+                // Single dependency value
+                $requiredValueArray = [$requiredValues];
+            }
+            
+            // Check parent question answer(s)
+            $parentAnswers = [];
+            
+            // Check for single answer (radio, option, rating, scale)
+            $parentSingleAnswer = $request->input("question_{$parentQuestionId}");
+            if ($parentSingleAnswer) {
+                $parentAnswers[] = $parentSingleAnswer;
+            }
+            
+            // Check for multiple answers (checkbox)
+            $parentMultipleAnswers = $request->input("question_{$parentQuestionId}", []);
+            if (is_array($parentMultipleAnswers)) {
+                $parentAnswers = array_merge($parentAnswers, $parentMultipleAnswers);
+            }
+            
+            // Check if any parent answer matches required values
+            $conditionMet = false;
+            foreach ($parentAnswers as $parentAnswer) {
+                if (in_array(trim($parentAnswer), $requiredValueArray)) {
+                    $conditionMet = true;
+                    break;
+                }
+            }
+            
+            \Log::info("Company: Enhanced dependency validation", [
+                'question_id' => $question->id_question,
+                'parent_question' => $parentQuestionId,
+                'required_values' => $requiredValueArray,
+                'parent_answers' => $parentAnswers,
+                'condition_met' => $conditionMet
+            ]);
+            
+            if (!$conditionMet) {
+                // Skip processing for conditional question that should be hidden
+                return;
+            }
+        }
         // Handle different question types berdasarkan struktur database yang sebenarnya
         switch ($questionType) {
             case 'text':

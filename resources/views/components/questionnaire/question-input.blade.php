@@ -14,6 +14,7 @@
             <input type="text" 
                    name="question_{{ $questionId }}" 
                    value="{{ $prevAnswer ?? '' }}"
+                   data-question-id="{{ $questionId }}"
                    class="flex-grow px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 text-sm sm:text-base"
                    placeholder="Masukkan jawaban...">
             
@@ -35,12 +36,12 @@
             <input type="text" 
                    name="question_{{ $questionId }}" 
                    value="{{ $prevAnswer ?? '' }}"
+                   data-question-id="{{ $questionId }}"
+                   data-question-type="numeric"
                    class="flex-grow px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500 min-w-0 numeric-only text-sm sm:text-base"
                    placeholder="Masukkan angka..."
                    pattern="[0-9]*"
                    inputmode="numeric"
-                   data-question-type="numeric"
-                   data-question-id="{{ $questionId }}"
                    autocomplete="off"
                    onkeypress="return /[0-9]/.test(event.key) || ['Backspace', 'Delete', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight'].includes(event.key)"
                    onpaste="return false"
@@ -69,6 +70,7 @@
             <input type="email" 
                    name="question_{{ $questionId }}" 
                    value="{{ $prevAnswer ?? '' }}"
+                   data-question-id="{{ $questionId }}"
                    class="flex-grow px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-w-0 email-validation text-sm sm:text-base"
                    placeholder="contoh@domain.com"
                    pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
@@ -92,6 +94,7 @@
             <input type="date" 
                    name="question_{{ $questionId }}" 
                    value="{{ $prevAnswer ?? '' }}"
+                   data-question-id="{{ $questionId }}"
                    class="w-full sm:w-auto px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base">
         </div>
     </div>
@@ -105,7 +108,9 @@
                 <label for="country-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-globe mr-1"></i>Negara:
                 </label>
-                <select id="country-select-{{ $question->id_question }}" class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <select id="country-select-{{ $question->id_question }}" 
+                        data-question-id="{{ $questionId }}"
+                        class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     <option value="">-- Pilih Negara --</option>
                 </select>
             </div>
@@ -115,7 +120,9 @@
                 <label for="state-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-map mr-1"></i>Provinsi/State:
                 </label>
-                <select id="state-select-{{ $question->id_question }}" class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
+                <select id="state-select-{{ $question->id_question }}" 
+                        data-question-id="{{ $questionId }}"
+                        class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
                     <option value="">-- Pilih Provinsi/State --</option>
                 </select>
             </div>
@@ -125,7 +132,9 @@
                 <label for="city-select-{{ $question->id_question }}" class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-city mr-1"></i>Kota:
                 </label>
-                <select id="city-select-{{ $question->id_question }}" class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
+                <select id="city-select-{{ $question->id_question }}" 
+                        data-question-id="{{ $questionId }}"
+                        class="w-full px-2 sm:px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500" disabled>
                     <option value="">-- Pilih Kota --</option>
                 </select>
             </div>
@@ -143,7 +152,10 @@
         </div>
         
         <!-- Hidden inputs -->
-        <input type="hidden" id="location-combined-{{ $question->id_question }}" name="location_combined[{{ $question->id_question }}]" value="">
+        <input type="hidden" id="location-combined-{{ $question->id_question }}" 
+               name="location_combined[{{ $question->id_question }}]" 
+               data-question-id="{{ $questionId }}"
+               value="">
         
         @if(isset($prevLocationAnswers[$question->id_question]))
             <input type="hidden" id="location-initial-{{ $question->id_question }}" value="{{ json_encode($prevLocationAnswers[$question->id_question]) }}">
@@ -182,6 +194,7 @@
                             <input type="text" 
                                    name="question_{{ $questionId }}_other"
                                    value="{{ $prevOtherAnswer ?? '' }}"
+                                   data-question-id="{{ $questionId }}"
                                    class="flex-grow px-2 sm:px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                                    placeholder="Sebutkan..."
                                    id="other_{{ $option->id_questions_options }}">
@@ -225,6 +238,7 @@
                             <input type="text" 
                                    name="question_{{ $questionId }}_other_{{ $option->id_questions_options }}"
                                    value="{{ isset($prevMultipleOtherAnswers[$option->id_questions_options]) ? $prevMultipleOtherAnswers[$option->id_questions_options] : '' }}"
+                                   data-question-id="{{ $questionId }}"
                                    class="flex-grow px-2 sm:px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                                    placeholder="Sebutkan..."
                                    id="multiple_other_{{ $option->id_questions_options }}">
@@ -501,7 +515,7 @@ input[type="checkbox"]:checked {
 </style>
 
 <script>
-// Dynamic rating color change dengan JavaScript untuk memastikan Tailwind classes bekerja
+// Enhanced script dengan support untuk conditional questions
 document.addEventListener('DOMContentLoaded', function() {
     // Handle rating radio buttons
     const ratingRadios = document.querySelectorAll('.rating-radio');
@@ -525,5 +539,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+    
+    // ✅ HAPUS: Event listeners untuk conditional questions (akan dihandle di fill.blade.php)
+    // Hanya handle rating visual feedback di sini
+    
+    console.log('question-input.blade.php loaded, found inputs with data-question-id:', 
+                document.querySelectorAll('[data-question-id]').length);
 });
 </script>

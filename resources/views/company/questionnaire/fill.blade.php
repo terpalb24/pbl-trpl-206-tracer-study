@@ -136,15 +136,16 @@
                         </div>
                     @else
                         @foreach($questions as $index => $question)
-                            <div class="question-container border border-gray-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6" 
-                                 data-question-id="{{ $question->id_question }}"
-                                 data-question-type="{{ $question->type }}"
-                                 data-required="{{ $question->is_required ? 'true' : 'false' }}"
-                                 @if($question->depends_on)
-                                     data-parent-question="{{ $question->depends_on }}"
-                                     data-condition-value="{{ $question->depends_value }}"
-                                     style="display: none;"
-                                 @endif>
+                            <div class="question-container border border-gray-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6 
+                                @if($question->depends_on) conditional-question @endif" 
+                                data-question-id="{{ $question->id_question }}"
+                                data-question-type="{{ $question->type }}"
+                                data-required="{{ $question->is_required ? 'true' : 'false' }}"
+                                @if($question->depends_on)
+                                    data-depends-on="{{ $question->depends_on }}"
+                                    data-depends-value="{{ $question->depends_value }}"
+                                    style="display: none;"
+                                @endif>
                                 
                                 <div class="flex flex-col sm:flex-row sm:items-start">
                                     <span class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium mb-3 sm:mb-0 sm:mr-4 self-center sm:self-start">
@@ -552,8 +553,8 @@ document.addEventListener('DOMContentLoaded', function() {
         totalCategories: {{ $totalCategories }},
         currentCategoryIndex: {{ $currentCategoryIndex }},
         routes: {
-            provinces: "{{ route('company.questionnaire.provinces') }}",
-            cities: "{{ route('company.questionnaire.cities', ':provinceId') }}"
+            provinces: '/api/location/provinces', // ✅ Use correct API route
+            cities: '/api/location/cities/:provinceId' // ✅ Use correct API route with parameter
         }
     };
     
@@ -580,385 +581,386 @@ function initializeQuestionnaire() {
 }
 
 function initializeOptionToggles() {
+    console.log('=== Initializing option toggles ===');
     
+    // ✅ STEP 1: Jangan clear value yang sudah ada - hanya hide fields yang tidak diperlukan
+    document.querySelectorAll('[id^="other_field_"], [id^="multiple_other_field_"]').forEach(field => {
+        // Hanya hide field, jangan clear value dulu
+        field.classList.add('hidden');
+        console.log('Initially hiding other field:', field.id);
+    });
+    
+    // ✅ STEP 2: Single Option (Radio) - Other field toggle
     document.querySelectorAll('.option-radio').forEach(radio => {
         radio.addEventListener('change', function() {
-            const questionId = this.dataset.questionId;
-            const isOther = this.dataset.isOther === '1';
+            const questionId = this.getAttribute('data-question-id');
+            const isOther = this.getAttribute('data-is-other') === '1';
             const optionId = this.value;
             
-            
-            // Hide all other fields for this question first
-            document.querySelectorAll(`[id^="other_field_${questionId}_"]`).forEach(field => {
-                field.classList.add('hidden');
+            console.log('=== Radio changed ===', {
+                questionId: questionId,
+                isOther: isOther,
+                optionId: optionId,
+                checked: this.checked
             });
             
-            // Show other field if this is an "other" option and it's selected
+            // Hide all other fields for this question (tapi jangan clear value)
+            document.querySelectorAll(`[id^="other_field_${questionId}_"]`).forEach(field => {
+                field.classList.add('hidden');
+                console.log('Hiding other field:', field.id);
+                
+                // ✅ PERBAIKAN: Hanya clear value jika field yang berbeda
+                const fieldOptionId = field.id.split('_').pop();
+                if (fieldOptionId !== optionId) {
+                    const otherInput = field.querySelector('input[type="text"]');
+                    if (otherInput) {
+                        otherInput.value = '';
+                    }
+                }
+            });
+            
+            // Show other field if this is "other" option and checked
             if (isOther && this.checked) {
                 const otherField = document.getElementById(`other_field_${questionId}_${optionId}`);
+                console.log('Looking for other field:', `other_field_${questionId}_${optionId}`);
+                
                 if (otherField) {
                     otherField.classList.remove('hidden');
+                    console.log('✅ Showing other field:', otherField.id);
                     
-                    // Focus on the text input
                     const otherInput = otherField.querySelector('input[type="text"]');
-                    if (otherInput) {
+                    if (otherInput && !otherInput.value) {
+                        // Hanya focus jika tidak ada value (untuk new input)
                         setTimeout(() => otherInput.focus(), 100);
                     }
                 } else {
-                    console.warn('Other field not found:', `other_field_${questionId}_${optionId}`);
+                    console.warn('❌ Other field not found:', `other_field_${questionId}_${optionId}`);
                 }
             }
         });
-        
-        if (radio.checked && radio.dataset.isOther === '1') {
-            const questionId = radio.dataset.questionId;
-            const optionId = radio.value;
-            const otherField = document.getElementById(`other_field_${questionId}_${optionId}`);
-            if (otherField) {
-                otherField.classList.remove('hidden');
-            }
-        }
     });
     
+    // ✅ STEP 3: Multiple Choice (Checkbox) - Other field toggle
     document.querySelectorAll('.multiple-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function() {
-            const questionId = this.dataset.questionId;
-            const isOther = this.dataset.isOther === '1';
+            const questionId = this.getAttribute('data-question-id');
+            const isOther = this.getAttribute('data-is-other') === '1';
             const optionId = this.value;
             
+            console.log('=== Checkbox changed ===', {
+                questionId: questionId,
+                isOther: isOther,
+                optionId: optionId,
+                checked: this.checked
+            });
             
             if (isOther) {
                 const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
+                console.log('Looking for multiple other field:', `multiple_other_field_${questionId}_${optionId}`);
+                
                 if (otherField) {
                     if (this.checked) {
                         otherField.classList.remove('hidden');
+                        console.log('✅ Showing multiple other field:', otherField.id);
                         
-                        // Focus on the text input
                         const otherInput = otherField.querySelector('input[type="text"]');
-                        if (otherInput) {
+                        if (otherInput && !otherInput.value) {
+                            // Hanya focus jika tidak ada value (untuk new input)
                             setTimeout(() => otherInput.focus(), 100);
                         }
                     } else {
                         otherField.classList.add('hidden');
+                        console.log('❌ Hiding multiple other field:', otherField.id);
                         
-                        // Clear the input value when hiding
+                        // Clear value when unchecked
                         const otherInput = otherField.querySelector('input[type="text"]');
                         if (otherInput) {
                             otherInput.value = '';
                         }
                     }
                 } else {
-                    console.warn('Multiple other field not found:', `multiple_other_field_${questionId}_${optionId}`);
+                    console.warn('❌ Multiple other field not found:', `multiple_other_field_${questionId}_${optionId}`);
                 }
             }
         });
-        
-        if (checkbox.checked && checkbox.dataset.isOther === '1') {
-            const questionId = checkbox.dataset.questionId;
-            const optionId = checkbox.value;
-            const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
-            if (otherField) {
-                otherField.classList.remove('hidden');
-            }
-        }
     });
     
-}
-
-function initializeConditionalQuestions() {
-    const conditionalQuestions = window.questionnaireData.conditionalQuestions;
-    
-    if (!conditionalQuestions || Object.keys(conditionalQuestions).length === 0) {
-        return;
-    }
-    
-    
-    // Monitor parent questions
-    Object.keys(conditionalQuestions).forEach(parentQuestionId => {
-        const parentInputs = document.querySelectorAll(`[name^="question_${parentQuestionId}"]`);
+    // ✅ STEP 4: Enhanced - Handle existing selections dengan preserve value
+    setTimeout(() => {
+        console.log('=== Checking existing selections with value preservation ===');
         
-        parentInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                handleConditionalQuestion(parentQuestionId, this.value);
-            });
-        });
-        
-        // Check initial state
-        const checkedInput = document.querySelector(`[name^="question_${parentQuestionId}"]:checked`);
-        if (checkedInput) {
-            handleConditionalQuestion(parentQuestionId, checkedInput.value);
-        }
-    });
-}
-
-function handleConditionalQuestion(parentQuestionId, selectedValue) {
-    const conditionalQuestions = window.questionnaireData.conditionalQuestions[parentQuestionId];
-    
-    if (!conditionalQuestions) return;
-    
-    conditionalQuestions.forEach(condition => {
-        const childQuestion = document.querySelector(`[data-question-id="${condition.question_id}"]`);
-        
-        if (childQuestion) {
-            if (selectedValue === condition.condition_value) {
-                childQuestion.style.display = 'block';
-            } else {
-                childQuestion.style.display = 'none';
-                // Clear answers when hiding
-                const inputs = childQuestion.querySelectorAll('input, select, textarea');
-                inputs.forEach(input => {
-                    if (input.type === 'checkbox' || input.type === 'radio') {
-                        input.checked = false;
-                    } else {
-                        input.value = '';
-                    }
-                });
-            }
-        }
-    });
-}
-
-function initializeLocationQuestions() {
-    
-    const locationQuestions = document.querySelectorAll('.location-question');
-    
-    if (locationQuestions.length === 0) {
-        return;
-    }
-    
-    locationQuestions.forEach((locationQuestion) => {
-        const questionId = locationQuestion.dataset.questionId;
-        
-        const countrySelect = document.getElementById(`country-select-${questionId}`);
-        const stateSelect = document.getElementById(`state-select-${questionId}`);
-        const citySelect = document.getElementById(`city-select-${questionId}`);
-        const combinedInput = document.getElementById(`location-combined-${questionId}`);
-        const initialInput = document.getElementById(`location-initial-${questionId}`);
-        
-        if (!countrySelect || !stateSelect || !citySelect || !combinedInput) {
-            console.error('Location elements not found for question:', questionId);
-            return;
-        }
-        
-        // Load countries from JSON file
-        fetch('/js/location-data/countries.json')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(countries => {
+        // Check existing radio selections
+        document.querySelectorAll('.option-radio:checked').forEach(radio => {
+            const isOther = radio.getAttribute('data-is-other') === '1';
+            if (isOther) {
+                const questionId = radio.getAttribute('data-question-id');
+                const optionId = radio.value;
+                const otherField = document.getElementById(`other_field_${questionId}_${optionId}`);
                 
-                // Clear current options
-                countrySelect.innerHTML = '<option value="">-- Pilih Negara --</option>';
-                
-                // Populate countries dropdown
-                countries.forEach(country => {
-                    const option = document.createElement('option');
-                    option.value = country.code;
-                    option.textContent = country.name;
-                    countrySelect.appendChild(option);
+                console.log('Found existing radio selection:', {
+                    questionId: questionId,
+                    optionId: optionId,
+                    isOther: isOther,
+                    otherFieldExists: !!otherField
                 });
                 
-                
-                // Load initial values if available after countries are loaded
-                if (initialInput && initialInput.value) {
-                    loadInitialLocationData();
-                }
-            })
-            .catch(error => {
-                console.error('Error loading countries:', error);
-                countrySelect.innerHTML = '<option value="">-- Error loading countries --</option>';
-            });
-        
-        // Country selection event
-        countrySelect.addEventListener('change', function() {
-            
-            if (this.value) {
-                stateSelect.disabled = false;
-                stateSelect.innerHTML = '<option value="">-- Memuat Provinsi/State... --</option>';
-                citySelect.disabled = true;
-                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                
-                // Load states from JSON file
-                fetch(`/js/location-data/${this.value}.json`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        
-                        // Clear current options
-                        stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
-                        
-                        // Add new options
-                        if (data && data.states) {
-                            data.states.forEach(state => {
-                                const option = document.createElement('option');
-                                option.value = state.code;
-                                option.textContent = state.name;
-                                stateSelect.appendChild(option);
-                            });
-                        }
-                        
-                        // Update combined value
-                        updateCombinedValue();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching states:', error);
-                        stateSelect.innerHTML = '<option value="">-- Error loading data --</option>';
-                    });
-            } else {
-                stateSelect.disabled = true;
-                citySelect.disabled = true;
-                stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
-                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                updateCombinedValue();
-            }
-        });
-        
-        // State selection event
-        stateSelect.addEventListener('change', function() {
-            
-            if (this.value) {
-                citySelect.disabled = false;
-                citySelect.innerHTML = '<option value="">-- Memuat Kota... --</option>';
-                
-                // Get the selected country and find the selected state
-                const countryCode = countrySelect.value;
-                
-                fetch(`/js/location-data/${countryCode}.json`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Find the selected state
-                        const selectedState = data.states.find(state => state.code === this.value);
-                        
-                        // Clear current options
-                        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                        
-                        // Add new options
-                        if (selectedState && selectedState.cities) {
-                            selectedState.cities.forEach(city => {
-                                const option = document.createElement('option');
-                                option.value = city.code;
-                                option.textContent = city.name;
-                                citySelect.appendChild(option);
-                            });
-                        }
-                        
-                        // Update combined value
-                        updateCombinedValue();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching cities:', error);
-                        citySelect.innerHTML = '<option value="">-- Error loading data --</option>';
-                    });
-            } else {
-                citySelect.disabled = true;
-                citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
-                updateCombinedValue();
-            }
-        });
-        
-        // City selection event
-        citySelect.addEventListener('change', function() {
-            updateCombinedValue();
-        });
-        
-        // Function to update combined value
-        function updateCombinedValue() {
-            const countryValue = countrySelect.value;
-            const countryText = countrySelect.options[countrySelect.selectedIndex]?.text || '';
-            const stateValue = stateSelect.value;
-            const stateText = stateSelect.options[stateSelect.selectedIndex]?.text || '';
-            const cityValue = citySelect.value;
-            const cityText = citySelect.options[citySelect.selectedIndex]?.text || '';
-            
-            const combinedValue = {
-                country: {
-                    code: countryValue,
-                    name: countryText !== '-- Pilih Negara --' ? countryText : ''
-                },
-                state: {
-                    id: stateValue,
-                    name: stateText !== '-- Pilih Provinsi/State --' && !stateText.includes('Memuat') ? stateText : ''
-                },
-                city: {
-                    id: cityValue,
-                    name: cityText !== '-- Pilih Kota --' && !cityText.includes('Memuat') ? cityText : ''
-                },
-                display: [cityText, stateText, countryText].filter(text => 
-                    text && 
-                    !text.startsWith('--') && 
-                    !text.includes('Memuat') && 
-                    !text.includes('Error')
-                ).join(', ')
-            };
-            
-            combinedInput.value = JSON.stringify(combinedValue);
-        }
-        
-        // Function to load initial values if available
-        function loadInitialLocationData() {
-            if (initialInput && initialInput.value) {
-                try {
-                    const initialData = JSON.parse(initialInput.value);
+                if (otherField) {
+                    otherField.classList.remove('hidden');
+                    console.log('✅ Initially showing other field for existing selection:', otherField.id);
                     
-                    if (initialData && initialData.country && initialData.country.code) {
-                        // Set country first
-                        countrySelect.value = initialData.country.code;
-                        
-                        // Trigger change event to load states
-                        const countryEvent = new Event('change');
-                        countrySelect.dispatchEvent(countryEvent);
-                        
-                        // Set state and city after states load
-                        setTimeout(() => {
-                            if (initialData.state && initialData.state.id) {
-                                stateSelect.value = initialData.state.id;
-                                
-                                // Trigger change event to load cities
-                                const stateEvent = new Event('change');
-                                stateSelect.dispatchEvent(stateEvent);
-                                
-                                // Set city after cities load
-                                setTimeout(() => {
-                                    if (initialData.city && initialData.city.id) {
-                                        citySelect.value = initialData.city.id;
-                                        
-                                        // Trigger final update
-                                        const cityEvent = new Event('change');
-                                        citySelect.dispatchEvent(cityEvent);
-                                    }
-                                }, 1000); // Increase timeout for cities
-                            }
-                        }, 1000); // Increase timeout for states
+                    // ✅ Log existing value untuk debugging
+                    const otherInput = otherField.querySelector('input[type="text"]');
+                    if (otherInput) {
+                        console.log('Other field existing value:', otherInput.value);
                     }
-                } catch (e) {
-                    console.error('Error parsing initial location data:', e);
                 }
             }
+        });
+        
+        // Check existing checkbox selections
+        document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
+            const isOther = checkbox.getAttribute('data-is-other') === '1';
+            if (isOther) {
+                const questionId = checkbox.getAttribute('data-question-id');
+                const optionId = checkbox.value;
+                const otherField = document.getElementById(`multiple_other_field_${questionId}_${optionId}`);
+                
+                console.log('Found existing checkbox selection:', {
+                    questionId: questionId,
+                    optionId: optionId,
+                    isOther: isOther,
+                    otherFieldExists: !!otherField
+                });
+                
+                if (otherField) {
+                    otherField.classList.remove('hidden');
+                    console.log('✅ Initially showing multiple other field for existing selection:', otherField.id);
+                    
+                    // ✅ Log existing value untuk debugging
+                    const otherInput = otherField.querySelector('input[type="text"]');
+                    if (otherInput) {
+                        console.log('Multiple other field existing value:', otherInput.value);
+                    }
+                }
+            }
+        });
+        
+        console.log('=== End checking existing selections ===');
+    }, 500);
+    
+    console.log('=== Option toggles initialization completed ===');
+}
+function initializeConditionalQuestions() {
+    console.log('Initializing conditional questions for company questionnaire');
+    
+    // ✅ Updated untuk menggunakan data attributes yang benar
+    document.querySelectorAll('.conditional-question, .question-container[data-depends-on]').forEach(questionContainer => {
+        const parentQuestionId = questionContainer.getAttribute('data-depends-on');
+        const conditionValue = questionContainer.getAttribute('data-depends-value');
+        
+        if (parentQuestionId && conditionValue) {
+            console.log('Found conditional question', {
+                questionId: questionContainer.getAttribute('data-question-id'),
+                parentQuestionId: parentQuestionId,
+                conditionValue: conditionValue
+            });
+            
+            // Initially hide conditional questions
+            questionContainer.style.display = 'none';
+            
+            // Monitor parent question changes
+            const parentInputs = document.querySelectorAll(`[data-question-id="${parentQuestionId}"]`);
+            console.log('Found parent inputs:', parentInputs.length);
+            
+            parentInputs.forEach(input => {
+                console.log('Adding listener to parent input:', input);
+                
+                input.addEventListener('change', function() {
+                    console.log('Parent input changed:', this.value);
+                    handleConditionalQuestion(parentQuestionId, questionContainer, conditionValue);
+                });
+                
+                // Check initial state
+                if (input.checked || input.selected) {
+                    console.log('Parent input initially checked/selected');
+                    handleConditionalQuestion(parentQuestionId, questionContainer, conditionValue);
+                }
+            });
         }
     });
     
+    // ✅ Initialize on page load for existing answers dengan delay lebih panjang
+    setTimeout(() => {
+        console.log('=== Checking initial conditional states... ===');
+        
+        // Check all currently checked/selected inputs
+        document.querySelectorAll('input:checked, select option:selected').forEach(input => {
+            const questionId = input.getAttribute('data-question-id') || 
+                             input.closest('[data-question-id]')?.getAttribute('data-question-id');
+            
+            if (questionId) {
+                console.log('Found checked input for question:', questionId, 'value:', input.value);
+                const conditionalQuestions = document.querySelectorAll(`[data-depends-on="${questionId}"]`);
+                console.log('Found conditional questions depending on', questionId, ':', conditionalQuestions.length);
+                
+                conditionalQuestions.forEach(conditionalQuestion => {
+                    const conditionValue = conditionalQuestion.getAttribute('data-depends-value');
+                    console.log('Processing conditional question with condition:', conditionValue);
+                    handleConditionalQuestion(questionId, conditionalQuestion, conditionValue);
+                });
+            }
+        });
+        
+        // ✅ TAMBAHAN: Manual trigger untuk memastikan
+        document.querySelectorAll('.conditional-question').forEach(conditional => {
+            const parentId = conditional.getAttribute('data-depends-on');
+            const conditionValue = conditional.getAttribute('data-depends-value');
+            
+            if (parentId && conditionValue) {
+                console.log('Manual check for conditional question:', {
+                    conditionalQuestionId: conditional.getAttribute('data-question-id'),
+                    parentId: parentId,
+                    conditionValue: conditionValue
+                });
+                
+                handleConditionalQuestion(parentId, conditional, conditionValue);
+            }
+        });
+        
+        console.log('=== End initial conditional states check ===');
+    }, 1000); // ✅ Increased delay untuk memastikan semua elements loaded
 }
 
-// Update the validation function to handle location_combined
+function handleConditionalQuestion(parentQuestionId, conditionalQuestionContainer, conditionValue) {
+    console.log('=== handleConditionalQuestion START ===');
+    console.log('Parent Question ID:', parentQuestionId);
+    console.log('Condition Value:', conditionValue);
+    console.log('Conditional Question Container:', conditionalQuestionContainer.getAttribute('data-question-id'));
+    
+    // Get all checked/selected values from parent question
+    const parentValues = [];
+    
+    // ✅ Enhanced parent input detection
+    const parentRadios = document.querySelectorAll(`input[type="radio"][data-question-id="${parentQuestionId}"]:checked`);
+    const parentCheckboxes = document.querySelectorAll(`input[type="checkbox"][data-question-id="${parentQuestionId}"]:checked`);
+    const parentSelects = document.querySelectorAll(`select[data-question-id="${parentQuestionId}"]`);
+    
+    console.log('Found parent radios checked:', parentRadios.length);
+    console.log('Found parent checkboxes checked:', parentCheckboxes.length);
+    console.log('Found parent selects:', parentSelects.length);
+    
+    // Collect values from all parent inputs
+    parentRadios.forEach(radio => {
+        parentValues.push(radio.value);
+        console.log('Parent radio value:', radio.value);
+    });
+    
+    parentCheckboxes.forEach(checkbox => {
+        parentValues.push(checkbox.value);
+        console.log('Parent checkbox value:', checkbox.value);
+    });
+    
+    parentSelects.forEach(select => {
+        if (select.value) {
+            parentValues.push(select.value);
+            console.log('Parent select value:', select.value);
+        }
+    });
+    
+    console.log('All parent values collected:', parentValues);
+    
+    // ✅ Enhanced multiple dependency values handling
+    let shouldShow = false;
+    
+    if (conditionValue && conditionValue.includes(',')) {
+        // Multiple dependency values - split by comma and check if any parentValue is in the list
+        const conditionValueArray = conditionValue.split(',').map(val => val.trim());
+        shouldShow = parentValues.some(val => conditionValueArray.includes(String(val).trim()));
+        
+        console.log('Multiple dependency check', {
+            conditionValueArray: conditionValueArray,
+            parentValues: parentValues,
+            shouldShow: shouldShow
+        });
+    } else {
+        // Single dependency value - direct comparison
+        shouldShow = parentValues.some(val => String(val).trim() === String(conditionValue).trim());
+        
+        console.log('Single dependency check', {
+            conditionValue: conditionValue,
+            parentValues: parentValues,
+            shouldShow: shouldShow
+        });
+    }
+    
+    console.log('Final decision - Should show:', shouldShow);
+    
+    if (shouldShow) {
+        conditionalQuestionContainer.style.display = 'block';
+        conditionalQuestionContainer.style.visibility = 'visible';
+        
+        // Enable all inputs in the conditional question
+        const inputs = conditionalQuestionContainer.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.disabled = false;
+        });
+        
+        console.log('✅ Conditional question SHOWN:', conditionalQuestionContainer.getAttribute('data-question-id'));
+    } else {
+        conditionalQuestionContainer.style.display = 'none';
+        conditionalQuestionContainer.style.visibility = 'hidden';
+        
+        // Clear and disable all inputs in the conditional question
+        const inputs = conditionalQuestionContainer.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.disabled = true;
+            
+            if (input.type === 'radio' || input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+            
+            // Clear other option fields untuk hidden questions
+            if (input.type === 'radio' && input.getAttribute('data-is-other') === '1') {
+                const questionId = conditionalQuestionContainer.getAttribute('data-question-id');
+                const otherField = document.getElementById(`other_field_${questionId}_${input.value}`);
+                if (otherField) {
+                    otherField.classList.add('hidden');
+                    const otherInput = otherField.querySelector('input[type="text"]');
+                    if (otherInput) {
+                        otherInput.value = '';
+                    }
+                }
+            }
+            
+            if (input.type === 'checkbox' && input.getAttribute('data-is-other') === '1') {
+                const questionId = conditionalQuestionContainer.getAttribute('data-question-id');
+                const otherField = document.getElementById(`multiple_other_field_${questionId}_${input.value}`);
+                if (otherField) {
+                    otherField.classList.add('hidden');
+                    const otherInput = otherField.querySelector('input[type="text"]');
+                    if (otherInput) {
+                        otherInput.value = '';
+                    }
+                }
+            }
+        });
+        
+        console.log('❌ Conditional question HIDDEN:', conditionalQuestionContainer.getAttribute('data-question-id'));
+    }
+    
+    console.log('=== handleConditionalQuestion END ===');
+}
+
+// ✅ Enhanced validation function untuk multiple dependencies
 function validateRequired() {
+    console.log('Validating form with enhanced dependency support');
     
     const allQuestions = document.querySelectorAll('.question-container');
     let isValid = true;
     let firstInvalidQuestion = null;
     const validationErrors = [];
-    
     
     if (allQuestions.length === 0) {
         return true;
@@ -970,17 +972,66 @@ function validateRequired() {
         const questionElement = questionContainer.querySelector('h3');
         const questionText = questionElement ? questionElement.textContent.replace('*', '').trim() : `Pertanyaan ${index + 1}`;
         
+        // ✅ PERBAIKAN: Gunakan data attributes yang benar
+        const parentQuestionId = questionContainer.getAttribute('data-depends-on'); // ✅ Bukan data-parent-question
+        const conditionValue = questionContainer.getAttribute('data-depends-value'); // ✅ Bukan data-condition-value
+        
         // Skip validation untuk pertanyaan conditional yang hidden
         if (questionContainer.style.display === 'none' || questionContainer.classList.contains('hidden')) {
+            console.log('Skipping validation - question hidden:', questionId);
             return;
         }
         
         const computedStyle = window.getComputedStyle(questionContainer);
         if (computedStyle.display === 'none') {
+            console.log('Skipping validation - question computed style none:', questionId);
             return;
         }
         
+        // ✅ Additional check for conditional questions
+        if (parentQuestionId && conditionValue) {
+            // Check if parent question conditions are met
+            const parentValues = [];
+            
+            const parentInputs = document.querySelectorAll(`[data-question-id="${parentQuestionId}"]:checked`);
+            parentInputs.forEach(input => {
+                parentValues.push(input.value);
+            });
+            
+            const parentSelects = document.querySelectorAll(`select[data-question-id="${parentQuestionId}"]`);
+            parentSelects.forEach(select => {
+                if (select.value) {
+                    parentValues.push(select.value);
+                }
+            });
+            
+            let conditionMet = false;
+            
+            if (conditionValue.includes(',')) {
+                // Multiple dependency values
+                const conditionValueArray = conditionValue.split(',').map(val => val.trim());
+                conditionMet = parentValues.some(val => conditionValueArray.includes(String(val).trim()));
+            } else {
+                // Single dependency value
+                conditionMet = parentValues.some(val => String(val).trim() === String(conditionValue).trim());
+            }
+            
+            console.log('Conditional validation check', {
+                questionId: questionId,
+                parentQuestionId: parentQuestionId,
+                conditionValue: conditionValue,
+                parentValues: parentValues,
+                conditionMet: conditionMet
+            });
+            
+            // Skip validation if condition is not met
+            if (!conditionMet) {
+                console.log('Skipping validation - condition not met for question:', questionId);
+                return;
+            }
+        }
         
+        // Rest of validation logic...
         let isAnswered = false;
         let validationMessage = 'Pertanyaan ini wajib diisi!';
         
@@ -1008,15 +1059,48 @@ function validateRequired() {
             case 'scale':
                 const radioInput = questionContainer.querySelector(`input[name="question_${questionId}"]:checked`);
                 isAnswered = radioInput !== null;
+                
+                // Check if "other" option is selected and requires text input
+                if (isAnswered && radioInput.getAttribute('data-is-other') === '1') {
+                    const otherField = questionContainer.querySelector(`#other_field_${questionId}_${radioInput.value}`);
+                    if (otherField && !otherField.classList.contains('hidden')) {
+                        const otherInput = otherField.querySelector('input[type="text"]');
+                        if (!otherInput || otherInput.value.trim() === '') {
+                            isAnswered = false;
+                            validationMessage = 'Jawaban "Lainnya" harus diisi';
+                        }
+                    }
+                }
                 break;
                 
             case 'multiple':
                 const checkboxInputs = questionContainer.querySelectorAll(`input[name="question_${questionId}[]"]:checked`);
                 isAnswered = checkboxInputs.length > 0;
+                
+                // Check if any "other" options require additional text
+                if (isAnswered) {
+                    let allOtherFieldsValid = true;
+                    
+                    checkboxInputs.forEach(checkbox => {
+                        if (checkbox.getAttribute('data-is-other') === '1') {
+                            const optionId = checkbox.value;
+                            const otherField = questionContainer.querySelector(`#multiple_other_field_${questionId}_${optionId}`);
+                            
+                            if (otherField && !otherField.classList.contains('hidden')) {
+                                const otherInput = otherField.querySelector('input[type="text"]');
+                                if (!otherInput || otherInput.value.trim() === '') {
+                                    allOtherFieldsValid = false;
+                                    validationMessage = 'Isian "Lainnya" harus diisi';
+                                }
+                            }
+                        }
+                    });
+                    
+                    isAnswered = allOtherFieldsValid;
+                }
                 break;
                 
             case 'location':
-                // Check for location_combined input instead of province/city selects
                 const locationCombinedInput = questionContainer.querySelector(`input[name="location_combined[${questionId}]"]`);
                 if (locationCombinedInput && locationCombinedInput.value) {
                     try {
@@ -1037,6 +1121,7 @@ function validateRequired() {
                 break;
         }
         
+        // Validation result processing
         if (!isAnswered) {
             isValid = false;
             validationErrors.push(questionText);
@@ -1063,19 +1148,27 @@ function validateRequired() {
     });
     
     if (!isValid) {
+        console.log('Form validation failed', {
+            errorCount: validationErrors.length,
+            errors: validationErrors
+        });
+        
         showValidationAlert(`Ada ${validationErrors.length} pertanyaan yang belum diisi atau tidak valid!`);
         
         if (firstInvalidQuestion) {
             firstInvalidQuestion.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     } else {
+        console.log('Form validation passed');
         hideValidationAlert();
     }
     
     return isValid;
 }
 
+// Enhanced form validation initialization
 function initializeFormValidation() {
+    console.log('Initializing enhanced form validation for company questionnaire');
     
     const form = document.getElementById('questionnaire-form');
     if (!form) {
@@ -1088,15 +1181,19 @@ function initializeFormValidation() {
         const submitButton = e.submitter;
         const action = submitButton ? submitButton.value : '';
         
+        console.log('Form submission attempt', { action: action });
         
         // Only validate for next_category and submit_final actions
         if (action === 'next_category' || action === 'submit_final') {
+            console.log('Validating form before submission');
             
             if (!validateRequired()) {
+                console.log('Form validation failed, preventing submission');
                 e.preventDefault();
                 return false;
             }
             
+            console.log('Form validation passed');
             
             // Show confirmation modal for final submission
             if (action === 'submit_final') {
@@ -1108,6 +1205,43 @@ function initializeFormValidation() {
         
         // For save_draft and prev_category, don't validate
         if (action === 'save_draft' || action === 'prev_category') {
+            console.log('Saving draft or going to previous category, skipping validation');
+        }
+    });
+    
+    // Enhanced input event handlers
+    document.querySelectorAll('input, select, textarea').forEach(input => {
+        // Clear validation styling on input change
+        input.addEventListener('change', function() {
+            const questionContainer = this.closest('.question-container');
+            if (questionContainer) {
+                questionContainer.classList.remove('border-red-300');
+                const validationMsg = questionContainer.querySelector('.validation-message');
+                if (validationMsg) {
+                    validationMsg.classList.add('hidden');
+                }
+            }
+        });
+        
+        // ✅ PERBAIKAN: Trigger conditional question handling menggunakan data-depends-on
+        if (input.type === 'radio' || input.type === 'checkbox' || input.tagName === 'SELECT') {
+            input.addEventListener('change', function() {
+                const questionId = this.getAttribute('data-question-id') || 
+                                 this.closest('[data-question-id]')?.getAttribute('data-question-id');
+                
+                if (questionId) {
+                    console.log('Input changed for question:', questionId, 'value:', this.value);
+                    // ✅ PERBAIKAN: Gunakan data-depends-on bukan data-parent-question
+                    const conditionalQuestions = document.querySelectorAll(`[data-depends-on="${questionId}"]`);
+                    console.log('Found dependent questions:', conditionalQuestions.length);
+                    
+                    conditionalQuestions.forEach(conditionalQuestion => {
+                        const conditionValue = conditionalQuestion.getAttribute('data-depends-value');
+                        console.log('Handling conditional question with condition:', conditionValue);
+                        handleConditionalQuestion(questionId, conditionalQuestion, conditionValue);
+                    });
+                }
+            });
         }
     });
     
@@ -1130,14 +1264,12 @@ function initializeFormValidation() {
     document.querySelectorAll('input[type="email"]').forEach(input => {
         input.addEventListener('blur', function() {
             if (this.value.trim()) {
-                // More comprehensive email regex pattern
                 const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
                 
                 if (!emailRegex.test(this.value.trim())) {
                     this.classList.add('border-red-300');
                     this.style.backgroundColor = '#fef2f2';
                     
-                    // Show validation message
                     const questionContainer = this.closest('.question-container');
                     if (questionContainer) {
                         const validationMsg = questionContainer.querySelector('.validation-message');
@@ -1150,7 +1282,6 @@ function initializeFormValidation() {
                     this.classList.remove('border-red-300');
                     this.style.backgroundColor = '';
                     
-                    // Hide validation message
                     const questionContainer = this.closest('.question-container');
                     if (questionContainer) {
                         const validationMsg = questionContainer.querySelector('.validation-message');
@@ -1169,30 +1300,6 @@ function initializeFormValidation() {
                     const validationMsg = questionContainer.querySelector('.validation-message');
                     if (validationMsg) {
                         validationMsg.classList.add('hidden');
-                    }
-                }
-            }
-        });
-        
-        // Also validate on input (real-time validation)
-        input.addEventListener('input', function() {
-            if (this.value.trim()) {
-                const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-                
-                if (!emailRegex.test(this.value.trim())) {
-                    this.classList.add('border-red-300');
-                    this.style.backgroundColor = '#fef2f2';
-                } else {
-                    this.classList.remove('border-red-300');
-                    this.style.backgroundColor = '';
-                    
-                    // Hide validation message when valid
-                    const questionContainer = this.closest('.question-container');
-                    if (questionContainer) {
-                        const validationMsg = questionContainer.querySelector('.validation-message');
-                        if (validationMsg) {
-                            validationMsg.classList.add('hidden');
-                        }
                     }
                 }
             }
@@ -1265,7 +1372,6 @@ function hideConfirmationModal() {
         document.body.style.overflow = '';
     }
 }
-}
 
 function showValidationAlert(message) {
     const alert = document.getElementById('validation-alert');
@@ -1288,6 +1394,325 @@ function hideValidationAlert() {
         alert.classList.add('hidden');
     }
 }
+
+function initializeLocationQuestions() {
+    console.log('Initializing location questions for company questionnaire');
+    
+    // Find all location questions
+    const locationQuestions = document.querySelectorAll('.location-question');
+    
+    if (locationQuestions.length === 0) {
+        console.log('No location questions found');
+        return;
+    }
+    
+    locationQuestions.forEach(questionContainer => {
+        const questionId = questionContainer.getAttribute('data-question-id');
+        
+        console.log('Setting up location question:', questionId);
+        
+        const countrySelect = document.getElementById(`country-select-${questionId}`);
+        const stateSelect = document.getElementById(`state-select-${questionId}`);
+        const citySelect = document.getElementById(`city-select-${questionId}`);
+        
+        if (!countrySelect || !stateSelect || !citySelect) {
+            console.warn('Location selects not found for question:', questionId);
+            return;
+        }
+        
+        // Load countries first
+        loadCountries(countrySelect, questionId);
+        
+        // Setup event listeners
+        setupLocationEventListeners(questionId);
+        
+        // Load saved data if exists
+        loadSavedLocationData(questionId);
+    });
+}
+
+function loadCountries(countrySelect, questionId) {
+    console.log('Loading countries from JSON for question:', questionId);
+    
+    countrySelect.disabled = true;
+    countrySelect.innerHTML = '<option value="">Loading countries...</option>';
+    
+    fetch('/js/location-data/countries.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(countries => {
+            console.log('Countries loaded from JSON:', countries.length);
+            
+            // Clear and add default option
+            countrySelect.innerHTML = '<option value="">-- Pilih Negara --</option>';
+            
+            // Add country options
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country.code;
+                option.textContent = country.name;
+                countrySelect.appendChild(option);
+            });
+            
+            countrySelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error loading countries from JSON:', error);
+            countrySelect.innerHTML = '<option value="">Error loading countries</option>';
+            countrySelect.disabled = true;
+        });
+}
+
+function loadStates(stateSelect, countryId, questionId) {
+    console.log('Loading states from JSON for country:', countryId, 'question:', questionId);
+    
+    stateSelect.disabled = true;
+    stateSelect.innerHTML = '<option value="">Loading states...</option>';
+    
+    fetch(`/js/location-data/${countryId}.json`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const states = data.states || [];
+            console.log('States loaded from JSON:', states.length);
+            
+            // Clear and add default option
+            stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+            
+            // Add state options
+            states.forEach(state => {
+                const option = document.createElement('option');
+                option.value = state.code;
+                option.textContent = state.name;
+                stateSelect.appendChild(option);
+            });
+            
+            stateSelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error loading states from JSON for country:', countryId, error);
+            stateSelect.innerHTML = '<option value="">Error loading states</option>';
+            stateSelect.disabled = true;
+        });
+}
+
+function loadCities(citySelect, countryId, stateId, questionId) {
+    console.log('Loading cities from JSON for country:', countryId, 'state:', stateId, 'question:', questionId);
+    
+    citySelect.disabled = true;
+    citySelect.innerHTML = '<option value="">Loading cities...</option>';
+    
+    fetch(`/js/location-data/${countryId}.json`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            const states = data.states || [];
+            const selectedState = states.find(state => state.code === stateId);
+            const cities = selectedState ? selectedState.cities || [] : [];
+            
+            console.log('Cities loaded from JSON:', cities.length);
+            
+            // Clear and add default option
+            citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+            
+            // Add city options
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city.code;
+                option.textContent = city.name;
+                citySelect.appendChild(option);
+            });
+            
+            citySelect.disabled = false;
+        })
+        .catch(error => {
+            console.error('Error loading cities from JSON for country:', countryId, 'state:', stateId, error);
+            citySelect.innerHTML = '<option value="">Error loading cities</option>';
+            citySelect.disabled = true;
+        });
+}
+
+function setupLocationEventListeners(questionId) {
+    const countrySelect = document.getElementById(`country-select-${questionId}`);
+    const stateSelect = document.getElementById(`state-select-${questionId}`);
+    const citySelect = document.getElementById(`city-select-${questionId}`);
+    
+    if (!countrySelect || !stateSelect || !citySelect) {
+        console.warn('Location selects not found for question:', questionId);
+        return;
+    }
+    
+    // Country change handler
+    countrySelect.addEventListener('change', function() {
+        const countryId = this.value;
+        const countryName = this.options[this.selectedIndex].text;
+        
+        console.log('Country changed for question', questionId, ':', countryId, countryName);
+        
+        // Reset state and city dropdowns
+        stateSelect.innerHTML = '<option value="">-- Pilih Provinsi/State --</option>';
+        stateSelect.disabled = true;
+        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+        citySelect.disabled = true;
+        
+        if (countryId) {
+            // Use JSON files for ALL countries including Indonesia
+            loadStates(stateSelect, countryId, questionId);
+        }
+        
+        updateLocationDisplay(questionId);
+    });
+    
+    // State/Province change handler
+    stateSelect.addEventListener('change', function() {
+        const stateId = this.value;
+        const stateName = this.options[this.selectedIndex].text;
+        
+        console.log('State changed for question', questionId, ':', stateId, stateName);
+        
+        // Reset city dropdown
+        citySelect.innerHTML = '<option value="">-- Pilih Kota --</option>';
+        citySelect.disabled = true;
+        
+        if (stateId) {
+            const countryId = countrySelect.value;
+            // Use JSON files for ALL countries including Indonesia
+            loadCities(citySelect, countryId, stateId, questionId);
+        }
+        
+        updateLocationDisplay(questionId);
+    });
+    
+    // City change handler
+    citySelect.addEventListener('change', function() {
+        updateLocationDisplay(questionId);
+    });
+}
+
+function updateLocationDisplay(questionId) {
+    const countrySelect = document.getElementById(`country-select-${questionId}`);
+    const stateSelect = document.getElementById(`state-select-${questionId}`);
+    const citySelect = document.getElementById(`city-select-${questionId}`);
+    const previewElement = document.getElementById(`location-preview-${questionId}`);
+    const previewText = document.getElementById(`location-preview-text-${questionId}`);
+    const combinedInput = document.getElementById(`location-combined-${questionId}`);
+    
+    if (!countrySelect || !stateSelect || !citySelect) {
+        console.warn('Location selects not found for question:', questionId);
+        return;
+    }
+    
+    const countryValue = countrySelect.value;
+    const stateValue = stateSelect.value;
+    const cityValue = citySelect.value;
+    
+    const countryText = countryValue ? countrySelect.options[countrySelect.selectedIndex].text : '';
+    const stateText = stateValue ? stateSelect.options[stateSelect.selectedIndex].text : '';
+    const cityText = cityValue ? citySelect.options[citySelect.selectedIndex].text : '';
+    
+    console.log('Updating location display for question', questionId, ':', {
+        country: { value: countryValue, text: countryText },
+        state: { value: stateValue, text: stateText },
+        city: { value: cityValue, text: cityText }
+    });
+    
+    // Build location display text
+    const locationParts = [];
+    if (cityText && cityText !== '-- Pilih Kota --') locationParts.push(cityText);
+    if (stateText && stateText !== '-- Pilih Provinsi/State --' && stateText !== '-- Pilih Provinsi --') locationParts.push(stateText);
+    if (countryText && countryText !== '-- Pilih Negara --') locationParts.push(countryText);
+    
+    const locationDisplay = locationParts.join(', ');
+    
+    // Update preview if elements exist
+    if (previewElement && previewText) {
+        if (locationDisplay) {
+            previewText.textContent = locationDisplay;
+            previewElement.classList.remove('hidden');
+        } else {
+            previewElement.classList.add('hidden');
+        }
+    }
+    
+    // Update combined input for form submission
+    if (combinedInput) {
+        const locationData = {
+            country: {
+                code: countryValue,
+                name: countryText
+            },
+            state: {
+                code: stateValue,
+                name: stateText
+            },
+            city: {
+                code: cityValue,
+                name: cityText
+            },
+            display: locationDisplay
+        };
+        
+        combinedInput.value = JSON.stringify(locationData);
+        console.log('Location data saved to combined input:', locationData);
+    } else {
+        console.warn('Combined input not found for question:', questionId);
+    }
+}
+
+function loadSavedLocationData(questionId) {
+    const initialDataElement = document.getElementById(`location-initial-${questionId}`);
+    
+    if (!initialDataElement || !initialDataElement.value) {
+        console.log('No saved location data for question:', questionId);
+        return;
+    }
+    
+    try {
+        const locationData = JSON.parse(initialDataElement.value);
+        console.log('Loading saved location data for question', questionId, ':', locationData);
+        
+        const countrySelect = document.getElementById(`country-select-${questionId}`);
+        const stateSelect = document.getElementById(`state-select-${questionId}`);
+        const citySelect = document.getElementById(`city-select-${questionId}`);
+        
+        if (locationData.country && locationData.country.code) {
+            // Wait for countries to load first
+            setTimeout(() => {
+                countrySelect.value = locationData.country.code;
+                countrySelect.dispatchEvent(new Event('change'));
+                
+                if (locationData.state && locationData.state.code) {
+                    // Wait for states to load
+                    setTimeout(() => {
+                        stateSelect.value = locationData.state.code;
+                        stateSelect.dispatchEvent(new Event('change'));
+                        
+                        if (locationData.city && locationData.city.code) {
+                            // Wait for cities to load
+                            setTimeout(() => {
+                                citySelect.value = locationData.city.code;
+                                citySelect.dispatchEvent(new Event('change'));
+                            }, 1000);
+                        }
+                    }, 1000);
+                }
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('Error parsing saved location data for question', questionId, ':', error);
+    }
+}
 </script>
-<script src="{{ asset('js/company.js') }}" defer></script>
 @endsection

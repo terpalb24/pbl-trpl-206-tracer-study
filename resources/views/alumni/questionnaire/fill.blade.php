@@ -1402,24 +1402,110 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initializeDependenciesOnLoad() {
-        
+        console.log('Initializing dependencies on page load');
         setTimeout(() => {
+            // Handle single choice questions (radio buttons)
             document.querySelectorAll('.option-radio:checked, .rating-radio:checked, .scale-radio:checked').forEach(radio => {
                 const questionId = radio.getAttribute('data-question-id');
                 const selectedValue = radio.value;
                 
-               
+                console.log('Initialize dependency for checked radio', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
                 
                 handleDependentQuestions(questionId, selectedValue);
             });
             
+            // Handle multiple choice questions (checkboxes)
+            const checkedQuestions = new Set();
             document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
                 const questionId = checkbox.getAttribute('data-question-id');
                 const selectedValue = checkbox.value;
                 
-              
+                console.log('Initialize dependency for checked checkbox', {
+                    questionId: questionId,
+                    selectedValue: selectedValue
+                });
                 
-                handleDependentQuestions(questionId, selectedValue);
+                // Avoid duplicate processing for same question
+                if (!checkedQuestions.has(questionId)) {
+                    checkedQuestions.add(questionId);
+                    
+                    // Get all checked values for this question
+                    const allCheckedValues = [];
+                    document.querySelectorAll(`input[data-question-id="${questionId}"]:checked`).forEach(cb => {
+                        allCheckedValues.push(cb.value);
+                    });
+                    
+                    // Process dependencies for each checked value
+                    allCheckedValues.forEach(value => {
+                        handleDependentQuestions(questionId, value);
+                    });
+                }
+            });
+            
+            document.querySelectorAll('.multiple-checkbox:checked').forEach(checkbox => {
+                const dependsOn = question.getAttribute('data-depends-on');
+                const dependsValue = question.getAttribute('data-depends-value');
+                const questionId = question.id.replace('question-', '');
+                
+                console.log('Processing conditional question on load', {
+                    questionId: questionId,
+                    dependsOn: dependsOn,
+                    dependsValue: dependsValue
+                });
+
+                if (dependsOn && dependsValue) {
+                    let shouldShow = false;
+                    
+                    // Check if parent question has answer
+                    const parentRadios = document.querySelectorAll(`input[data-question-id="${dependsOn}"]`);
+                    const parentCheckedValues = [];
+                    
+                    parentRadios.forEach(radio => {
+                        if (radio.checked) {
+                            parentCheckedValues.push(radio.value);
+                        }
+                    });
+                    
+                    console.log('Parent question status', {
+                        dependsOn: dependsOn,
+                        parentCheckedValues: parentCheckedValues,
+                        dependsValue: dependsValue
+                    });
+                    
+                    // ✅ Enhanced dependency value checking
+                    if (dependsValue.includes(',')) {
+                        // Multiple dependency values
+                        const dependsValueArray = dependsValue.split(',').map(val => val.trim());
+                        shouldShow = parentCheckedValues.some(val => dependsValueArray.includes(String(val).trim()));
+                    } else {
+                        // Single dependency value
+                        shouldShow = parentCheckedValues.some(val => val == dependsValue);
+                    }
+                    
+                    console.log('Conditional question decision', {
+                        questionId: questionId,
+                        shouldShow: shouldShow
+                    });
+                    
+                    if (shouldShow) {
+                        question.style.display = 'block';
+                        
+                        const inputs = question.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            input.disabled = false;
+                        });
+                    } else {
+                        question.style.display = 'none';
+                        
+                        const inputs = question.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            input.disabled = true;
+                        });
+                    }
+                }
             });
             
             document.querySelectorAll('.conditional-question').forEach(question => {
@@ -1462,6 +1548,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleDependentQuestions(parentQuestionId, selectedValue) {
+        console.log('Handling dependent questions', {
+            parentQuestionId: parentQuestionId,
+            selectedValue: selectedValue
+        });
         
         const dependentQuestions = document.querySelectorAll(`.conditional-question[data-depends-on="${parentQuestionId}"]`);
         
@@ -1470,9 +1560,36 @@ document.addEventListener('DOMContentLoaded', function() {
             const dependsValue = dependentQuestion.getAttribute('data-depends-value');
             const questionId = dependentQuestion.id.replace('question-', '');
             
+            console.log('Processing dependent question', {
+                questionId: questionId,
+                dependsValue: dependsValue,
+                selectedValue: selectedValue
+            });
             
-            
-            if (dependsValue == selectedValue) {
+            // ✅ Enhanced multiple dependency values handling
+            let shouldShow = false;
+
+            if (dependsValue && dependsValue.includes(',')) {
+                // Multiple dependency values - split by comma and check if selectedValue is in the list
+                const dependsValueArray = dependsValue.split(',').map(val => val.trim());
+                shouldShow = dependsValueArray.includes(String(selectedValue).trim());
+                
+                console.log('Multiple dependency check', {
+                    dependsValueArray: dependsValueArray,
+                    selectedValue: selectedValue,
+                    shouldShow: shouldShow
+                });
+            } else {
+                // Single dependency value - direct comparison
+                shouldShow = dependsValue == selectedValue;
+                
+                console.log('Single dependency check', {
+                    dependsValue: dependsValue,
+                    selectedValue: selectedValue,
+                    shouldShow: shouldShow
+                });
+            }
+            if (shouldShow) {
                 dependentQuestion.style.display = 'block';
                 
                 const inputs = dependentQuestion.querySelectorAll('input, select, textarea');
@@ -1480,6 +1597,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     input.disabled = false;
                 });
                 
+                console.log('Question shown:', questionId);
             } else {
                 dependentQuestion.style.display = 'none';
                 
@@ -1493,6 +1611,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         input.value = '';
                     }
                     
+                    // Clear other option fields for hidden questions
                     if (input.type === 'radio' && input.getAttribute('data-is-other') === '1') {
                         const otherField = document.getElementById(`other_field_${questionId}_${input.value}`);
                         if (otherField) {
@@ -1516,6 +1635,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
                 
+                console.log('Question hidden:', questionId);
             }
         });
     }
@@ -1619,7 +1739,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function validateCurrentCategory() {
-        
+        console.log('Validating current category with enhanced dependency support');
         const validationErrors = [];
         let hasErrors = false;
         
@@ -1642,16 +1762,64 @@ document.addEventListener('DOMContentLoaded', function() {
             const isConditional = questionContainer.classList.contains('conditional-question');
             const isCurrentlyVisible = questionContainer.style.display !== 'none';
             
-        
+            console.log('Validating question', {
+                questionId: questionId,
+                isConditional: isConditional,
+                isCurrentlyVisible: isCurrentlyVisible
+            });
             
-            if (isConditional && !isCurrentlyVisible) {
+           // ✅ Enhanced conditional question validation
+            if (isConditional) {
+                const dependsOn = questionContainer.getAttribute('data-depends-on');
+                const dependsValue = questionContainer.getAttribute('data-depends-value');
+                
+                if (dependsOn && dependsValue) {
+                    // Check if parent question conditions are met
+                    const parentCheckedValues = [];
+                    const parentInputs = document.querySelectorAll(`input[data-question-id="${dependsOn}"]:checked`);
+                    
+                    parentInputs.forEach(input => {
+                        parentCheckedValues.push(input.value);
+                    });
+                    
+                    let conditionMet = false;
+                    
+                    if (dependsValue.includes(',')) {
+                        // Multiple dependency values
+                        const dependsValueArray = dependsValue.split(',').map(val => val.trim());
+                        conditionMet = parentCheckedValues.some(val => dependsValueArray.includes(String(val).trim()));
+                    } else {
+                        // Single dependency value
+                        conditionMet = parentCheckedValues.some(val => val == dependsValue);
+                    }
+                    
+                    console.log('Conditional validation check', {
+                        questionId: questionId,
+                        dependsOn: dependsOn,
+                        dependsValue: dependsValue,
+                        parentCheckedValues: parentCheckedValues,
+                        conditionMet: conditionMet,
+                        isCurrentlyVisible: isCurrentlyVisible
+                    });
+                    
+                    // Skip validation if condition is not met
+                    if (!conditionMet) {
+                        console.log('Skipping validation - condition not met');
+                        return;
+                    }
+                }
+            }
+            // Skip if question is not visible
+            if (!isCurrentlyVisible) {
+                console.log('Skipping validation - question not visible');
                 return;
             }
-            
+
             const allInputs = questionContainer.querySelectorAll('input, select, textarea');
             const hasDisabledInputs = Array.from(allInputs).some(input => input.disabled);
             
             if (hasDisabledInputs) {
+                console.log('Skipping validation - inputs disabled');
                 return;
             }
             
