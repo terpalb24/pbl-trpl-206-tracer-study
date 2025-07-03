@@ -1014,7 +1014,7 @@ class QuestionnaireController extends Controller
         foreach ($questions as $question) {
             if ($question->depends_on) {
                 $parentQuestionId = $question->depends_on;
-                $requiredValue = $question->depends_value;
+                $requiredValues = $question->depends_value;
                 // ✅ Enhanced multiple dependency values handling
                 $requiredValueArray = [];
                 if ($requiredValues && strpos($requiredValues, ',') !== false) {
