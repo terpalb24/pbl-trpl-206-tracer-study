@@ -438,8 +438,15 @@
                             @foreach($categoryQuestions as $index => $qData)
                                 @php
                                     $globalIndex = $groupedQuestions->flatten(1)->search($qData);
+                                    $optionCount = $qData['question']->options ? $qData['question']->options->count() : 0;
+                                    $shouldSpanFull = ($qData['question']->type === 'multiple' && $optionCount > 8) || 
+                                                    ($qData['question']->type === 'option' && $optionCount > 8);
                                 @endphp
-                                <div class="border border-gray-200 rounded-lg p-4 {{ $qData['total_responses'] > 0 ? 'bg-orange-25' : 'bg-gray-50' }}">
+                                <div class="border border-gray-200 rounded-lg p-4 {{ $qData['total_responses'] > 0 ? 'bg-orange-25' : 'bg-gray-50' }}
+                                    @if($shouldSpanFull)
+                                        col-span-full
+                                    @endif
+                                    ">
                                     <div class="mb-3">
                                         <h5 class="font-medium text-gray-800 mb-2 text-sm">
                                             {{ $loop->iteration }}. {{ Str::limit($qData['question']->question, 60) }}
@@ -464,11 +471,11 @@
                                     @if($qData['total_responses'] > 0)
                                         <!-- Mini Chart -->
                                         <div class="mb-3">
-                                            @if(isset($qData['question']->type) && in_array($qData['question']->type, ['multiple']))
-                                                <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="540"></canvas>
-                                            @else
-                                            <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="150"></canvas>
-                                            @endif
+                                            @php
+                                                $optionCount = $qData['question']->options ? $qData['question']->options->count() : 0;
+                                                $chartHeight = ($optionCount > 6) ? 540 : 150;
+                                            @endphp
+                                            <canvas id="miniBarChart{{ $globalIndex }}" width="250" height="{{ $chartHeight }}"></canvas>
                                         </div>
                                         
                                         <!-- Top Answer -->
@@ -570,7 +577,16 @@
                             @endif
                             gap-4">
                     @foreach($questionnaireChartData['questions_data'] as $index => $qData)
-                        <div class="border border-orange-200 rounded-lg p-4">
+                        @php
+                            $optionCount = $qData['question']->options ? $qData['question']->options->count() : 0;
+                            $shouldSpanFull = ($qData['question']->type === 'multiple' && $optionCount > 8) || 
+                                            ($qData['question']->type === 'option' && $optionCount > 8);
+                        @endphp
+                        <div class="border border-orange-200 rounded-lg p-4
+                            @if($shouldSpanFull)
+                                col-span-full
+                            @endif
+                            ">
                             <div class="mb-4">
                                 <h4 class="font-medium text-orange-800 mb-2">
                                     {{ $index + 1 }}. {{ Str::limit($qData['question']->question, 80) }}
@@ -595,11 +611,11 @@
                             @if($qData['total_responses'] > 0)
                                 <!-- Mini Chart -->
                                 <div class="mb-4">
-                                    @if(isset($qData['question']->type) && in_array($qData['question']->type, ['multiple']))
-                                        <canvas id="miniBarChart{{ $index }}" width="300" height="550"></canvas>
-                                    @else
-                                    <canvas id="miniBarChart{{ $index }}" width="300" height="200"></canvas>
-                                    @endif
+                                    @php
+                                        $optionCount = $qData['question']->options ? $qData['question']->options->count() : 0;
+                                        $chartHeight = ($optionCount > 6) ? 550 : 200;
+                                    @endphp
+                                    <canvas id="miniBarChart{{ $index }}" width="300" height="{{ $chartHeight }}"></canvas>
                                 </div>
                                 
                                 <!-- Detailed Options Table -->
