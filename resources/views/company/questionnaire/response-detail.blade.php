@@ -75,12 +75,56 @@
                                 foreach($questionsWithAnswers as $catData) {
                                     foreach($catData['questions'] as $parentQData) {
                                         if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                            $hasParentAnswer = false;
+                                            $parentAnswersToCheck = [];
+                                            
+                                            // Check for single answer
                                             if (isset($parentQData['answer']) && $parentQData['answer']) {
-                                                if ($parentQData['answer'] == $qData['question']->depends_value) {
-                                                    $parentAnswered = true;
-                                                }
-                                                break 2;
+                                                $hasParentAnswer = true;
+                                                $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
                                             }
+                                            
+                                            // Check for multiple answers
+                                            if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
+                                                $hasParentAnswer = true;
+                                                $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
+                                            }
+                                            
+                                            if ($hasParentAnswer) {
+                                                // Support multi-value depends_value (OR logic)
+                                                $dependsValues = is_string($qData['question']->depends_value) ? 
+                                                    explode(',', $qData['question']->depends_value) : 
+                                                    [$qData['question']->depends_value];
+                                                $dependsValues = array_map('trim', $dependsValues);
+                                                
+                                                // Check if parent answer matches any of the depends_value options
+                                                foreach ($parentAnswersToCheck as $answer) {
+                                                    $trimmedAnswer = trim($answer);
+                                                    
+                                                    // Direct match check
+                                                    if (in_array($trimmedAnswer, $dependsValues)) {
+                                                        $parentAnswered = true;
+                                                        break 2;
+                                                    }
+                                                    
+                                                    // Check if answer is text but depends_value contains option ID
+                                                    $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
+                                                    if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
+                                                        $parentAnswered = true;
+                                                        break 2;
+                                                    }
+                                                    
+                                                    // Check if answer is ID but depends_value contains option text
+                                                    if (is_numeric($trimmedAnswer)) {
+                                                        $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
+                                                        if ($optionById && in_array($optionById->option, $dependsValues)) {
+                                                            $parentAnswered = true;
+                                                            break 2;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            break 2;
                                         }
                                     }
                                 }
@@ -216,12 +260,56 @@
                                                         foreach($questionsWithAnswers as $catData) {
                                                             foreach($catData['questions'] as $parentQData) {
                                                                 if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                                                    $hasParentAnswer = false;
+                                                                    $parentAnswersToCheck = [];
+                                                                    
+                                                                    // Check for single answer
                                                                     if (isset($parentQData['answer']) && $parentQData['answer']) {
-                                                                        if ($parentQData['answer'] == $qData['question']->depends_value) {
-                                                                            $parentAnswered = true;
-                                                                        }
-                                                                        break 2;
+                                                                        $hasParentAnswer = true;
+                                                                        $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
                                                                     }
+                                                                    
+                                                                    // Check for multiple answers
+                                                                    if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
+                                                                        $hasParentAnswer = true;
+                                                                        $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
+                                                                    }
+                                                                    
+                                                                    if ($hasParentAnswer) {
+                                                                        // Support multi-value depends_value (OR logic)
+                                                                        $dependsValues = is_string($qData['question']->depends_value) ? 
+                                                                            explode(',', $qData['question']->depends_value) : 
+                                                                            [$qData['question']->depends_value];
+                                                                        $dependsValues = array_map('trim', $dependsValues);
+                                                                        
+                                                                        // Check if parent answer matches any of the depends_value options
+                                                                        foreach ($parentAnswersToCheck as $answer) {
+                                                                            $trimmedAnswer = trim($answer);
+                                                                            
+                                                                            // Direct match check
+                                                                            if (in_array($trimmedAnswer, $dependsValues)) {
+                                                                                $parentAnswered = true;
+                                                                                break 2;
+                                                                            }
+                                                                            
+                                                                            // Check if answer is text but depends_value contains option ID
+                                                                            $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
+                                                                            if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
+                                                                                $parentAnswered = true;
+                                                                                break 2;
+                                                                            }
+                                                                            
+                                                                            // Check if answer is ID but depends_value contains option text
+                                                                            if (is_numeric($trimmedAnswer)) {
+                                                                                $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
+                                                                                if ($optionById && in_array($optionById->option, $dependsValues)) {
+                                                                                    $parentAnswered = true;
+                                                                                    break 2;
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    break 2;
                                                                 }
                                                             }
                                                         }
@@ -248,12 +336,56 @@
                                                 foreach($questionsWithAnswers as $catData) {
                                                     foreach($catData['questions'] as $parentQData) {
                                                         if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                                            $hasParentAnswer = false;
+                                                            $parentAnswersToCheck = [];
+                                                            
+                                                            // Check for single answer
                                                             if (isset($parentQData['answer']) && $parentQData['answer']) {
-                                                                if ($parentQData['answer'] == $qData['question']->depends_value) {
-                                                                    $parentAnswered = true;
-                                                                }
-                                                                break 2;
+                                                                $hasParentAnswer = true;
+                                                                $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
                                                             }
+                                                            
+                                                            // Check for multiple answers
+                                                            if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
+                                                                $hasParentAnswer = true;
+                                                                $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
+                                                            }
+                                                            
+                                                            if ($hasParentAnswer) {
+                                                                // Support multi-value depends_value (OR logic)
+                                                                $dependsValues = is_string($qData['question']->depends_value) ? 
+                                                                    explode(',', $qData['question']->depends_value) : 
+                                                                    [$qData['question']->depends_value];
+                                                                $dependsValues = array_map('trim', $dependsValues);
+                                                                
+                                                                // Check if parent answer matches any of the depends_value options
+                                                                foreach ($parentAnswersToCheck as $answer) {
+                                                                    $trimmedAnswer = trim($answer);
+                                                                    
+                                                                    // Direct match check
+                                                                    if (in_array($trimmedAnswer, $dependsValues)) {
+                                                                        $parentAnswered = true;
+                                                                        break 2;
+                                                                    }
+                                                                    
+                                                                    // Check if answer is text but depends_value contains option ID
+                                                                    $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
+                                                                    if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
+                                                                        $parentAnswered = true;
+                                                                        break 2;
+                                                                    }
+                                                                    
+                                                                    // Check if answer is ID but depends_value contains option text
+                                                                    if (is_numeric($trimmedAnswer)) {
+                                                                        $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
+                                                                        if ($optionById && in_array($optionById->option, $dependsValues)) {
+                                                                            $parentAnswered = true;
+                                                                            break 2;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            break 2;
                                                         }
                                                     }
                                                 }
