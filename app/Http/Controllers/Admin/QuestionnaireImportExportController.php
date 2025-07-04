@@ -56,11 +56,11 @@ class QuestionnaireImportExportController extends Controller
             $sheet->setCellValue('O1', 'Other Before Texts (| separated, match option index)');
             $sheet->setCellValue('P1', 'Other After Texts (| separated, match option index)');
             $sheet->setCellValue('Q1', 'Depends On Question (Question Text)');
-            $sheet->setCellValue('R1', 'Depends On Value');
+            $sheet->setCellValue('R1', 'Depends On Values (| separated for multiple values)');
 
             // Contoh data baris 2
             $sheet->fromArray([
-                $catName, 1, 'alumni', 'FALSE', '', 'Contoh pertanyaan untuk ' . $catName, 'option', 1, '', '', '', '', 'Sangat Baik|Baik|Cukup|Kurang|Sangat Kurang', '4', '| | | |Sebutkan:', '| | | |', '', ''
+                $catName, 1, 'alumni', 'FALSE', '', 'Contoh pertanyaan untuk ' . $catName, 'option', 1, '', '', '', '', 'Sangat Baik|Baik|Cukup|Kurang|Sangat Kurang', '4', '| | | |Sebutkan:', '| | | |', '', 'Sangat Baik|Baik'
             ], null, 'A2');
 
             // Auto-size columns
@@ -163,7 +163,7 @@ class QuestionnaireImportExportController extends Controller
                 $categoryId = $categoryMap[$category];
                 
                 // Get headers
-                $headers = $sheet->rangeToArray('A1:Q1')[0];
+                $headers = $sheet->rangeToArray('A1:R1')[0];
                 $h = $this->createHeaderMap($headers);
 
                 // Start from row 3 (after category data)
@@ -250,7 +250,7 @@ class QuestionnaireImportExportController extends Controller
 
                     // Handle dependencies
                     $dependsOnText = $rowData[15] ?? ''; // depends on question text
-                    $dependsOnValue = $rowData[16] ?? ''; // depends on value
+                    $dependsOnValues = $rowData[16] ?? ''; // depends on values (pipe-separated)
 
                     if ($dependsOnText) {
                         $parentQuestion = Tb_Questions::where('question', 'LIKE', "%$dependsOnText%")
@@ -258,45 +258,67 @@ class QuestionnaireImportExportController extends Controller
                             ->first();
 
                         if ($parentQuestion) {
-                            // For option-based questions, map the text value to option ID
-                            if (in_array($parentQuestion->type, ['option', 'multiple', 'rating', 'scale'])) {
-                                // Get all options for parent question
-                                $parentOptions = Tb_Question_Options::where('id_question', $parentQuestion->id_question)
-                                    ->get();
+                            $dependsValueIds = [];
+                            
+                            // ✅ Handle multiple dependency values
+                            if ($dependsOnValues && trim($dependsOnValues) !== '') {
+                                $dependsValueArray = array_filter(explode('|', $dependsOnValues));
                                 
-                                // Find matching option by text
-                                $matchingOption = $parentOptions->first(function($option) use ($dependsOnValue) {
-                                    return trim(strtolower($option->option)) === trim(strtolower($dependsOnValue));
-                                });
+                                // Log::info("Processing dependency values", [
+                                //     'question_id' => $question->id_question,
+                                //     'parent_question_id' => $parentQuestion->id_question,
+                                //     'raw_depends_values' => $dependsOnValues,
+                                //     'parsed_values' => $dependsValueArray
+                                // ]);
+                                
+                                // For option-based questions, map the text values to option IDs
+                                if (in_array($parentQuestion->type, ['option', 'multiple', 'rating', 'scale'])) {
+                                    $parentOptions = Tb_Question_Options::where('id_question', $parentQuestion->id_question)
+                                        ->get();
+                                    
+                                    foreach ($dependsValueArray as $valueText) {
+                                        $valueText = trim($valueText);
+                                        if (empty($valueText)) continue;
+                                        
+                                        // Find matching option by text
+                                        $matchingOption = $parentOptions->first(function($option) use ($valueText) {
+                                            return trim(strtolower($option->option)) === trim(strtolower($valueText));
+                                        });
 
-                                if ($matchingOption) {
-                                    $dependsValueId = $matchingOption->id_questions_options;
+                                        if ($matchingOption) {
+                                            $dependsValueIds[] = $matchingOption->id_questions_options;
+                                        } else {
+                                            Log::warning("Could not find matching option for depends_value", [
+                                                'question_id' => $question->id_question,
+                                                'parent_question_id' => $parentQuestion->id_question,
+                                                'depends_value_text' => $valueText,
+                                                'available_options' => $parentOptions->pluck('option')->toArray()
+                                            ]);
+                                        }
+                                    }
                                 } else {
-                                    Log::warning("Could not find matching option for depends_value", [
-                                        'question_id' => $question->id_question,
-                                        'parent_question_id' => $parentQuestion->id_question,
-                                        'depends_value_text' => $dependsOnValue,
-                                        'available_options' => $parentOptions->pluck('option')->toArray()
-                                    ]);
-                                    // Set to null or handle error as needed
-                                    $dependsValueId = null;
+                                    // For non-option questions, use the values as-is
+                                    $dependsValueIds = $dependsValueArray;
                                 }
-                            } else {
-                                // For non-option questions, use the value as-is
-                                $dependsValueId = $dependsOnValue;
                             }
 
-                            $question->update([
-                                'depends_on' => $parentQuestion->id_question,
-                                'depends_value' => $dependsValueId
-                            ]);
+                            // ✅ Store as comma-separated string (matching the controller logic)
+                            $dependsValueString = !empty($dependsValueIds) ? implode(',', $dependsValueIds) : null;
+                            
+                            if ($dependsValueString) {
+                                $question->update([
+                                    'depends_on' => $parentQuestion->id_question,
+                                    'depends_value' => $dependsValueString
+                                ]);
 
-                            // Log::info("Updated question dependency", [
-                            //     'question_id' => $question->id_question,
-                            //     'depends_on' => $parentQuestion->id_question,
-                            //     'depends_value_text' => $dependsOnValue,
-                            //     'depends_value_id' => $dependsValueId
-                            // ]);
+                                // Log::info("Updated question dependency with multiple values", [
+                                //     'question_id' => $question->id_question,
+                                //     'depends_on' => $parentQuestion->id_question,
+                                //     'depends_value_texts' => $dependsValueArray ?? [],
+                                //     'depends_value_ids' => $dependsValueIds,
+                                //     'depends_value_string' => $dependsValueString
+                                // ]);
+                            }
                         }
                     }
                 }
@@ -344,7 +366,7 @@ class QuestionnaireImportExportController extends Controller
                 'category order', 'for type', 'is_status_dependent', 'required_alumni_status',
                 'question text', 'question type', 'question order', 'before text', 'after text',
                 'scale min label', 'scale max label', 'options', 'other option indexes',
-                'other before texts', 'other after texts', 'depends on', 'depends value'
+                'other before texts', 'other after texts', 'depends on', 'depends values'
             ];
             $sheet->fromArray([$headers], NULL, 'A1');
 
@@ -362,17 +384,47 @@ class QuestionnaireImportExportController extends Controller
             foreach ($category->questions as $question) {
                 $options = $question->options->sortBy('order');
                 
-                // Get depends value as text if it's an option
-                $dependsValue = '';
+                // ✅ Get depends values as text if it's an option (supporting multiple values)
+                $dependsValues = '';
                 if ($question->depends_on) {
                     $parentQuestion = Tb_Questions::with('options')->find($question->depends_on);
                     if ($parentQuestion && in_array($parentQuestion->type, ['option', 'multiple', 'rating', 'scale'])) {
-                        $option = $parentQuestion->options
-                            ->where('id_questions_options', $question->depends_value)
-                            ->first();
-                        $dependsValue = $option ? $option->option : '';
+                        // ✅ Handle multiple dependency values (comma-separated)
+                        if ($question->depends_value && trim($question->depends_value) !== '') {
+                            $dependsValueIds = array_filter(explode(',', $question->depends_value));
+                            $dependsValueTexts = [];
+                            
+                            // Log::info("Exporting dependency values", [
+                            //     'question_id' => $question->id_question,
+                            //     'parent_question_id' => $parentQuestion->id_question,
+                            //     'raw_depends_value' => $question->depends_value,
+                            //     'parsed_ids' => $dependsValueIds
+                            // ]);
+                            
+                            foreach ($dependsValueIds as $valueId) {
+                                $valueId = trim($valueId);
+                                if (empty($valueId)) continue;
+                                
+                                $option = $parentQuestion->options
+                                    ->where('id_questions_options', $valueId)
+                                    ->first();
+                                if ($option) {
+                                    $dependsValueTexts[] = $option->option;
+                                }
+                            }
+                            
+                            // ✅ Join multiple values with pipe separator
+                            $dependsValues = implode('|', $dependsValueTexts);
+                            
+                            // Log::info("Exported dependency values", [
+                            //     'question_id' => $question->id_question,
+                            //     'depends_value_texts' => $dependsValueTexts,
+                            //     'final_depends_values' => $dependsValues
+                            // ]);
+                        }
                     } else {
-                        $dependsValue = $question->depends_value;
+                        // ✅ For non-option questions, the depends_value might still be comma-separated
+                        $dependsValues = $question->depends_value;
                     }
                 }
 
@@ -391,7 +443,7 @@ class QuestionnaireImportExportController extends Controller
                     in_array($question->type, ['option', 'multiple', 'rating', 'scale']) ? $options->where('is_other_option', true)->pluck('other_before_text')->implode('|') : '',
                     in_array($question->type, ['option', 'multiple', 'rating', 'scale']) ? $options->where('is_other_option', true)->pluck('other_after_text')->implode('|') : '',
                     $question->depends_on ? Tb_Questions::find($question->depends_on)->question : '',
-                    $dependsValue
+                    $dependsValues
                 ];
 
                 // Add debug logging
