@@ -42,27 +42,29 @@ class QuestionnaireImportExportController extends Controller
             $sheet->setCellValue('D1', 'For Type (alumni/company/both)');
             $sheet->setCellValue('E1', 'Is Status Dependent (TRUE/FALSE)');
             $sheet->setCellValue('F1', 'Required Alumni Status (pisahkan koma)');
-            $sheet->setCellValue('G1', 'Question Text');
-            $sheet->setCellValue('H1', 'Question Type (text/option/multiple/rating/scale/date/location/numeric/email)');
-            $sheet->setCellValue('I1', 'Question Order');
-            $sheet->setCellValue('J1', 'Before Text');
-            $sheet->setCellValue('K1', 'After Text');
-            $sheet->setCellValue('L1', 'Scale Min Label');
-            $sheet->setCellValue('M1', 'Scale Max Label');
-            $sheet->setCellValue('N1', 'Options (separate with |)');
-            $sheet->setCellValue('O1', 'Other Option Indexes (comma separated, 0-based)');
-            $sheet->setCellValue('P1', 'Other Before Texts (| separated, match option index)');
-            $sheet->setCellValue('Q1', 'Other After Texts (| separated, match option index)');
-            $sheet->setCellValue('R1', 'Depends On Question (Question Text)');
-            $sheet->setCellValue('S1', 'Depends On Values (| separated for multiple values)');
+            $sheet->setCellValue('G1', 'Is Graduation Year Dependent (TRUE/FALSE)');
+            $sheet->setCellValue('H1', 'Required Graduation Years (pisahkan koma)');
+            $sheet->setCellValue('I1', 'Question Text');
+            $sheet->setCellValue('J1', 'Question Type (text/option/multiple/rating/scale/date/location/numeric/email)');
+            $sheet->setCellValue('K1', 'Question Order');
+            $sheet->setCellValue('L1', 'Before Text');
+            $sheet->setCellValue('M1', 'After Text');
+            $sheet->setCellValue('N1', 'Scale Min Label');
+            $sheet->setCellValue('O1', 'Scale Max Label');
+            $sheet->setCellValue('P1', 'Options (separate with |)');
+            $sheet->setCellValue('Q1', 'Other Option Indexes (comma separated, 0-based)');
+            $sheet->setCellValue('R1', 'Other Before Texts (| separated, match option index)');
+            $sheet->setCellValue('S1', 'Other After Texts (| separated, match option index)');
+            $sheet->setCellValue('T1', 'Depends On Question (Question Text)');
+            $sheet->setCellValue('U1', 'Depends On Values (| separated for multiple values)');
 
             // Contoh data kategori di baris 2
             $sheet->fromArray([
-                $catName, 'Deskripsi untuk ' . $catName, $i + 1, 'alumni', 'FALSE', '', 'Contoh pertanyaan untuk ' . $catName, 'option', 1, '', '', '', '', 'Sangat Baik|Baik|Cukup|Kurang|Sangat Kurang', '4', '| | | |Sebutkan:', '| | | |', '', 'Sangat Baik|Baik'
+                $catName, 'Deskripsi untuk ' . $catName, $i + 1, 'alumni', 'FALSE', '', 'FALSE', '', 'Contoh pertanyaan untuk ' . $catName, 'option', 1, '', '', '', '', 'Sangat Baik|Baik|Cukup|Kurang|Sangat Kurang', '4', '| | | |Sebutkan:', '| | | |', '', 'Sangat Baik|Baik'
             ], null, 'A2');
 
             // Auto-size columns
-            foreach(range('A', 'S') as $column) {
+            foreach(range('A', 'U') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
         }
@@ -118,13 +120,15 @@ class QuestionnaireImportExportController extends Controller
                 $category = trim($sheetName);
                 
                 // Read category data from row 2
-                $categoryData = $worksheet->rangeToArray('A2:F2')[0];
+                $categoryData = $worksheet->rangeToArray('A2:H2')[0];
                 $categoryName = trim($categoryData[0] ?? $category);
                 $categoryDescription = trim($categoryData[1] ?? '');
                 $categoryOrder = (int)($categoryData[2] ?? 1);
                 $forType = strtolower(trim($categoryData[3] ?? 'both'));
                 $isStatusDependent = strtolower(trim($categoryData[4] ?? 'false')) === 'true';
-                $requiredAlumniStatus = $categoryData[5] ? json_decode($categoryData[5], true) : null;
+                $requiredAlumniStatus = $categoryData[5] ? array_filter(explode(',', $categoryData[5])) : null;
+                $isGraduationYearDependent = strtolower(trim($categoryData[6] ?? 'false')) === 'true';
+                $requiredGraduationYears = $categoryData[7] ? array_filter(explode(',', $categoryData[7])) : null;
                 
                 if (!in_array($forType, $validForTypes)) {
                     throw new \Exception("Invalid for_type '$forType' in sheet '$category'. Must be one of: " . implode(', ', $validForTypes));
@@ -143,7 +147,9 @@ class QuestionnaireImportExportController extends Controller
                         'order' => $categoryOrder,
                         'for_type' => $forType,
                         'is_status_dependent' => $isStatusDependent,
-                        'required_alumni_status' => $requiredAlumniStatus
+                        'required_alumni_status' => $requiredAlumniStatus,
+                        'is_graduation_year_dependent' => $isGraduationYearDependent,
+                        'required_graduation_years' => $requiredGraduationYears
                     ]);
                 } else {
                     $categoryModel->update([
@@ -152,7 +158,9 @@ class QuestionnaireImportExportController extends Controller
                         'order' => $categoryOrder,
                         'for_type' => $forType,
                         'is_status_dependent' => $isStatusDependent,
-                        'required_alumni_status' => $requiredAlumniStatus
+                        'required_alumni_status' => $requiredAlumniStatus,
+                        'is_graduation_year_dependent' => $isGraduationYearDependent,
+                        'required_graduation_years' => $requiredGraduationYears
                     ]);
                 }
 
@@ -171,7 +179,7 @@ class QuestionnaireImportExportController extends Controller
                 $categoryId = $categoryMap[$categoryName];
                 
                 // Get headers
-                $headers = $sheet->rangeToArray('A1:S1')[0];
+                $headers = $sheet->rangeToArray('A1:U1')[0];
                 $h = $this->createHeaderMap($headers);
 
                 // Start from row 3 (after category data)
@@ -180,16 +188,16 @@ class QuestionnaireImportExportController extends Controller
                     
                     if (empty(array_filter($rowData))) continue;
 
-                    // Map question data according to export structure (shifted by 1 due to description column)
+                    // Map question data according to export structure (shifted by 2 due to graduation year columns)
                     $questionData = [
                         'id_category' => $categoryId,
-                        'question' => trim($rowData[6] ?? ''), // question text (column G)
-                        'type' => trim($rowData[7] ?? ''), // question type (column H)
-                        'order' => (int)($rowData[8] ?? 0), // question order (column I)
-                        'before_text' => trim($rowData[9] ?? ''), // before text (column J)
-                        'after_text' => trim($rowData[10] ?? ''), // after text (column K)
-                        'scale_min_label' => trim($rowData[11] ?? ''), // scale min label (column L)
-                        'scale_max_label' => trim($rowData[12] ?? ''), // scale max label (column M)
+                        'question' => trim($rowData[8] ?? ''), // question text (column I)
+                        'type' => trim($rowData[9] ?? ''), // question type (column J)
+                        'order' => (int)($rowData[10] ?? 0), // question order (column K)
+                        'before_text' => trim($rowData[11] ?? ''), // before text (column L)
+                        'after_text' => trim($rowData[12] ?? ''), // after text (column M)
+                        'scale_min_label' => trim($rowData[13] ?? ''), // scale min label (column N)
+                        'scale_max_label' => trim($rowData[14] ?? ''), // scale max label (column O)
                         'status' => 'visible'
                     ];
 
@@ -206,13 +214,13 @@ class QuestionnaireImportExportController extends Controller
 
                     // Process options if needed
                     if (in_array($question->type, ['option', 'multiple', 'rating', 'scale'])) {
-                        $options = $rowData[13] ? array_filter(explode('|', $rowData[13])) : []; // options (column N)
-                        $otherIndexes = $rowData[14] ? 
+                        $options = $rowData[15] ? array_filter(explode('|', $rowData[15])) : []; // options (column P)
+                        $otherIndexes = $rowData[16] ? 
                             array_map(function($idx) { 
                                 return (int)$idx; 
-                            }, explode(',', $rowData[14])) : []; // other indexes (column O)
-                        $otherBeforeTexts = $rowData[15] ? array_filter(explode('|', $rowData[15])) : []; // other before texts (column P)
-                        $otherAfterTexts = $rowData[16] ? array_filter(explode('|', $rowData[16])) : []; // other after texts (column Q)
+                            }, explode(',', $rowData[16])) : []; // other indexes (column Q)
+                        $otherBeforeTexts = $rowData[17] ? array_filter(explode('|', $rowData[17])) : []; // other before texts (column R)
+                        $otherAfterTexts = $rowData[18] ? array_filter(explode('|', $rowData[18])) : []; // other after texts (column S)
 
                         // Log::info('Processing options', [
                         //     'options' => $options,
@@ -257,8 +265,8 @@ class QuestionnaireImportExportController extends Controller
                     }
 
                     // Handle dependencies
-                    $dependsOnText = $rowData[17] ?? ''; // depends on question text (column R)
-                    $dependsOnValues = $rowData[18] ?? ''; // depends on values (column S)
+                    $dependsOnText = $rowData[19] ?? ''; // depends on question text (column T)
+                    $dependsOnValues = $rowData[20] ?? ''; // depends on values (column U)
 
                     if ($dependsOnText) {
                         $parentQuestion = Tb_Questions::where('question', 'LIKE', "%$dependsOnText%")
@@ -385,6 +393,7 @@ class QuestionnaireImportExportController extends Controller
             // Set headers
             $headers = [
                 'category name', 'category description', 'category order', 'for type', 'is_status_dependent', 'required_alumni_status',
+                'is_graduation_year_dependent', 'required_graduation_years',
                 'question text', 'question type', 'question order', 'before text', 'after text',
                 'scale min label', 'scale max label', 'options', 'other option indexes',
                 'other before texts', 'other after texts', 'depends on', 'depends values'
@@ -398,7 +407,9 @@ class QuestionnaireImportExportController extends Controller
                 $category->order,
                 $category->for_type,
                 $category->is_status_dependent ? 'true' : 'false',
-                $category->required_alumni_status ? json_encode($category->required_alumni_status) : ''
+                $category->required_alumni_status ? implode(',', $category->required_alumni_status) : '',
+                $category->is_graduation_year_dependent ? 'true' : 'false',
+                $category->required_graduation_years ? implode(',', $category->required_graduation_years) : ''
             ];
             $sheet->fromArray([$categoryInfo], NULL, 'A2');
 
@@ -453,7 +464,7 @@ class QuestionnaireImportExportController extends Controller
 
                 // Build question data array with all fields
                 $questionData = [
-                    '', '', '', '', '', '', // Skip category info columns (A-F)
+                    '', '', '', '', '', '', '', '', // Skip category info columns (A-H)
                     $question->question,
                     $question->type,
                     $question->order,
@@ -489,13 +500,13 @@ class QuestionnaireImportExportController extends Controller
             $sheet = $spreadsheet->setActiveSheetIndex($i);
             
             // Auto-size columns
-            foreach(range('A', 'S') as $column) {
+            foreach(range('A', 'U') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
             
             // Add simple styling
             // Header row styling
-            $headerRange = 'A1:S1';
+            $headerRange = 'A1:U1';
             $sheet->getStyle($headerRange)->applyFromArray([
                 'font' => [
                     'bold' => true,
@@ -514,7 +525,7 @@ class QuestionnaireImportExportController extends Controller
             ]);
             
             // Category info row styling
-            $categoryRange = 'A2:S2';
+            $categoryRange = 'A2:U2';
             $sheet->getStyle($categoryRange)->applyFromArray([
                 'font' => [
                     'bold' => true
@@ -534,7 +545,7 @@ class QuestionnaireImportExportController extends Controller
             // Data rows styling
             $lastRow = $sheet->getHighestRow();
             if ($lastRow > 2) {
-                $dataRange = 'A3:S' . $lastRow;
+                $dataRange = 'A3:U' . $lastRow;
                 $sheet->getStyle($dataRange)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
