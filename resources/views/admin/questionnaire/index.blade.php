@@ -51,27 +51,27 @@
         </div>
 
         <!-- Modal Pilih Periode -->
-        <div id="remindAllModal" class="fixed inset-0 bg-black bg-opacity-30 items-center justify-center z-50 p-4 hidden">
-            <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md">
-                <h3 class="text-lg font-semibold mb-4">Kirim Pengingat ke Semua</h3>
-                <form id="remindAllModalForm" method="POST">
-                    @csrf
-                    <label for="periode_id_select" class="block mb-2 text-sm font-medium text-gray-700">Pilih Periode Aktif</label>
-                    <select id="periode_id_select" name="id_periode" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 text-sm" required>
-                        <option value="">-- Pilih Periode Aktif --</option>
-                        @foreach($periodes as $periode)
-                            @if($periode->status == 'active')
-                                <option value="{{ $periode->id_periode }}">{{ $periode->periode_name }} ({{ $periode->start_date->format('d M Y') }} - {{ $periode->end_date->format('d M Y') }})</option>
-                            @endif
-                        @endforeach
-                    </select>
-                    <div class="flex flex-col sm:flex-row justify-end gap-2">
-                        <button type="button" onclick="closeRemindAllModal()" 
-                            class="w-full sm:w-auto px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm order-2 sm:order-1">Batal</button>
-                        <button type="submit" 
-                            class="w-full sm:w-auto px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm order-1 sm:order-2">Kirim</button>
-                    </div>
-                </form>
+        <div id="remindAllModal" class="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4 hidden">
+            <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-md mx-auto">
+            <h3 class="text-lg font-semibold mb-4 text-center">Kirim Pengingat ke Semua</h3>
+            <form id="remindAllModalForm" method="POST">
+                @csrf
+                <label for="periode_id_select" class="block mb-2 text-sm font-medium text-gray-700">Pilih Periode Aktif</label>
+                <select id="periode_id_select" name="id_periode" class="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 text-sm" required>
+                <option value="">-- Pilih Periode Aktif --</option>
+                @foreach($periodes as $periode)
+                    @if($periode->status == 'active')
+                    <option value="{{ $periode->id_periode }}">{{ $periode->periode_name }} ({{ $periode->start_date->format('d M Y') }} - {{ $periode->end_date->format('d M Y') }})</option>
+                    @endif
+                @endforeach
+                </select>
+                <div class="flex flex-col sm:flex-row justify-end gap-2">
+                <button type="button" onclick="closeRemindAllModal()" 
+                    class="w-full sm:w-auto px-4 py-2 bg-gray-300 rounded hover:bg-gray-400 text-sm order-2 sm:order-1">Batal</button>
+                <button type="submit" 
+                    class="w-full sm:w-auto px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm order-1 sm:order-2">Kirim</button>
+                </div>
+            </form>
             </div>
         </div>
 
