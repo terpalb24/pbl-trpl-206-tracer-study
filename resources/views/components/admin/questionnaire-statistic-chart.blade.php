@@ -1237,6 +1237,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Changed: Use bar chart for all types including scale and rating
                     const chartCtx = document.getElementById(`miniBarChart${index}`);
                     if (chartCtx) {
+                        // Calculate optimal height based on number of labels and max label length
+                        const maxLabelLength = Math.max(...chartLabels.map(label => label.length));
+                        const numLabels = chartLabels.length;
+                        let chartHeight = 200; // base height for mini charts
+                        
+                        // Adjust height based on number of labels
+                        if (numLabels > 6) {
+                            chartHeight = 250;
+                        } else if (numLabels > 4) {
+                            chartHeight = 225;
+                        }
+                        
+                        // Adjust height based on label length - extra space for multi-line labels when numLabels <= 5
+                        if (numLabels <= 5 && maxLabelLength > 20) {
+                            chartHeight += 60; // More space for multi-line labels
+                        } else if (maxLabelLength > 50) {
+                            chartHeight += 40;
+                        } else if (maxLabelLength > 30) {
+                            chartHeight += 20;
+                        }
+                        
+                        // Set canvas height
+                        chartCtx.style.height = chartHeight + 'px';
+                        
                         const chartInstance = new Chart(chartCtx.getContext('2d'), {
                             type: 'bar',
                             data: {
@@ -1261,13 +1285,55 @@ document.addEventListener('DOMContentLoaded', function () {
                                                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                                 const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
                                                 return context.parsed.y + ' responden (' + percentage + '%)';
+                                            },
+                                            title: function(context) {
+                                                // Show full label text in tooltip
+                                                return context[0].label;
                                             }
                                         }
                                     }
                                 },
                                 scales: {
-                                    y: { beginAtZero: true, ticks: { precision: 0 } },
-                                    x: { ticks: { maxRotation: 45, minRotation: 0 } }
+                                    y: { 
+                                        beginAtZero: true, 
+                                        ticks: { precision: 0 } 
+                                    },                                x: { 
+                                    ticks: { 
+                                        maxRotation: 45,
+                                        minRotation: 0,
+                                        callback: function(value, index, values) {
+                                            const label = this.getLabelForValue(value);
+                                            // Only truncate if more than 5 labels, otherwise allow multi-line
+                                            if (values.length > 5) {
+                                                if (label.length > 12) {
+                                                    return label.substring(0, 12) + '...';
+                                                }
+                                                return label;
+                                            } else {
+                                                // For 5 or fewer labels, split long labels into multiple lines
+                                                if (label.length > 20) {
+                                                    const words = label.split(' ');
+                                                    const lines = [];
+                                                    let currentLine = '';
+                                                    
+                                                    for (let word of words) {
+                                                        if ((currentLine + word).length > 20 && currentLine.length > 0) {
+                                                            lines.push(currentLine.trim());
+                                                            currentLine = word + ' ';
+                                                        } else {
+                                                            currentLine += word + ' ';
+                                                        }
+                                                    }
+                                                    if (currentLine.trim().length > 0) {
+                                                        lines.push(currentLine.trim());
+                                                    }
+                                                    return lines;
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    }
+                                }
                                 }
                             }
                         });
@@ -1292,6 +1358,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Changed: Use bar chart for all types including scale and rating
                 const chartCtx = document.getElementById(`miniBarChart${index}`);
                 if (chartCtx) {
+                    // Calculate optimal height based on number of labels and max label length
+                    const maxLabelLength = Math.max(...chartLabels.map(label => label.length));
+                    const numLabels = chartLabels.length;
+                    let chartHeight = 250; // base height
+                    
+                    // Adjust height based on number of labels
+                    if (numLabels > 6) {
+                        chartHeight = 300;
+                    } else if (numLabels > 4) {
+                        chartHeight = 275;
+                    }
+                    
+                    // Adjust height based on label length - extra space for multi-line labels when numLabels <= 5
+                    if (numLabels <= 5 && maxLabelLength > 20) {
+                        chartHeight += 75; // More space for multi-line labels
+                    } else if (maxLabelLength > 50) {
+                        chartHeight += 50;
+                    } else if (maxLabelLength > 30) {
+                        chartHeight += 25;
+                    }
+                    
+                    // Set canvas height
+                    chartCtx.style.height = chartHeight + 'px';
+                    
                     const chartInstance = new Chart(chartCtx.getContext('2d'), {
                         type: 'bar',
                         data: {
@@ -1316,13 +1406,56 @@ document.addEventListener('DOMContentLoaded', function () {
                                             const total = context.dataset.data.reduce((a, b) => a + b, 0);
                                             const percentage = total > 0 ? ((context.parsed.y / total) * 100).toFixed(1) : 0;
                                             return context.parsed.y + ' responden (' + percentage + '%)';
+                                        },
+                                        title: function(context) {
+                                            // Show full label text in tooltip
+                                            return context[0].label;
                                         }
                                     }
                                 }
                             },
                             scales: {
-                                y: { beginAtZero: true, ticks: { precision: 0 } },
-                                x: { ticks: { maxRotation: 45, minRotation: 0 } }
+                                y: { 
+                                    beginAtZero: true, 
+                                    ticks: { precision: 0 } 
+                                },
+                                x: { 
+                                    ticks: { 
+                                        maxRotation: 45,
+                                        minRotation: 0,
+                                        callback: function(value, index, values) {
+                                            const label = this.getLabelForValue(value);
+                                            // Only truncate if more than 5 labels, otherwise allow multi-line
+                                            if (values.length > 5) {
+                                                if (label.length > 15) {
+                                                    return label.substring(0, 15) + '...';
+                                                }
+                                                return label;
+                                            } else {
+                                                // For 5 or fewer labels, split long labels into multiple lines
+                                                if (label.length > 20) {
+                                                    const words = label.split(' ');
+                                                    const lines = [];
+                                                    let currentLine = '';
+                                                    
+                                                    for (let word of words) {
+                                                        if ((currentLine + word).length > 20 && currentLine.length > 0) {
+                                                            lines.push(currentLine.trim());
+                                                            currentLine = word + ' ';
+                                                        } else {
+                                                            currentLine += word + ' ';
+                                                        }
+                                                    }
+                                                    if (currentLine.trim().length > 0) {
+                                                        lines.push(currentLine.trim());
+                                                    }
+                                                    return lines;
+                                                }
+                                                return label;
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     });
