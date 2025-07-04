@@ -96,6 +96,29 @@
                     @enderror
                 </div>
 
+                <!-- Deskripsi Kategori -->
+                <div class="mb-4 sm:mb-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-text text-green-600 mr-1"></i>
+                        Deskripsi Kategori
+                    </label>
+                    <textarea name="description" 
+                              id="description" 
+                              rows="3"
+                              class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                              placeholder="Jelaskan tujuan dan isi dari kategori ini...">{{ old('description') }}</textarea>
+                    @error('description')
+                        <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Deskripsi akan membantu pengguna memahami maksud dari kategori ini
+                    </p>
+                </div>
+
                 <!-- Grid untuk Order dan For Type -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                     <!-- Urutan -->
@@ -107,11 +130,13 @@
                         <input type="number" 
                                name="order" 
                                id="order" 
-                               value="{{ old('order', 1) }}" 
+                               value="{{ old('order', isset($_GET['count']) ? $_GET['count'] + 1 : $categories->count() + 1) }}" 
                                required
                                min="1"
                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                placeholder="Contoh: 1">
+                        <!-- Hidden data for JavaScript -->
+                        <input type="hidden" id="categories-data" value="{{ json_encode($categories->map(function($cat) { return ['for_type' => $cat->for_type]; })) }}">
                         @error('order')
                             <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -354,6 +379,12 @@
                             </span>
                         </div>
                     </div>
+                    <div id="preview-description" class="text-xs sm:text-sm text-gray-600 mb-2">
+                        <i class="fas fa-file-text text-green-600 mr-1"></i>
+                        <span id="preview-description-text" class="italic">
+                            Deskripsi kategori akan ditampilkan di sini
+                        </span>
+                    </div>
                     <div id="preview-status" class="text-xs sm:text-sm text-gray-600 hidden mb-2">
                         <i class="fas fa-user-check text-orange-600 mr-1"></i>
                         Terbatas untuk status: <span id="preview-status-list" class="font-medium">
@@ -469,8 +500,39 @@
         const statusDependencySection = document.getElementById('status-dependency-section');
         const graduationYearDependencySection = document.getElementById('graduation-year-dependency-section');
         
+        // Get categories data for counting
+        const categoriesData = JSON.parse(document.getElementById('categories-data').value);
+        
+        // Get count from URL parameter if available
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCount = urlParams.get('count');
+        
+        // Function to calculate next order based on for_type
+        function updateOrderValue() {
+            const selectedForType = forTypeSelect.value;
+            let count = 0;
+            
+            // If URL count parameter is provided, use it instead of calculating
+            if (urlCount !== null) {
+                count = parseInt(urlCount);
+            } else {
+                // Use global ordering - count all existing categories regardless of type
+                count = categoriesData.length;
+            }
+            
+            // Update the order input
+            const orderInput = document.getElementById('order');
+            orderInput.value = count + 1;
+            
+            // Update preview
+            document.getElementById('preview-order').textContent = 'Urutan: ' + (count + 1);
+        }
+        
         forTypeSelect.addEventListener('change', function() {
             const value = this.value;
+            
+            // Update order based on selected for_type
+            updateOrderValue();
             
             if (value === 'company') {
                 statusDependencySection.classList.add('hidden');
@@ -492,9 +554,11 @@
         // Real-time preview updates
         const categoryNameInput = document.getElementById('category_name');
         const orderInput = document.getElementById('order');
+        const descriptionInput = document.getElementById('description');
         
         const previewName = document.getElementById('preview-name');
         const previewOrder = document.getElementById('preview-order');
+        const previewDescriptionText = document.getElementById('preview-description-text');
         
         categoryNameInput.addEventListener('input', function() {
             previewName.textContent = this.value || 'Nama Kategori';
@@ -502,6 +566,10 @@
         
         orderInput.addEventListener('input', function() {
             previewOrder.textContent = 'Urutan: ' + (this.value || '1');
+        });
+        
+        descriptionInput.addEventListener('input', function() {
+            previewDescriptionText.textContent = this.value || 'Deskripsi kategori akan ditampilkan di sini';
         });
         
         forTypeSelect.addEventListener('change', updatePreviewTarget);
@@ -589,16 +657,44 @@
             previewGraduationYear.classList.remove('hidden');
         }
         
+        // Initialize order value based on current for_type
+        updateOrderValue();
         updatePreviewTarget();
         updateStatusPreview();
         updateGraduationYearPreview();
+        
+        // Add visual feedback when form is submitted
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function() {
+                const submitButton = document.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+                    submitButton.disabled = true;
+                }
+            });
+        }
+    });
     });
 
     // Template functions
     function fillTemplate(name, order, forType) {
         document.getElementById('category_name').value = name;
-        document.getElementById('order').value = order;
         document.getElementById('for_type').value = forType;
+        
+        // Calculate correct order based on URL count parameter if available, otherwise use global count
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlCount = urlParams.get('count');
+        let count = 0;
+        
+        if (urlCount !== null) {
+            count = parseInt(urlCount);
+        } else {
+            const categoriesData = JSON.parse(document.getElementById('categories-data').value);
+            count = categoriesData.length;
+        }
+        
+        document.getElementById('order').value = count + 1;
         
         // Trigger events to update preview
         document.getElementById('category_name').dispatchEvent(new Event('input'));

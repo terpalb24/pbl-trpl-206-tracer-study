@@ -192,17 +192,17 @@
                 </div>
                 <p class="text-sm sm:text-base text-gray-600 font-medium mb-4">Tambah Kategori</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=both" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=both&count={{ $bothCategories->count() }}" 
                         class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
                         <i class="fas fa-users mr-2"></i>
                         Kategori Umum
                     </a>
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni&count={{ $alumniCategories->count() + $bothCategories->count() }}" 
                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                         <i class="fas fa-graduation-cap mr-2"></i>
                         Kategori Alumni
                     </a>
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company&count={{ $companyCategories->count() + $bothCategories->count() }}" 
                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
                         <i class="fas fa-building mr-2"></i>
                         Kategori Perusahaan
@@ -214,7 +214,7 @@
                 @if($hasAlumniCategories)
                     <!-- Alumni-specific categories -->
                     @foreach($alumniCategories->concat($bothCategories) as $category)
-                        <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6 border-l-4 border-blue-500">
+                        <div id="category-{{ $category->id_category }}" class="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6 border-l-4 border-blue-500">
                             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 space-y-3 lg:space-y-0">
                                 <div class="flex-1">
                                     <div class="flex flex-col sm:flex-row sm:items-center mb-2 space-y-2 sm:space-y-0">
@@ -264,7 +264,7 @@
                             @if($category->questions->count() > 0)
                                 <div class="space-y-3">
                                     @foreach($category->questions->sortBy('order') as $question)
-                                        <div class="bg-gray-50 p-3 sm:p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
+                                        <div id="question-{{ $question->id_question }}" class="bg-gray-50 p-3 sm:p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
                                                     {{ ($question->status ?? 'visible') === 'hidden' ? 'border-red-300 bg-red-50 opacity-75' : 'border-gray-200' }}">
                                             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-3 lg:space-y-0">
                                                 <div class="flex-1 lg:mr-4">
@@ -428,6 +428,19 @@
                                         </div>
                                     @endforeach
                                 </div>
+                                
+                                <!-- Add Question Button at the end of questions -->
+                                <div class="bg-blue-50 border-2 border-dashed border-blue-300 hover:border-blue-400 rounded-lg p-4 text-center mt-4 transition-colors">
+                                    <div class="text-blue-500 mb-2">
+                                        <i class="fas fa-plus-circle text-xl"></i>
+                                    </div>
+                                    <p class="text-blue-600 font-medium mb-3">Tambah Pertanyaan Baru</p>
+                                    <a href="{{ route('admin.questionnaire.question.create', [$periode->id_periode, $category->id_category]) }}" 
+                                       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Tambah Pertanyaan
+                                    </a>
+                                </div>
                             @else
                                 <div class="bg-gray-50 p-4 sm:p-6 rounded-lg text-center border-2 border-dashed border-gray-300">
                                     <div class="text-gray-400 mb-2">
@@ -451,7 +464,7 @@
                                 <i class="fas fa-plus-circle text-3xl"></i>
                             </div>
                             <p class="text-blue-600 font-medium mb-4">Tambah Kategori untuk Alumni</p>
-                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni&count={{ $alumniCategories->count() + $bothCategories->count() }}" 
                                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                                 <i class="fas fa-graduation-cap mr-2"></i>
                                 Buat Kategori Alumni
@@ -464,7 +477,7 @@
                             </div>
                             <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Alumni</h3>
                             <p class="text-gray-500 mb-6">Buat kategori pertama untuk kuesioner alumni.</p>
-                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni&count={{ $alumniCategories->count() + $bothCategories->count() }}" 
                                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition">
                                 <i class="fas fa-plus mr-2"></i>
                                 Buat Kategori Alumni
@@ -478,7 +491,7 @@
                 @if($hasCompanyCategories)
                     <!-- Company-specific categories -->
                     @foreach($companyCategories->concat($bothCategories) as $category)
-                        <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6 border-l-4 border-green-500">
+                        <div id="category-{{ $category->id_category }}" class="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4 lg:mb-6 border-l-4 border-green-500">
                             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-4 space-y-3 lg:space-y-0">
                                 <div class="flex-1">
                                     <div class="flex flex-col sm:flex-row sm:items-center mb-2 space-y-2 sm:space-y-0">
@@ -528,7 +541,7 @@
                             @if($category->questions->count() > 0)
                                 <div class="space-y-3">
                                     @foreach($category->questions->sortBy('order') as $question)
-                                        <div class="bg-gray-50 p-3 sm:p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
+                                        <div id="question-{{ $question->id_question }}" class="bg-gray-50 p-3 sm:p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow 
                                                     {{ ($question->status ?? 'visible') === 'hidden' ? 'border-red-300 bg-red-50 opacity-75' : 'border-gray-200' }}">
                                             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-3 lg:space-y-0">
                                                 <div class="flex-1 lg:mr-4">
@@ -681,7 +694,7 @@
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" 
-                                                                class="w-full px-2 sm:px-3 py-1 sm:py-2 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200 transition-all duration-200 hover:shadow-md flex items-center justify-center lg:w-auto"
+                                                                class="w-full px-2 sm:px-3 py-1 sm:py-2 bg-red-100 text-red-700 rounded-md text-xs hover:bg-red-200 transition-all duration-200 hover:shadow-md flex items-center justify-center lg:w-full"
                                                                 title="Hapus pertanyaan">
                                                             <i class="fas fa-trash mr-1 sm:mr-0 lg:mr-1"></i>
                                                             <span class="sm:hidden lg:inline">Hapus</span>
@@ -691,6 +704,19 @@
                                             </div>
                                         </div>
                                     @endforeach
+                                </div>
+                                
+                                <!-- Add Question Button at the end of questions -->
+                                <div class="bg-green-50 border-2 border-dashed border-green-300 hover:border-green-400 rounded-lg p-4 text-center mt-4 transition-colors">
+                                    <div class="text-green-500 mb-2">
+                                        <i class="fas fa-plus-circle text-xl"></i>
+                                    </div>
+                                    <p class="text-green-600 font-medium mb-3">Tambah Pertanyaan Baru</p>
+                                    <a href="{{ route('admin.questionnaire.question.create', [$periode->id_periode, $category->id_category]) }}" 
+                                       class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors duration-200">
+                                        <i class="fas fa-plus mr-2"></i>
+                                        Tambah Pertanyaan
+                                    </a>
                                 </div>
                             @else
                                 <div class="bg-gray-50 p-4 sm:p-6 rounded-lg text-center border-2 border-dashed border-gray-300">
@@ -715,7 +741,7 @@
                                 <i class="fas fa-plus-circle text-3xl"></i>
                             </div>
                             <p class="text-green-600 font-medium mb-4">Tambah Kategori untuk Perusahaan</p>
-                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company&count={{ $companyCategories->count() + $bothCategories->count() }}" 
                                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
                                 <i class="fas fa-building mr-2"></i>
                                 Buat Kategori Perusahaan
@@ -728,7 +754,7 @@
                             </div>
                             <h3 class="text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori Perusahaan</h3>
                             <p class="text-gray-500 mb-6">Buat kategori pertama untuk kuesioner perusahaan.</p>
-                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                            <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company&count={{ $companyCategories->count() + $bothCategories->count() }}" 
                                class="inline-flex items-center px-6 py-3 bg-green-600 text-white rounded-md hover:bg-green-700 transition">
                                 <i class="fas fa-plus mr-2"></i>
                                 Buat Kategori Perusahaan
@@ -747,19 +773,19 @@
                 <h3 class="text-lg sm:text-xl font-semibold text-gray-600 mb-2">Belum Ada Kategori</h3>
                 <p class="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">Mulai dengan membuat kategori pertama untuk kuesioner ini.</p>
                 <div class="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=alumni&count=0" 
                        class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-md text-sm sm:text-base hover:bg-blue-700 transition-colors duration-200">
                         <i class="fas fa-graduation-cap mr-2"></i>
                         <span class="hidden sm:inline">Kategori Alumni</span>
                         <span class="sm:hidden">Alumni</span>
                     </a>
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=company&count=0" 
                        class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-md text-sm sm:text-base hover:bg-green-700 transition-colors duration-200">
                         <i class="fas fa-building mr-2"></i>
                         <span class="hidden sm:inline">Kategori Perusahaan</span>
                         <span class="sm:hidden">Company</span>
                     </a>
-                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=both" 
+                    <a href="{{ route('admin.questionnaire.category.create', $periode->id_periode) }}?for_type=both&count=0" 
                        class="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 bg-purple-600 text-white rounded-md text-sm sm:text-base hover:bg-purple-700 transition-colors duration-200">
                         <i class="fas fa-users mr-2"></i>
                         <span class="hidden sm:inline">Kategori Umum</span>
@@ -816,6 +842,90 @@
                 document.getElementById(targetTab + '-content').classList.remove('hidden');
             });
         });
+        
+        // Auto-scroll functionality
+        function autoScrollToElement() {
+            const params = new URLSearchParams(window.location.search);
+            const scrollToCategory = params.get('scrollToCategory') || '{{ session("scrollToCategory") }}';
+            const scrollToQuestion = params.get('scrollToQuestion') || '{{ session("scrollToQuestion") }}';
+            
+            if (scrollToCategory) {
+                const categoryElement = document.getElementById('category-' + scrollToCategory);
+                if (categoryElement) {
+                    // First, check if we need to switch tab
+                    const categoryCard = categoryElement.closest('.tab-content');
+                    if (categoryCard) {
+                        const tabId = categoryCard.id.replace('-content', '');
+                        
+                        // Switch to the appropriate tab if needed
+                        if (categoryCard.classList.contains('hidden')) {
+                            // Switch tab
+                            const tabButton = document.getElementById(tabId + '-tab');
+                            if (tabButton) {
+                                tabButton.click();
+                            }
+                        }
+                    }
+                    
+                    // Wait a moment for tab switching, then scroll
+                    setTimeout(() => {
+                        categoryElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        
+                        // Add highlight effect
+                        categoryElement.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.5)';
+                        categoryElement.style.transition = 'box-shadow 0.3s ease';
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            categoryElement.style.boxShadow = '';
+                        }, 3000);
+                    }, 200);
+                }
+            }
+            
+            if (scrollToQuestion) {
+                const questionElement = document.getElementById('question-' + scrollToQuestion);
+                if (questionElement) {
+                    // First, check if we need to switch tab
+                    const questionCard = questionElement.closest('.tab-content');
+                    if (questionCard) {
+                        const tabId = questionCard.id.replace('-content', '');
+                        
+                        // Switch to the appropriate tab if needed
+                        if (questionCard.classList.contains('hidden')) {
+                            // Switch tab
+                            const tabButton = document.getElementById(tabId + '-tab');
+                            if (tabButton) {
+                                tabButton.click();
+                            }
+                        }
+                    }
+                    
+                    // Wait a moment for tab switching, then scroll
+                    setTimeout(() => {
+                        questionElement.scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                        
+                        // Add highlight effect
+                        questionElement.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.5)';
+                        questionElement.style.transition = 'box-shadow 0.3s ease';
+                        
+                        // Remove highlight after 3 seconds
+                        setTimeout(() => {
+                            questionElement.style.boxShadow = '';
+                        }, 3000);
+                    }, 200);
+                }
+            }
+        }
+        
+        // Call auto-scroll on page load
+        autoScrollToElement();
     });
     </script>
 

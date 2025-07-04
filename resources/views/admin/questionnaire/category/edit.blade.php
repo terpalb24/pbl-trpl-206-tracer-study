@@ -97,6 +97,29 @@
                     @enderror
                 </div>
 
+                <!-- Deskripsi Kategori -->
+                <div class="mb-4 sm:mb-6">
+                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-file-text text-green-600 mr-1"></i>
+                        Deskripsi Kategori
+                    </label>
+                    <textarea name="description" 
+                              id="description" 
+                              rows="3"
+                              class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                              placeholder="Jelaskan tujuan dan isi dari kategori ini...">{{ old('description', $category->description) }}</textarea>
+                    @error('description')
+                        <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Deskripsi akan membantu pengguna memahami maksud dari kategori ini
+                    </p>
+                </div>
+
                 <!-- Grid untuk Order dan For Type -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                     <!-- Urutan -->
@@ -356,6 +379,12 @@
                             </span>
                         </div>
                     </div>
+                    <div id="preview-description" class="text-xs sm:text-sm text-gray-600 mb-2">
+                        <i class="fas fa-file-text text-green-600 mr-1"></i>
+                        <span id="preview-description-text" class="italic">
+                            {{ $category->description ?: 'Deskripsi kategori akan ditampilkan di sini' }}
+                        </span>
+                    </div>
                     <div id="preview-status" class="text-xs sm:text-sm text-gray-600 mb-2 {{ $category->is_status_dependent ? '' : 'hidden' }}">
                         <i class="fas fa-user-check text-orange-600 mr-1"></i>
                         Terbatas untuk status: <span id="preview-status-list" class="font-medium">
@@ -466,10 +495,12 @@
         // Real-time preview updates
         const categoryNameInput = document.getElementById('category_name');
         const orderInput = document.getElementById('order');
+        const descriptionInput = document.getElementById('description');
         
         const previewName = document.getElementById('preview-name');
         const previewOrder = document.getElementById('preview-order');
         const previewTarget = document.getElementById('preview-target');
+        const previewDescriptionText = document.getElementById('preview-description-text');
         
         categoryNameInput.addEventListener('input', function() {
             previewName.textContent = this.value || 'Nama Kategori';
@@ -477,6 +508,10 @@
         
         orderInput.addEventListener('input', function() {
             previewOrder.textContent = 'Urutan: ' + (this.value || '?');
+        });
+        
+        descriptionInput.addEventListener('input', function() {
+            previewDescriptionText.textContent = this.value || 'Deskripsi kategori akan ditampilkan di sini';
         });
 
         function updatePreviewTarget() {
@@ -564,6 +599,20 @@
         updatePreviewTarget();
         updateStatusPreview();
         updateGraduationYearPreview();
+        
+        // Add smooth scroll back functionality when coming from create/update
+        if (document.referrer.includes('admin/questionnaire/') && !document.referrer.includes('edit')) {
+            // Add a subtle indicator that we came from another form
+            const form = document.querySelector('form');
+            if (form) {
+                form.style.boxShadow = '0 0 10px rgba(59, 130, 246, 0.3)';
+                form.style.transition = 'box-shadow 0.3s ease';
+                
+                setTimeout(() => {
+                    form.style.boxShadow = '';
+                }, 2000);
+            }
+        }
     });
     </script>
 

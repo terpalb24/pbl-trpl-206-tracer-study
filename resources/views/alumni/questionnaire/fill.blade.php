@@ -87,7 +87,19 @@
                             <i class="fas fa-folder-open mr-2 text-blue-600"></i>
                             {{ $currentCategory->category_name }}
                         </h3>
-                        <p class="text-gray-600 mt-1 text-sm sm:text-base">{{ $currentCategory->description ?? 'Silakan jawab pertanyaan berikut dengan lengkap dan jujur.' }}</p>
+                        @if($currentCategory->description)
+                            <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-900 mb-1">Deskripsi Kategori</p>
+                                        <p class="text-sm text-blue-700 leading-relaxed">{{ $currentCategory->description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <p class="text-gray-600 mt-2 text-sm sm:text-base">Silakan jawab pertanyaan berikut dengan lengkap dan jujur.</p>
+                        @endif
                     </div>
                     <div class="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                         <span class="text-xs font-medium px-2 sm:px-3 py-1 rounded-full bg-green-100 text-green-700">

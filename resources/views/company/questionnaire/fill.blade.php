@@ -123,9 +123,20 @@
                 
                 <div class="bg-white rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6">
                     <div class="border-b border-gray-200 pb-3 sm:pb-4 mb-4 sm:mb-6">
-                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">{{ $currentCategory->category_name }}</h2>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-folder-open mr-2 text-blue-600"></i>
+                            {{ $currentCategory->category_name }}
+                        </h2>
                         @if($currentCategory->description)
-                            <p class="text-sm sm:text-base text-gray-600 mt-2">{{ $currentCategory->description }}</p>
+                            <div class="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                                <div class="flex items-start">
+                                    <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5 flex-shrink-0"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-900 mb-1">Deskripsi Kategori</p>
+                                        <p class="text-sm text-blue-700 leading-relaxed">{{ $currentCategory->description }}</p>
+                                    </div>
+                                </div>
+                            </div>
                         @endif
                     </div>
 

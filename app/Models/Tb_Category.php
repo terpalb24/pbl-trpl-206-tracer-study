@@ -16,6 +16,7 @@ class Tb_Category extends Model
     protected $fillable = [
         'id_periode',
         'category_name',
+        'description',  // NEW: Added description field
         'order',
         'for_type',
         'is_status_dependent',

@@ -366,7 +366,8 @@ class QuestionnaireController extends Controller
     public function createCategory($id_periode)
     {
         $periode = Tb_Periode::findOrFail($id_periode);
-        return view('admin.questionnaire.category.create', compact('periode'));
+        $categories = $periode->categories()->orderBy('order')->get();
+        return view('admin.questionnaire.category.create', compact('periode', 'categories'));
     }
 
     /**
@@ -376,6 +377,7 @@ class QuestionnaireController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'order' => 'required|integer|min:1',
             'for_type' => 'required|in:alumni,company,both',
             'is_status_dependent' => 'boolean',
@@ -391,6 +393,7 @@ class QuestionnaireController extends Controller
         $categoryData = [
             'id_periode' => $id_periode,
             'category_name' => $request->category_name,
+            'description' => $request->description,
             'order' => $request->order,
             'for_type' => $request->for_type,
             'is_status_dependent' => $request->boolean('is_status_dependent'),
@@ -416,7 +419,8 @@ class QuestionnaireController extends Controller
         $category = Tb_Category::create($categoryData);
 
         return redirect()->route('admin.questionnaire.show', $id_periode)
-            ->with('success', 'Kategori berhasil ditambahkan.');
+            ->with('success', 'Kategori berhasil ditambahkan.')
+            ->with('scrollToCategory', $category->id_category);
     }
 
     /**
@@ -437,6 +441,7 @@ class QuestionnaireController extends Controller
     {
         $request->validate([
             'category_name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
             'order' => 'required|integer|min:1',
             'for_type' => 'required|in:alumni,company,both',
             'is_status_dependent' => 'boolean',
@@ -450,6 +455,7 @@ class QuestionnaireController extends Controller
         
         $updateData = [
             'category_name' => $request->category_name,
+            'description' => $request->description,
             'order' => $request->order,
             'for_type' => $request->for_type,
             'is_status_dependent' => $request->boolean('is_status_dependent'),
@@ -475,7 +481,8 @@ class QuestionnaireController extends Controller
         $category->update($updateData);
 
         return redirect()->route('admin.questionnaire.show', $id_periode)
-            ->with('success', 'Kategori berhasil diperbarui.');
+            ->with('success', 'Kategori berhasil diperbarui.')
+            ->with('scrollToCategory', $category->id_category);
     }
 
     /**
@@ -710,7 +717,8 @@ class QuestionnaireController extends Controller
             }
 
             return redirect()->route('admin.questionnaire.show', $id_periode)
-                ->with('success', 'Pertanyaan berhasil ditambahkan.');
+                ->with('success', 'Pertanyaan berhasil ditambahkan.')
+                ->with('scrollToQuestion', $question->id_question);
         } catch (\Exception $e) {
             Log::error('Error creating question: ' . $e->getMessage(), [
                 'file' => $e->getFile(),
@@ -921,7 +929,8 @@ class QuestionnaireController extends Controller
             // Log::info('Question updated successfully');
             
             return redirect()->route('admin.questionnaire.show', $id_periode)
-                ->with('success', 'Pertanyaan berhasil diperbarui.');
+                ->with('success', 'Pertanyaan berhasil diperbarui.')
+                ->with('scrollToQuestion', $id_question);
                 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -945,10 +954,12 @@ class QuestionnaireController extends Controller
     {
         try {
             $question = Tb_Questions::findOrFail($id_question);
+            $categoryId = $question->id_category;
             $question->delete();
             
             return redirect()->route('admin.questionnaire.show', $id_periode)
-                ->with('success', 'Pertanyaan berhasil dihapus.');
+                ->with('success', 'Pertanyaan berhasil dihapus.')
+                ->with('scrollToCategory', $categoryId);
         } catch (\Exception $e) {
             return redirect()->route('admin.questionnaire.show', $id_periode)
                 ->with('error', 'Terjadi kesalahan saat menghapus pertanyaan.');
@@ -970,7 +981,9 @@ class QuestionnaireController extends Controller
 
             $statusText = $newStatus === 'visible' ? 'ditampilkan' : 'disembunyikan';
             
-            return redirect()->back()->with('success', "Pertanyaan \"{$question->question}\" berhasil {$statusText}.");
+            return redirect()->route('admin.questionnaire.show', $id_periode)
+                ->with('success', "Pertanyaan \"{$question->question}\" berhasil {$statusText}.")
+                ->with('scrollToQuestion', $id_question);
             
         } catch (\Exception $e) {
             Log::error('Error toggling question status: ' . $e->getMessage());
