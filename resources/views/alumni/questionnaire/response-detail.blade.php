@@ -312,6 +312,14 @@
                                             </span>
                                         </div>
                                     </div>
+                                    @if($categoryData['category']->description)
+                                        <div class="mt-3 pt-3 border-t border-blue-200">
+                                            <p class="text-xs sm:text-sm text-blue-700 flex items-start">
+                                                <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                                                {{ $categoryData['category']->description }}
+                                            </p>
+                                        </div>
+                                    @endif
                                 </div>
                                 
                                 <!-- Questions -->
