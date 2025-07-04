@@ -407,6 +407,14 @@
                                 <h4 class="font-semibold text-orange-800 text-lg">
                                     📋 {{ $categoryInfo->category_name }}
                                 </h4>
+                                @if($categoryInfo->description)
+                                    <div class="mt-2 mb-3">
+                                        <p class="text-sm text-orange-700 flex items-start">
+                                            <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                                            {{ $categoryInfo->description }}
+                                        </p>
+                                    </div>
+                                @endif
                                 <div class="flex items-center gap-3 text-xs text-gray-600 mt-1">
                                     <span class="bg-orange-100 px-2 py-1 rounded">
                                         {{ $categoryQuestions->count() }} pertanyaan
@@ -603,6 +611,14 @@
                     <h3 class="font-semibold text-orange-800 mb-2">
                         📊 Statistik Semua Pertanyaan - {{ $questionnaireChartData['category_name'] }}
                     </h3>
+                    @if(isset($questionnaireChartData['category_description']) && $questionnaireChartData['category_description'])
+                        <div class="mb-3">
+                            <p class="text-sm text-orange-700 flex items-start">
+                                <i class="fas fa-info-circle mr-2 mt-0.5"></i>
+                                {{ $questionnaireChartData['category_description'] }}
+                            </p>
+                        </div>
+                    @endif
                     <div class="flex items-center gap-4 text-sm text-gray-600">
                         <span>
                             <i class="fas fa-list mr-1"></i>
