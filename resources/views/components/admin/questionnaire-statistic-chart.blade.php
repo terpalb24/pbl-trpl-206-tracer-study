@@ -448,9 +448,59 @@
                                     @endif
                                     ">
                                     <div class="mb-3">
-                                        <h5 class="font-medium text-gray-800 mb-2 text-sm">
-                                            {{ $loop->iteration }}. {{ Str::limit($qData['question']->question, 60) }}
-                                        </h5> 
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h5 class="font-medium text-gray-800 text-sm flex-1">
+                                                {{ $loop->iteration }}. {{ Str::limit($qData['question']->question, 60) }}
+                                            </h5>
+                                            @if($qData['total_responses'] > 0)
+                                                <!-- Download buttons -->
+                                                <div class="flex gap-1 ml-2">
+                                                    <button onclick="downloadChart('miniBarChart{{ $globalIndex }}', 'png')" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Download PNG">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button onclick="downloadChart('miniBarChart{{ $globalIndex }}', 'jpeg')" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Download JPEG">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button onclick="downloadChart('miniBarChart{{ $globalIndex }}', 'svg')" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Download SVG">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button onclick="downloadChartData('miniBarChart{{ $globalIndex }}', 'csv', {{ json_encode($qData['labels']) }}, {{ json_encode($qData['values']) }})" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Download CSV">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button onclick="downloadChartData('miniBarChart{{ $globalIndex }}', 'xlsx', {{ json_encode($qData['labels']) }}, {{ json_encode($qData['values']) }})" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Download Excel">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </button>
+                                                    <button onclick="printChart('miniBarChart{{ $globalIndex }}', '{{ addslashes($qData['question']->question) }}')" 
+                                                            class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                            title="Print Chart">
+                                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm1 0v2h6v-2H6zm0-1h6V9H6v4z" clip-rule="evenodd"/>
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </div>
                                         <div class="flex items-center gap-2 text-xs text-gray-600">
                                             <span class="bg-orange-100 px-2 py-1 rounded">
                                                 {{ ucfirst($qData['question']->type) }}
@@ -588,9 +638,59 @@
                             @endif
                             ">
                             <div class="mb-4">
-                                <h4 class="font-medium text-orange-800 mb-2">
-                                    {{ $index + 1 }}. {{ Str::limit($qData['question']->question, 80) }}
-                                </h4>
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-medium text-orange-800 flex-1">
+                                        {{ $index + 1 }}. {{ Str::limit($qData['question']->question, 80) }}
+                                    </h4>
+                                    @if($qData['total_responses'] > 0)
+                                        <!-- Download buttons -->
+                                        <div class="flex gap-1 ml-2">
+                                            <button onclick="downloadChart('miniBarChart{{ $index }}', 'png')" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Download PNG">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="downloadChart('miniBarChart{{ $index }}', 'jpeg')" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Download JPEG">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="downloadChart('miniBarChart{{ $index }}', 'svg')" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Download SVG">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="downloadChartData('miniBarChart{{ $index }}', 'csv', {{ json_encode($qData['labels']) }}, {{ json_encode($qData['values']) }})" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Download CSV">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="downloadChartData('miniBarChart{{ $index }}', 'xlsx', {{ json_encode($qData['labels']) }}, {{ json_encode($qData['values']) }})" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Download Excel">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </button>
+                                            <button onclick="printChart('miniBarChart{{ $index }}', '{{ addslashes($qData['question']->question) }}')" 
+                                                    class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                                    title="Print Chart">
+                                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm1 0v2h6v-2H6zm0-1h6V9H6v4z" clip-rule="evenodd"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endif
+                                </div>
                                 <div class="flex items-center gap-3 text-xs text-gray-600">
                                     <span class="bg-orange-100 px-2 py-1 rounded">
                                         {{ ucfirst($qData['question']->type) }}
@@ -748,9 +848,57 @@
             @else
                 <div class="bg-white rounded-xl shadow p-6">
                     <div class="mb-4">
-                        <h3 class="font-semibold text-orange-800 mb-2">
-                            {{ $questionnaireChartData['question']->question }}
-                        </h3>
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-semibold text-orange-800 flex-1">
+                                {{ $questionnaireChartData['question']->question }}
+                            </h3>
+                            <!-- Download buttons -->
+                            <div class="flex gap-1 ml-2">
+                                <button onclick="downloadChart('questionnaireBarChart', 'png')" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Download PNG">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadChart('questionnaireBarChart', 'jpeg')" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Download JPEG">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadChart('questionnaireBarChart', 'svg')" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Download SVG">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadChartData('questionnaireBarChart', 'csv', @json($questionnaireChartData['labels']), @json($questionnaireChartData['values']))" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Download CSV">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                                <button onclick="downloadChartData('questionnaireBarChart', 'xlsx', @json($questionnaireChartData['labels']), @json($questionnaireChartData['values']))" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Download Excel">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                                <button onclick="printChart('questionnaireBarChart', '{{ addslashes($questionnaireChartData['question']->question) }}')" 
+                                        class="bg-white/80 hover:bg-white p-1 rounded shadow text-xs text-gray-600 hover:text-gray-800" 
+                                        title="Print Chart">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 4v3H4a2 2 0 00-2 2v3a2 2 0 002 2h1v2a2 2 0 002 2h6a2 2 0 002-2v-2h1a2 2 0 002-2V9a2 2 0 00-2-2h-1V4a2 2 0 00-2-2H7a2 2 0 00-2 2zm8 0H7v3h6V4zM5 14H4v-3h1v3zm1 0v2h6v-2H6zm0-1h6V9H6v4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
                         <div class="flex items-center gap-4 text-sm text-gray-600">
                             <span>
                                 <i class="fas fa-chart-bar mr-1"></i>
@@ -893,7 +1041,157 @@
 </div>
 
 @push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+// Download chart functions
+const chartInstances = {};
+
+function downloadChart(chartId, format) {
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+    
+    const link = document.createElement('a');
+    const filename = `chart_${chartId}_${new Date().toISOString().split('T')[0]}`;
+    
+    if (format === 'png') {
+        link.download = filename + '.png';
+        link.href = canvas.toDataURL('image/png');
+    } else if (format === 'jpeg') {
+        link.download = filename + '.jpeg';
+        // Create a white background for JPEG
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+        link.href = tempCanvas.toDataURL('image/jpeg', 0.9);
+    } else if (format === 'svg') {
+        // Convert canvas to SVG
+        const canvasData = canvas.toDataURL('image/png');
+        const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">
+            <image href="${canvasData}" width="${canvas.width}" height="${canvas.height}"/>
+        </svg>`;
+        const blob = new Blob([svgData], { type: 'image/svg+xml' });
+        link.href = URL.createObjectURL(blob);
+        link.download = filename + '.svg';
+    }
+    
+    link.click();
+}
+
+function downloadChartData(chartId, format, labels, values) {
+    const filename = `chart_data_${chartId}_${new Date().toISOString().split('T')[0]}`;
+    
+    if (format === 'csv') {
+        let csvContent = 'Label,Value\n';
+        for (let i = 0; i < labels.length; i++) {
+            csvContent += `"${labels[i]}",${values[i]}\n`;
+        }
+        
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename + '.csv';
+        link.click();
+    } else if (format === 'xlsx') {
+        const data = [];
+        data.push(['Label', 'Value']);
+        for (let i = 0; i < labels.length; i++) {
+            data.push([labels[i], values[i]]);
+        }
+        
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Chart Data');
+        XLSX.writeFile(wb, filename + '.xlsx');
+    }
+}
+
+function printChart(chartId, questionTitle) {
+    const canvas = document.getElementById(chartId);
+    if (!canvas) return;
+    
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    
+    // Get the chart image as base64
+    const chartImage = canvas.toDataURL('image/png');
+    
+    // Create HTML content for printing
+    const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Chart Print - ${questionTitle}</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 20px;
+                    text-align: center;
+                }
+                .chart-title {
+                    font-size: 18px;
+                    font-weight: bold;
+                    margin-bottom: 20px;
+                    color: #333;
+                }
+                .chart-container {
+                    margin: 20px 0;
+                }
+                .chart-image {
+                    max-width: 100%;
+                    height: auto;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                }
+                .print-info {
+                    margin-top: 20px;
+                    font-size: 12px;
+                    color: #666;
+                }
+                @media print {
+                    body {
+                        margin: 0;
+                    }
+                    .print-info {
+                        page-break-inside: avoid;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="chart-title">${questionTitle}</div>
+            <div class="chart-container">
+                <img src="${chartImage}" alt="Chart" class="chart-image" />
+            </div>
+            <div class="print-info">
+                Dicetak pada: ${new Date().toLocaleDateString('id-ID', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}
+            </div>
+        </body>
+        </html>
+    `;
+    
+    // Write content to print window
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for image to load then print
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     @if($selectedCategory && !request('questionnaire_question'))
         setTimeout(() => {
@@ -923,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Changed: Use bar chart for all types including scale and rating
                     const chartCtx = document.getElementById(`miniBarChart${index}`);
                     if (chartCtx) {
-                        new Chart(chartCtx.getContext('2d'), {
+                        const chartInstance = new Chart(chartCtx.getContext('2d'), {
                             type: 'bar',
                             data: {
                                 labels: chartLabels,
@@ -957,6 +1255,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                             }
                         });
+                        chartInstances[`miniBarChart${index}`] = chartInstance;
                     }
                 }
             });
@@ -977,7 +1276,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // Changed: Use bar chart for all types including scale and rating
                 const chartCtx = document.getElementById(`miniBarChart${index}`);
                 if (chartCtx) {
-                    new Chart(chartCtx.getContext('2d'), {
+                    const chartInstance = new Chart(chartCtx.getContext('2d'), {
                         type: 'bar',
                         data: {
                             labels: chartLabels,
@@ -1011,6 +1310,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }
                     });
+                    chartInstances[`miniBarChart${index}`] = chartInstance;
                 }
             });
         @elseif(isset($questionnaireChartData['question']))
@@ -1027,7 +1327,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Changed: Use bar chart for all types including scale and rating
             const barCtx = document.getElementById('questionnaireBarChart');
             if (barCtx) {
-                new Chart(barCtx.getContext('2d'), {
+                const chartInstance = new Chart(barCtx.getContext('2d'), {
                     type: 'bar',
                     data: {
                         labels: chartLabels,
@@ -1076,7 +1376,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             }
                         }
                     });
-                }
+                chartInstances['questionnaireBarChart'] = chartInstance;
             }
         @endif
     @endif
