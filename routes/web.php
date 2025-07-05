@@ -134,6 +134,9 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/alumni/store', [AdminController::class, 'alumniStore'])->name('admin.alumni.store');
     Route::get('/admin/alumni/{nim}/edit', [AdminController::class, 'alumniEdit'])->name('admin.alumni.edit');
     Route::put('/admin/alumni/{nim}/update', [AdminController::class, 'alumniUpdate'])->name('admin.alumni.update');
+    // Bulk delete harus didefinisikan SEBELUM route dengan parameter {id_user}
+    Route::delete('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete');
+    Route::post('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete.post');
     Route::delete('/admin/alumni/{id_user}', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy');
     Route::post('/admin/alumni/import', [AdminController::class, 'import'])->name('admin.alumni.import');
     Route::get('/admin/alumni/export', [AdminController::class, 'export'])->name('admin.alumni.export');
@@ -145,6 +148,11 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/company', [AdminController::class, 'companyStore'])->name('admin.company.store');
     Route::get('/admin/company/{id_company}/edit', [AdminController::class, 'companyEdit'])->name('admin.company.edit');
     Route::put('/admin/company/{id_company}', [AdminController::class, 'companyUpdate'])->name('admin.company.update');
+    // Bulk delete harus didefinisikan SEBELUM route dengan parameter {id_user}
+    Route::delete('/admin/company/bulk-delete', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.bulk-delete');
+    Route::post('/admin/company/bulk-delete', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.bulk-delete.post');
+    Route::delete('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all');
+    Route::post('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all.post');
     Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
     Route::post('/admin/company/import', [AdminController::class, 'companyImport'])->name('admin.company.import');
     Route::get('/admin/company/export', [AdminController::class, 'companyExport'])->name('admin.company.export');
@@ -219,3 +227,7 @@ Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompan
 // Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompanyAnswers'])
 //     ->middleware(['auth', 'admin.check']) // Ganti dengan nama middleware yang benar
 //     ->name('admin.debug.company-answers');
+
+// Route untuk halaman Lupa NIM
+Route::get('/forgot-nim', [AuthController::class, 'forgotNim'])->name('forgot-nim');
+// End of routes

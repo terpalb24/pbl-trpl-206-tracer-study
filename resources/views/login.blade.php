@@ -72,6 +72,7 @@
                 <!-- Forgot Password -->
                 <div class="text-right">
                     <a href="/forgot-password" class="text-sm text-theme-primary hover:underline">Lupa Kata Sandi?</a>
+                    <a href="/forgot-nim" class="text-sm text-theme-primary hover:underline ml-4">Lupa NIM?</a>
                 </div>
 
                 <!-- Buttons -->

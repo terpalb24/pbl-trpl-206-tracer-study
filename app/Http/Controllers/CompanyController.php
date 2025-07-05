@@ -6,6 +6,8 @@ use App\Models\Tb_Company;
 use App\Models\Tb_user;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
+
 
 class CompanyController extends Controller
 {
@@ -71,5 +73,7 @@ class CompanyController extends Controller
     return redirect()->route('company.edit')->with('success', 'Profil perusahaan berhasil diperbarui');
 }
 
-    //
 }
+
+    //
+

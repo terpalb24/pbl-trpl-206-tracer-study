@@ -5,10 +5,9 @@
 @endphp
 
 @section('content')
-<!-- CSRF Token -->
-<meta name="csrf-token" content="{{ csrf_token() }}">
-
 <x-layout-admin>
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <x-slot name="sidebar">
         <x-admin.sidebar />
     </x-slot>
@@ -178,11 +177,31 @@
             <div class="p-4 sm:p-6 border-b">
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
                     <h2 class="text-xl sm:text-2xl font-semibold text-gray-800">Daftar Perusahaan</h2>
-                    <a href="{{ route('admin.company.create') }}" 
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2 sm:w-auto w-full">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Tambah Perusahaan</span>
-                    </a>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <!-- Bulk Delete Buttons -->
+                        <button id="bulkDeleteBtn" 
+                                type="button"
+                                onclick="confirmBulkDelete()" 
+                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                style="display: none;">
+                            <i class="fas fa-trash mr-2"></i>
+                            <span id="deleteSelectedText">Hapus Terpilih</span>
+                        </button>
+                        
+                        <button type="button"
+                            onclick="deleteAllCompanies()"
+                            class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition duration-200"
+                            title="Hapus semua perusahaan yang sesuai dengan filter saat ini">
+                            <i class="fas fa-trash-alt mr-2"></i>
+                            <span>Hapus Semua</span>
+                        </button>
+
+                        <a href="{{ route('admin.company.create') }}" 
+                            class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
+                            <i class="bi bi-plus-circle"></i>
+                            <span>Tambah Perusahaan</span>
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -195,40 +214,52 @@
 
             <!-- Search Section -->
             <div class="p-4 sm:p-6 border-b bg-gray-50">
-                <form method="GET" action="{{ route('admin.company.index') }}" class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                    <div class="relative w-full sm:max-w-md">
-                        <input type="text" name="search" value="{{ request('search') }}" 
-                            placeholder="Cari Nama Perusahaan..."
-                            class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-2 sm:pl-3 text-gray-400">
-                            <i class="bi bi-search text-sm"></i>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                    <form method="GET" action="{{ route('admin.company.index') }}" class="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+                        <div class="relative w-full sm:max-w-md">
+                            <input type="text" name="search" value="{{ request('search') }}" 
+                                placeholder="Cari Nama Perusahaan..."
+                                class="w-full pl-8 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-2 sm:pl-3 text-gray-400">
+                                <i class="bi bi-search text-sm"></i>
+                            </div>
                         </div>
-                    </div>
-                    <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm transition duration-200">
-                        <i class="bi bi-search mr-1 sm:mr-2"></i>
-                        <span>Cari</span>
-                    </button>
-                </form>
+                        <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm transition duration-200">
+                            <i class="bi bi-search mr-1 sm:mr-2"></i>
+                            <span>Cari</span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Tabel Perusahaan - Mobile: Card view, Desktop: Table view -->
             <div class="overflow-hidden">
                 <!-- Desktop Table View -->
                 <div class="hidden lg:block overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
-                            <tr>
-                                <th class="px-4 py-3 text-center">No</th>
-                                <th class="px-4 py-3 text-left">Nama Perusahaan</th>
-                                <th class="px-4 py-3 text-left">Alamat</th>
-                                <th class="px-4 py-3 text-left">Email</th>
-                                <th class="px-4 py-3 text-left">Telepon</th>
-                                <th class="px-4 py-3 text-center w-40">Aksi</th> {{-- Ubah dari w-24 ke w-40 --}}
+                    <form id="bulkDeleteForm" action="{{ route('admin.company.bulk-delete') }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
+                                <tr>
+                                    <th class="px-4 py-3 text-center w-10">
+                                        <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    </th>
+                                    <th class="px-4 py-3 text-center">No</th>
+                                    <th class="px-4 py-3 text-left">Nama Perusahaan</th>
+                                    <th class="px-4 py-3 text-left">Alamat</th>
+                                    <th class="px-4 py-3 text-left">Email</th>
+                                    <th class="px-4 py-3 text-left">Telepon</th>
+                                    <th class="px-4 py-3 text-center w-40">Aksi</th> {{-- Ubah dari w-24 ke w-40 --}}
                             </tr>
                         </thead>
                         <tbody class="text-gray-700">
                             @forelse($companies as $index => $company)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-4 py-3 text-center">
+                                        <input type="checkbox" name="ids[]" value="{{ $company->id_company }}" 
+                                            class="company-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                    </td>
                                     <td class="px-4 py-3 text-center">{{ ($companies->currentPage() - 1) * $companies->perPage() + $index + 1 }}</td>
                                     <td class="px-4 py-3 font-medium">{{ $company->company_name }}</td>
                                     <td class="px-4 py-3">{{ $company->company_address ?? '-' }}</td>
@@ -245,7 +276,7 @@
                                             </a>
                                             
                                             <!-- Delete Button -->
-                                            <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
+                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
                                                 class="inline">
                                                 @csrf
@@ -255,7 +286,6 @@
                                                 title="Hapus Perusahaan">
                                                  <i class="fas fa-trash text-xs sm:text-sm"></i>
                                                </button>
-                                                
                                             </form>
                                         </div>
                                     </td>
@@ -303,7 +333,7 @@
                                                 <i class="bi bi-pencil-square mr-1"></i>
                                                 <span>Edit</span>
                                             </a>
-                                            <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
+                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
                                                 onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')" class="inline">
                                                 @csrf
                                                 @method('DELETE')
@@ -361,7 +391,7 @@
                                   title="Edit Perusahaan">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
-                                <form action="{{ route('admin.company.destroy', $company->id_user) }}" method="POST" 
+                                <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
                                     onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
                                     class="flex-1">
                                     @csrf
@@ -453,5 +483,192 @@
 
     <!-- script JS  -->
     <script src="{{ asset('js/script.js') }}"></script>
+    
+    <script>
+        function getSelectedCompanyIds() {
+            const ids = [];
+            document.querySelectorAll('.company-checkbox:checked').forEach(checkbox => {
+                ids.push(checkbox.value);
+            });
+            return ids;
+        }
+
+        async function confirmBulkDelete() {
+            const selectedIds = getSelectedCompanyIds();
+            
+            if (selectedIds.length === 0) {
+                alert('Pilih minimal satu perusahaan untuk dihapus!');
+                return;
+            }
+
+            if (!confirm(`Yakin ingin menghapus ${selectedIds.length} perusahaan yang dipilih?\n\nData yang akan dihapus:\n- Perusahaan terpilih\n- Semua data terkait akan ikut terhapus`)) {
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                alert('CSRF token tidak ditemukan');
+                return;
+            }
+
+            // Disable button and show loading state
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const originalText = bulkDeleteBtn.innerHTML;
+            bulkDeleteBtn.disabled = true;
+            bulkDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+
+            try {
+                const response = await fetch('{{ route("admin.company.bulk-delete") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-HTTP-Method-Override': 'DELETE',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        ids: selectedIds 
+                    })
+                });
+
+                let responseText = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Server response:', responseText);
+                    throw new Error('Server returned invalid response format');
+                }
+
+                if (!response.ok) {
+                    throw new Error(result?.message || `HTTP error! status: ${response.status}`);
+                }
+
+                if (result?.success) {
+                    alert(result.message || `${selectedIds.length} perusahaan berhasil dihapus.`);
+                    window.location.reload();
+                } else {
+                    throw new Error(result?.message || 'Operasi gagal: Tidak ada konfirmasi keberhasilan dari server');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Gagal menghapus perusahaan: ' + error.message);
+                // Reset button state
+                bulkDeleteBtn.disabled = false;
+                bulkDeleteBtn.innerHTML = originalText;
+            }
+        }
+
+        async function deleteAllCompanies() {
+            if (!confirm('Yakin ingin menghapus semua perusahaan?\n\nPeringatan: Semua data perusahaan dan data terkait akan terhapus permanen.')) {
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                alert('CSRF token tidak ditemukan');
+                return;
+            }
+
+            // Get and disable the delete all button
+            const deleteAllBtn = document.querySelector('button[onclick="deleteAllCompanies()"]');
+            const originalText = deleteAllBtn.innerHTML;
+            deleteAllBtn.disabled = true;
+            deleteAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+
+            try {
+                const response = await fetch('{{ route("admin.company.bulk-delete") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-HTTP-Method-Override': 'DELETE',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        delete_all: true,
+                        search: new URLSearchParams(window.location.search).get('search')
+                    })
+                });
+
+                let responseText = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Server response:', responseText);
+                    throw new Error('Server returned invalid response format');
+                }
+
+                if (!response.ok) {
+                    throw new Error(result?.message || `HTTP error! status: ${response.status}`);
+                }
+
+                if (result?.success) {
+                    alert(result.message || 'Semua perusahaan berhasil dihapus');
+                    window.location.reload();
+                } else {
+                    throw new Error(result?.message || 'Operasi gagal: Tidak ada konfirmasi keberhasilan dari server');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Gagal menghapus perusahaan: ' + error.message);
+                // Reset button state
+                deleteAllBtn.disabled = false;
+                deleteAllBtn.innerHTML = originalText;
+            }
+        }
+
+        function updateBulkDeleteButton() {
+            const selectedIds = getSelectedCompanyIds();
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            
+            if (!bulkDeleteBtn) return;
+            
+            if (selectedIds.length > 0) {
+                bulkDeleteBtn.style.display = 'inline-flex';
+                bulkDeleteBtn.innerHTML = `<i class="fas fa-trash mr-2"></i>Hapus Terpilih (${selectedIds.length})`;
+            } else {
+                bulkDeleteBtn.style.display = 'none';
+                bulkDeleteBtn.innerHTML = '<i class="fas fa-trash mr-2"></i>Hapus Terpilih';
+            }
+        }
+
+        // Event listener untuk select all checkbox
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('.company-checkbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                    });
+                    updateBulkDeleteButton();
+                });
+            }
+
+            // Event listener untuk individual checkboxes
+            document.querySelectorAll('.company-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    updateBulkDeleteButton();
+                    
+                    // Update select all checkbox state
+                    const selectAllCheckbox = document.getElementById('selectAll');
+                    if (selectAllCheckbox) {
+                        const totalCheckboxes = document.querySelectorAll('.company-checkbox').length;
+                        const checkedCheckboxes = document.querySelectorAll('.company-checkbox:checked').length;
+                        selectAllCheckbox.checked = totalCheckboxes === checkedCheckboxes;
+                        selectAllCheckbox.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+                    }
+                });
+            });
+
+            // Initialize button state
+            updateBulkDeleteButton();
+        });
+    </script>
 </x-layout-admin>
 @endsection

@@ -1,16 +1,10 @@
 @extends('layouts.app')
 
-@php
-    $admin = auth()->user()->admin;
-
-@endphp
-
 @section('content')
-
-<!-- CSRF Token -->
-<meta name="csrf-token" content="{{ csrf_token() }}">
-
 <x-layout-admin>
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
     <!-- Sidebar -->
     <x-slot name="sidebar">
         <x-admin.sidebar />
@@ -175,12 +169,32 @@
                     <!-- Judul -->
                     <h1 class="text-2xl font-bold text-gray-800">Data Alumni</h1>
 
-                    <!-- Tombol Tambah Alumni -->
-                    <a href="{{ route('admin.alumni.create') }}" 
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Tambah Alumni</span>
-                    </a>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <!-- Tombol Bulk Delete -->
+                        <button id="selectAlumniDelete" 
+                                type="button"
+                                onclick="selectAlumniDelete()" 
+                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                style="display: none;">
+                            <i class="bi bi-trash mr-2"></i>
+                            <span id="deleteSelectedText">Hapus Terpilih</span>
+                        </button>
+
+                        <!-- Tombol Hapus Semua Alumni -->
+                        <button type="button"
+                                onclick="deleteAllAlumni()" 
+                                class="inline-flex items-center px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition-colors duration-200 border border-red-800">
+                            <i class="bi bi-trash-fill mr-2"></i>
+                            Hapus Semua
+                        </button>
+
+                        <!-- Tombol Tambah Alumni -->
+                        <a href="{{ route('admin.alumni.create') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                            <i class="bi bi-plus-circle mr-2"></i>
+                            Tambah Alumni
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -250,6 +264,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
+                                <th class="px-3 py-2 text-center w-12">
+                                    <input type="checkbox" 
+                                           id="selectAllCheckbox" 
+                                           onchange="toggleSelectAll()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-4 py-3 text-center">No</th>
                                 <th class="px-4 py-3 text-left">NIM</th>
                                 <th class="px-4 py-3 text-left">Program Studi</th>
@@ -260,6 +280,13 @@
                         <tbody class="text-gray-700">
                             @forelse($alumni as $index => $item)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="checkbox" 
+                                               name="selected_alumni[]" 
+                                               value="{{ $item->id_user }}" 
+                                               onchange="updateSelectAllState()" 
+                                               class="alumni-checkbox rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </td>
                                     <td class="px-4 py-3 text-center">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
                                     <td class="px-4 py-3">{{ $item->nim }}</td>
                                     <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
@@ -279,40 +306,14 @@
                                                 title="Hapus Alumni">
                                                 <i class="fas fa-trash text-xs sm:text-sm"></i>
                                             </button>
-                                            <!-- Modal Confirm Delete -->
-                                            <div id="modal-delete-{{ $item->id_user }}" class="fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                                                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-xs sm:max-w-sm relative">
-                                                    <button onclick="closeDeleteModal({{ $item->id_user }})"
-                                                            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
-                                                        <i class="fas fa-times text-lg"></i>
-                                                    </button>
-                                                    <div class="flex flex-col items-center text-center">
-                                                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
-                                                        <h3 class="text-lg font-semibold mb-2 text-gray-800">Konfirmasi Hapus</h3>
-                                                        <p class="text-gray-600 mb-4 text-sm">Yakin ingin menghapus alumni ini?<br>
-                                                            <b>{{ $item->name }}</b> (NIM: {{ $item->nim }})<br>
-                                                            Semua data terkait akan ikut terhapus.</p>
-                                                        <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" class="w-full flex flex-col gap-2">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <div class="flex justify-center gap-2 mt-2">
-                                                                <button type="button" onclick="closeDeleteModal({{ $item->id_user }})"
-                                                                    class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition">Batal</button>
-                                                                <button type="submit"
-                                                                    class="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold transition">Ya, Hapus</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-8 text-gray-400 text-center">
-                                        <i class="bi bi-inbox text-2xl mb-2 block"></i>
-                                        Tidak ada data alumni
+                                    <td colspan="6" class="px-4 py-6 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-3xl mb-3 block"></i>
+                                        <p>Tidak ada data alumni</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -325,6 +326,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
+                                <th class="px-3 py-2 text-center w-12">
+                                    <input type="checkbox" 
+                                           id="selectAllCheckboxTablet" 
+                                           onchange="toggleSelectAllTablet()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-3 py-2 text-center">No</th>
                                 <th class="px-3 py-2 text-left">NIM</th>
                                 <th class="px-3 py-2 text-left">Nama</th>
@@ -334,6 +341,13 @@
                         <tbody class="text-gray-700">
                             @forelse($alumni as $index => $item)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="checkbox" 
+                                               name="selected_alumni_tablet[]" 
+                                               value="{{ $item->id_user }}" 
+                                               onchange="updateSelectAllStateTablet()" 
+                                               class="alumni-checkbox-tablet rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </td>
                                     <td class="px-3 py-2 text-center text-xs">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
                                     <td class="px-3 py-2 text-xs">{{ $item->nim }}</td>
                                     <td class="px-3 py-2">
@@ -342,31 +356,25 @@
                                     </td>
                                     <td class="px-3 py-2">
                                         <div class="flex justify-center items-center space-x-2">
-                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                                class="inline-flex items-center justify-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[60px]"
-                                                title="Edit">
-                                                <i class="bi bi-pencil-square mr-1"></i>
-                                                <span>Edit</span>
+                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}"
+                                               class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 transition-colors duration-200"
+                                               title="Edit Alumni">
+                                                <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
-                                            <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]" 
-                                                    title="Hapus">
-                                                    <i class="bi bi-trash mr-1"></i>
-                                                    <span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                onclick="openDeleteModal({{ $item->id_user }})"
+                                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                                title="Hapus Alumni">
+                                                <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-3 py-6 text-gray-400 text-center">
-                                        <i class="bi bi-inbox text-xl mb-2 block"></i>
-                                        <span class="text-sm">Tidak ada data alumni</span>
+                                    <td colspan="5" class="px-3 py-6 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-3xl mb-3 block"></i>
+                                        <p>Tidak ada data alumni</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -379,9 +387,16 @@
                     @forelse($alumni as $index => $item)
                         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <div class="flex justify-between items-start mb-3">
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $item->name }}</h3>
-                                    <p class="text-gray-600 text-xs mt-1">NIM: {{ $item->nim }}</p>
+                                <div class="flex items-start gap-3 flex-1 min-w-0">
+                                    <input type="checkbox" 
+                                           name="selected_alumni_mobile[]" 
+                                           value="{{ $item->id_user }}" 
+                                           onchange="updateSelectAllStateMobile()" 
+                                           class="alumni-checkbox-mobile rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 mt-1">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $item->name }}</h3>
+                                        <p class="text-gray-600 text-xs mt-1">NIM: {{ $item->nim }}</p>
+                                    </div>
                                 </div>
                                 <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2">
                                     #{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}
@@ -401,19 +416,12 @@
                                 title="Edit Alumni">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
-                                <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                    onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
-                                    class="flex-1">
-                                    @csrf
-                                    @method('DELETE')
-                                    <!-- Delete Button pakai modal -->
-                                 <button type="button"
-                                     onclick="openDeleteModal({{ $item->id_user }})"
-                                     class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
-                                     title="Hapus Alumni">
+                                <button type="button"
+                                    onclick="openDeleteModal({{ $item->id_user }})"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                    title="Hapus Alumni">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
-                                 </button>
-                                </form>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -526,7 +534,376 @@
             modal.classList.add('hidden');
         }
     }
+
+    // ======================== BULK DELETE FUNCTIONALITY ========================
+    
+    // Function to get all selected alumni IDs from all views (desktop, tablet, mobile)
+    function getSelectedAlumniIds() {
+        const ids = [];
+        
+        // Desktop checkboxes
+        document.querySelectorAll('.alumni-checkbox:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Tablet checkboxes
+        document.querySelectorAll('.alumni-checkbox-tablet:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Mobile checkboxes
+        document.querySelectorAll('.alumni-checkbox-mobile:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Remove duplicates and ensure all are positive integers
+        const uniqueIds = [...new Set(ids)];
+        
+        // Extra validation: filter out any non-numeric or 'bulk-delete' values
+        const validIds = uniqueIds.filter(id => {
+            return Number.isInteger(id) && 
+                   id > 0 && 
+                   !String(id).includes('bulk') && 
+                   String(id) !== 'bulk-delete';
+        });
+        
+        return validIds;
+    }
+    
+    // Function to update bulk delete button visibility and text
+    function updateBulkDeleteButton() {
+        const selectedIds = getSelectedAlumniIds();
+        const bulkDeleteBtn = document.getElementById('selectAlumniDelete');
+        const deleteText = document.getElementById('deleteSelectedText');
+        
+        if (selectedIds.length > 0) {
+            bulkDeleteBtn.style.display = 'inline-flex';
+            deleteText.textContent = `Hapus Terpilih (${selectedIds.length})`;
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+            deleteText.textContent = 'Hapus Terpilih';
+        }
+    }
+    
+    // Desktop table functions
+    function toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox');
+        
+        alumniCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+    
+    function updateSelectAllState() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox');
+        const checkedBoxes = document.querySelectorAll('.alumni-checkbox:checked');
+        
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === alumniCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+        
+        updateBulkDeleteButton();
+    }
+    
+    // Tablet table functions
+    function toggleSelectAllTablet() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckboxTablet');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox-tablet');
+        
+        alumniCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+    
+    function updateSelectAllStateTablet() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckboxTablet');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox-tablet');
+        const checkedBoxes = document.querySelectorAll('.alumni-checkbox-tablet:checked');
+        
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === alumniCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+        
+        updateBulkDeleteButton();
+    }
+    
+    // Mobile view functions
+    function updateSelectAllStateMobile() {
+        updateBulkDeleteButton();
+    }
+    
+    // Main bulk delete function
+    async function selectAlumniDelete() {
+        const selectedIds = getSelectedAlumniIds();
+        
+        console.log('Selected IDs:', selectedIds); // Debug log
+        
+        if (selectedIds.length === 0) {
+            alert('Pilih minimal satu alumni untuk dihapus!');
+            return;
+        }
+        
+        // Extra security: Validate that all IDs are positive integers and not containing 'bulk'
+        const validIds = selectedIds.filter(id => {
+            const isValidNumber = Number.isInteger(id) && id > 0;
+            const doesNotContainBulk = !String(id).toLowerCase().includes('bulk');
+            const isNotBulkDelete = String(id) !== 'bulk-delete';
+            
+            return isValidNumber && doesNotContainBulk && isNotBulkDelete;
+        });
+        
+        console.log('Valid IDs after filtering:', validIds); // Debug log
+        
+        if (validIds.length !== selectedIds.length) {
+            alert('Data yang dipilih tidak valid. Silakan refresh halaman dan coba lagi.');
+            console.error('Invalid IDs detected:', {
+                selected: selectedIds,
+                valid: validIds
+            });
+            return;
+        }
+        
+        if (validIds.length === 0) {
+            alert('Tidak ada ID alumni yang valid untuk dihapus.');
+            return;
+        }
+        
+        // Confirmation
+        const confirmMessage = `Yakin ingin menghapus ${validIds.length} alumni yang dipilih?\n\nSemua data terkait akan ikut terhapus dan tidak dapat dikembalikan.`;
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        // Disable button and show loading
+        const bulkDeleteBtn = document.getElementById('selectAlumniDelete');
+        const deleteText = document.getElementById('deleteSelectedText');
+        const originalText = deleteText.textContent;
+        
+        bulkDeleteBtn.disabled = true;
+        deleteText.textContent = 'Menghapus...';
+        
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token tidak ditemukan');
+            }
+            
+            // Final validation before sending
+            const requestData = {
+                ids: validIds.filter(id => Number.isInteger(id) && id > 0)
+            };
+            
+            console.log('Sending request with data:', requestData); // Debug log
+            console.log('Valid IDs after filtering:', requestData.ids);
+            
+            // Extra check to ensure no 'bulk-delete' values
+            if (requestData.ids.some(id => String(id).includes('bulk'))) {
+                throw new Error('Invalid ID detected containing "bulk"');
+            }
+            
+            // Send request
+            const response = await fetch('{{ route("admin.alumni.bulk-delete") }}', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                alert(result.message || `${validIds.length} alumni berhasil dihapus.`);
+                
+                // Reload page to refresh data
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Terjadi kesalahan saat menghapus data');
+            }
+            
+        } catch (error) {
+            console.error('Error during bulk delete:', error);
+            alert('Error: ' + error.message);
+            
+            // Reset button
+            bulkDeleteBtn.disabled = false;
+            deleteText.textContent = originalText;
+        }
+    }
+    
+    // Function to delete all alumni with current filters
+    async function deleteAllAlumni() {
+        // Get current filter values
+        const currentFilters = {
+            graduation_year: document.querySelector('[name="graduation_year"]')?.value || '',
+            id_study: document.querySelector('[name="id_study"]')?.value || '',
+            search: document.querySelector('[name="search"]')?.value || ''
+        };
+        
+        // Create confirmation message based on active filters
+        let confirmMessage = 'Apakah Anda yakin ingin menghapus SEMUA data alumni?';
+        
+        // Check if there are active filters
+        const hasFilters = currentFilters.graduation_year || currentFilters.id_study || currentFilters.search;
+        if (hasFilters) {
+            confirmMessage = 'Apakah Anda yakin ingin menghapus SEMUA alumni yang sesuai dengan filter saat ini?';
+            
+            let filterInfo = '\n\nFilter yang diterapkan:';
+            if (currentFilters.graduation_year) {
+                filterInfo += `\n- Tahun Lulus: ${currentFilters.graduation_year}`;
+            }
+            if (currentFilters.id_study) {
+                const studySelect = document.querySelector('[name="id_study"]');
+                const selectedOption = studySelect.options[studySelect.selectedIndex];
+                filterInfo += `\n- Program Studi: ${selectedOption.text}`;
+            }
+            if (currentFilters.search) {
+                filterInfo += `\n- Pencarian: "${currentFilters.search}"`;
+            }
+            
+            confirmMessage += filterInfo;
+        }
+        
+        confirmMessage += '\n\nSemua data terkait akan ikut terhapus dan TIDAK DAPAT DIKEMBALIKAN!';
+        
+        if (!confirm(confirmMessage)) {
+            return;
+        }
+        
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token tidak ditemukan');
+            }
+            
+            // Prepare request data
+            const requestData = {
+                delete_all: true,
+                ...currentFilters
+            };
+            
+            console.log('Sending delete all request with data:', requestData); // Debug log
+            
+            // Send request
+            const response = await fetch('{{ route("admin.alumni.bulk-delete.post") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                alert(result.message || 'Semua alumni berhasil dihapus.');
+                
+                // Reload page to refresh data
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Terjadi kesalahan saat menghapus data');
+            }
+            
+        } catch (error) {
+            console.error('Error during delete all:', error);
+            alert('Error: ' + error.message);
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        updateBulkDeleteButton();
+        
+        // DEBUG: Add form submission logging
+        document.addEventListener('submit', function(e) {
+            console.log('Form submission detected:', {
+                action: e.target.action,
+                method: e.target.method,
+                formData: new FormData(e.target)
+            });
+        });
+        
+        // DEBUG: Add all button click logging
+        document.addEventListener('click', function(e) {
+            if (e.target.type === 'button' || e.target.type === 'submit') {
+                console.log('Button clicked:', {
+                    id: e.target.id,
+                    name: e.target.name,
+                    value: e.target.value,
+                    onclick: e.target.onclick ? e.target.onclick.toString() : null
+                });
+            }
+        });
+    });
+    
 </script>
+
+<!-- Delete Modals for Individual Alumni -->
+@foreach($alumni as $item)
+    <!-- Modal Delete Alumni -->
+    <div id="modal-delete-{{ $item->id_user }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+        <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Konfirmasi Hapus Alumni</h3>
+                <p class="text-gray-600 mb-6">
+                    Apakah Anda yakin ingin menghapus alumni <strong>{{ $item->name }}</strong>?
+                    <br><span class="text-sm text-red-600">Data yang dihapus tidak dapat dikembalikan.</span>
+                </p>
+                <div class="flex justify-end gap-3">
+                    <button type="button" 
+                            onclick="closeDeleteModal({{ $item->id_user }})"
+                            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors duration-200">
+                        Batal
+                    </button>
+                    <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" 
+                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200">
+                            Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
+
  <!-- script JS  -->
     <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>

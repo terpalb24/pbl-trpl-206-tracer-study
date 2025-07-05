@@ -317,8 +317,43 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
     // Hapus alumni
     public function alumniDestroy($id_user)
     {
-        Tb_User::where('id_user',$id_user)->delete();
-        return redirect()->route('admin.alumni.index')->with('success', 'Data alumni dihapus.');
+        // SECURITY: Validate the parameter
+        if (!is_numeric($id_user) || $id_user <= 0) {
+            \Log::warning('Invalid ID parameter in alumniDestroy', ['id_user' => $id_user]);
+            return redirect()->route('admin.alumni.index')
+                ->with('error', 'Parameter ID tidak valid.');
+        }
+        
+        // SECURITY: Block any string containing 'bulk'
+        if (is_string($id_user) && (strpos($id_user, 'bulk') !== false || $id_user === 'bulk-delete')) {
+            \Log::error('SECURITY ALERT: bulk-related string in alumniDestroy', ['id_user' => $id_user]);
+            return redirect()->route('admin.alumni.index')
+                ->with('error', 'Parameter tidak valid. Silakan refresh halaman dan coba lagi.');
+        }
+        
+        // Convert to integer for extra safety
+        $id_user = (int) $id_user;
+        
+        // Check if user exists and is alumni
+        $user = Tb_User::where('id_user', $id_user)->where('role', 2)->first();
+        if (!$user) {
+            return redirect()->route('admin.alumni.index')
+                ->with('error', 'Alumni tidak ditemukan.');
+        }
+        
+        try {
+            // Delete alumni data first
+            Tb_Alumni::where('id_user', $id_user)->delete();
+            // Delete user data
+            $user->delete();
+            
+            return redirect()->route('admin.alumni.index')
+                ->with('success', 'Data alumni berhasil dihapus.');
+        } catch (\Exception $e) {
+            \Log::error('Error deleting alumni', ['id_user' => $id_user, 'error' => $e->getMessage()]);
+            return redirect()->route('admin.alumni.index')
+                ->with('error', 'Gagal menghapus data alumni: ' . $e->getMessage());
+        }
     }
 
     public function import(Request $request)
@@ -2345,5 +2380,402 @@ public function deleteStudyProgramBySelect(Request $request)
 
     return redirect()->back()->with('success', 'Program Studi berhasil dihapus.');
 }
+
+public function bulkDeleteAlumni(Request $request)
+{
+    // Determine if this is a JSON request (for JavaScript fetch)
+    $isJsonRequest = $request->expectsJson() || $request->ajax() || $request->header('Content-Type') === 'application/json';
+
+    // Check if this is a "delete all" request
+    $deleteAll = $request->input('delete_all', false);
+    
+    if ($deleteAll) {
+        return $this->bulkDeleteAllAlumni($request, $isJsonRequest);
+    }
+    
+    // SECURITY: Block any request containing 'bulk-delete' string or button name fields
+    $allInput = $request->all();
+    
+    // Remove any non-essential fields that might cause issues
+    unset($allInput['_token']);
+    unset($allInput['_method']);
+    unset($allInput['bulk_delete_action']);
+    unset($allInput['delete_all']);
+    
+    foreach ($allInput as $key => $value) {
+        if (is_string($value) && (strpos($value, 'bulk') !== false || $value === 'bulk-delete')) {
+            if ($isJsonRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid request detected. Please refresh the page and try again.'
+                ], 400);
+            }
+            return back()->with('error', 'Invalid request detected. Please refresh the page and try again.');
+        }
+        if (is_array($value)) {
+            foreach ($value as $subKey => $subValue) {
+                if (is_string($subValue) && (strpos($subValue, 'bulk') !== false || $subValue === 'bulk-delete')) {
+                    if ($isJsonRequest) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Invalid request detected. Please refresh the page and try again.'
+                        ], 400);
+                    }
+                    return back()->with('error', 'Invalid request detected. Please refresh the page and try again.');
+                }
+            }
+        }
+    }
+
+    // Laravel validation untuk memastikan ids berupa array integer
+    try {
+        // Create a clean request with only the IDs field
+        $cleanRequest = new \Illuminate\Http\Request(['ids' => $request->input('ids', [])]);
+        
+        $validated = $cleanRequest->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'required|integer|min:1'
+        ]);
+        
+        $validIds = $validated['ids'];
+        
+        // EXTRA: Filter out any non-numeric values that might have slipped through
+        $validIds = array_filter($validIds, function($id) {
+            return is_numeric($id) && $id > 0 && $id == (int)$id;
+        });
+        
+        if (empty($validIds)) {
+            if ($isJsonRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid alumni IDs provided.'
+                ], 400);
+            }
+            return back()->with('error', 'No valid alumni IDs provided.');
+        }        } catch (\Illuminate\Validation\ValidationException $e) {
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data yang dikirim tidak valid. Pastikan memilih alumni yang benar.',
+                'errors' => $e->errors()
+            ], 422);
+        }
+        return back()->with('error', 'Data yang dikirim tidak valid. Pastikan memilih alumni yang benar.');
+    }
+
+    // EXTRA SAFETY: Validate yang valid IDs benar-benar integer dan exist di database
+    
+    // Debug: Check what users exist with these IDs (any role)
+    $allUsersWithIds = Tb_User::whereIn('id_user', $validIds)->get();
+    
+    // Check specifically for alumni (role 2)
+    $existingUserIds = Tb_User::whereIn('id_user', $validIds)
+        ->where('role', 2) // hanya alumni
+        ->pluck('id_user')
+        ->toArray();
+    
+    if (empty($existingUserIds)) {
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ditemukan alumni yang valid untuk dihapus.'
+            ], 404);
+        }
+        return back()->with('error', 'Tidak ditemukan alumni yang valid untuk dihapus.');
+    }
+
+    DB::beginTransaction();
+    try {
+        // Get NIMs for job history deletion
+        $alumniNims = Tb_User::whereIn('tb_user.id_user', $existingUserIds)
+            ->where('tb_user.role', 2)
+            ->join('tb_alumni', 'tb_user.id_user', '=', 'tb_alumni.id_user')
+            ->pluck('tb_alumni.nim')
+            ->toArray();
+
+        // Delete related data first to avoid foreign key constraints
+        // Delete user answers and answer items
+        $deletedAnswerItems = DB::table('tb_user_answer_item')
+            ->whereIn('id_user_answer', function($query) use ($existingUserIds) {
+                $query->select('id_user_answer')
+                      ->from('tb_user_answers')
+                      ->whereIn('id_user', $existingUserIds);
+            })
+            ->delete();
+
+        $deletedAnswers = DB::table('tb_user_answers')
+            ->whereIn('id_user', $existingUserIds)
+            ->delete();
+
+        // Delete job history using NIM
+        $deletedJobHistory = 0;
+        if (!empty($alumniNims)) {
+            $deletedJobHistory = DB::table('tb_jobhistory')
+                ->whereIn('nim', $alumniNims)
+                ->delete();
+        }
+        
+        // Hapus data dari kedua tabel dengan explicit integer binding
+        $deletedAlumni = DB::table('tb_alumni')
+            ->whereIn('id_user', $existingUserIds)
+            ->delete();
+            
+        $deletedUsers = DB::table('tb_user')
+            ->whereIn('id_user', $existingUserIds)
+            ->where('role', 2) // extra safety untuk hanya hapus alumni
+            ->delete();
+
+        DB::commit();
+        
+        $successMessage = count($existingUserIds) . ' alumni berhasil dihapus.';
+        
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage,
+                'deleted_count' => count($existingUserIds)
+            ]);
+        }
+        
+        return redirect()->route('admin.alumni.index')
+            ->with('success', $successMessage);
+            
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        $errorMessage = 'Terjadi kesalahan saat menghapus data alumni: ' . $e->getMessage();
+        
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
+        }
+        
+        return back()->with('error', $errorMessage);
+    }
+}
+
+/**
+ * Delete all alumni data (with filters if applied)
+ */
+private function bulkDeleteAllAlumni(Request $request, $isJsonRequest)
+{
+    try {
+        // Build query based on current filters (same logic as in alumniIndex)
+        $query = Tb_alumni::with('studyProgram');
+
+        // Apply same filters as in index page
+        if ($request->filled('graduation_year')) {
+            $query->where('graduation_year', $request->graduation_year);
+        }
+
+        if ($request->filled('id_study')) {
+            $query->where('id_study', $request->id_study);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'LIKE', "%{$search}%")
+                  ->orWhere('nim', 'LIKE', "%{$search}%")
+                  ->orWhereHas('studyProgram', function ($q2) use ($search) {
+                      $q2->where('study_program', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Get all alumni IDs that match the filters
+        $alumniToDelete = $query->pluck('id_user')->toArray();
+        
+        if (empty($alumniToDelete)) {
+            if ($isJsonRequest) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada alumni yang ditemukan dengan filter yang diterapkan.'
+                ], 404);
+            }
+            return back()->with('error', 'Tidak ada alumni yang ditemukan dengan filter yang diterapkan.');
+        }
+
+        // Get NIMs for job history deletion
+        $alumniNims = Tb_alumni::whereIn('id_user', $alumniToDelete)->pluck('nim')->toArray();
+
+        DB::beginTransaction();
+
+        // Delete related data first to avoid foreign key constraints
+        // Delete user answers and answer items
+        $deletedAnswerItems = DB::table('tb_user_answer_item')
+            ->whereIn('id_user_answer', function($query) use ($alumniToDelete) {
+                $query->select('id_user_answer')
+                      ->from('tb_user_answers')
+                      ->whereIn('id_user', $alumniToDelete);
+            })
+            ->delete();
+
+        $deletedAnswers = DB::table('tb_user_answers')
+            ->whereIn('id_user', $alumniToDelete)
+            ->delete();
+
+        // Delete job history using NIM
+        $deletedJobHistory = DB::table('tb_jobhistory')
+            ->whereIn('nim', $alumniNims)
+            ->delete();
+
+        // Delete alumni data
+        $deletedAlumni = DB::table('tb_alumni')
+            ->whereIn('id_user', $alumniToDelete)
+            ->delete();
+
+        // Delete user accounts (only alumni users)
+        $deletedUsers = DB::table('tb_user')
+            ->whereIn('id_user', $alumniToDelete)
+            ->where('role', 2) // Only delete alumni users
+            ->delete();
+
+        DB::commit();
+
+        $successMessage = count($alumniToDelete) . ' alumni berhasil dihapus.';
+        
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMessage,
+                'deleted_count' => count($alumniToDelete)
+            ]);
+        }
+        
+        return redirect()->route('admin.alumni.index')
+            ->with('success', $successMessage);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        $errorMessage = 'Terjadi kesalahan saat menghapus semua data alumni: ' . $e->getMessage();
+        
+        if ($isJsonRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
+        }
+        
+        return back()->with('error', $errorMessage);
+    }
+}
+/**
+ * Bulk delete perusahaan (pilih beberapa atau semua)
+ */
+public function bulkDeleteCompany(Request $request)
+    {
+        $isJsonRequest = $request->expectsJson() || $request->ajax() || $request->header('Content-Type') === 'application/json';
+
+        // Handle delete all request
+        if ($request->input('delete_all')) {
+            return $this->bulkDeleteAllCompany($request, $isJsonRequest);
+        }
+
+        // Validate input
+        try {
+            $validated = $request->validate([
+                'ids' => 'required|array|min:1',
+                'ids.*' => 'required|integer|min:1'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $msg = 'Data yang dikirim tidak valid: ' . implode(', ', $e->errors()['ids'] ?? ['Format data tidak sesuai']);
+            if ($isJsonRequest) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $companyIds = $validated['ids'];
+
+        // Get companies with their user IDs
+        $companies = Tb_Company::whereIn('id_company', $companyIds)->get();
+        if ($companies->isEmpty()) {
+            $msg = 'Tidak ditemukan perusahaan yang valid untuk dihapus.';
+            if ($isJsonRequest) {
+                return response()->json(['success' => false, 'message' => $msg], 404);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $userIds = $companies->pluck('id_user')->toArray();
+
+        DB::beginTransaction();
+        try {
+            // Delete company records
+            Tb_Company::whereIn('id_company', $companyIds)->delete();
+            // Delete associated user accounts
+            Tb_User::whereIn('id_user', $userIds)->where('role', 3)->delete();
+
+            DB::commit();
+            $msg = count($companyIds) . ' perusahaan berhasil dihapus.';
+            
+            if ($isJsonRequest) {
+                return response()->json(['success' => true, 'message' => $msg]);
+            }
+            return redirect()->route('admin.company.index')->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $msg = 'Terjadi kesalahan saat menghapus data perusahaan: ' . $e->getMessage();
+            if ($isJsonRequest) {
+                return response()->json(['success' => false, 'message' => $msg], 500);
+            }
+            return back()->with('error', $msg);
+        }
+    }
+
+    private function bulkDeleteAllCompany(Request $request, $isJsonRequest)
+    {
+        // Build query with filters
+        $query = Tb_Company::query();
+
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('company_name', 'LIKE', "%{$search}%")
+                  ->orWhere('company_email', 'LIKE', "%{$search}%");
+            });
+        }
+
+        // Get companies with their IDs
+        $companies = $query->get();
+        if ($companies->isEmpty()) {
+            $msg = 'Tidak ada perusahaan yang ditemukan' . 
+                   ($request->filled('search') ? ' dengan filter yang diterapkan.' : '.');
+            if ($isJsonRequest) {
+                return response()->json(['success' => false, 'message' => $msg], 404);
+            }
+            return back()->with('error', $msg);
+        }
+
+        $companyIds = $companies->pluck('id_company')->toArray();
+        $userIds = $companies->pluck('id_user')->toArray();
+
+        DB::beginTransaction();
+        try {
+            // Delete company records
+            Tb_Company::whereIn('id_company', $companyIds)->delete();
+            // Delete associated user accounts
+            Tb_User::whereIn('id_user', $userIds)->where('role', 3)->delete();
+
+            DB::commit();
+            $msg = count($companyIds) . ' perusahaan berhasil dihapus.';
+            
+            if ($isJsonRequest) {
+                return response()->json(['success' => true, 'message' => $msg]);
+            }
+            return redirect()->route('admin.company.index')->with('success', $msg);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            $msg = 'Terjadi kesalahan saat menghapus data perusahaan: ' . $e->getMessage();
+            if ($isJsonRequest) {
+                return response()->json(['success' => false, 'message' => $msg], 500);
+            }
+            return back()->with('error', $msg);
+        }
+    }
 
 }
