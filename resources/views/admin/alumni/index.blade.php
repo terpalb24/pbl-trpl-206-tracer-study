@@ -48,9 +48,16 @@
                         
                         <a href="{{ route('admin.alumni.template') }}"
                             class="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
-                            <i class="bi bi-file-earmark-excel"></i> 
-                            <span class="hidden sm:inline">Template</span>
+                            <i class="bi bi-file-text"></i>
+                            <span class="hidden sm:inline">Download Template</span>
                             <span class="sm:hidden">Template</span>
+                        </a>
+                        
+                        <a href="{{ route('admin.export.job-history') }}"
+                            class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            <span class="hidden sm:inline">Export Riwayat Pekerjaan</span>
+                            <span class="sm:hidden">Export Riwayat</span>
                         </a>
                     </div>
                 </div>
@@ -568,7 +575,7 @@
         // Remove duplicates and ensure all are positive integers
         const uniqueIds = [...new Set(ids)];
         
-        // Extra validation: filter out any non-numeric or 'bulk-delete' values
+        // Extra validation: filter out any non-numeric or 'bulk' values
         const validIds = uniqueIds.filter(id => {
             return Number.isInteger(id) && 
                    id > 0 && 

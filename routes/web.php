@@ -16,6 +16,7 @@ use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\Admin\QuestionnaireController;
 use App\Http\Controllers\Admin\QuestionnaireImportController;
+use App\Http\Controllers\Admin\EksportJobhistory;
 use App\Http\Controllers\Alumni\JobHistoryController; // Tambahkan ini di atas
 use App\Http\Controllers\Alumni\QuestionnaireController as AlumniQuestionnaireController;
 use App\Http\Controllers\Company\QuestionnaireController as CompanyQuestionnaireController;
@@ -209,6 +210,9 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/questionnaire/{id_periode}/complete-drafts', [QuestionnaireController::class, 'completeDraftAnswers'])
     ->name('admin.questionnaire.complete-drafts');
     Route::get('/admin/questionnaire/{id_periode}/export-responden', [\App\Http\Controllers\Admin\EksportRespondenController::class, 'export'])->name('admin.export-responden');
+
+    // Job History Export
+    Route::get('/export/job-history', [EksportJobhistory::class, 'exportJobHistory'])->name('admin.export.job-history');
 });
 //ROUTE UNTUK ADMIN NAMBAHIN study Program\
 Route::post('/admin/study-program', [AdminController::class, 'storeStudyProgram'])->name('admin.study-program.store');
