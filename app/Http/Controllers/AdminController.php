@@ -213,55 +213,73 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         return view('admin.alumni.create', compact('prodi'));
     }
 
-    public function alumniStore(Request $request)
-    {
-        $request->validate([
-            'nim' => 'required|unique:tb_alumni,nim',
-            'nik' => 'required|unique:tb_alumni,nik|numeric',
-            'name' => 'required|string|max:50',
-            'gender' => 'required|in:pria,wanita',
-            'email' => 'required|email|unique:tb_alumni,email',
-            'phone_number' => 'required|string|max:15',
-            'id_study' => 'required|exists:tb_study_program,id_study',
-            'batch' => 'required|integer',
-            'graduation_year' => 'required|integer',
-            'date_of_birth' => 'required|date',
-            'status' => 'required|string|max:50',
-            'ipk' => 'required|numeric|between:0,4.00',
-            'address' => 'required|string|max:255',
-        ]);
+  public function alumniStore(Request $request)
+{
+    $request->validate([
+        'nim' => 'required|unique:tb_alumni,nim',
+        'nik' => 'required|unique:tb_alumni,nik|numeric',
+        'name' => 'required|string|max:50',
+        'gender' => 'required|in:pria,wanita',
+        'email' => 'required|email|unique:tb_alumni,email',
+        'phone_number' => [
+            'required',
+            'max:15',
+            'regex:/^[0-9-]+$/', // Only allows numbers and dashes
+            function ($attribute, $value, $fail) {
+                // Check if there are consecutive dashes
+                if (strpos($value, '--') !== false) {
+                    $fail('Format nomor telepon tidak valid. Jangan gunakan tanda strip berurutan.');
+                }
+                // Check if starts or ends with dash
+                if (str_starts_with($value, '-') || str_ends_with($value, '-')) {
+                    $fail('Format nomor telepon tidak valid. Jangan awali atau akhiri dengan tanda strip.');
+                }
+            },
+        ],
+        'id_study' => 'required|exists:tb_study_program,id_study',
+        'batch' => 'required|integer',
+        'graduation_year' => 'required|integer',
+        'date_of_birth' => 'required|date',
+        'status' => 'required|string|max:50',
+        'ipk' => 'required|numeric|between:0,4.00',
+        'address' => 'required|string|max:255',
+    ], [
+        'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka dan tanda strip (-)',
+        'phone_number.required' => 'Nomor telepon wajib diisi',
+        'phone_number.max' => 'Nomor telepon maksimal 15 karakter',
+    ]);
 
-        // membuat kapital pada awal inputan nama dan gender
-        $name = ucwords(strtolower($request->name));
-        $gender = strtolower($request->gender);
+    // membuat kapital pada awal inputan nama dan gender
+    $name = ucwords(strtolower($request->name));
+    $gender = strtolower($request->gender);
 
-        // Simpan user baru (username & password = nim)
-        $user = Tb_User::create([
-            'username' => $request->nim,
-            'password' => bcrypt($request->nim),
-            'role' => 2, // Role 2 = Alumni
-        ]);
+    // Simpan user baru (username & password = nim)
+    $user = Tb_User::create([
+        'username' => $request->nim,
+        'password' => bcrypt($request->nim),
+        'role' => 2, // Role 2 = Alumni
+    ]);
 
-        // Simpan data alumni, sertakan id_user
-        Tb_alumni::create([
-            'nim' => $request->nim,
-            'nik' => $request->nik,
-            'name' => $name,
-            'gender' => $gender,
-            'date_of_birth' => $request->date_of_birth,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'status' => $request->status,
-            'ipk' => $request->ipk,
-            'address' => $request->address,
-            'batch' => $request->batch,
-            'graduation_year' => $request->graduation_year,
-            'id_study' => $request->id_study,
-            'id_user' => $user->id_user,
-        ]);
+    // Simpan data alumni, sertakan id_user
+    Tb_alumni::create([
+        'nim' => $request->nim,
+        'nik' => $request->nik,
+        'name' => $name,
+        'gender' => $gender,
+        'date_of_birth' => $request->date_of_birth,
+        'email' => $request->email,
+        'phone_number' => $request->phone_number,
+        'status' => $request->status,
+        'ipk' => $request->ipk,
+        'address' => $request->address,
+        'batch' => $request->batch,
+        'graduation_year' => $request->graduation_year,
+        'id_study' => $request->id_study,
+        'id_user' => $user->id_user,
+    ]);
 
-        return redirect()->route('admin.alumni.index')->with('success', 'Alumni berhasil ditambahkan.');
-    }
+    return redirect()->route('admin.alumni.index')->with('success', 'Alumni berhasil ditambahkan.');
+}
 
     // Form edit alumni
     public function alumniEdit($nim)
@@ -272,47 +290,65 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
     }
 
     // Update alumni
-    public function alumniUpdate(Request $request, $nim)
-    {
-        $request->validate([
-            'nik' => 'required',
-            'name' => 'required|string|max:50',
-            'gender' => 'required|in:pria,wanita',
-            'email' => 'required',
-            'phone_number' => 'required|string|max:15',
-            'id_study' => 'required|exists:tb_study_program,id_study',
-            'batch' => 'required|integer',
-            'graduation_year' => 'required|integer',
-            'date_of_birth' => 'required|date',
-            'status' => 'required|string|max:50',
-            'ipk' => 'required|numeric|between:0,4.00',
-            'address' => 'required|string|max:255',
-        ]);
+public function alumniUpdate(Request $request, $nim)
+{
+    $request->validate([
+        'nik' => 'required',
+        'name' => 'required|string|max:50',
+        'gender' => 'required|in:pria,wanita',
+        'email' => 'required',
+        'phone_number' => [
+            'required',
+            'max:15',
+            'regex:/^[0-9-]+$/', // Only allows numbers and dashes
+            function ($attribute, $value, $fail) {
+                // Check if there are consecutive dashes
+                if (strpos($value, '--') !== false) {
+                    $fail('Format nomor telepon tidak valid. Jangan gunakan tanda strip berurutan.');
+                }
+                // Check if starts or ends with dash
+                if (str_starts_with($value, '-') || str_ends_with($value, '-')) {
+                    $fail('Format nomor telepon tidak valid. Jangan awali atau akhiri dengan tanda strip.');
+                }
+            },
+        ],
+        'id_study' => 'required|exists:tb_study_program,id_study',
+        'batch' => 'required|integer',
+        'graduation_year' => 'required|integer',
+        'date_of_birth' => 'required|date',
+        'status' => 'required|string|max:50',
+        'ipk' => 'required|numeric|between:0,4.00',
+        'address' => 'required|string|max:255',
+    ], [
+        'phone_number.regex' => 'Nomor telepon hanya boleh berisi angka dan tanda strip (-)',
+        'phone_number.required' => 'Nomor telepon wajib diisi',
+        'phone_number.max' => 'Nomor telepon maksimal 15 karakter',
+    ]);
 
-        $alumni = Tb_alumni::where('nim', $nim)->firstOrFail();
+    $alumni = Tb_alumni::where('nim', $nim)->firstOrFail();
 
-        // Kapitalisasi nama dan gender
-        $name = ucwords(strtolower($request->name));
-        $gender = strtolower($request->gender);
+    // Kapitalisasi nama dan gender
+    $name = ucwords(strtolower($request->name));
+    $gender = strtolower($request->gender);
 
-        // Update field (kecuali NIM dan id_user)
-        $alumni->update([
-            'nik' => $request->nik,
-            'name' => $name,
-            'gender' => $gender,
-            'date_of_birth' => $request->date_of_birth,
-            'email' => $request->email,
-            'phone_number' => $request->phone_number,
-            'status' => $request->status,
-            'ipk' => $request->ipk,
-            'address' => $request->address,
-            'batch' => $request->batch,
-            'graduation_year' => $request->graduation_year,
-            'id_study' => $request->id_study,
-        ]);
+    // Update field (kecuali NIM dan id_user)
+    $alumni->update([
+        'nik' => $request->nik,
+        'name' => $name,
+        'gender' => $gender,
+        'date_of_birth' => $request->date_of_birth,
+        'email' => $request->email,
+        'phone_number' => $request->phone_number,
+        'status' => $request->status,
+        'ipk' => $request->ipk,
+        'address' => $request->address,
+        'batch' => $request->batch,
+        'graduation_year' => $request->graduation_year,
+        'id_study' => $request->id_study,
+    ]);
 
-        return redirect()->route('admin.alumni.index')->with('success', 'Data alumni berhasil diperbarui.');
-    }
+    return redirect()->route('admin.alumni.index')->with('success', 'Data alumni berhasil diperbarui.');
+}
 
     // Hapus alumni
     public function alumniDestroy($id_user)
@@ -477,59 +513,76 @@ public function companyStore(Request $request)
         return view('admin.company.edit', compact('company'));
     }
 
-    public function companyUpdate(Request $request, $id_company)
-    {
-        $request->validate([
-            'company_name' => 'required|string|max:100',
-            'company_email' => 'required|email|unique:tb_company,company_email,' . $id_company . ',id_company',
-            'company_phone_number' => 'required|string|max:15',
-            'company_address' => 'required|string|max:255',
-            'Hrd_name' => 'nullable|string|max:50', // Konsisten gunakan Hrd_name
+  public function companyUpdate(Request $request, $id_company)
+{
+    $request->validate([
+        'company_name' => 'required|string|max:100',
+        'company_email' => 'required|email|unique:tb_company,company_email,' . $id_company . ',id_company',
+        'company_phone_number' => [
+            'required',
+            'max:15',
+            'regex:/^[0-9-]+$/', // Only allows numbers and dashes
+            function ($attribute, $value, $fail) {
+                // Check if there are consecutive dashes
+                if (strpos($value, '--') !== false) {
+                    $fail('Format nomor telepon tidak valid. Jangan gunakan tanda strip berurutan.');
+                }
+                // Check if starts or ends with dash
+                if (str_starts_with($value, '-') || str_ends_with($value, '-')) {
+                    $fail('Format nomor telepon tidak valid. Jangan awali atau akhiri dengan tanda strip.');
+                }
+            },
+        ],
+        'company_address' => 'required|string|max:255',
+        'Hrd_name' => 'nullable|string|max:50',
+    ], [
+        'company_phone_number.regex' => 'Nomor telepon hanya boleh berisi angka dan tanda strip (-)',
+        'company_phone_number.required' => 'Nomor telepon wajib diisi',
+        'company_phone_number.max' => 'Nomor telepon maksimal 15 karakter',
+    ]);
+
+    $company = Tb_company::findOrFail($id_company);
+
+    // Kapitalisasi nama HRD
+    $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
+    $company_name = $request->company_name ? strtoupper($request->company_name) : null;
+
+    // Cek jika data perusahaan sebelumnya kosong (hanya company_name, data lain null)
+    $isIncomplete = !$company->company_address && !$company->company_email && !$company->company_phone_number && !$company->id_user;
+
+    // Update data perusahaan
+    $company->update([
+        'company_name' => $company_name,
+        'company_email' => $request->company_email,
+        'company_phone_number' => $request->company_phone_number,
+        'company_address' => $request->company_address,
+        'Hrd_name' => $hrdName,
+    ]);
+
+    // Jika sebelumnya incomplete dan sekarang sudah ada email, buat user perusahaan
+    if ($isIncomplete && $request->company_email) {
+        $user = Tb_User::create([
+            'username' => $request->company_email,
+            'password' => bcrypt($request->company_email),
+            'role' => 3,
         ]);
-
-        $company = Tb_company::findOrFail($id_company);
-
-        // Kapitalisasi nama HRD
-        $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
-        $company_name = $request->company_name ? strtoupper($request->company_name) : null;
-
-        // Cek jika data perusahaan sebelumnya kosong (hanya company_name, data lain null)
-        $isIncomplete = !$company->company_address && !$company->company_email && !$company->company_phone_number && !$company->id_user;
-
-        // Update data perusahaan
         $company->update([
-            'company_name' => $company_name,
-            'company_email' => $request->company_email,
-            'company_phone_number' => $request->company_phone_number,
-            'company_address' => $request->company_address,
-            'Hrd_name' => $hrdName, // Nama HRD sudah dikapitalisasi
+            'id_user' => $user->id_user,
         ]);
-
-        // Jika sebelumnya incomplete dan sekarang sudah ada email, buat user perusahaan
-        if ($isIncomplete && $request->company_email) {
-            $user = Tb_User::create([
-                'username' => $request->company_email,
-                'password' => bcrypt($request->company_email),
-                'role' => 3,
-            ]);
-            $company->update([
-                'id_user' => $user->id_user,
-            ]);
-        }
-
-        // Update juga email di tb_user jika perlu (jika sudah ada user)
-        if ($company->id_user) {
-            $user = Tb_User::find($company->id_user);
-            if ($user) {
-                $user->update([
-                    'username' => $request->company_email,
-                    // password tidak diubah di sini
-                ]);
-            }
-        }
-
-        return redirect()->route('admin.company.index')->with('success', 'Data company berhasil diperbarui.');
     }
+
+    // Update juga email di tb_user jika perlu (jika sudah ada user)
+    if ($company->id_user) {
+        $user = Tb_User::find($company->id_user);
+        if ($user) {
+            $user->update([
+                'username' => $request->company_email,
+            ]);
+        }
+    }
+
+    return redirect()->route('admin.company.index')->with('success', 'Data company berhasil diperbarui.');
+}
 
    public function companyImport(Request $request)
     {

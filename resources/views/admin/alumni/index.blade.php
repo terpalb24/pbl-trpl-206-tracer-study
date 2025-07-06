@@ -428,7 +428,7 @@
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
                                 <button type="button"
-                                    onclick="openDeleteModal({{ $item->id_user }})"
+                                    onclick="deleteAlumni('{{ $item->id_user }}', '{{ $item->name }}')"
                                     class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                     title="Hapus Alumni">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>

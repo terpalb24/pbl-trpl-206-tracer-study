@@ -357,6 +357,14 @@
                 <div class="md:hidden space-y-3 p-4">
                     @forelse($companies as $index => $company)
                         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <!-- Add checkbox for bulk delete -->
+                            <div class="flex justify-end mb-2">
+                                <input type="checkbox" 
+                                    value="{{ $company->id_user }}" 
+                                    class="company-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    onchange="updateBulkDeleteButton()">
+                            </div>
+                            
                             <div class="flex justify-between items-start mb-3">
                                 <div class="flex-1 min-w-0">
                                     <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $company->company_name }}</h3>
@@ -385,8 +393,9 @@
                                   title="Edit Perusahaan">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
+                                <!-- Delete Button - Using id_user instead of id_company -->
                                 <button type="button"
-                                    onclick="deleteCompany('{{ $company->id_company }}', '{{ $company->company_name }}')"
+                                    onclick="deleteCompany('{{ $company->id_user }}', '{{ $company->company_name }}')"
                                     class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                     title="Hapus Perusahaan">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
