@@ -31,7 +31,15 @@ class AlumniController extends Controller
 public function sendEmailVerification(Request $request)
 {
     $request->validate([
-        'email' => 'required|email',
+        'email' => [
+            'required',
+            'email:rfc,dns',
+            'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/' // Accepts all valid email domains
+        ],
+    ], [
+        'email.required' => 'Email wajib diisi.',
+        'email.email' => 'Format email tidak valid.',
+        'email.regex' => 'Format email tidak valid. Gunakan format email yang benar (contoh: nama@domain.com).'
     ]);
 
     $user = Auth::user();
