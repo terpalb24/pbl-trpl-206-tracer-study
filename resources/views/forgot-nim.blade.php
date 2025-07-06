@@ -6,7 +6,7 @@
         <!-- Logo dan Judul -->
         <div class="text-center mb-8">
             <img src="{{ asset('assets/images/polteklogo.png') }}" alt="Logo Polibatam" class="h-20 mx-auto mb-4">
-            <h2 class="text-3xl font-bold text-sky-800 mb-2">Sistem Tracer Study</h2>
+            <h2 class="text-3xl font-bold text-sky-800 mb-2">Tracer Study</h2>
             <p class="text-sky-700">Politeknik Negeri Batam</p>
         </div>
 

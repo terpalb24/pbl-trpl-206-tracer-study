@@ -138,7 +138,9 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     // Bulk delete harus didefinisikan SEBELUM route dengan parameter {id_user}
     Route::delete('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete');
     Route::post('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete.post');
+    // Support both POST and DELETE for alumni deletion
     Route::delete('/admin/alumni/{id_user}', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy');
+    Route::post('/admin/alumni/{id_user}/delete', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy.post');
     Route::post('/admin/alumni/import', [AdminController::class, 'import'])->name('admin.alumni.import');
     Route::get('/admin/alumni/export', [AdminController::class, 'export'])->name('admin.alumni.export');
     Route::get('/admin/alumni/template', [AdminController::class, 'alumniTemplate'])->name('admin.alumni.template');
@@ -154,8 +156,9 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/company/bulk-delete', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.bulk-delete.post');
     Route::delete('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all');
     Route::post('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all.post');
-    Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
     Route::post('/admin/company/import', [AdminController::class, 'companyImport'])->name('admin.company.import');
+    Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
+    Route::post('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy.post');
     Route::get('/admin/company/export', [AdminController::class, 'companyExport'])->name('admin.company.export');
     Route::get('/admin/company/template', [AdminController::class, 'companyTemplate'])->name('admin.company.template');
     

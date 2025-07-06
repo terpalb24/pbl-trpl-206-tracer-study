@@ -1,13 +1,15 @@
 @extends('layouts.app')
 
-@php
-    $admin = auth()->user()->admin;
-@endphp
+
 
 @section('content')
 <x-layout-admin>
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <x-slot name="sidebar">
         <x-admin.sidebar />
     </x-slot>
@@ -24,13 +26,14 @@
         <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 mt-3 sm:mt-4">
             <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Import/Export Data Perusahaan</h3>
             <form action="{{ route('admin.company.import') }}" method="POST" enctype="multipart/form-data" 
-                class="flex flex-col gap-3 sm:gap-4">
+                class="flex flex-col gap-3 sm:gap-4" id="importForm">
                 @csrf
                 
                 <!-- File input section -->
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <input type="file" name="file" accept=".xlsx,.xls" required
-                        class="border border-gray-300 rounded-md px-3 sm:px-4 py-2 w-full sm:flex-1 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        class="border border-gray-300 rounded-md px-3 sm:px-4 py-2 w-full sm:flex-1 text-sm text-gray-700 focus:ring-blue-500 focus:border-blue-500 file:mr-2 sm:file:mr-4 file:py-1 sm:file:py-2 file:px-2 sm:file:px-4 file:rounded file:border-0 file:text-xs sm:file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                        onchange="validateExcelFile(this)">
                     
                     <!-- Action buttons -->
                     <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
@@ -257,7 +260,7 @@
                             @forelse($companies as $index => $company)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
                                     <td class="px-4 py-3 text-center">
-                                        <input type="checkbox" name="ids[]" value="{{ $company->id_company }}" 
+                                        <input type="checkbox" name="ids[]" value="{{ $company->id_user }}" 
                                             class="company-checkbox rounded border-gray-300 text-blue-600 focus:ring-blue-500">
                                     </td>
                                     <td class="px-4 py-3 text-center">{{ ($companies->currentPage() - 1) * $companies->perPage() + $index + 1 }}</td>
@@ -275,18 +278,13 @@
                                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
                                             
-                                            <!-- Delete Button -->
-                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
-                                                class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
+                                            <!-- Delete Button with SweetAlert2 -->
+                                            <button type="button" 
+                                                onclick="deleteCompany('{{ $company->id_user }}', '{{ $company->company_name }}')"
                                                 class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                                 title="Hapus Perusahaan">
-                                                 <i class="fas fa-trash text-xs sm:text-sm"></i>
-                                               </button>
-                                            </form>
+                                                <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -333,17 +331,13 @@
                                                 <i class="bi bi-pencil-square mr-1"></i>
                                                 <span>Edit</span>
                                             </a>
-                                            <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?')" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]" 
-                                                    title="Hapus">
-                                                    <i class="bi bi-trash mr-1"></i>
-                                                    <span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                onclick="deleteCompany('{{ $company->id_company }}', '{{ $company->company_name }}')"
+                                                class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]"
+                                                title="Hapus">
+                                                <i class="bi bi-trash mr-1"></i>
+                                                <span>Hapus</span>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -391,17 +385,12 @@
                                   title="Edit Perusahaan">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
-                                <form action="{{ route('admin.company.destroy', $company->id_company) }}" method="POST" 
-                                    onsubmit="return confirm('Yakin ingin menghapus perusahaan ini?\n\nData yang akan dihapus:\n- Perusahaan: {{ addslashes($company->company_name) }}\n- Semua data terkait akan ikut terhapus')" 
-                                    class="flex-1">
-                                    @csrf
-                                    @method('DELETE')
-                                     <button type="submit" 
-                                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
-                                                title="Hapus Perusahaan">
-                                             <i class="fas fa-trash text-xs sm:text-sm"></i>
-                                     </button>
-                                </form>
+                                <button type="button"
+                                    onclick="deleteCompany('{{ $company->id_company }}', '{{ $company->company_name }}')"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                    title="Hapus Perusahaan">
+                                    <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -485,6 +474,100 @@
     <script src="{{ asset('js/script.js') }}"></script>
     
     <script>
+        // Function to delete single company
+        async function deleteCompany(id, name) {
+            const result = await Swal.fire({
+                title: 'Konfirmasi Hapus Perusahaan',
+                html: `Apakah Anda yakin ingin menghapus perusahaan <strong>${name}</strong>?<br>
+                      <div class="text-red-600 text-sm font-semibold mt-2">⚠️ Data yang dihapus tidak dapat dikembalikan!</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6B7280',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-xl font-bold mb-4',
+                    htmlContainer: 'text-left',
+                    confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                    cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+                }
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Menghapus Data',
+                        text: 'Mohon tunggu...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Use POST with _method=DELETE for proper routing
+                    const response = await fetch(`/admin/company/${id}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            _method: 'DELETE'  // This simulates DELETE method
+                        })
+                    });
+
+                    let data;
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        data = await response.json();
+                    } else {
+                        data = {
+                            success: response.ok,
+                            message: response.ok ? 'Perusahaan berhasil dihapus' : 'Gagal menghapus perusahaan'
+                        };
+                    }
+
+                    if (response.ok && data.success) {
+                        await Swal.fire({
+                            title: 'Berhasil!',
+                            text: data.message || 'Perusahaan berhasil dihapus.',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6',
+                            customClass: {
+                                popup: 'swal2-show',
+                                title: 'text-lg font-semibold mb-2',
+                                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                            }
+                        });
+
+                        window.location.reload();
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan saat menghapus data');
+                    }
+                } catch (error) {
+                    console.error('Error deleting company:', error);
+                    await Swal.fire({
+                        title: 'Error!',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold text-red-600 mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                }
+            }
+        }
+
         function getSelectedCompanyIds() {
             const ids = [];
             document.querySelectorAll('.company-checkbox:checked').forEach(checkbox => {
@@ -497,127 +580,224 @@
             const selectedIds = getSelectedCompanyIds();
             
             if (selectedIds.length === 0) {
-                alert('Pilih minimal satu perusahaan untuk dihapus!');
-                return;
-            }
-
-            if (!confirm(`Yakin ingin menghapus ${selectedIds.length} perusahaan yang dipilih?\n\nData yang akan dihapus:\n- Perusahaan terpilih\n- Semua data terkait akan ikut terhapus`)) {
+                await Swal.fire({
+                    title: 'Perhatian',
+                    text: 'Pilih minimal satu perusahaan untuk dihapus!',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
                 return;
             }
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             if (!csrfToken) {
-                alert('CSRF token tidak ditemukan');
+                await Swal.fire({
+                    title: 'Error',
+                    text: 'CSRF token tidak ditemukan',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
                 return;
             }
 
-            // Disable button and show loading state
-            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
-            const originalText = bulkDeleteBtn.innerHTML;
-            bulkDeleteBtn.disabled = true;
-            bulkDeleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+            const result = await Swal.fire({
+                title: 'Konfirmasi Hapus Perusahaan',
+                html: `Apakah Anda yakin ingin menghapus <strong>${selectedIds.length} perusahaan</strong> yang dipilih?
+                      <div class="text-red-600 text-sm font-semibold mt-2">
+                        ⚠️ Semua data terkait akan ikut terhapus dan TIDAK DAPAT DIKEMBALIKAN!
+                      </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6B7280'
+            });
+
+            if (!result.isConfirmed) return;
+
+            const loadingSwal = Swal.fire({
+                title: 'Menghapus Data',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             try {
+                // Validate selected IDs
+                if (!Array.isArray(selectedIds) || selectedIds.some(id => !id)) {
+                    throw new Error('Data perusahaan yang dipilih tidak valid');
+                }
+
                 const response = await fetch('{{ route("admin.company.bulk-delete") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
-                        'X-HTTP-Method-Override': 'DELETE',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
-                        ids: selectedIds 
+                        _method: 'DELETE',
+                        ids: selectedIds.map(id => parseInt(id)) // Ensure IDs are numbers
                     })
                 });
 
-                let responseText = await response.text();
-                let result;
-
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Server response:', responseText);
-                    throw new Error('Server returned invalid response format');
-                }
-
-                if (!response.ok) {
-                    throw new Error(result?.message || `HTTP error! status: ${response.status}`);
-                }
-
-                if (result?.success) {
-                    alert(result.message || `${selectedIds.length} perusahaan berhasil dihapus.`);
-                    window.location.reload();
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
                 } else {
-                    throw new Error(result?.message || 'Operasi gagal: Tidak ada konfirmasi keberhasilan dari server');
+                    throw new Error('Server tidak mengembalikan response JSON yang valid');
                 }
+
+                // Check both response.ok and data.success
+                if (!response.ok || !data.success) {
+                    let errorMessage = data.message || 'Terjadi kesalahan saat menghapus data';
+                    if (data.message && data.message.includes('tidak ditemukan')) {
+                        errorMessage = 'Data perusahaan yang dipilih tidak valid atau sudah tidak tersedia.';
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                await loadingSwal.close();
+
+                await Swal.fire({
+                    title: 'Berhasil',
+                    text: data.message || `${selectedIds.length} perusahaan berhasil dihapus`,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+
+                window.location.reload();
             } catch (error) {
                 console.error('Error:', error);
-                alert('Gagal menghapus perusahaan: ' + error.message);
-                // Reset button state
-                bulkDeleteBtn.disabled = false;
-                bulkDeleteBtn.innerHTML = originalText;
+                await loadingSwal.close();
+                
+                await Swal.fire({
+                    title: 'Gagal',
+                    html: `<div class="text-left">
+                            ${error.message}
+                            ${error.message.includes('tidak ditemukan') || error.message.includes('tidak valid') ? 
+                              '<br><br><div class="mt-2 text-sm text-gray-600">' +
+                              '<p class="mb-1">Kemungkinan penyebab:</p>' +
+                              '<ul class="list-disc pl-4">' +
+                              '<li>Data perusahaan sudah dihapus sebelumnya</li>' +
+                              '<li>Data perusahaan sudah tidak tersedia di database</li>' +
+                              '<li>ID perusahaan tidak valid</li>' +
+                              '</ul>' +
+                              '<p class="mt-2">Silakan refresh halaman untuk memperbarui data.</p>' +
+                              '</div>' : 
+                              ''}
+                          </div>`,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
             }
         }
 
         async function deleteAllCompanies() {
-            if (!confirm('Yakin ingin menghapus semua perusahaan?\n\nPeringatan: Semua data perusahaan dan data terkait akan terhapus permanen.')) {
-                return;
-            }
+            const result = await Swal.fire({
+                title: 'Konfirmasi Hapus Semua Perusahaan',
+                html: `Apakah Anda yakin ingin menghapus <strong>semua perusahaan</strong>?<br>
+                      <div class="text-red-600 text-sm font-semibold mt-2">
+                        ⚠️ Semua data perusahaan dan data terkait akan terhapus dan TIDAK DAPAT DIKEMBALIKAN!
+                      </div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus Semua',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6B7280'
+            });
+
+            if (!result.isConfirmed) return;
 
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             if (!csrfToken) {
-                alert('CSRF token tidak ditemukan');
+                await Swal.fire({
+                    title: 'Error',
+                    text: 'CSRF token tidak ditemukan',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
                 return;
             }
 
-            // Get and disable the delete all button
-            const deleteAllBtn = document.querySelector('button[onclick="deleteAllCompanies()"]');
-            const originalText = deleteAllBtn.innerHTML;
-            deleteAllBtn.disabled = true;
-            deleteAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menghapus...';
+            const loadingSwal = Swal.fire({
+                title: 'Menghapus Data',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             try {
+                const searchParams = new URLSearchParams(window.location.search);
                 const response = await fetch('{{ route("admin.company.bulk-delete") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken,
-                        'X-HTTP-Method-Override': 'DELETE',
                         'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
+                        _method: 'DELETE',
                         delete_all: true,
-                        search: new URLSearchParams(window.location.search).get('search')
+                        search: searchParams.get('search')
                     })
                 });
 
-                let responseText = await response.text();
-                let result;
-
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Server response:', responseText);
-                    throw new Error('Server returned invalid response format');
+                let data;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    data = await response.json();
+                } else {
+                    throw new Error('Server tidak mengembalikan response JSON yang valid');
                 }
 
                 if (!response.ok) {
-                    throw new Error(result?.message || `HTTP error! status: ${response.status}`);
+                    throw new Error(data.message || 'Terjadi kesalahan saat menghapus data');
                 }
 
-                if (result?.success) {
-                    alert(result.message || 'Semua perusahaan berhasil dihapus');
-                    window.location.reload();
-                } else {
-                    throw new Error(result?.message || 'Operasi gagal: Tidak ada konfirmasi keberhasilan dari server');
-                }
+                await loadingSwal.close();
+
+                await Swal.fire({
+                    title: 'Berhasil',
+                    text: data.message || 'Semua perusahaan berhasil dihapus',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+
+                window.location.reload();
             } catch (error) {
                 console.error('Error:', error);
-                alert('Gagal menghapus perusahaan: ' + error.message);
-                // Reset button state
-                deleteAllBtn.disabled = false;
-                deleteAllBtn.innerHTML = originalText;
+                await loadingSwal.close();
+
+                await Swal.fire({
+                    title: 'Gagal',
+                    html: `<div class="text-left">
+                            ${error.message}
+                            ${error.message.includes('tidak ditemukan') ? 
+                              '<br><br><span class="text-sm text-gray-600">Tidak ada perusahaan yang dapat dihapus dengan filter yang diterapkan.</span>' : 
+                              ''}
+                      </div>`,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
             }
         }
 
@@ -669,6 +849,168 @@
             // Initialize button state
             updateBulkDeleteButton();
         });
+
+        // Function to handle import form submission
+        async function handleImport(event) {
+            event.preventDefault();
+            const form = event.target;
+            const fileInput = form.querySelector('input[type="file"]');
+            
+            if (!fileInput.files.length) {
+                await Swal.fire({
+                    title: 'Perhatian',
+                    text: 'Pilih file Excel terlebih dahulu',
+                    icon: 'warning',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+                return;
+            }
+
+            const file = fileInput.files[0];
+            if (!file.name.match(/\.(xls|xlsx)$/i)) {
+                await Swal.fire({
+                    title: 'File Tidak Valid',
+                    text: 'File harus berformat Excel (.xls atau .xlsx)',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Konfirmasi Import',
+                html: `Anda akan mengimport data dari file:<br>
+                      <strong class="text-blue-600">${file.name}</strong><br><br>
+                      <div class="text-left text-sm">
+                        <p class="mb-2">Pastikan:</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                          <li>Format file sesuai dengan template</li>
+                          <li>Data sudah diisi dengan benar</li>
+                          <li>Tidak ada duplikasi email</li>
+                        </ul>
+                      </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Import',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6B7280'
+            });
+
+            if (!result.isConfirmed) return;
+
+            const formData = new FormData(form);
+
+            // Show loading state
+            const loadingSwal = Swal.fire({
+                title: 'Mengimport Data',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                await loadingSwal.close();
+
+                if (response.ok && data.success) {
+                    await Swal.fire({
+                        title: 'Berhasil!',
+                        html: `${data.message}<br>
+                              <div class="text-sm text-gray-600 mt-2">
+                                ${data.imported ? `Jumlah data terimport: ${data.imported}` : ''}
+                                ${data.updated ? `<br>Jumlah data terupdate: ${data.updated}` : ''}
+                              </div>`,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    });
+
+                    window.location.reload();
+                } else {
+                    let errorMessage = data.message || 'Terjadi kesalahan saat mengimport data';
+                    let errorDetails = '';
+                    
+                    if (data.errors) {
+                        errorDetails = '<div class="mt-3 text-sm text-left">' +
+                            '<p class="font-semibold mb-1">Detail error:</p>' +
+                            '<ul class="list-disc pl-5 space-y-1">' +
+                            Object.entries(data.errors).map(([key, value]) => 
+                                `<li>${value}</li>`
+                            ).join('') +
+                            '</ul></div>';
+                    }
+
+                    throw new Error(errorMessage + errorDetails);
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                await Swal.fire({
+                    title: 'Gagal Import',
+                    html: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6'
+                });
+            }
+
+            // Reset file input
+            fileInput.value = '';
+        }
+
+        // Attach event listener to import form
+        document.getElementById('importForm').addEventListener('submit', handleImport);
+
+        function validateExcelFile(input) {
+            const file = input.files[0];
+            if (file) {
+                if (!file.name.match(/\.(xls|xlsx)$/i)) {
+                    Swal.fire({
+                        title: 'File Tidak Valid',
+                        text: 'File harus berformat Excel (.xls atau .xlsx)',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        input.value = ''; // Reset file input
+                    });
+                    return false;
+                }
+
+                // File size validation (optional, maximum 5MB)
+                const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (file.size > maxSize) {
+                    Swal.fire({
+                        title: 'File Terlalu Besar',
+                        text: 'Ukuran file maksimal adalah 5MB',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6'
+                    }).then(() => {
+                        input.value = ''; // Reset file input
+                    });
+                    return false;
+                }
+            }
+            return true;
+        }
     </script>
 </x-layout-admin>
 @endsection

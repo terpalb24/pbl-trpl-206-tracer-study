@@ -320,6 +320,12 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         // SECURITY: Validate the parameter
         if (!is_numeric($id_user) || $id_user <= 0) {
             \Log::warning('Invalid ID parameter in alumniDestroy', ['id_user' => $id_user]);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Parameter ID tidak valid.'
+                ], 400);
+            }
             return redirect()->route('admin.alumni.index')
                 ->with('error', 'Parameter ID tidak valid.');
         }
@@ -327,6 +333,12 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         // SECURITY: Block any string containing 'bulk'
         if (is_string($id_user) && (strpos($id_user, 'bulk') !== false || $id_user === 'bulk-delete')) {
             \Log::error('SECURITY ALERT: bulk-related string in alumniDestroy', ['id_user' => $id_user]);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Parameter tidak valid. Silakan refresh halaman dan coba lagi.'
+                ], 400);
+            }
             return redirect()->route('admin.alumni.index')
                 ->with('error', 'Parameter tidak valid. Silakan refresh halaman dan coba lagi.');
         }
@@ -337,6 +349,12 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         // Check if user exists and is alumni
         $user = Tb_User::where('id_user', $id_user)->where('role', 2)->first();
         if (!$user) {
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Alumni tidak ditemukan.'
+                ], 404);
+            }
             return redirect()->route('admin.alumni.index')
                 ->with('error', 'Alumni tidak ditemukan.');
         }
@@ -347,275 +365,26 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
             // Delete user data
             $user->delete();
             
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data alumni berhasil dihapus.'
+                ]);
+            }
             return redirect()->route('admin.alumni.index')
                 ->with('success', 'Data alumni berhasil dihapus.');
         } catch (\Exception $e) {
             \Log::error('Error deleting alumni', ['id_user' => $id_user, 'error' => $e->getMessage()]);
+            if (request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus data alumni: ' . $e->getMessage()
+                ], 500);
+            }
             return redirect()->route('admin.alumni.index')
                 ->with('error', 'Gagal menghapus data alumni: ' . $e->getMessage());
         }
     }
-
-    public function import(Request $request)
-    {
-        set_time_limit(300);
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls'
-        ]);
-
-        DB::beginTransaction();
-
-        try {
-            $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
-
-            // Skip header row
-            array_shift($rows);
-
-            foreach ($rows as $index => $row) {
-                if (empty($row[0])) continue; // Skip empty rows
-
-                // Cek NIM sudah ada
-                $existingNim = Tb_Alumni::where('nim', $row[0])->exists();
-                if ($existingNim) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIM '" . $row[0] . "' sudah terdaftar di sistem.");
-                }
-
-                // Cek NIK sudah ada
-                $existingNik = Tb_Alumni::where('nik', $row[1])->exists();
-                if ($existingNik) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIK '" . $row[1] . "' sudah terdaftar di sistem.");
-                }
-
-                // Validate status
-                $status = strtolower(trim($row[12] ?? ''));
-                $validStatuses = ['bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'];
-                if (!in_array($status, $validStatuses)) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": Status harus salah satu dari: " . implode(', ', $validStatuses));
-                }
-
-                // Validate gender
-                $gender = strtolower(trim($row[3])); // Paksa lowercase gender
-                if (!in_array($gender, ['pria', 'wanita'])) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'Pria' atau 'Wanita'");
-                }
-
-                // Validate study program using case-insensitive LIKE 
-                $studyProgramName = trim($row[11]);
-                $studyProgram = Tb_study_program::whereRaw('LOWER(study_program) LIKE ?', ['%' . strtolower($studyProgramName) . '%'])->first();
-                if (!$studyProgram) {
-                    throw new \Exception("Baris ke-" . ($index + 2) . ": Program Studi '" . $studyProgramName . "' tidak ditemukan");
-                }
-
-                // Kapitalisasi nama alumni
-                $name = ucwords(strtolower(trim($row[2])));
-
-                // Create/update user
-                $user = Tb_User::updateOrCreate(
-                    ['username' => $row[0]],
-                    [
-                        'password' => bcrypt($row[0]),
-                        'role' => 2
-                    ]
-                );
-
-                // Create/update alumni
-                Tb_Alumni::updateOrCreate(
-                    ['nim' => $row[0]],
-                    [
-                        'id_user' => $user->id_user,
-                        'nik' => $row[1],
-                        'name' => $name,
-                        'gender' => $gender,
-                        'date_of_birth' => $row[4],
-                        'email' => $row[5],
-                        'phone_number' => $row[6],
-                        'ipk' => $row[7],
-                        'address' => $row[8],
-                        'batch' => $row[9],
-                        'graduation_year' => $row[10],
-                        'id_study' => $studyProgram->id_study,
-                        'status' => $status
-                    ]
-                );
-            }
-
-            DB::commit();
-            return redirect()->back()->with('success', 'Data alumni berhasil diimport!');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()->with('error', $e->getMessage());
-        }
-    }
-
-    public function export()
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Set headers
-        $headers = [
-            'NIM',
-            'NIK',
-            'Nama Lengkap',
-            'Jenis Kelamin',
-            'Tanggal Lahir',
-            'Email',
-            'Nomor Telepon',
-            'IPK',
-            'Alamat',
-            'Angkatan',
-            'Tahun Lulus',
-            'Program Studi',
-            'Status'
-        ];
-
-        // Apply headers with styling
-        foreach ($headers as $index => $header) {
-            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
-            $sheet->setCellValue($column . '1', $header);
-        }
-
-        // Style headers
-        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
-        $sheet->getStyle($headerRange)->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'CCCCCC']
-            ]
-        ]);
-
-        // Add data
-        $row = 2;
-        Tb_Alumni::with('studyProgram')->chunk(100, function($alumni) use ($sheet, &$row) {
-            foreach ($alumni as $data) {
-                $sheet->fromArray([
-                    $data->nim,
-                    $data->nik,
-                    $data->name,
-                    $data->gender,
-                    $data->date_of_birth,
-                    $data->email,
-                    $data->phone_number,
-                    $data->ipk,
-                    $data->address,
-                    $data->batch,
-                    $data->graduation_year,
-                    $data->studyProgram ? $data->studyProgram->study_program : '',
-                    $data->status
-                ], null, 'A' . $row);
-                $row++;
-            }
-        });
-
-        // Auto-size columns
-        foreach (range('A', 'M') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        // Create file
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'data_alumni_' . date('Y-m-d_H-i-s') . '.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
-        $writer->save($tempFile);
-
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-    }
-
-    public function alumniTemplate()
-    {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-
-        // Set headers
-        $headers = [
-            'NIM',
-            'NIK',
-            'Nama Lengkap',
-            'Jenis Kelamin',
-            'Tanggal Lahir',
-            'Email',
-            'Nomor Telepon',
-            'IPK',
-            'Alamat',
-            'Angkatan',
-            'Tahun Lulus',
-            'Program Studi',
-            'Status'
-        ];
-
-        // Apply headers with styling
-        foreach ($headers as $index => $header) {
-            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
-            $sheet->setCellValue($column . '1', $header);
-        }
-
-        // Style headers
-        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
-        $sheet->getStyle($headerRange)->applyFromArray([
-            'font' => ['bold' => true],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'CCCCCC']
-            ]
-        ]);
-
-        // Add example data
-        $exampleData = [
-            '12345678',              // NIM
-            '1234567890123456',      // NIK
-            'John Doe',              // Nama
-            'Pria',            // Jenis Kelamin
-            '2000-01-01',           // Tanggal Lahir
-            'john.doe@email.com',    // Email
-            '081234567890',         // No. Telepon
-            '3.50',                 // IPK
-            'Jl. Contoh No. 123',   // Alamat
-            '2019',                 // Angkatan
-            '2023',                 // Tahun Lulus
-            'Teknik Informatika',   // Program Studi
-            'bekerja'               // Status
-        ];
-
-        // Add example row with styling
-        $sheet->fromArray([$exampleData], null, 'A2');
-        $sheet->getStyle('A2:M2')->getFont()->setItalic(true);
-
-        // Add notes
-        $notes = [
-            'Catatan:',
-            '- NIM wajib diisi dan harus unik',
-            '- Jenis Kelamin harus diisi dengan: Pria atau Wanita',
-            '- Tanggal Lahir format: YYYY-MM-DD (contoh: 2000-01-01)',
-            '- Status harus diisi dengan salah satu dari: bekerja, tidak bekerja, melanjutkan studi, berwiraswasta, atau sedang mencari kerja',
-            '- Program Studi harus sesuai dengan yang ada di sistem',
-            '- Email harus unik untuk setiap alumni',
-            '- IPK menggunakan format desimal dengan titik (contoh: 3.50)'
-        ];
-
-        $row = 4;
-        foreach ($notes as $note) {
-            $sheet->setCellValue('A' . $row, $note);
-            $sheet->mergeCells('A' . $row . ':M' . $row);
-            $row++;
-        }
-
-        // Auto-size columns
-        foreach (range('A', 'M') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        // Create file
-        $writer = new Xlsx($spreadsheet);
-        $fileName = 'template_alumni.xlsx';
-        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
-        $writer->save($tempFile);
-
-        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
-    }
-
     public function companyIndex(Request $request)
     {
         $query = Tb_company::query();
@@ -651,40 +420,57 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         return view('admin.company.create');
     }
 
-    public function companyStore(Request $request)
-    {
-        $request->validate([
-            'company_name' => 'required|string|max:100|unique:tb_company,company_name',
-            'company_address' => 'required|string|max:255',
-            'company_email' => 'required|email|unique:tb_company,company_email',
-            'company_phone_number' => 'required|string|max:20',
-            'Hrd_name' => 'nullable|string|max:50', // Tambahan untuk nama HRD
-        ]);
+public function companyStore(Request $request)
+{
+    $request->validate([
+        'company_name' => 'required|string|max:100|unique:tb_company,company_name',
+        'company_address' => 'required|string|max:255',
+        'company_email' => 'required|email|unique:tb_company,company_email',
+        'company_phone_number' => [
+            'required',
+            'max:20',
+            'regex:/^[0-9-]+$/', // Only allows numbers and dashes
+            function ($attribute, $value, $fail) {
+                // Check if there are consecutive dashes
+                if (strpos($value, '--') !== false) {
+                    $fail('Format nomor telepon tidak valid. Jangan gunakan tanda strip berurutan.');
+                }
+                // Check if starts or ends with dash
+                if (str_starts_with($value, '-') || str_ends_with($value, '-')) {
+                    $fail('Format nomor telepon tidak valid. Jangan awali atau akhiri dengan tanda strip.');
+                }
+            },
+        ],
+        'Hrd_name' => 'nullable|string|max:50',
+    ], [
+        'company_phone_number.regex' => 'Nomor telepon hanya boleh berisi angka dan tanda strip (-)',
+        'company_phone_number.required' => 'Nomor telepon wajib diisi',
+        'company_phone_number.max' => 'Nomor telepon maksimal 20 karakter',
+    ]);
 
-        // Kapitalisasi nama HRD
-        $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
-        $company_name = $request->company_name ? strtoupper($request->company_name) : null;
+    // Kapitalisasi nama HRD
+    $hrdName = $request->Hrd_name ? ucwords(strtolower($request->Hrd_name)) : null;
+    $company_name = $request->company_name ? strtoupper($request->company_name) : null;
 
-        // Buat user baru untuk perusahaan
-        $user = Tb_User::create([
-            'username' => $request->company_email,
-            'password' => bcrypt($request->company_email),  // password default email perusahaan
-            'role' => 3, // role perusahaan
-        ]);
+    // Buat user baru untuk perusahaan
+    $user = Tb_User::create([
+        'username' => $request->company_email,
+        'password' => bcrypt($request->company_email),  // password default email perusahaan
+        'role' => 3, // role perusahaan
+    ]);
 
-        // Simpan data perusahaan, sertakan id_user
-        Tb_company::create([
-            'company_name' => $company_name,
-            'company_address' => $request->company_address,
-            'company_email' => $request->company_email,
-            'company_phone_number' => $request->company_phone_number,
-            'id_user' => $user->id_user,
-            'Hrd_name' => $hrdName, // Nama HRD sudah dikapitalisasi
-        ]);
+    // Simpan data perusahaan, sertakan id_user
+    Tb_company::create([
+        'company_name' => $company_name,
+        'company_address' => $request->company_address,
+        'company_email' => $request->company_email,
+        'company_phone_number' => $request->company_phone_number,
+        'id_user' => $user->id_user,
+        'Hrd_name' => $hrdName,
+    ]);
 
-        return redirect()->route('admin.company.index')->with('success', 'Perusahaan berhasil ditambahkan.');
-    }
-
+    return redirect()->route('admin.company.index')->with('success', 'Perusahaan berhasil ditambahkan.');
+}
     public function companyEdit($id_company)
     {
         $company = Tb_company::findOrFail($id_company);
@@ -745,24 +531,29 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         return redirect()->route('admin.company.index')->with('success', 'Data company berhasil diperbarui.');
     }
 
-    public function companyDestroy($id_user)
-    {
-
-
-        Tb_User::where('id_user', $id_user)->delete();
-        return redirect()->route('admin.company.index')->with('success', 'Data perusahaan dihapus.');
-    }
-
-    public function companyImport(Request $request)
+   public function companyImport(Request $request)
     {
         set_time_limit(300);
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls'
-        ]);
-
-        DB::beginTransaction();
+        
+        // Check if request wants JSON response
+        $wantsJson = $request->expectsJson() || $request->ajax();
 
         try {
+            // Validate the upload
+            $request->validate([
+                'file' => 'required|file|mimes:xlsx,xls|max:5120' // max 5MB
+            ], [
+                'file.required' => 'File Excel harus diupload',
+                'file.mimes' => 'File harus berformat Excel (.xlsx atau .xls)',
+                'file.max' => 'Ukuran file tidak boleh lebih dari 5MB'
+            ]);
+
+            if (!$request->file('file')->isValid()) {
+                throw new \Exception('File tidak valid atau rusak');
+            }
+
+            DB::beginTransaction();
+
             $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
             $rows = $spreadsheet->getActiveSheet()->toArray();
             array_shift($rows); // Remove header row
@@ -804,10 +595,41 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
             }
 
             DB::commit();
+            
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data perusahaan berhasil diimport!'
+                ]);
+            }
+            
             return redirect()->back()->with('success', 'Data perusahaan berhasil diimport!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            $errorMessage = $e->validator->errors()->first();
+            
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 422);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', $e->getMessage());
+            $errorMessage = 'Terjadi kesalahan saat mengimport data: ' . $e->getMessage();
+            
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMessage
+                ], 500);
+            }
+            
+            return redirect()->back()->with('error', $errorMessage);
         }
     }
 
@@ -941,6 +763,53 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
         $writer->save($tempFile);
 
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+    
+    public function companyDestroy($id_user)
+    {
+        // Check if request wants JSON response
+        $wantsJson = request()->expectsJson() || request()->ajax();
+        
+        try {
+            DB::beginTransaction();
+            
+            // Find the company first to make sure it exists
+            $company = Tb_Company::where('id_user', $id_user)->first();
+            if (!$company) {
+                throw new \Exception('Data perusahaan tidak ditemukan.');
+            }
+            
+            // Delete company data first
+            $company->delete();
+            
+            // Then delete the user account
+            Tb_User::where('id_user', $id_user)->where('role', 3)->delete();
+            
+            DB::commit();
+            
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data perusahaan berhasil dihapus'
+                ]);
+            }
+            
+            return redirect()->route('admin.company.index')
+                ->with('success', 'Data perusahaan berhasil dihapus');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            if ($wantsJson) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus data perusahaan: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus data perusahaan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -2663,119 +2532,372 @@ private function bulkDeleteAllAlumni(Request $request, $isJsonRequest)
         return back()->with('error', $errorMessage);
     }
 }
-/**
- * Bulk delete perusahaan (pilih beberapa atau semua)
- */
 public function bulkDeleteCompany(Request $request)
-    {
-        $isJsonRequest = $request->expectsJson() || $request->ajax() || $request->header('Content-Type') === 'application/json';
+{
+    $isJsonRequest = $request->expectsJson() || $request->ajax() || $request->header('Content-Type') === 'application/json';
 
-        // Handle delete all request
-        if ($request->input('delete_all')) {
-            return $this->bulkDeleteAllCompany($request, $isJsonRequest);
-        }
-
-        // Validate input
-        try {
-            $validated = $request->validate([
-                'ids' => 'required|array|min:1',
-                'ids.*' => 'required|integer|min:1'
-            ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            $msg = 'Data yang dikirim tidak valid: ' . implode(', ', $e->errors()['ids'] ?? ['Format data tidak sesuai']);
-            if ($isJsonRequest) {
-                return response()->json(['success' => false, 'message' => $msg], 422);
-            }
-            return back()->with('error', $msg);
-        }
-
-        $companyIds = $validated['ids'];
-
-        // Get companies with their user IDs
-        $companies = Tb_Company::whereIn('id_company', $companyIds)->get();
-        if ($companies->isEmpty()) {
-            $msg = 'Tidak ditemukan perusahaan yang valid untuk dihapus.';
-            if ($isJsonRequest) {
-                return response()->json(['success' => false, 'message' => $msg], 404);
-            }
-            return back()->with('error', $msg);
-        }
-
-        $userIds = $companies->pluck('id_user')->toArray();
-
-        DB::beginTransaction();
-        try {
-            // Delete company records
-            Tb_Company::whereIn('id_company', $companyIds)->delete();
-            // Delete associated user accounts
-            Tb_User::whereIn('id_user', $userIds)->where('role', 3)->delete();
-
-            DB::commit();
-            $msg = count($companyIds) . ' perusahaan berhasil dihapus.';
-            
-            if ($isJsonRequest) {
-                return response()->json(['success' => true, 'message' => $msg]);
-            }
-            return redirect()->route('admin.company.index')->with('success', $msg);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            $msg = 'Terjadi kesalahan saat menghapus data perusahaan: ' . $e->getMessage();
-            if ($isJsonRequest) {
-                return response()->json(['success' => false, 'message' => $msg], 500);
-            }
-            return back()->with('error', $msg);
-        }
+    // Jika delete_all dikirim, jalankan hapus semua
+    if ($request->input('delete_all')) {
+        return $this->bulkDeleteAllCompany($request, $isJsonRequest);
     }
 
-    private function bulkDeleteAllCompany(Request $request, $isJsonRequest)
-    {
-        // Build query with filters
+    // Validasi input
+    $validated = $request->validate([
+        'ids' => 'required|array|min:1',
+        'ids.*' => 'required|integer|min:1'
+    ]);
+    $ids = $validated['ids'];
+
+    // Ambil id_user perusahaan yang valid
+    $companyUserIds = Tb_Company::whereIn('id_user', $ids)->pluck('id_user')->toArray();
+
+    if (empty($companyUserIds)) {
+        $msg = 'Tidak ditemukan perusahaan yang valid untuk dihapus.';
+        if ($isJsonRequest) {
+            return response()->json(['success' => false, 'message' => $msg], 404);
+        }
+        return back()->with('error', $msg);
+    }
+
+    DB::beginTransaction();
+    try {
+        // Hapus data perusahaan
+        Tb_Company::whereIn('id_user', $companyUserIds)->delete();
+        // Hapus user perusahaan
+        Tb_User::whereIn('id_user', $companyUserIds)->where('role', 3)->delete();
+
+        DB::commit();
+        $msg = count($companyUserIds) . ' perusahaan berhasil dihapus.';
+        if ($isJsonRequest) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+        return redirect()->route('admin.company.index')->with('success', $msg);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        $msg = 'Terjadi kesalahan saat menghapus data perusahaan: ' . $e->getMessage();
+        if ($isJsonRequest) {
+            return response()->json(['success' => false, 'message' => $msg], 500);
+        }
+        return back()->with('error', $msg);
+    }
+}
+
+private function bulkDeleteAllCompany(Request $request, $isJsonRequest)
+{
+    try {
         $query = Tb_Company::query();
 
+        // Filter pencarian jika ada
         if ($request->filled('search')) {
             $search = $request->input('search');
-            $query->where(function($q) use ($search) {
-                $q->where('company_name', 'LIKE', "%{$search}%")
-                  ->orWhere('company_email', 'LIKE', "%{$search}%");
-            });
+            $query->where('company_name', 'LIKE', "%{$search}%");
         }
 
-        // Get companies with their IDs
-        $companies = $query->get();
-        if ($companies->isEmpty()) {
-            $msg = 'Tidak ada perusahaan yang ditemukan' . 
-                   ($request->filled('search') ? ' dengan filter yang diterapkan.' : '.');
+        $companyUserIds = $query->pluck('id_user')->toArray();
+
+        if (empty($companyUserIds)) {
+            $msg = 'Tidak ada perusahaan yang ditemukan dengan filter yang diterapkan.';
             if ($isJsonRequest) {
                 return response()->json(['success' => false, 'message' => $msg], 404);
             }
             return back()->with('error', $msg);
         }
 
-        $companyIds = $companies->pluck('id_company')->toArray();
-        $userIds = $companies->pluck('id_user')->toArray();
+        DB::beginTransaction();
+        // Hapus data perusahaan
+        Tb_Company::whereIn('id_user', $companyUserIds)->delete();
+        // Hapus user perusahaan
+        Tb_User::whereIn('id_user', $companyUserIds)->where('role', 3)->delete();
+        DB::commit();
+
+        $msg = count($companyUserIds) . ' perusahaan berhasil dihapus.';
+        if ($isJsonRequest) {
+            return response()->json(['success' => true, 'message' => $msg]);
+        }
+        return redirect()->route('admin.company.index')->with('success', $msg);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        $msg = 'Terjadi kesalahan saat menghapus semua data perusahaan: ' . $e->getMessage();
+        if ($isJsonRequest) {
+            return response()->json(['success' => false, 'message' => $msg], 500);
+        }
+        return back()->with('error', $msg);
+    }
+  }
+  public function import(Request $request)
+    {
+        set_time_limit(300);
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls'
+        ]);
 
         DB::beginTransaction();
+
         try {
-            // Delete company records
-            Tb_Company::whereIn('id_company', $companyIds)->delete();
-            // Delete associated user accounts
-            Tb_User::whereIn('id_user', $userIds)->where('role', 3)->delete();
+            $spreadsheet = IOFactory::load($request->file('file')->getRealPath());
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray();
+
+            // Skip header row
+            array_shift($rows);
+
+            foreach ($rows as $index => $row) {
+                if (empty($row[0])) continue; // Skip empty rows
+
+                // Cek NIM sudah ada
+                $existingNim = Tb_Alumni::where('nim', $row[0])->exists();
+                if ($existingNim) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIM '" . $row[0] . "' sudah terdaftar di sistem.");
+                }
+
+                // Cek NIK sudah ada
+                $existingNik = Tb_Alumni::where('nik', $row[1])->exists();
+                if ($existingNik) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": NIK '" . $row[1] . "' sudah terdaftar di sistem.");
+                }
+
+                // Validate status
+                $status = strtolower(trim($row[12] ?? ''));
+                $validStatuses = ['bekerja', 'tidak bekerja', 'melanjutkan studi', 'berwiraswasta', 'sedang mencari kerja'];
+                if (!in_array($status, $validStatuses)) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": Status harus salah satu dari: " . implode(', ', $validStatuses));
+                }
+
+                // Validate gender
+                $gender = strtolower(trim($row[3])); // Paksa lowercase gender
+                if (!in_array($gender, ['pria', 'wanita'])) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": Jenis kelamin harus 'Pria' atau 'Wanita'");
+                }
+
+                // Validate study program using case-insensitive LIKE 
+                $studyProgramName = trim($row[11]);
+                $studyProgram = Tb_study_program::whereRaw('LOWER(study_program) LIKE ?', ['%' . strtolower($studyProgramName) . '%'])->first();
+                if (!$studyProgram) {
+                    throw new \Exception("Baris ke-" . ($index + 2) . ": Program Studi '" . $studyProgramName . "' tidak ditemukan");
+                }
+
+                // Kapitalisasi nama alumni
+                $name = ucwords(strtolower(trim($row[2])));
+
+                // Create/update user
+                $user = Tb_User::updateOrCreate(
+                    ['username' => $row[0]],
+                    [
+                        'password' => bcrypt($row[0]),
+                        'role' => 2
+                    ]
+                );
+
+                // Create/update alumni
+                Tb_Alumni::updateOrCreate(
+                    ['nim' => $row[0]],
+                    [
+                        'id_user' => $user->id_user,
+                        'nik' => $row[1],
+                        'name' => $name,
+                        'gender' => $gender,
+                        'date_of_birth' => $row[4],
+                        'email' => $row[5],
+                        'phone_number' => $row[6],
+                        'ipk' => $row[7],
+                        'address' => $row[8],
+                        'batch' => $row[9],
+                        'graduation_year' => $row[10],
+                        'id_study' => $studyProgram->id_study,
+                        'status' => $status
+                    ]
+                );
+            }
 
             DB::commit();
-            $msg = count($companyIds) . ' perusahaan berhasil dihapus.';
             
-            if ($isJsonRequest) {
-                return response()->json(['success' => true, 'message' => $msg]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Data alumni berhasil diimport!'
+                ]);
             }
-            return redirect()->route('admin.company.index')->with('success', $msg);
+            return redirect()->back()->with('success', 'Data alumni berhasil diimport!');
+            
         } catch (\Exception $e) {
             DB::rollBack();
-            $msg = 'Terjadi kesalahan saat menghapus data perusahaan: ' . $e->getMessage();
-            if ($isJsonRequest) {
-                return response()->json(['success' => false, 'message' => $msg], 500);
+            
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $e->getMessage()
+                ], 422);
             }
-            return back()->with('error', $msg);
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
+
+    public function export()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $headers = [
+            'NIM',
+            'NIK',
+            'Nama Lengkap',
+            'Jenis Kelamin',
+            'Tanggal Lahir',
+            'Email',
+            'Nomor Telepon',
+            'IPK',
+            'Alamat',
+            'Angkatan',
+            'Tahun Lulus',
+            'Program Studi',
+            'Status'
+        ];
+
+        // Apply headers with styling
+        foreach ($headers as $index => $header) {
+            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+        }
+
+        // Style headers
+        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'CCCCCC']
+            ]
+        ]);
+
+        // Add data
+        $row = 2;
+        Tb_Alumni::with('studyProgram')->chunk(100, function($alumni) use ($sheet, &$row) {
+            foreach ($alumni as $data) {
+                $sheet->fromArray([
+                    $data->nim,
+                    $data->nik,
+                    $data->name,
+                    $data->gender,
+                    $data->date_of_birth,
+                    $data->email,
+                    $data->phone_number,
+                    $data->ipk,
+                    $data->address,
+                    $data->batch,
+                    $data->graduation_year,
+                    $data->studyProgram ? $data->studyProgram->study_program : '',
+                    $data->status
+                ], null, 'A' . $row);
+                $row++;
+            }
+        });
+
+        // Auto-size columns
+        foreach (range('A', 'M') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        // Create file
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'data_alumni_' . date('Y-m-d_H-i-s') . '.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
+    public function alumniTemplate()
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // Set headers
+        $headers = [
+            'NIM',
+            'NIK',
+            'Nama Lengkap',
+            'Jenis Kelamin',
+            'Tanggal Lahir',
+            'Email',
+            'Nomor Telepon',
+            'IPK',
+            'Alamat',
+            'Angkatan',
+            'Tahun Lulus',
+            'Program Studi',
+            'Status'
+        ];
+
+        // Apply headers with styling
+        foreach ($headers as $index => $header) {
+            $column = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($index + 1);
+            $sheet->setCellValue($column . '1', $header);
+        }
+
+        // Style headers
+        $headerRange = 'A1:' . \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($headers)) . '1';
+        $sheet->getStyle($headerRange)->applyFromArray([
+            'font' => ['bold' => true],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'CCCCCC']
+            ]
+        ]);
+
+        // Add example data
+        $exampleData = [
+            '12345678',              // NIM
+            '1234567890123456',      // NIK
+            'John Doe',              // Nama
+            'Pria',            // Jenis Kelamin
+            '2000-01-01',           // Tanggal Lahir
+            'john.doe@email.com',    // Email
+            '081234567890',         // No. Telepon
+            '3.50',                 // IPK
+            'Jl. Contoh No. 123',   // Alamat
+            '2019',                 // Angkatan
+            '2023',                 // Tahun Lulus
+            'Teknik Informatika',   // Program Studi
+            'bekerja'               // Status
+        ];
+
+        // Add example row with styling
+        $sheet->fromArray([$exampleData], null, 'A2');
+        $sheet->getStyle('A2:M2')->getFont()->setItalic(true);
+
+        // Add notes
+        $notes = [
+            'Catatan:',
+            '- NIM wajib diisi dan harus unik',
+            '- Jenis Kelamin harus diisi dengan: Pria atau Wanita',
+            '- Tanggal Lahir format: YYYY-MM-DD (contoh: 2000-01-01)',
+            '- Status harus diisi dengan salah satu dari: bekerja, tidak bekerja, melanjutkan studi, berwiraswasta, atau sedang mencari kerja',
+            '- Program Studi harus sesuai dengan yang ada di sistem',
+            '- Email harus unik untuk setiap alumni',
+            '- IPK menggunakan format desimal dengan titik (contoh: 3.50)'
+        ];
+
+        $row = 4;
+        foreach ($notes as $note) {
+            $sheet->setCellValue('A' . $row, $note);
+            $sheet->mergeCells('A' . $row . ':M' . $row);
+            $row++;
+        }
+
+        // Auto-size columns
+        foreach (range('A', 'M') as $column) {
+            $sheet->getColumnDimension($column)->setAutoSize(true);
+        }
+
+        // Create file
+        $writer = new Xlsx($spreadsheet);
+        $fileName = 'template_alumni.xlsx';
+        $tempFile = tempnam(sys_get_temp_dir(), $fileName);
+        $writer->save($tempFile);
+
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
+    }
+
 
 }

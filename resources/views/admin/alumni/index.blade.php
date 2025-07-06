@@ -5,6 +5,9 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Sidebar -->
     <x-slot name="sidebar">
         <x-admin.sidebar />
@@ -22,7 +25,7 @@
         <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 mt-3 sm:mt-4">
             <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Import/Export Data Alumni</h3>
             <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" 
-                class="flex flex-col gap-3 sm:gap-4">
+                class="flex flex-col gap-3 sm:gap-4" id="importForm">
                 @csrf
                 
                 <!-- File input section -->
@@ -111,9 +114,10 @@
 
                     <!-- Form Tambah Prodi -->
                     <div id="prodiForm" class="hidden">
-                        <form action="{{ route('admin.study-program.store') }}" method="POST" class="flex flex-col sm:flex-row gap-3 mt-2">
+                        <form id="addProdiForm" onsubmit="handleAddProdi(event)" class="flex flex-col sm:flex-row gap-3 mt-2">
                             @csrf
                             <input type="text" name="study_program" required 
+                                id="newProdiInput"
                                 placeholder="Nama Program Studi" 
                                 class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-green-300 text-sm">
                             <button type="submit" 
@@ -306,9 +310,9 @@
                                                title="Edit Alumni">
                                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
-                                            <!-- Delete Button pakai modal -->
+                                            <!-- Delete Button with SweetAlert2 -->
                                             <button type="button"
-                                                onclick="openDeleteModal({{ $item->id_user }})"
+                                                onclick="deleteAlumni({{ $item->id_user }}, '{{ $item->name }}')"
                                                 class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                                 title="Hapus Alumni">
                                                 <i class="fas fa-trash text-xs sm:text-sm"></i>
@@ -369,7 +373,7 @@
                                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
                                             <button type="button"
-                                                onclick="openDeleteModal({{ $item->id_user }})"
+                                                onclick="deleteAlumni({{ $item->id_user }}, '{{ $item->name }}')"
                                                 class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                                 title="Hapus Alumni">
                                                 <i class="fas fa-trash text-xs sm:text-sm"></i>
@@ -528,18 +532,67 @@
     }
     // Modal open/close logic for delete confirmation
     function openDeleteModal(id) {
-        const modal = document.getElementById('modal-delete-' + id);
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-    }
-    function closeDeleteModal(id) {
-        const modal = document.getElementById('modal-delete-' + id);
-        if (modal) {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        }
+        Swal.fire({
+            title: 'Hapus Alumni',
+            text: 'Anda yakin ingin menghapus data alumni ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kirim request delete
+                fetch(`/admin/alumni/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Data alumni berhasil dihapus',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6',
+                            customClass: {
+                                popup: 'swal2-show',
+                                title: 'text-lg font-semibold mb-2',
+                                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                            }
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan saat menghapus data');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold text-red-600 mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                });
+            }
+        });
     }
 
     // ======================== BULK DELETE FUNCTIONALITY ========================
@@ -672,73 +725,88 @@
     async function selectAlumniDelete() {
         const selectedIds = getSelectedAlumniIds();
         
-        console.log('Selected IDs:', selectedIds); // Debug log
-        
         if (selectedIds.length === 0) {
-            alert('Pilih minimal satu alumni untuk dihapus!');
-            return;
-        }
-        
-        // Extra security: Validate that all IDs are positive integers and not containing 'bulk'
-        const validIds = selectedIds.filter(id => {
-            const isValidNumber = Number.isInteger(id) && id > 0;
-            const doesNotContainBulk = !String(id).toLowerCase().includes('bulk');
-            const isNotBulkDelete = String(id) !== 'bulk-delete';
-            
-            return isValidNumber && doesNotContainBulk && isNotBulkDelete;
-        });
-        
-        console.log('Valid IDs after filtering:', validIds); // Debug log
-        
-        if (validIds.length !== selectedIds.length) {
-            alert('Data yang dipilih tidak valid. Silakan refresh halaman dan coba lagi.');
-            console.error('Invalid IDs detected:', {
-                selected: selectedIds,
-                valid: validIds
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih minimal satu alumni untuk dihapus!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
             });
             return;
         }
         
-        if (validIds.length === 0) {
-            alert('Tidak ada ID alumni yang valid untuk dihapus.');
+        // Extra security: Validate IDs
+        const validIds = selectedIds.filter(id => {
+            const isValidNumber = Number.isInteger(id) && id > 0;
+            const doesNotContainBulk = !String(id).toLowerCase().includes('bulk');
+            const isNotBulkDelete = String(id) !== 'bulk-delete';
+            return isValidNumber && doesNotContainBulk && isNotBulkDelete;
+        });
+        
+        if (validIds.length !== selectedIds.length) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Data yang dipilih tidak valid. Silakan refresh halaman dan coba lagi.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
             return;
         }
         
-        // Confirmation
-        const confirmMessage = `Yakin ingin menghapus ${validIds.length} alumni yang dipilih?\n\nSemua data terkait akan ikut terhapus dan tidak dapat dikembalikan.`;
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-        
-        // Disable button and show loading
-        const bulkDeleteBtn = document.getElementById('selectAlumniDelete');
-        const deleteText = document.getElementById('deleteSelectedText');
-        const originalText = deleteText.textContent;
-        
-        bulkDeleteBtn.disabled = true;
-        deleteText.textContent = 'Menghapus...';
+        // Confirmation dialog
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus Alumni',
+            html: `Yakin ingin menghapus <b>${validIds.length} alumni</b> yang dipilih?<br><br>Semua data terkait akan ikut terhapus dan tidak dapat dikembalikan.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
+        // Show loading state
+        Swal.fire({
+            title: 'Menghapus Data',
+            text: 'Mohon tunggu...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
         
         try {
-            // Get CSRF token
             const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             if (!csrfToken) {
                 throw new Error('CSRF token tidak ditemukan');
             }
             
-            // Final validation before sending
             const requestData = {
                 ids: validIds.filter(id => Number.isInteger(id) && id > 0)
             };
             
-            console.log('Sending request with data:', requestData); // Debug log
-            console.log('Valid IDs after filtering:', requestData.ids);
-            
-            // Extra check to ensure no 'bulk-delete' values
-            if (requestData.ids.some(id => String(id).includes('bulk'))) {
-                throw new Error('Invalid ID detected containing "bulk"');
-            }
-            
-            // Send request
             const response = await fetch('{{ route("admin.alumni.bulk-delete") }}', {
                 method: 'DELETE',
                 headers: {
@@ -752,9 +820,18 @@
             const result = await response.json();
             
             if (response.ok && result.success) {
-                alert(result.message || `${validIds.length} alumni berhasil dihapus.`);
-                
-                // Reload page to refresh data
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || `${validIds.length} alumni berhasil dihapus.`,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
                 window.location.reload();
             } else {
                 throw new Error(result.message || 'Terjadi kesalahan saat menghapus data');
@@ -762,11 +839,18 @@
             
         } catch (error) {
             console.error('Error during bulk delete:', error);
-            alert('Error: ' + error.message);
-            
-            // Reset button
-            bulkDeleteBtn.disabled = false;
-            deleteText.textContent = originalText;
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
         }
     }
     
@@ -780,34 +864,63 @@
         };
         
         // Create confirmation message based on active filters
-        let confirmMessage = 'Apakah Anda yakin ingin menghapus SEMUA data alumni?';
+        let confirmTitle = 'Konfirmasi Hapus Semua Alumni';
+        let confirmHtml = 'Apakah Anda yakin ingin menghapus <b>SEMUA</b> data alumni?';
         
         // Check if there are active filters
         const hasFilters = currentFilters.graduation_year || currentFilters.id_study || currentFilters.search;
         if (hasFilters) {
-            confirmMessage = 'Apakah Anda yakin ingin menghapus SEMUA alumni yang sesuai dengan filter saat ini?';
+            confirmHtml = 'Apakah Anda yakin ingin menghapus <b>SEMUA</b> alumni yang sesuai dengan filter saat ini?<br><br>';
             
-            let filterInfo = '\n\nFilter yang diterapkan:';
+            confirmHtml += '<div class="text-left bg-gray-50 p-3 rounded-lg mt-2 mb-3">';
+            confirmHtml += '<p class="font-semibold mb-2">Filter yang diterapkan:</p>';
             if (currentFilters.graduation_year) {
-                filterInfo += `\n- Tahun Lulus: ${currentFilters.graduation_year}`;
+                confirmHtml += `<p class="text-sm">• Tahun Lulus: <span class="font-medium">${currentFilters.graduation_year}</span></p>`;
             }
             if (currentFilters.id_study) {
                 const studySelect = document.querySelector('[name="id_study"]');
                 const selectedOption = studySelect.options[studySelect.selectedIndex];
-                filterInfo += `\n- Program Studi: ${selectedOption.text}`;
+                confirmHtml += `<p class="text-sm">• Program Studi: <span class="font-medium">${selectedOption.text}</span></p>`;
             }
             if (currentFilters.search) {
-                filterInfo += `\n- Pencarian: "${currentFilters.search}"`;
+                confirmHtml += `<p class="text-sm">• Pencarian: <span class="font-medium">"${currentFilters.search}"</span></p>`;
             }
-            
-            confirmMessage += filterInfo;
+            confirmHtml += '</div>';
         }
         
-        confirmMessage += '\n\nSemua data terkait akan ikut terhapus dan TIDAK DAPAT DIKEMBALIKAN!';
+        confirmHtml += '<div class="text-red-600 text-sm font-semibold mt-3">⚠️ Semua data terkait akan ikut terhapus dan TIDAK DAPAT DIKEMBALIKAN!</div>';
         
-        if (!confirm(confirmMessage)) {
-            return;
-        }
+        // Show confirmation dialog with SweetAlert2
+        const result = await Swal.fire({
+            title: confirmTitle,
+            html: confirmHtml,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus Semua',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-xl font-bold mb-4',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
+        // Show loading state
+        Swal.fire({
+            title: 'Menghapus Data',
+            text: 'Mohon tunggu...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
         
         try {
             // Get CSRF token
@@ -838,7 +951,18 @@
             const result = await response.json();
             
             if (response.ok && result.success) {
-                alert(result.message || 'Semua alumni berhasil dihapus.');
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Semua alumni berhasil dihapus.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
                 
                 // Reload page to refresh data
                 window.location.reload();
@@ -848,68 +972,311 @@
             
         } catch (error) {
             console.error('Error during delete all:', error);
-            alert('Error: ' + error.message);
+            await Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
         }
     }
     
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        updateBulkDeleteButton();
-        
-        // DEBUG: Add form submission logging
-        document.addEventListener('submit', function(e) {
-            console.log('Form submission detected:', {
-                action: e.target.action,
-                method: e.target.method,
-                formData: new FormData(e.target)
-            });
-        });
-        
-        // DEBUG: Add all button click logging
-        document.addEventListener('click', function(e) {
-            if (e.target.type === 'button' || e.target.type === 'submit') {
-                console.log('Button clicked:', {
-                    id: e.target.id,
-                    name: e.target.name,
-                    value: e.target.value,
-                    onclick: e.target.onclick ? e.target.onclick.toString() : null
-                });
+    // Fungsi untuk menghapus alumni individual
+    async function deleteAlumni(id, name) {
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus Alumni',
+            html: `Apakah Anda yakin ingin menghapus alumni <strong>${name}</strong>?<br>
+                  <div class="text-red-600 text-sm font-semibold mt-2">⚠️ Data yang dihapus tidak dapat dikembalikan!</div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-xl font-bold mb-4',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
             }
         });
-    });
-    
-</script>
 
-<!-- Delete Modals for Individual Alumni -->
-@foreach($alumni as $item)
-    <!-- Modal Delete Alumni -->
-    <div id="modal-delete-{{ $item->id_user }}" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
-        <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
-            <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Konfirmasi Hapus Alumni</h3>
-                <p class="text-gray-600 mb-6">
-                    Apakah Anda yakin ingin menghapus alumni <strong>{{ $item->name }}</strong>?
-                    <br><span class="text-sm text-red-600">Data yang dihapus tidak dapat dikembalikan.</span>
-                </p>
-                <div class="flex justify-end gap-3">
-                    <button type="button" 
-                            onclick="closeDeleteModal({{ $item->id_user }})"
-                            class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors duration-200">
-                        Batal
-                    </button>
-                    <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200">
-                            Hapus
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-@endforeach
+        if (result.isConfirmed) {
+            try {
+                // Show loading state
+                Swal.fire({
+                    title: 'Menghapus Data',
+                    text: 'Mohon tunggu...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Send the delete request
+                const response = await fetch(`/admin/alumni/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _method: 'DELETE'  // Laravel method spoofing
+                    })
+                });
+
+                // Try to parse the response as JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    // If response is not JSON, create a basic response object
+                    data = {
+                        success: response.ok,
+                        message: response.ok ? 'Alumni berhasil dihapus' : 'Gagal menghapus alumni'
+                    };
+                }
+
+                // Check both response.ok and data.success
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Terjadi kesalahan saat menghapus data.');
+                }
+
+                // Show success message
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: data.message || 'Alumni berhasil dihapus.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+
+                // Reload halaman untuk memperbarui data
+                window.location.reload();
+            } catch (error) {
+                console.error('Error deleting alumni:', error);
+                await Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold text-red-600 mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+            }
+        }
+    }
+
+    // Handle tambah program studi dengan SweetAlert2
+    async function handleAddProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiName = document.getElementById('newProdiInput').value;
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Buat FormData untuk mengirim data
+            const formData = new FormData();
+            formData.append('study_program', prodiName);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            const response = await fetch('{{ route("admin.study-program.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil ditambahkan' : 'Gagal menambahkan program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil ditambahkan',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal menambahkan program studi');
+            }
+        } catch (error) {
+            console.error('Error adding prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle import excel dengan SweetAlert2
+    document.addEventListener('DOMContentLoaded', function() {
+        const importForm = document.querySelector('form[action*="import"]');
+        if (importForm) {
+            importForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                const fileInput = this.querySelector('input[type="file"]');
+                if (!fileInput.files.length) {
+                    Swal.fire({
+                        title: 'Peringatan',
+                        text: 'Pilih file Excel terlebih dahulu!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                    return;
+                }
+
+                const result = await Swal.fire({
+                    title: 'Konfirmasi Import',
+                    text: 'Yakin ingin mengimport data alumni dari file Excel ini?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Import',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mr-2',
+                        cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+                    }
+                });
+
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Mengimport Data',
+                        text: 'Mohon tunggu...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    try {
+                        const formData = new FormData(this);
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        let result;
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            result = await response.json();
+                        } else {
+                            // Jika response bukan JSON, buat object result manual
+                            result = {
+                                success: response.ok,
+                                message: response.ok ? 'Data berhasil diimport' : 'Gagal mengimport data'
+                            };
+                        }
+
+                        if (response.ok && result.success) {
+                            await Swal.fire({
+                                title: 'Berhasil!',
+                                text: result.message || 'Data alumni berhasil diimport',
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'swal2-show',
+                                    title: 'text-lg font-semibold mb-2',
+                                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                                }
+                            });
+                            
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'Gagal mengimport data');
+                        }
+                    } catch (error) {
+                        console.error('Error importing:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'swal2-show',
+                                title: 'text-lg font-semibold text-red-600 mb-2',
+                                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
+    // ...existing code...
+</script>
 
  <!-- script JS  -->
     <script src="{{ asset('js/script.js') }}"></script>
