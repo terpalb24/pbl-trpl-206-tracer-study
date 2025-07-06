@@ -6,14 +6,14 @@
         <!-- Logo dan Judul -->
         <div class="text-center mb-8">
             <img src="{{ asset('assets/images/polteklogo.png') }}" alt="Logo Polibatam" class="h-20 mx-auto mb-4">
-            <h2 class="text-3xl font-bold text-sky-800 mb-2">Tracer Study</h2>
+            <h2 class="text-3xl font-bold text-sky-900 mb-2">Tracer Study</h2>
             <p class="text-sky-700">Politeknik Negeri Batam</p>
         </div>
 
         <!-- Card Utama -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-sky-200">
             <!-- Header Card -->
-            <div class="bg-gradient-to-r from-sky-400 to-blue-500 px-6 py-4">
+            <div class="bg-gradient-to-r from-sky-800 to-blue-500 px-6 py-4">
                 <h3 class="text-xl font-semibold text-white mb-1">Daftar NIM & Nama Alumni</h3>
                 <p class="text-sky-100 text-sm">Cari NIM atau nama alumni yang terdaftar di sistem</p>
             </div>
@@ -22,17 +22,17 @@
             <div class="p-6 border-b border-sky-100 bg-gradient-to-b from-sky-50 to-white">
                 <form method="GET" action="{{ route('forgot-nim') }}" class="flex flex-col sm:flex-row items-center gap-3">
                     <div class="relative flex-1">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-sky-500">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-sky-800">
                             <i class="fas fa-search"></i>
                         </span>
                         <input type="text" 
                                name="search" 
-                               class="w-full pl-10 pr-4 py-2 border border-sky-200 rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 transition-colors bg-white text-sky-800 placeholder-sky-400"
+                               class="w-full pl-10 pr-4 py-2 border border-sky-800 rounded-lg focus:ring-2 focus:ring-sky-800 focus:border-sky-800 transition-colors bg-white text-sky-800 placeholder-sky-400"
                                placeholder="Masukkan NIM atau Nama Alumni..." 
                                value="{{ request('search') }}">
                     </div>
                     <button type="submit" 
-                            class="w-full sm:w-auto px-6 py-2 bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                            class="w-full sm:w-auto px-6 py-2 bg-sky-800 hover:bg-sky-600 text-white font-medium rounded-lg transition duration-200 flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
                         <i class="fas fa-search"></i>
                         <span>Cari Alumni</span>
                     </button>
