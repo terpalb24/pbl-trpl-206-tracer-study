@@ -3,25 +3,45 @@ document.addEventListener("DOMContentLoaded", function () {
     const toggleSidebar = document.getElementById("toggle-sidebar");
     const closeSidebar = document.getElementById("close-sidebar");
     const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
 
     // Pastikan sidebar tertutup di mobile saat load
     if (sidebar) {
         if (window.innerWidth < 1024) {
             sidebar.classList.add("-translate-x-full");
+            if (backdrop) backdrop.classList.add("hidden");
         } else {
             sidebar.classList.remove("-translate-x-full");
+            if (backdrop) backdrop.classList.add("hidden");
         }
     }
 
     if (toggleSidebar && sidebar) {
         toggleSidebar.addEventListener("click", function () {
-            sidebar.classList.toggle("-translate-x-full");
+            const isHidden = sidebar.classList.contains("-translate-x-full");
+            
+            if (isHidden) {
+                sidebar.classList.remove("-translate-x-full");
+                if (backdrop) backdrop.classList.remove("hidden");
+            } else {
+                sidebar.classList.add("-translate-x-full");
+                if (backdrop) backdrop.classList.add("hidden");
+            }
         });
     }
 
     if (closeSidebar && sidebar) {
         closeSidebar.addEventListener("click", function () {
             sidebar.classList.add("-translate-x-full");
+            if (backdrop) backdrop.classList.add("hidden");
+        });
+    }
+
+    // Close sidebar when clicking backdrop
+    if (backdrop && sidebar) {
+        backdrop.addEventListener("click", function () {
+            sidebar.classList.add("-translate-x-full");
+            backdrop.classList.add("hidden");
         });
     }
 
@@ -29,11 +49,13 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener("resize", function () {
         if (sidebar) {
             if (window.innerWidth >= 1024) {
-                // Desktop: show sidebar
+                // Desktop: show sidebar, hide backdrop
                 sidebar.classList.remove("-translate-x-full");
+                if (backdrop) backdrop.classList.add("hidden");
             } else {
-                // Mobile: hide sidebar
+                // Mobile: hide sidebar and backdrop
                 sidebar.classList.add("-translate-x-full");
+                if (backdrop) backdrop.classList.add("hidden");
             }
         }
     });

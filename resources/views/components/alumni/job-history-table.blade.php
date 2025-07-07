@@ -38,13 +38,16 @@
                                title="Edit">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
-                            <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat kerja ini?')">
+                            <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline job-history-delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit"
-                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
-                                    title="Hapus">
+                                <button type="button"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200 delete-job-history-btn"
+                                    title="Hapus"
+                                    data-company="{{ $jobHistory->company_name }}"
+                                    data-position="{{ $jobHistory->position }}"
+                                    data-start="{{ \Carbon\Carbon::parse($jobHistory->start_date)->format('M Y') }}"
+                                    data-end="{{ $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('M Y') : 'Sekarang' }}">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>
                             </form>
@@ -74,13 +77,16 @@
                        title="Edit">
                         <i class="fas fa-edit text-xs"></i>
                     </a>
-                    <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline"
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat kerja ini?')">
+                    <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline job-history-delete-form">
                         @csrf
                         @method('DELETE')
-                        <button type="submit"
-                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-700"
-                            title="Hapus">
+                        <button type="button"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 delete-job-history-btn"
+                            title="Hapus"
+                            data-company="{{ $jobHistory->company_name }}"
+                            data-position="{{ $jobHistory->position }}"
+                            data-start="{{ \Carbon\Carbon::parse($jobHistory->start_date)->format('M Y') }}"
+                            data-end="{{ $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('M Y') : 'Sekarang' }}">
                             <i class="fas fa-trash text-xs"></i>
                         </button>
                     </form>
@@ -129,7 +135,7 @@
 
 @foreach($jobHistories as $index => $jobHistory)
     {{-- Modal Detail (letakkan di sini, di luar card/table, cukup satu per data) --}}
-    <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 hidden flex items-center justify-center backdrop-blur-sm bg-black/50 p-2 sm:p-4">
+    <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 hidden items-center justify-center backdrop-blur-sm bg-black/50 p-2 sm:p-4">
         <div class="bg-white rounded-lg shadow-xl w-full max-w-xs sm:max-w-md lg:max-w-2xl p-4 sm:p-8 relative max-h-screen overflow-y-auto">
             <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
                     class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1 sm:p-2">

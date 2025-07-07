@@ -196,7 +196,10 @@
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-<!-- ✅ TAMBAHAN: JavaScript dengan konfirmasi -->
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- ✅ PERBAIKAN: JavaScript dengan SweetAlert2 -->
 <script>
 $(document).ready(function() {
     // Initialize Select2
@@ -210,26 +213,83 @@ $(document).ready(function() {
     const alumniStatus = '{{ $alumni->status }}';
 
     function toggleEndDate() {
-        endDateSection.style.display = isCurrent.checked ? 'none' : '';
+        if (isCurrent.checked) {
+            endDateSection.style.display = 'none';
+        } else {
+            endDateSection.style.display = '';
+        }
     }
 
     isCurrent.addEventListener('change', function() {
-        toggleEndDate();
-        
-        // Show confirmation if status is not "bekerja"
+        // Jika checkbox dicentang dan status bukan "bekerja"
         if (this.checked && alumniStatus !== 'bekerja') {
-            const confirm = window.confirm(
-                'Dengan mencentang opsi ini, status profil Anda akan otomatis diperbarui dari "' + 
-                '{{ ucfirst($alumni->status) }}' + '" menjadi "Bekerja". Apakah Anda setuju?'
-            );
-            
-            if (!confirm) {
-                this.checked = false;
-                toggleEndDate();
-            }
+            // Tampilkan SweetAlert2 konfirmasi
+            Swal.fire({
+                title: 'Konfirmasi Perubahan Status',
+                html: `
+                    <div class="text-left">
+                        <p class="mb-3">Dengan mencentang opsi ini, status profil Anda akan diperbarui:</p>
+                        <div class="bg-gray-50 p-3 rounded-lg mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Status saat ini:</span>
+                                <span class="font-semibold text-red-600">"{{ ucfirst($alumni->status) }}"</span>
+                            </div>
+                            <div class="flex items-center justify-center my-2">
+                                <i class="fas fa-arrow-down text-blue-500"></i>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-600">Status baru:</span>
+                                <span class="font-semibold text-green-600">"Bekerja"</span>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600">Apakah Anda setuju dengan perubahan ini?</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: '<i class="fas fa-check mr-2"></i>Ya, Setuju',
+                cancelButtonText: '<i class="fas fa-times mr-2"></i>Tidak',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-lg',
+                    title: 'text-lg font-bold',
+                    confirmButton: 'font-semibold',
+                    cancelButton: 'font-semibold'
+                },
+                buttonsStyling: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // User mengkonfirmasi, toggle end date
+                    toggleEndDate();
+                    
+                    // Tampilkan notifikasi sukses
+                    Swal.fire({
+                        title: 'Perubahan Dikonfirmasi!',
+                        text: 'Status profil akan diperbarui menjadi "Bekerja" setelah form disimpan.',
+                        icon: 'success',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end',
+                        customClass: {
+                            popup: 'rounded-lg'
+                        }
+                    });
+                } else {
+                    // User membatalkan, uncheck checkbox
+                    this.checked = false;
+                    toggleEndDate();
+                }
+            });
+        } else {
+            // Jika checkbox unchecked atau status sudah "bekerja"
+            toggleEndDate();
         }
     });
 
+    // Initialize toggle state
     toggleEndDate();
 });
 </script>
