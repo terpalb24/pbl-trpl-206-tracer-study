@@ -168,6 +168,27 @@
                             @enderror
                         </div>
 
+                        <!-- Alamat -->
+                        <div class="space-y-1 sm:space-y-2 lg:col-span-2">
+                            <label for="address" class="block text-sm sm:text-base font-semibold text-gray-700">
+                                Alamat <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <div class="absolute top-3 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-map-marker-alt text-gray-400 text-sm"></i>
+                                </div>
+                                <textarea name="address" id="address" rows="3"
+                                          class="w-full border pl-10 pr-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 {{ $errors->has('address') ? 'border-red-500' : 'border-gray-300' }}"
+                                          placeholder="Masukkan alamat lengkap Anda">{{ old('address', $alumni->address) }}</textarea>
+                            </div>
+                            @error('address')
+                                <p class="text-red-500 text-xs flex items-center mt-1">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
+                        </div>
+
                         <!-- Prodi -->
                         <div class="space-y-1 sm:space-y-2">
                             <label for="id_study" class="block text-sm sm:text-base font-semibold text-gray-700">

@@ -8,14 +8,28 @@
     <div class="w-full lg:w-1/2 bg-theme-secondary p-8 sm:p-10 md:p-12">
         <h2 class="text-2xl sm:text-3xl font-bold text-center text-black mb-3">Ganti Password</h2>
         <p class="text-sm sm:text-base text-center text-black mb-6">
-            Silakan masukkan password baru dan konfirmasi untuk mengganti password akun Anda.
+            Silakan masukkan password baru untuk menyelesaikan verifikasi email Anda.
         </p>
+
+        @if(session('error'))
+            <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if ($errors->any())
+            <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('alumni.password.update') }}" class="space-y-5">
             @csrf
             <input type="hidden" name="token" value="{{ $token }}">
-            <input type="hidden" name="email" value="{{ $email }}">
-            <input type="hidden" name="id_user" value="{{ $id_user }}">
 
             <!-- Password Input -->
             <div>
