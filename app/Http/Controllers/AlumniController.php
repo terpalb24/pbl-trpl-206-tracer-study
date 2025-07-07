@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Carbon;
 use PhpOffice\PhpSpreadsheet\Reader\Xlsx as XlsxReader;
-
+use App\Models\Tb_study_program;
 
 class AlumniController extends Controller
 {
@@ -34,7 +34,7 @@ public function sendEmailVerification(Request $request)
         'email' => [
             'required',
             'email:rfc,dns',
-            'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/' // Accepts all valid email domains
+            'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
         ],
     ], [
         'email.required' => 'Email wajib diisi.',
@@ -199,4 +199,5 @@ public function verifyEmailToken($token)
     } catch (\Exception $e) {
         return redirect()->route('alumni.email.form')->with('error', 'Token tidak valid atau kadaluarsa.');
     }
-}}
+}
+}

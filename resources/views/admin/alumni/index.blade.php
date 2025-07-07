@@ -153,8 +153,8 @@
                     <!-- Form Hapus Prodi -->
                     <div id="hapusProdiForm" class="hidden space-y-2">
                         <h3 class="text-lg font-semibold text-gray-800">Hapus Program Studi</h3>
-                        <form action="{{ route('admin.study-program.deleteBySelect') }}" method="POST" 
-                            onsubmit="return confirm('Yakin ingin menghapus program studi ini?')" 
+                        <form id="deleteProdiForm" action="{{ route('admin.study-program.deleteBySelect') }}" method="POST" 
+                            onsubmit="handleDeleteProdi(event)" 
                             class="flex flex-col sm:flex-row gap-3">
                             @csrf
                             @method('DELETE')
@@ -1096,6 +1096,355 @@
             Swal.fire({
                 title: 'Peringatan',
                 text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Buat FormData untuk mengirim data
+            const formData = new FormData();
+            formData.append('study_program', prodiName);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            const response = await fetch('{{ route("admin.study-program.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil ditambahkan' : 'Gagal menambahkan program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil ditambahkan',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal menambahkan program studi');
+            }
+        } catch (error) {
+            console.error('Error adding prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle edit program studi dengan SweetAlert2
+    async function handleEditProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiId = form.querySelector('select[name="id_study"]').value;
+        const prodiName = document.getElementById('editInput').value;
+        
+        if (!prodiId) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih program studi yang ingin diedit!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Show loading state
+            Swal.fire({
+                title: 'Mengupdate Data',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: new URLSearchParams(new FormData(form))
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil diperbarui' : 'Gagal memperbarui program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil diperbarui',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal memperbarui program studi');
+            }
+        } catch (error) {
+            console.error('Error updating prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle hapus program studi dengan SweetAlert2
+    async function handleDeleteProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const selectElement = form.querySelector('select[name="id_study"]');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        
+        if (!selectElement.value) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih program studi yang ingin dihapus!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        const prodiName = selectedOption.text;
+        
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus',
+            text: `Yakin ingin menghapus program studi "${prodiName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Menghapus Program Studi',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Jika response bukan JSON, buat object result manual
+                    result = {
+                        success: response.ok,
+                        message: response.ok ? `Program studi "${prodiName}" berhasil dihapus` : 'Gagal menghapus program studi'
+                    };
+                }
+
+                if (response.ok && result.success) {
+                    await Swal.fire({
+                        title: 'Berhasil!',
+                        text: result.message || `Program studi "${prodiName}" berhasil dihapus`,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                    
+                    // Reset form dan refresh halaman
+                    form.reset();
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message || 'Gagal menghapus program studi');
+                }
+            } catch (error) {
+                console.error('Error deleting prodi:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold text-red-600 mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+            }
+        }
+    }
+
+    // Handle tambah program studi dengan SweetAlert2
+    async function handleAddProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiName = document.getElementById('newProdiInput').value;
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
                 icon: 'warning',
                 confirmButtonText: 'OK',
                 customClass: {

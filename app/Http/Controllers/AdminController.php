@@ -2256,7 +2256,15 @@ public function companyStore(Request $request)
   public function storeStudyProgram(Request $request)
 {
     $request->validate([
-        'study_program' => 'required|string|max:255|unique:tb_study_program,study_program',
+        'study_program' => [
+            'required',
+            'string',
+            'max:255',
+            'unique:tb_study_program,study_program',
+            'regex:/^[A-Z].*$/' // First letter must be uppercase
+        ],
+    ], [
+        'study_program.regex' => 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
     ]);
 
     Tb_study_program::create([
@@ -2270,7 +2278,15 @@ public function updateStudyProgram(Request $request)
 {
     $request->validate([
         'id_study' => 'required|exists:tb_study_program,id_study',
-        'study_program' => 'required|string|max:255|unique:tb_study_program,study_program,' . $request->id_study . ',id_study',
+        'study_program' => [
+            'required',
+            'string',
+            'max:255',
+            'unique:tb_study_program,study_program,' . $request->id_study . ',id_study',
+            'regex:/^[A-Z].*$/' // First letter must be uppercase
+        ],
+    ], [
+        'study_program.regex' => 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
     ]);
 
     $prodi =Tb_study_program ::where('id_study', $request->id_study)->first();
@@ -2288,19 +2304,57 @@ public function updateStudyProgram(Request $request)
 
 public function deleteStudyProgramBySelect(Request $request)
 {
-    $request->validate([
-        'id_study' => 'required|exists:tb_study_program,id_study',
-    ]);
+    try {
+        $request->validate([
+            'id_study' => 'required|exists:tb_study_program,id_study',
+        ]);
 
-    $prodi = Tb_study_program::where('id_study', $request->id_study)->first();
+        $prodi = Tb_study_program::where('id_study', $request->id_study)->first();
 
-    if (!$prodi) {
-        return redirect()->back()->with('error', 'Program Studi tidak ditemukan.');
+        if (!$prodi) {
+            // Check if this is an AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Program Studi tidak ditemukan.'
+                ], 404);
+            }
+            return redirect()->back()->with('error', 'Program Studi tidak ditemukan.');
+        }
+
+        $prodiName = $prodi->study_program;
+        $prodi->delete();
+
+        // Check if this is an AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Program Studi \"{$prodiName}\" berhasil dihapus."
+            ], 200);
+        }
+
+        return redirect()->back()->with('success', "Program Studi \"{$prodiName}\" berhasil dihapus.");
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Check if this is an AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Data tidak valid: ' . implode(', ', $e->errors()['id_study'] ?? ['ID program studi tidak valid'])
+            ], 422);
+        }
+        return redirect()->back()->with('error', 'Data tidak valid.');
+    } catch (\Exception $e) {
+        \Log::error('Error deleting study program: ' . $e->getMessage());
+        
+        // Check if this is an AJAX request
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menghapus program studi.'
+            ], 500);
+        }
+        return redirect()->back()->with('error', 'Terjadi kesalahan saat menghapus program studi.');
     }
-
-    $prodi->delete();
-
-    return redirect()->back()->with('success', 'Program Studi berhasil dihapus.');
 }
 
 public function bulkDeleteAlumni(Request $request)
