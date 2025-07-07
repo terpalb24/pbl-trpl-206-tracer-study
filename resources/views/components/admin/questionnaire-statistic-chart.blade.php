@@ -85,10 +85,25 @@
                     <option value="all" {{ $selectedCategory === 'all' ? 'selected' : '' }}>
                         📊 Semua Kategori
                     </option>
-                    @foreach($availableCategories as $category)
+                    @php
+                        // ✅ Urutkan kategori - Alumni terlebih dahulu, kemudian Company
+                        $sortedCategories = $availableCategories->sortBy(function($category) {
+                            // Alumni kategori (for_type != 'company') akan ditampilkan terlebih dahulu
+                            if ($category->for_type === 'company') {
+                                return 2; // Company kategori - prioritas kedua
+                            } else {
+                                return 1; // Alumni kategori - prioritas pertama
+                            }
+                        });
+                    @endphp
+                    @foreach($sortedCategories as $category)
                         <option value="{{ $category->id_category }}" 
                                 {{ $selectedCategory == $category->id_category ? 'selected' : '' }}>
-                            {{ $category->category_name }}
+                            @if($category->for_type === 'company')
+                                🏢 {{ $category->category_name }}
+                            @else
+                                🎓 {{ $category->category_name }}
+                            @endif
                         </option>
                     @endforeach
                 </select>
@@ -360,9 +375,21 @@
                 <!-- ✅ GROUPING: Group questions by category -->
                 @php
                     $groupedQuestions = collect($questionnaireChartData['questions_data'])->groupBy('category.id_category');
+                    
+                    // ✅ SORT: Urutkan kategori - Alumni terlebih dahulu, kemudian Company
+                    $sortedGroupedQuestions = $groupedQuestions->sortBy(function($categoryQuestions, $categoryId) {
+                        $categoryInfo = $categoryQuestions->first()['category'];
+                        // Alumni kategori (for_type != 'company') akan ditampilkan terlebih dahulu (prioritas 1)
+                        // Company kategori (for_type = 'company') akan ditampilkan setelahnya (prioritas 2)
+                        if ($categoryInfo->for_type === 'company') {
+                            return 2; // Company kategori - prioritas kedua
+                        } else {
+                            return 1; // Alumni kategori - prioritas pertama
+                        }
+                    });
                 @endphp
                 
-                @foreach($groupedQuestions as $categoryId => $categoryQuestions)
+                @foreach($sortedGroupedQuestions as $categoryId => $categoryQuestions)
                     @php
                         $categoryInfo = $categoryQuestions->first()['category'];
                         
@@ -404,9 +431,23 @@
                         <!-- Category Header -->
                         <div class="flex items-center justify-between mb-4 pb-3 border-b border-orange-100">
                             <div>
-                                <h4 class="font-semibold text-orange-800 text-lg">
-                                    📋 {{ $categoryInfo->category_name }}
-                                </h4>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h4 class="font-semibold text-orange-800 text-lg">
+                                        📋 {{ $categoryInfo->category_name }}
+                                    </h4>
+                                    <!-- ✅ Badge untuk tipe kategori -->
+                                    @if($categoryInfo->for_type === 'company')
+                                        <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                            <i class="fas fa-building mr-1"></i>
+                                            Perusahaan
+                                        </span>
+                                    @else
+                                        <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                                            <i class="fas fa-user-graduate mr-1"></i>
+                                            Alumni
+                                        </span>
+                                    @endif
+                                </div>
                                 @if($categoryInfo->description)
                                     <div class="mt-2 mb-3">
                                         <p class="text-sm text-orange-700 flex items-start">
