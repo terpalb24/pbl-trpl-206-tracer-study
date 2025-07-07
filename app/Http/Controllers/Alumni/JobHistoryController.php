@@ -63,7 +63,7 @@ public function store(Request $request)
     // Jika alumni mengisi nama perusahaan baru
     if (!$id_company && $request->filled('new_company_name')) {
         $company = Tb_Company::create([
-            'company_name' => $request->new_company_name,
+            'company_name' => strtoupper($request->new_company_name),
             'company_address' => null,
             'company_email' => null,
             'company_phone_number' => null,

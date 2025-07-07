@@ -622,7 +622,7 @@ public function companyStore(Request $request)
                 // Kapitalisasi nama HRD
                 $hrdName = isset($row[4]) && $row[4] ? ucwords(strtolower($row[4])) : null;
 
-                $company_name = isset($row[0]) && $row[0] ? ucwords(strtolower($row[0])) : null;
+                $company_name = isset($row[0]) && $row[0] ? strtolower($row[0]) : null;
 
                 // Create/update user
                 $user = Tb_User::updateOrCreate(
