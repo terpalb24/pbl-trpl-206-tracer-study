@@ -772,21 +772,13 @@ class QuestionnaireController extends Controller
         
         $alumni = Tb_Alumni::where('nim', $userAnswer->nim)->first();
         
-        $categories = Tb_Category::where('id_periode', $id_periode)
-            ->whereIn('for_type', ['company', 'both'])
-            ->orderBy('order')
-            ->get()
-            ->filter(function($category) use ($alumni) {
-                if (!$alumni) return true; // If alumni not found, don't filter
-                
-                if ($category->is_graduation_year_dependent && !empty($category->required_graduation_years)) {
-                    return in_array($alumni->graduation_year, $category->required_graduation_years);
-                }
-                return true;
-            })
-            ->values();
-        
+        // Simplified approach: Get ALL categories that have answers for this user
         $questionsWithAnswers = [];
+        
+        // Get all categories for this period
+        $categories = Tb_Category::where('id_periode', $id_periode)
+            ->orderBy('order')
+            ->get();
         
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
@@ -805,7 +797,12 @@ class QuestionnaireController extends Controller
                     ->where('id_question', $question->id_question)
                     ->get();
 
-                $hasAnswer = $answers->isNotEmpty();
+                // Only show questions that have answers
+                if ($answers->isEmpty()) {
+                    continue;
+                }
+
+                $hasAnswer = true;
                 $processedAnswerData = $this->processAnswersForDisplay($question, $answers);
                 
                 $questionData = [
@@ -823,22 +820,11 @@ class QuestionnaireController extends Controller
                 $categoryData['questions'][] = $questionData;
             }
 
-            $questionsWithAnswers[] = $categoryData;
+            // Only add category if it has questions with answers
+            if (!empty($categoryData['questions'])) {
+                $questionsWithAnswers[] = $categoryData;
+            }
         }
-
-        // Log::info('Company response detail - Enhanced dependency filtering', [
-        //     'user_answer_id' => $id_user_answer,
-        //     'alumni_nim' => $userAnswer->nim,
-        //     'alumni_graduation_year' => $alumni ? $alumni->graduation_year : 'unknown',
-        //     'total_categories_before_filter' => Tb_Category::where('id_periode', $id_periode)
-        //         ->whereIn('for_type', ['company', 'both'])
-        //         ->count(),
-        //     'total_categories_after_filter' => $categories->count(),
-        //     'categories_with_graduation_dependency' => $categories->filter(function($cat) {
-        //         return $cat->is_graduation_year_dependent;
-        //     })->count(),
-        //     'questionsWithAnswers_count' => count($questionsWithAnswers)
-        // ]);
         
         return view('company.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers', 'company'));
     }

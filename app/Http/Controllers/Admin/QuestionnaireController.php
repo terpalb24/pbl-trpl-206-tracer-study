@@ -1203,25 +1203,23 @@ class QuestionnaireController extends Controller
         //     'has_company_relation' => $company ? true : false,
         //     'determined_user_type' => $userType,
         //     'alumni_name' => $alumni->name ?? null,
-        //     'company_name' => $company->company_name ?? null
+        //     'company_name' => $company->company_name ?? null,
+        //     'historical_status' => $userAnswer->historical_status ?? null,
+        //     'current_status' => $alumni->status ?? null
         // ]);
         
+        // ✅ Get all categories that have answered questions for this user
+        // Don't filter by user type or accessibility - show all answers that exist
+        $answeredQuestionIds = Tb_User_Answer_Item::where('id_user_answer', $userAnswer->id_user_answer)
+            ->pluck('id_question')
+            ->unique();
+        
         $categories = Tb_Category::where('id_periode', $id_periode)
-            ->where(function($query) use ($userType) {
-                if ($userType === 'alumni') {
-                    $query->whereIn('for_type', ['alumni', 'both']);
-                } elseif ($userType === 'company') {
-                    $query->whereIn('for_type', ['company', 'both']);
-                } else {
-                    $query->whereIn('for_type', ['alumni', 'company', 'both']);
-                }
+            ->whereHas('questions', function($query) use ($answeredQuestionIds) {
+                $query->whereIn('id_question', $answeredQuestionIds);
             })
             ->orderBy('order')
-            ->get()
-            ->filter(function($category) use ($alumni) {
-                return $category->isAccessibleByAlumni($alumni);
-            })
-            ->values(); 
+            ->get(); 
         
         // \Log::info('Response Detail - Categories Filter', [
         //     'user_type' => $userType,
@@ -1233,8 +1231,9 @@ class QuestionnaireController extends Controller
         $questionsWithAnswers = [];
         
         foreach ($categories as $category) {
+            // ✅ Get only questions that have been answered by this user
             $questions = Tb_Questions::where('id_category', $category->id_category)
-                ->where('status', 'visible')
+                ->whereIn('id_question', $answeredQuestionIds)
                 ->with('options')
                 ->orderBy('order')
                 ->get();
@@ -1246,20 +1245,24 @@ class QuestionnaireController extends Controller
                     ->where('id_question', $question->id_question)
                     ->get();
                 
-                $processedAnswerData = $this->processAnswersForDisplay($question, $answerItems);
-                
-                $questionData = [
-                    'question' => $question,
-                    'answer' => $processedAnswerData['answer'],
-                    'otherAnswer' => $processedAnswerData['otherAnswer'],
-                    'multipleAnswers' => $processedAnswerData['multipleAnswers'],
-                    'multipleOtherAnswers' => $processedAnswerData['multipleOtherAnswers'],
-                    'hasAnswer' => !empty($processedAnswerData['answer']) || !empty($processedAnswerData['multipleAnswers'])
-                ];
-                
-                $questionArray[] = $questionData;
+                // ✅ Only include questions that actually have answers
+                if ($answerItems->isNotEmpty()) {
+                    $processedAnswerData = $this->processAnswersForDisplay($question, $answerItems);
+                    
+                    $questionData = [
+                        'question' => $question,
+                        'answer' => $processedAnswerData['answer'],
+                        'otherAnswer' => $processedAnswerData['otherAnswer'],
+                        'multipleAnswers' => $processedAnswerData['multipleAnswers'],
+                        'multipleOtherAnswers' => $processedAnswerData['multipleOtherAnswers'],
+                        'hasAnswer' => true
+                    ];
+                    
+                    $questionArray[] = $questionData;
+                }
             }
             
+            // ✅ Only include categories that have answered questions
             if (!empty($questionArray)) {
                 $questionsWithAnswers[] = [
                     'category' => $category,

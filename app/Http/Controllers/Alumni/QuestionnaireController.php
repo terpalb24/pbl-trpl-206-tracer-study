@@ -828,12 +828,6 @@ class QuestionnaireController extends Controller
      */
     public function responseDetail($periodeId, $userAnswerId)
     {
-        // \Log::info('Alumni accessing response detail', [
-        //     'user_id' => auth()->id(),
-        //     'periode_id' => $periodeId,
-        //     'user_answer_id' => $userAnswerId
-        // ]);
-
         $alumni = auth()->user()->alumni;
         
         if (!$alumni) {
@@ -853,19 +847,13 @@ class QuestionnaireController extends Controller
                 ->with('error', 'Data jawaban tidak ditemukan atau Anda tidak memiliki akses.');
         }
 
-        $categories = Tb_Category::where('id_periode', $periodeId)
-            ->where(function($query) {
-                $query->where('for_type', 'alumni')
-                      ->orWhere('for_type', 'both');
-            })
-            ->orderBy('order')
-            ->get()
-            ->filter(function($category) use ($alumni) {
-                return $category->isAccessibleByAlumni($alumni);
-            })
-            ->values(); // Reset array keys
-
+        // Simplified approach: Get ALL categories that have answers for this user
         $questionsWithAnswers = [];
+        
+        // Get all categories for this period
+        $categories = Tb_Category::where('id_periode', $periodeId)
+            ->orderBy('order')
+            ->get();
 
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
@@ -886,7 +874,12 @@ class QuestionnaireController extends Controller
                     ->with(['question', 'option'])
                     ->get();
 
-                $hasAnswer = $answerItems->isNotEmpty();
+                // Only show questions that have answers
+                if ($answerItems->isEmpty()) {
+                    continue;
+                }
+
+                $hasAnswer = true;
                 $answer = null;
                 $otherAnswer = null;
                 $otherOption = null;
@@ -894,64 +887,44 @@ class QuestionnaireController extends Controller
                 $multipleOtherAnswers = [];
                 $multipleOtherOptions = [];
 
-                if ($hasAnswer) {
-                    if ($question->type === 'multiple') {
-                        // Multiple choice answers
-                        foreach ($answerItems as $answerItem) {
-                            if ($answerItem->id_questions_options) {
-                                $multipleAnswers[] = $answerItem->id_questions_options;
+                if ($question->type === 'multiple') {
+                    // Multiple choice answers - convert to display format
+                    foreach ($answerItems as $answerItem) {
+                        if ($answerItem->id_questions_options) {
+                            $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
+                            if ($option) {
+                                $multipleAnswers[] = $option->option;
                                 
                                 if (!empty($answerItem->other_answer)) {
-                                    $multipleOtherAnswers[$answerItem->id_questions_options] = $answerItem->other_answer;
-                                    
-                                    $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
-                                    if ($option && $option->is_other_option) {
-                                        $multipleOtherOptions[$answerItem->id_questions_options] = $option;
-                                    }
+                                    $multipleOtherAnswers[] = $answerItem->other_answer;
                                 }
-                            }
-                        }
-                        
-                        // \Log::info('Multiple choice processed', [
-                        //     'question_id' => $question->id_question,
-                        //     'multiple_answers' => $multipleAnswers,
-                        //     'multiple_other_answers' => $multipleOtherAnswers
-                        // ]);
-                    } else {
-                        // Single answer
-                        $answerItem = $answerItems->first();
-                        
-                        if ($question->type === 'option' || $question->type === 'rating') {
-                            if ($answerItem->id_questions_options) {
-                                $answer = $answerItem->id_questions_options;
-                                
-                                $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
-                                if ($option && $option->is_other_option && !empty($answerItem->other_answer)) {
-                                    $otherAnswer = $answerItem->other_answer;
-                                    $otherOption = $option;
-                                }
-                            } else {
-                                $answer = $answerItem->answer;
-                            }
-                        } else {
-                            $answer = $answerItem->answer;
-                            if (!empty($answerItem->other_answer)) {
-                                $otherAnswer = $answerItem->other_answer;
                             }
                         }
                     }
+                } else {
+                    // Single answer
+                    $answerItem = $answerItems->first();
+                    
+                    if ($question->type === 'option' || $question->type === 'rating') {
+                        if ($answerItem->id_questions_options) {
+                            $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
+                            if ($option) {
+                                $answer = $option->option;
+                                
+                                if ($option->is_other_option && !empty($answerItem->other_answer)) {
+                                    $otherAnswer = $answerItem->other_answer;
+                                }
+                            }
+                        } else {
+                            $answer = $answerItem->answer;
+                        }
+                    } else {
+                        $answer = $answerItem->answer;
+                        if (!empty($answerItem->other_answer)) {
+                            $otherAnswer = $answerItem->other_answer;
+                        }
+                    }
                 }
-
-                // if ($otherAnswer || !empty($multipleOtherAnswers)) {
-                //     \Log::info('Other Answer Found', [
-                //         'question_id' => $question->id_question,
-                //         'question_type' => $question->type,
-                //         'other_answer' => $otherAnswer,
-                //         'multiple_other_answers' => $multipleOtherAnswers,
-                //         'option_id' => $answer,
-                //         'option_is_other' => $otherOption ? $otherOption->is_other_option : false
-                //     ]);
-                // }
 
                 $questionData = [
                     'question' => $question,
@@ -967,7 +940,7 @@ class QuestionnaireController extends Controller
                 $questionArray[] = $questionData;
             }
 
-            // Only add category if it has questions
+            // Only add category if it has questions with answers
             if (!empty($questionArray)) {
                 $questionsWithAnswers[] = [
                     'category' => $category,
@@ -975,34 +948,6 @@ class QuestionnaireController extends Controller
                 ];
             }
         }
-
-        // \Log::info('Alumni Response Detail - Dependency debug:', [
-        //     'alumni_status' => $alumni->status,
-        //     'alumni_graduation_year' => $alumni->graduation_year,
-        //     'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) use ($alumni) {
-        //         return [
-        //             'category' => $cat['category']->category_name,
-        //             'category_status_dependent' => $cat['category']->is_status_dependent,
-        //             'category_required_status' => $cat['category']->required_alumni_status,
-        //             'category_graduation_year_dependent' => $cat['category']->is_graduation_year_dependent,
-        //             'category_required_graduation_years' => $cat['category']->required_graduation_years,
-        //             'category_accessible' => $cat['category']->isAccessibleByAlumni($alumni),
-        //             'questions' => collect($cat['questions'])->map(function($q) {
-        //                 return [
-        //                     'id' => $q['question']->id_question,
-        //                     'question' => substr($q['question']->question, 0, 50),
-        //                     'depends_on' => $q['question']->depends_on,
-        //                     'depends_value' => $q['question']->depends_value,
-        //                     'hasAnswer' => $q['hasAnswer'],
-        //                     'answer' => $q['answer'],
-        //                     'otherAnswer' => $q['otherAnswer'],
-        //                     'multipleAnswers' => $q['multipleAnswers'],
-        //                     'multipleOtherAnswers' => $q['multipleOtherAnswers']
-        //                 ];
-        //             })->toArray()
-        //         ];
-        //     })->toArray()
-        // ]);
 
         return view('alumni.questionnaire.response-detail', compact('userAnswer', 'questionsWithAnswers'));
     }
