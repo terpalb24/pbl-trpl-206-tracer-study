@@ -204,6 +204,7 @@ public function update(Request $request)
             'max:15',
             'regex:/^(?!.*--)[0-9]+(-[0-9]+)*[0-9]$/'
         ],
+        'name' => 'required|string|max:255',
         'email' => 'required|email',
         'address' => 'required|string|min:10|max:500',
         'batch' => 'required|integer',

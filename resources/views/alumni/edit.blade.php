@@ -113,15 +113,25 @@
                         
                         <!-- Nama -->
                         <div class="space-y-2">
-                            <label class="block text-sm font-semibold text-gray-700">Nama Lengkap</label>
+                            <label for="name" class="block text-sm font-semibold text-gray-700">
+                                Nama Lengkap <span class="text-red-500">*</span>
+                            </label>
                             <div class="relative">
-                                <input type="text" value="{{ $alumni->name }}" disabled 
-                                       class="w-full bg-gray-50 border border-gray-300 px-4 py-3 rounded-lg text-sm text-gray-500 font-medium">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                    <i class="fas fa-lock text-gray-400 text-sm"></i>
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                    <i class="fas fa-user text-gray-400 text-sm"></i>
                                 </div>
+                                <input type="text" name="name" id="name"
+                                       value="{{ old('name', $alumni->name) }}"
+                                       required
+                                       class="w-full border pl-10 pr-4 py-3 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors {{ $errors->has('name') ? 'border-red-500 bg-red-50' : 'border-gray-300' }}"
+                                       placeholder="Masukkan nama lengkap Anda">
                             </div>
-                            <p class="text-xs text-gray-500">Nama tidak dapat diubah</p>
+                            @error('name')
+                                <p class="text-red-500 text-xs flex items-center mt-1">
+                                    <i class="fas fa-exclamation-circle mr-1"></i>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
 
                         <!-- Nomor Telepon -->
