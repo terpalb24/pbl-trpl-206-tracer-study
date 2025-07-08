@@ -1,82 +1,56 @@
 @extends('layouts.app')
 
+@php
+    $admin = auth()->user()->admin;
+@endphp
+
 @section('content')
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<div class="flex min-h-screen w-full bg-gray-100 overflow-hidden" id="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar-menu w-64 bg-blue-950 text-white flex flex-col transition-all duration-300" id="sidebar">
-        <div class="flex flex-col items-center justify-between p-4">
-            <img src="{{ asset('assets/images/Group 3.png') }}" alt="Tracer Study Polibatam Logo" class="h-12 mt-2 object-contain">
-            <button id="close-sidebar" class="text-white text-xl lg:hidden focus:outline-none absolute top-4 right-4">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="flex flex-col p-4">
-            @include('admin.sidebar')
-        </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-grow overflow-y-auto" id="main-content">
-        <!-- Header -->
-        <div class="bg-white shadow-sm p-4 flex justify-between items-center">
-            <div class="flex items-center">
-                <button id="toggle-sidebar" class="mr-4 text-gray-600 lg:hidden">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
+<x-layout-admin>
+    <x-slot name="sidebar">
+        <x-admin.sidebar />
+    </x-slot>
+
+    <x-slot name="header">
+        <x-admin.header>Detail Respons Kuesioner</x-admin.header>
+        <x-admin.profile-dropdown></x-admin.profile-dropdown>
+    </x-slot>
+
+    <!-- Container utama dengan responsive padding -->
+    <div class="px-3 sm:px-4 lg:px-6 max-w-7xl mx-auto py-4 sm:py-6">
+        <!-- Action buttons card -->
+        <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 mb-4 sm:mb-6 no-print">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-blue-800">Detail Respons Kuesioner</h1>
+                    <h3 class="text-lg sm:text-xl font-semibold text-gray-800">Detail Respons Kuesioner</h3>
                     <p class="text-sm text-gray-600">Periode: {{ $periode->start_date->format('d M Y') }} - {{ $periode->end_date->format('d M Y') }}</p>
                 </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center space-x-3">
-                <button onclick="printResponse()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm">
-                    <i class="fas fa-print mr-1"></i> Print
-                </button>
-                <button onclick="exportResponse()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm">
-                    <i class="fas fa-download mr-1"></i> Export
-                </button>
-                
-                <!-- Profile Dropdown -->
-                <div class="relative">
-                    <div class="flex items-center bg-blue-900 text-white rounded-md px-4 py-2 cursor-pointer gap-3" id="profile-toggle">
-                        <img src="{{ asset('assets/images/profilepicture.jpg') }}" alt="Foto Profil" class="w-10 h-10 rounded-full object-cover border-2 border-white" />
-                        <div class="text-left">
-                            <p class="font-semibold leading-none">{{ auth()->user()->name ?? 'Administrator' }}</p>
-                            <p class="text-sm text-gray-300 leading-none mt-1">Admin</p>
-                        </div>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
-
-                    <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                        <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                            <i class="fas fa-key mr-2"></i>Ganti Password
-                        </a>
-                        <a href="#" id="logout-btn" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
-                            <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                        </a>
-                    </div>
+                <div class="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3">
+                    <button onclick="printResponse()" 
+                        class="inline-flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition">
+                        <i class="fas fa-print"></i> 
+                        <span>Print</span>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Content Section -->
-        <div class="p-6" id="printable-content">
-            <!-- Breadcrumb -->
-            <nav class="mb-6 no-print">
-                <ol class="flex items-center space-x-2 text-sm">
+        <!-- Breadcrumb
+        <nav class="mb-4 sm:mb-6 no-print">
+            <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-3 sm:p-4">
+                <ol class="flex items-center space-x-2 text-xs sm:text-sm">
                     <li><a href="{{ route('admin.questionnaire.index') }}" class="text-blue-600 hover:underline">Kuesioner</a></li>
                     <li><span class="text-gray-500">/</span></li>
                     <li><a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" class="text-blue-600 hover:underline">Respons</a></li>
                     <li><span class="text-gray-500">/</span></li>
-                    <li class="text-gray-700">Detail</li>
+                    <li class="text-gray-700 font-medium">Detail</li>
                 </ol>
-            </nav>
+            </div>
+        </nav> -->
 
+        <!-- Content Section -->
+        <div id="printable-content">
             <!-- Response Summary Card -->
             <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 mb-6 border border-blue-200">
                 <div class="flex justify-between items-start mb-4">
@@ -103,7 +77,7 @@
                     </div>
                     <div class="text-right">
                         <p class="text-sm text-gray-600">ID Respons</p>
-                        <p class="text-lg font-bold text-blue-900">#{{ $userAnswer->id_user_answers }}</p>
+                        <p class="text-lg font-bold text-blue-900">#{{ $userAnswer->id_user_answer }}</p>
                     </div>
                 </div>
                 @if(isset($userAnswer->user->company))
@@ -831,94 +805,119 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex justify-between items-center mt-8 no-print">
-                <div class="flex space-x-3">
-                    <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" class="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-3 rounded-md font-medium transition-colors duration-200">
-                        <i class="fas fa-arrow-left mr-2"></i> Kembali ke Daftar Responden
+            <div class="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center gap-4 mt-8 no-print">
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <a href="{{ route('admin.questionnaire.responses', $periode->id_periode) }}" 
+                        class="inline-flex items-center justify-center gap-2 bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 sm:px-6 py-2 sm:py-3 rounded-md text-sm font-medium transition-colors duration-200">
+                        <i class="fas fa-arrow-left"></i> 
+                        <span>Kembali ke Daftar Responden</span>
                     </a>
                 </div>
-                <div class="flex space-x-3">
-                    <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
-                        <i class="fas fa-list mr-2"></i> Lihat Kuesioner
+                <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <a href="{{ route('admin.questionnaire.show', $periode->id_periode) }}" 
+                        class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md text-sm font-medium transition-colors duration-200">
+                        <i class="fas fa-list"></i> 
+                        <span>Lihat Kuesioner</span>
                     </a>
-                    <a href="{{ route('admin.questionnaire.index') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-200">
-                        <i class="fas fa-home mr-2"></i> Dashboard Kuesioner
+                    <a href="{{ route('admin.questionnaire.index') }}" 
+                        class="inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-md text-sm font-medium transition-colors duration-200">
+                        <i class="fas fa-home"></i> 
+                        <span>Dashboard Kuesioner</span>
                     </a>
                 </div>
             </div>
         </div>
-    </main>
-</div>
+    </div>
 
-<style>
-@media print {
-    .no-print { display: none !important; }
-    #sidebar { display: none !important; }
-    #main-content { margin-left: 0 !important; width: 100% !important; }
-    .bg-gradient-to-r { background: #f8fafc !important; }
-    .shadow-md { box-shadow: none !important; }
-    body { font-size: 12px; }
-    .p-6 { padding: 1rem !important; }
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Sidebar functionality
-    document.getElementById('toggle-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.toggle('hidden');
-    });
-
-    document.getElementById('close-sidebar')?.addEventListener('click', function() {
-        document.getElementById('sidebar').classList.add('hidden');
-    });
-
-    // Profile dropdown functionality
-    document.getElementById('profile-toggle')?.addEventListener('click', function() {
-        document.getElementById('profile-dropdown').classList.toggle('hidden');
-    });
-
-    document.addEventListener('click', function(event) {
-        const dropdown = document.getElementById('profile-dropdown');
-        const toggle = document.getElementById('profile-toggle');
-        
-        if (dropdown && toggle && !dropdown.contains(event.target) && !toggle.contains(event.target)) {
-            dropdown.classList.add('hidden');
+    <style>
+    @media print {
+        .no-print { display: none !important; }
+        .bg-gradient-to-r { background: #f8fafc !important; }
+        .shadow-md { box-shadow: none !important; }
+        body { 
+            font-size: 12px;
+            color: black !important;
+            background: white !important;
         }
-    });
+        .p-6 { padding: 1rem !important; }
+        .px-3, .px-4, .px-6 { padding-left: 0.5rem !important; padding-right: 0.5rem !important; }
+        .py-4, .py-6 { padding-top: 0.5rem !important; padding-bottom: 0.5rem !important; }
+        .mb-6, .mb-4 { margin-bottom: 1rem !important; }
+        .rounded-xl, .rounded-lg { border-radius: 0.5rem !important; }
+        .text-blue-900, .text-blue-800, .text-gray-800, .text-gray-900 { color: black !important; }
+        .text-green-800, .text-green-700 { color: #065f46 !important; }
+        .text-blue-700 { color: #1d4ed8 !important; }
+        .bg-green-100, .bg-blue-100, .bg-indigo-100, .bg-yellow-100 { 
+            background: #f3f4f6 !important; 
+            border: 1px solid #d1d5db !important; 
+        }
+        .border { border: 1px solid #d1d5db !important; }
+        h2, h3 { page-break-after: avoid; }
+        .question-item { page-break-inside: avoid; }
+        
+        /* Print header */
+        @page {
+            margin: 1cm;
+            @top-center {
+                content: "Detail Respons Kuesioner - Halaman " counter(page);
+            }
+        }
+    }
+    </style>
 
-    // Logout functionality
-    document.getElementById('logout-btn')?.addEventListener('click', function(event) {
-        event.preventDefault();
+    <!-- Scripts -->
+    <script>
+        // Enhanced Print functionality
+        function printResponse() {
+            // Add print-specific title
+            const originalTitle = document.title;
+            document.title = 'Detail Respons Kuesioner - {{ $userAnswer->user->alumni->name ?? $userAnswer->user->company->company_name ?? "User #" . $userAnswer->id_user }}';
+            
+            // Create print header with response info
+            const printHeader = document.createElement('div');
+            printHeader.innerHTML = `
+                <div style="text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px;">
+                    <h1 style="margin: 0; font-size: 18px; font-weight: bold;">DETAIL RESPONS KUESIONER</h1>
+                    <p style="margin: 5px 0; font-size: 14px;">Periode: {{ $periode->start_date->format('d M Y') }} - {{ $periode->end_date->format('d M Y') }}</p>
+                    <p style="margin: 5px 0; font-size: 12px;">Dicetak pada: ${new Date().toLocaleDateString('id-ID', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    })}</p>
+                </div>
+            `;
+            printHeader.className = 'print-header';
+            
+            // Insert header at the beginning of printable content
+            const printableContent = document.getElementById('printable-content');
+            if (printableContent) {
+                printableContent.insertBefore(printHeader, printableContent.firstChild);
+            }
+            
+            // Add CSS classes for better print layout
+            const questionItems = document.querySelectorAll('.bg-gray-50.border.border-gray-200.rounded-lg');
+            questionItems.forEach(item => {
+                item.classList.add('question-item');
+            });
+            
+            // Trigger print
+            window.print();
+            
+            // Clean up after print
+            setTimeout(() => {
+                document.title = originalTitle;
+                if (printHeader.parentNode) {
+                    printHeader.parentNode.removeChild(printHeader);
+                }
+                questionItems.forEach(item => {
+                    item.classList.remove('question-item');
+                });
+            }, 1000);
+        }
+    </script>
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '{{ route("logout") }}';
-
-        const csrfTokenInput = document.createElement('input');
-        csrfTokenInput.type = 'hidden';
-        csrfTokenInput.name = '_token';
-        csrfTokenInput.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        form.appendChild(csrfTokenInput);
-        document.body.appendChild(form);
-        form.submit();
-    });
-});
-
-// Print functionality
-function printResponse() {
-    window.print();
-}
-
-// Export functionality
-function exportResponse() {
-    // This would need to be implemented in the backend
-    const responseId = {{ $userAnswer->id_user_answers }};
-    const periodeId = {{ $periode->id_periode }};
-    
-    // You can implement an export route that generates PDF or Excel
-    window.location.href = `/admin/questionnaire/${periodeId}/responses/${responseId}/export`;
-}
-</script>
+    <script src="{{ asset('js/script.js') }}"></script>
+</x-layout-admin>
 @endsection
