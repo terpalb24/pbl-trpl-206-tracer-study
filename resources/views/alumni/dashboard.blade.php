@@ -30,4 +30,20 @@
 
    <!-- script JS  -->
            <script src="{{ asset('js/alumni.js') }}"></script>
+           
+   <!-- SweetAlert2 -->
+   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+   
+   @if(session('password_updated'))
+   <script>
+       Swal.fire({
+           icon: 'success',
+           title: 'Berhasil!',
+           text: '{{ session('password_updated') }}',
+           showConfirmButton: true,
+           confirmButtonText: 'OK',
+           confirmButtonColor: '#10a2b9'
+       });
+   </script>
+   @endif
 @endsection

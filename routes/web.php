@@ -16,6 +16,7 @@ use App\Http\Controllers\AlumniController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\Admin\QuestionnaireController;
 use App\Http\Controllers\Admin\QuestionnaireImportController;
+use App\Http\Controllers\Admin\EksportJobhistory;
 use App\Http\Controllers\Alumni\JobHistoryController; // Tambahkan ini di atas
 use App\Http\Controllers\Alumni\QuestionnaireController as AlumniQuestionnaireController;
 use App\Http\Controllers\Company\QuestionnaireController as CompanyQuestionnaireController;
@@ -60,6 +61,16 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->get('/admin/dashboard'
 Route::middleware(['auth:web', CheckRole::class . ':2'])->get('/alumni/dashboard', [AlumniController::class, 'dashboard'])->name('dashboard.alumni');
 Route::middleware(['auth:web', CheckRole::class . ':3'])->get('/company/dashboard', [CompanyController::class, 'dashboard'])->name('dashboard.company');
 
+/*
+|--------------------------------------------------------------------------
+| Alumni Email Verification Routes (No Authentication Required)
+|--------------------------------------------------------------------------
+*/
+// These routes don't require authentication so alumni can verify from any device
+Route::get('/alumni/verify-email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
+Route::post('/alumni/verify-email', [AlumniController::class, 'sendEmailVerification'])->name('alumni.verify.email');
+Route::get('/alumni/verify-email/{token}', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.change_password');
+Route::post('/alumni/update-password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
 
 /*
 |--------------------------------------------------------------------------
@@ -90,12 +101,6 @@ Route::middleware(['auth:web', CheckRole::class . ':2'])->group(function () {
     // Location API routes for alumni questionnaire
     Route::get('/alumni/questionnaire/provinces', [AlumniQuestionnaireController::class, 'getProvinces'])->name('alumni.questionnaire.provinces');
     Route::get('/alumni/questionnaire/cities/{provinceId}', [AlumniQuestionnaireController::class, 'getCities'])->name('alumni.questionnaire.cities');
-
-    // Email verification & password update for alumni
-    Route::get('/alumni/verify-email', [AlumniController::class, 'showEmailForm'])->name('alumni.email.form');
-    Route::post('/alumni/verify-email', [AlumniController::class, 'sendEmailVerification'])->name('alumni.verify.email');
-    Route::get('/alumni/verify-email/{token}', [AlumniController::class, 'showChangePasswordForm'])->name('alumni.change_password');
-    Route::post('/alumni/update-password', [AlumniController::class, 'updatePassword'])->name('alumni.password.update');
 });
 
 /*
@@ -134,7 +139,12 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/alumni/store', [AdminController::class, 'alumniStore'])->name('admin.alumni.store');
     Route::get('/admin/alumni/{nim}/edit', [AdminController::class, 'alumniEdit'])->name('admin.alumni.edit');
     Route::put('/admin/alumni/{nim}/update', [AdminController::class, 'alumniUpdate'])->name('admin.alumni.update');
+    // Bulk delete harus didefinisikan SEBELUM route dengan parameter {id_user}
+    Route::delete('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete');
+    Route::post('/admin/alumni/bulk-delete', [AdminController::class, 'bulkDeleteAlumni'])->name('admin.alumni.bulk-delete.post');
+    // Support both POST and DELETE for alumni deletion
     Route::delete('/admin/alumni/{id_user}', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy');
+    Route::post('/admin/alumni/{id_user}/delete', [AdminController::class, 'alumniDestroy'])->name('admin.alumni.destroy.post');
     Route::post('/admin/alumni/import', [AdminController::class, 'import'])->name('admin.alumni.import');
     Route::get('/admin/alumni/export', [AdminController::class, 'export'])->name('admin.alumni.export');
     Route::get('/admin/alumni/template', [AdminController::class, 'alumniTemplate'])->name('admin.alumni.template');
@@ -145,8 +155,14 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/company', [AdminController::class, 'companyStore'])->name('admin.company.store');
     Route::get('/admin/company/{id_company}/edit', [AdminController::class, 'companyEdit'])->name('admin.company.edit');
     Route::put('/admin/company/{id_company}', [AdminController::class, 'companyUpdate'])->name('admin.company.update');
-    Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
+    // Bulk delete harus didefinisikan SEBELUM route dengan parameter {id_user}
+    Route::delete('/admin/company/bulk-delete', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.bulk-delete');
+    Route::post('/admin/company/bulk-delete', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.bulk-delete.post');
+    Route::delete('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all');
+    Route::post('/admin/company/delete-all', [AdminController::class, 'bulkDeleteCompany'])->name('admin.company.delete-all.post');
     Route::post('/admin/company/import', [AdminController::class, 'companyImport'])->name('admin.company.import');
+    Route::delete('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy');
+    Route::post('/admin/company/{id_user}', [AdminController::class, 'companyDestroy'])->name('admin.company.destroy.post');
     Route::get('/admin/company/export', [AdminController::class, 'companyExport'])->name('admin.company.export');
     Route::get('/admin/company/template', [AdminController::class, 'companyTemplate'])->name('admin.company.template');
     
@@ -201,6 +217,9 @@ Route::middleware(['auth:web', CheckRole::class . ':1'])->group(function () {
     Route::post('/admin/questionnaire/{id_periode}/complete-drafts', [QuestionnaireController::class, 'completeDraftAnswers'])
     ->name('admin.questionnaire.complete-drafts');
     Route::get('/admin/questionnaire/{id_periode}/export-responden', [\App\Http\Controllers\Admin\EksportRespondenController::class, 'export'])->name('admin.export-responden');
+
+    // Job History Export
+    Route::get('/export/job-history', [EksportJobhistory::class, 'exportJobHistory'])->name('admin.export.job-history');
 });
 //ROUTE UNTUK ADMIN NAMBAHIN study Program\
 Route::post('/admin/study-program', [AdminController::class, 'storeStudyProgram'])->name('admin.study-program.store');
@@ -219,3 +238,7 @@ Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompan
 // Route::get('/admin/debug/company-answers', [AdminController::class, 'debugCompanyAnswers'])
 //     ->middleware(['auth', 'admin.check']) // Ganti dengan nama middleware yang benar
 //     ->name('admin.debug.company-answers');
+
+// Route untuk halaman Lupa NIM
+Route::get('/forgot-nim', [AuthController::class, 'forgotNim'])->name('forgot-nim');
+// End of routes

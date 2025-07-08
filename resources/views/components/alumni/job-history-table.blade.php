@@ -38,20 +38,24 @@
                                title="Edit">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
-                            <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat kerja ini?')">
+                            <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline job-history-delete-form">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit"
-                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
-                                    title="Hapus">
+                                <button type="button"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200 delete-job-history-btn"
+                                    title="Hapus"
+                                    data-company="{{ $jobHistory->company_name }}"
+                                    data-position="{{ $jobHistory->position }}"
+                                    data-start="{{ \Carbon\Carbon::parse($jobHistory->start_date)->format('M Y') }}"
+                                    data-end="{{ $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('M Y') : 'Sekarang' }}">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>
                             </form>
                             <button type="button"
-                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors duration-200"
+                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 transition-colors duration-200 detail-btn"
                                 title="Detail"
-                                onclick="showDetail({{ $jobHistory->id_jobhistory }})">
+                                data-job-id="{{ $jobHistory->id_jobhistory }}"
+                                onclick="event.preventDefault(); event.stopPropagation(); console.log('Desktop button clicked for ID:', {{ $jobHistory->id_jobhistory }}); showJobHistoryDetail({{ $jobHistory->id_jobhistory }}); return false;">
                                 <i class="fas fa-info-circle text-xs sm:text-sm"></i>
                             </button>
                         </div>
@@ -74,20 +78,24 @@
                        title="Edit">
                         <i class="fas fa-edit text-xs"></i>
                     </a>
-                    <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline"
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus riwayat kerja ini?')">
+                    <form action="{{ route('alumni.job-history.destroy', $jobHistory->id_jobhistory) }}" method="POST" class="inline job-history-delete-form">
                         @csrf
                         @method('DELETE')
-                        <button type="submit"
-                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-700"
-                            title="Hapus">
+                        <button type="button"
+                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 delete-job-history-btn"
+                            title="Hapus"
+                            data-company="{{ $jobHistory->company_name }}"
+                            data-position="{{ $jobHistory->position }}"
+                            data-start="{{ \Carbon\Carbon::parse($jobHistory->start_date)->format('M Y') }}"
+                            data-end="{{ $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->format('M Y') : 'Sekarang' }}">
                             <i class="fas fa-trash text-xs"></i>
                         </button>
                     </form>
                     <button type="button"
-                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700"
+                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 detail-btn"
                         title="Detail"
-                        onclick="showDetail({{ $jobHistory->id_jobhistory }})">
+                        data-job-id="{{ $jobHistory->id_jobhistory }}"
+                        onclick="event.preventDefault(); event.stopPropagation(); console.log('Mobile button clicked for ID:', {{ $jobHistory->id_jobhistory }}); showJobHistoryDetail({{ $jobHistory->id_jobhistory }}); return false;">
                         <i class="fas fa-info-circle text-xs"></i>
                     </button>
                 </div>
@@ -127,81 +135,331 @@
     <x-alumni.job-history-empty />
 @endif
 
-@foreach($jobHistories as $index => $jobHistory)
-    {{-- Modal Detail (letakkan di sini, di luar card/table, cukup satu per data) --}}
-    <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 hidden flex items-center justify-center backdrop-blur-sm bg-black/50 p-2 sm:p-4">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-xs sm:max-w-md lg:max-w-2xl p-4 sm:p-8 relative max-h-screen overflow-y-auto">
-            <button onclick="closeDetail({{ $jobHistory->id_jobhistory }})" 
-                    class="absolute top-2 right-2 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1 sm:p-2">
-                <i class="fas fa-times text-lg sm:text-xl"></i>
-            </button>
-            <h2 class="text-lg sm:text-xl lg:text-2xl font-bold mb-4 sm:mb-6 text-blue-800 text-center">Detail Riwayat Kerja</h2>
-            <div class="space-y-4">
-                <div>
-                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Nama Perusahaan</span>
-                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->company->company_name ?? '-' }}</div>
-                </div>
-                <div>
-                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Posisi</span>
-                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->position }}</div>
-                </div>
-                <div>
-                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Gaji</span>
-                    <div class="text-sm sm:text-base text-gray-900 mt-1">Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}</div>
-                </div>
-                <div>
-                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Durasi</span>
-                    <div class="text-sm sm:text-base text-gray-900 mt-1">{{ $jobHistory->duration }}</div>
-                </div>
-                <div>
-                    <span class="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide">Periode Bekerja</span>
-                    <div class="text-sm sm:text-base text-gray-900 mt-1">
-                        @php
-                            $start = $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->translatedFormat('F Y') : '-';
-                            $end = $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->translatedFormat('F Y') : 'Sekarang';
-                        @endphp
-                        {{ $start }} - {{ $end }}
+<!-- Modal Detail untuk semua job histories -->
+@if($jobHistories->count() > 0)
+    @foreach($jobHistories as $jobHistory)
+        <div id="modal-detail-{{ $jobHistory->id_jobhistory }}" class="fixed inset-0 z-50 hidden" style="display: none; opacity: 0; transition: opacity 0.3s ease-in-out; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(6px);">
+            <!-- Perfect center container with flexbox -->
+            <div class="flex items-center justify-center min-h-screen min-w-full p-4" style="min-height: 100vh; min-width: 100vw;">
+                <div class="bg-white rounded-xl shadow-2xl w-full max-w-xs sm:max-w-md lg:max-w-lg xl:max-w-xl mx-auto my-auto relative transform transition-all duration-300 ease-out" style="max-height: 85vh; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);" id="modal-content-{{ $jobHistory->id_jobhistory }}">
+                    <div class="overflow-y-auto" style="max-height: 85vh;">
+                        <div class="p-6 sm:p-8">
+                            <!-- Close button -->
+                            <button onclick="closeJobHistoryDetail({{ $jobHistory->id_jobhistory }})" 
+                                    class="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-400 hover:text-red-600 transition-colors duration-200 p-2 hover:bg-gray-100 rounded-full z-10 group">
+                                <i class="fas fa-times text-lg sm:text-xl group-hover:scale-110 transition-transform duration-200"></i>
+                            </button>
+                            
+                            <!-- Header with icon -->
+                            <div class="text-center mb-6">
+                                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full mb-4 shadow-sm">
+                                    <i class="fas fa-briefcase text-blue-600 text-2xl"></i>
+                                </div>
+                                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Detail Riwayat Kerja</h2>
+                                <div class="w-16 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full mx-auto"></div>
+                            </div>
+                            <!-- Content -->
+                            <div class="space-y-6">
+                                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200">
+                                    <div class="grid grid-cols-1 gap-6">
+                                        <div class="space-y-1">
+                                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                                                <i class="fas fa-building mr-2 text-gray-400"></i>Nama Perusahaan
+                                            </span>
+                                            <div class="text-base text-gray-900 font-semibold bg-white px-3 py-2 rounded-lg shadow-sm">
+                                                {{ $jobHistory->company->company_name ?? 'Tidak tersedia' }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-1">
+                                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                                                <i class="fas fa-user-tie mr-2 text-gray-400"></i>Posisi
+                                            </span>
+                                            <div class="text-base text-gray-900 bg-white px-3 py-2 rounded-lg shadow-sm">
+                                                {{ $jobHistory->position }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-1">
+                                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                                                <i class="fas fa-money-bill-wave mr-2 text-gray-400"></i>Gaji
+                                            </span>
+                                            <div class="text-lg text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg shadow-sm border border-green-200">
+                                                Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-1">
+                                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                                                <i class="fas fa-clock mr-2 text-gray-400"></i>Durasi
+                                            </span>
+                                            <div class="text-base text-gray-900 bg-white px-3 py-2 rounded-lg shadow-sm">
+                                                {{ $jobHistory->duration }}
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="space-y-1">
+                                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                                                <i class="fas fa-calendar-alt mr-2 text-gray-400"></i>Periode Bekerja
+                                            </span>
+                                            <div class="bg-white px-3 py-3 rounded-lg shadow-sm">
+                                                @php
+                                                    $start = $jobHistory->start_date ? \Carbon\Carbon::parse($jobHistory->start_date)->translatedFormat('F Y') : '-';
+                                                    $end = $jobHistory->end_date ? \Carbon\Carbon::parse($jobHistory->end_date)->translatedFormat('F Y') : 'Sekarang';
+                                                @endphp
+                                                <div class="flex items-center justify-center flex-wrap gap-2">
+                                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                                                        <i class="fas fa-play mr-1 text-xs"></i>{{ $start }}
+                                                    </span>
+                                                    <i class="fas fa-arrow-right text-gray-400 mx-1"></i>
+                                                    <span class="bg-{{ $jobHistory->end_date ? 'gray' : 'green' }}-100 text-{{ $jobHistory->end_date ? 'gray' : 'green' }}-800 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                                                        <i class="fas fa-{{ $jobHistory->end_date ? 'stop' : 'circle' }} mr-1 text-xs"></i>{{ $end }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Footer with close button -->
+                                <div class="flex justify-center pt-4 border-t border-gray-200">
+                                    <button onclick="closeJobHistoryDetail({{ $jobHistory->id_jobhistory }})" 
+                                            class="px-8 py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center">
+                                        <i class="fas fa-times mr-2"></i>
+                                        Tutup
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-@endforeach
+    @endforeach
+@endif
 
 <script>
-function showDetail(id) {
+// Make functions global with unique names to avoid conflicts
+window.showJobHistoryDetail = function(id) {
+    console.log('=== DEBUGGING JOB HISTORY MODAL ===');
+    console.log('Attempting to show modal with ID:', 'modal-detail-' + id);
+    console.log('Current page location:', window.location.href);
+    
+    // Close any other open modals first
+    const allModals = document.querySelectorAll('[id^="modal-detail-"]');
+    allModals.forEach(modal => {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+        modal.style.opacity = '0';
+    });
+    
     const modal = document.getElementById('modal-detail-' + id);
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-}
-
-function closeDetail(id) {
-    const modal = document.getElementById('modal-detail-' + id);
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    document.body.style.overflow = 'auto'; // Restore scrolling
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('backdrop-blur-sm')) {
-        const modals = document.querySelectorAll('[id^="modal-detail-"]');
-        modals.forEach(modal => {
-            modal.classList.add('hidden');
+    const modalContent = document.getElementById('modal-content-' + id);
+    console.log('Modal element found:', modal);
+    
+    if (modal && modalContent) {
+        console.log('Modal found, showing...');
+        console.log('Modal current display:', window.getComputedStyle(modal).display);
+        
+        // Set initial styles for animation
+        modal.style.display = 'flex';
+        modal.style.opacity = '0';
+        modalContent.style.transform = 'scale(0.8) translateY(20px)';
+        modalContent.style.opacity = '0';
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Force reflow
+        modal.offsetHeight;
+        
+        // Animate in
+        requestAnimationFrame(() => {
+            modal.style.transition = 'opacity 0.3s ease-out';
+            modalContent.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            
+            modal.style.opacity = '1';
+            modalContent.style.transform = 'scale(1) translateY(0)';
+            modalContent.style.opacity = '1';
         });
-        document.body.style.overflow = 'auto';
+        
+        console.log('After show - Modal display:', window.getComputedStyle(modal).display);
+        console.log('After show - Modal classes:', modal.className);
+        
+    } else {
+        console.error('Modal or modal content not found with ID:', 'modal-detail-' + id);
+        // Debug: List all available modals
+        const allModals = document.querySelectorAll('[id^="modal-detail-"]');
+        console.log('Available modals:', Array.from(allModals).map(m => m.id));
+        console.log('All modal elements:', allModals);
+        
+        // Show error to user
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Error',
+                text: 'Detail riwayat kerja tidak dapat ditampilkan. Silakan refresh halaman.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#dc2626'
+            });
+        } else {
+            alert('Detail riwayat kerja tidak dapat ditampilkan. Silakan refresh halaman.');
+        }
     }
-});
+};
 
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const modals = document.querySelectorAll('[id^="modal-detail-"]');
-        modals.forEach(modal => {
+window.closeJobHistoryDetail = function(id) {
+    console.log('Closing modal with ID:', 'modal-detail-' + id);
+    const modal = document.getElementById('modal-detail-' + id);
+    const modalContent = document.getElementById('modal-content-' + id);
+    
+    if (modal && modalContent) {
+        // Animate out
+        modal.style.transition = 'opacity 0.2s ease-in';
+        modalContent.style.transition = 'all 0.2s ease-in';
+        
+        modal.style.opacity = '0';
+        modalContent.style.transform = 'scale(0.9) translateY(-10px)';
+        modalContent.style.opacity = '0';
+        
+        setTimeout(() => {
+            modal.style.display = 'none';
             modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            console.log('Modal closed successfully');
+        }, 200);
+    }
+};
+
+// Backward compatibility
+window.showDetail = window.showJobHistoryDetail;
+window.closeDetail = window.closeJobHistoryDetail;
+
+// Enhanced DOM ready handling
+function initJobHistoryModals() {
+    console.log('Initializing Job History Modals...');
+    console.log('Available modals on init:', document.querySelectorAll('[id^="modal-detail-"]').length);
+    
+    // Alternative event listener approach for buttons
+    document.addEventListener('click', function(e) {
+        // Handle detail buttons
+        if (e.target.closest('.detail-btn')) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btn = e.target.closest('.detail-btn');
+            const jobId = btn.getAttribute('data-job-id');
+            console.log('Detail button clicked via event listener, ID:', jobId);
+            if (jobId) {
+                showJobHistoryDetail(jobId);
+            }
+            return false;
+        }
+        
+        // Handle backdrop clicks (clicking outside modal content)
+        if (e.target.id && e.target.id.startsWith('modal-detail-')) {
+            const modalId = e.target.id.replace('modal-detail-', '');
+            console.log('Backdrop clicked, closing modal:', modalId);
+            closeJobHistoryDetail(modalId);
+        }
+    });
+    
+    // Handle escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            console.log('Escape key pressed, closing all modals');
+            const openModals = document.querySelectorAll('[id^="modal-detail-"]:not(.hidden)');
+            openModals.forEach(modal => {
+                const modalId = modal.id.replace('modal-detail-', '');
+                closeJobHistoryDetail(modalId);
+            });
+        }
+    });
+}
+
+// Multiple initialization attempts
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initJobHistoryModals);
+} else {
+    initJobHistoryModals();
+}
+
+// Fallback initialization
+setTimeout(initJobHistoryModals, 100);
+setTimeout(initJobHistoryModals, 500);
+setTimeout(initJobHistoryModals, 1000);
+
+// Handle job history delete with SweetAlert2
+document.addEventListener('click', function(e) {
+    const deleteBtn = e.target.closest('.delete-job-history-btn');
+    if (deleteBtn) {
+        e.preventDefault();
+        console.log('Delete button clicked');
+        
+        const form = deleteBtn.closest('.job-history-delete-form');
+        const company = deleteBtn.dataset.company || 'N/A';
+        const position = deleteBtn.dataset.position || 'N/A';
+        const startDate = deleteBtn.dataset.start || 'N/A';
+        const endDate = deleteBtn.dataset.end || 'N/A';
+        
+        Swal.fire({
+            title: 'Konfirmasi Hapus Riwayat Kerja',
+            html: `
+                <div class="text-left">
+                    <p class="mb-3 text-gray-600">Apakah Anda yakin ingin menghapus riwayat kerja berikut?</p>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Perusahaan:</span>
+                                <span class="text-gray-900 font-semibold">${company}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Posisi:</span>
+                                <span class="text-gray-900">${position}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Periode:</span>
+                                <span class="text-gray-900">${startDate} - ${endDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-red-600 font-medium">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Tindakan ini tidak dapat dibatalkan!
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-trash mr-2"></i>Ya, Hapus',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Batal',
+            reverseButtons: true,
+            customClass: {
+                popup: 'swal2-popup-custom',
+                title: 'text-lg font-semibold',
+                content: 'text-sm'
+            },
+            buttonsStyling: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Menghapus...',
+                    text: 'Sedang memproses penghapusan riwayat kerja',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                if (form) {
+                    form.submit();
+                }
+            }
         });
-        document.body.style.overflow = 'auto';
     }
 });
 </script>

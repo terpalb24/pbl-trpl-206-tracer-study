@@ -342,5 +342,20 @@ class AuthController extends Controller
 
         return redirect()->route('login')->with('status', 'Password berhasil direset. Silakan login dengan password baru Anda.');
     }
+
+    // Halaman Lupa NIM
+    public function forgotNim(Request $request)
+    {
+        $search = $request->input('search');
+        $alumni = Tb_Alumni::query()
+            ->when($search, function ($query, $search) {
+                return $query->where('nim', 'like', "%{$search}%")
+                             ->orWhere('name', 'like', "%{$search}%");
+            })
+            ->orderBy('name')
+            ->paginate(20)
+            ->withQueryString();
+        return view('forgot-nim', compact('alumni'));
+    }
 }
 

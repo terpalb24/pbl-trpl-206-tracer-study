@@ -41,6 +41,10 @@
                 <p class="font-semibold text-sm sm:text-base break-words">{{ $alumni->studyProgram->study_program ?? '-' }}</p>
             </div>
             <div>
+                <h3 class="text-xs sm:text-sm text-gray-500 mb-1">Alamat</h3>
+                <p class="font-semibold text-sm sm:text-base break-words">{{ $alumni->address ?? '-' }}</p>
+            </div>
+            <div>
                 <h3 class="text-xs sm:text-sm text-gray-500 mb-1">Angkatan</h3>
                 <p class="font-semibold text-sm sm:text-base">{{ $alumni->batch }}</p>
             </div>

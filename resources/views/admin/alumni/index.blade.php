@@ -1,16 +1,13 @@
 @extends('layouts.app')
 
-@php
-    $admin = auth()->user()->admin;
-
-@endphp
-
 @section('content')
-
-<!-- CSRF Token -->
-<meta name="csrf-token" content="{{ csrf_token() }}">
-
 <x-layout-admin>
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <!-- Sidebar -->
     <x-slot name="sidebar">
         <x-admin.sidebar />
@@ -28,7 +25,7 @@
         <div class="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 lg:p-8 mb-4 sm:mb-6 mt-3 sm:mt-4">
             <h3 class="text-lg sm:text-xl font-semibold text-gray-800 mb-4">Import/Export Data Alumni</h3>
             <form action="{{ route('admin.alumni.import') }}" method="POST" enctype="multipart/form-data" 
-                class="flex flex-col gap-3 sm:gap-4">
+                class="flex flex-col gap-3 sm:gap-4" id="importForm">
                 @csrf
                 
                 <!-- File input section -->
@@ -54,9 +51,16 @@
                         
                         <a href="{{ route('admin.alumni.template') }}"
                             class="flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
-                            <i class="bi bi-file-earmark-excel"></i> 
-                            <span class="hidden sm:inline">Template</span>
+                            <i class="bi bi-file-text"></i>
+                            <span class="hidden sm:inline">Download Template</span>
                             <span class="sm:hidden">Template</span>
+                        </a>
+                        
+                        <a href="{{ route('admin.export.job-history') }}"
+                            class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 sm:px-5 py-2 rounded-md font-semibold text-xs sm:text-sm transition duration-200 whitespace-nowrap">
+                            <i class="bi bi-file-earmark-spreadsheet"></i>
+                            <span class="hidden sm:inline">Export Riwayat Pekerjaan</span>
+                            <span class="sm:hidden">Export Riwayat</span>
                         </a>
                     </div>
                 </div>
@@ -110,9 +114,10 @@
 
                     <!-- Form Tambah Prodi -->
                     <div id="prodiForm" class="hidden">
-                        <form action="{{ route('admin.study-program.store') }}" method="POST" class="flex flex-col sm:flex-row gap-3 mt-2">
+                        <form id="addProdiForm" onsubmit="handleAddProdi(event)" class="flex flex-col sm:flex-row gap-3 mt-2">
                             @csrf
                             <input type="text" name="study_program" required 
+                                id="newProdiInput"
                                 placeholder="Nama Program Studi" 
                                 class="border border-gray-300 rounded-md px-4 py-2 w-full sm:w-72 focus:outline-none focus:ring-2 focus:ring-green-300 text-sm">
                             <button type="submit" 
@@ -148,8 +153,8 @@
                     <!-- Form Hapus Prodi -->
                     <div id="hapusProdiForm" class="hidden space-y-2">
                         <h3 class="text-lg font-semibold text-gray-800">Hapus Program Studi</h3>
-                        <form action="{{ route('admin.study-program.deleteBySelect') }}" method="POST" 
-                            onsubmit="return confirm('Yakin ingin menghapus program studi ini?')" 
+                        <form id="deleteProdiForm" action="{{ route('admin.study-program.deleteBySelect') }}" method="POST" 
+                            onsubmit="handleDeleteProdi(event)" 
                             class="flex flex-col sm:flex-row gap-3">
                             @csrf
                             @method('DELETE')
@@ -175,12 +180,32 @@
                     <!-- Judul -->
                     <h1 class="text-2xl font-bold text-gray-800">Data Alumni</h1>
 
-                    <!-- Tombol Tambah Alumni -->
-                    <a href="{{ route('admin.alumni.create') }}" 
-                        class="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition gap-2">
-                        <i class="bi bi-plus-circle"></i>
-                        <span>Tambah Alumni</span>
-                    </a>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <!-- Tombol Bulk Delete -->
+                        <button id="selectAlumniDelete" 
+                                type="button"
+                                onclick="selectAlumniDelete()" 
+                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                style="display: none;">
+                            <i class="bi bi-trash mr-2"></i>
+                            <span id="deleteSelectedText">Hapus Terpilih</span>
+                        </button>
+
+                        <!-- Tombol Hapus Semua Alumni -->
+                        <button type="button"
+                                onclick="deleteAllAlumni()" 
+                                class="inline-flex items-center px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-medium rounded-lg transition-colors duration-200 border border-red-800">
+                            <i class="bi bi-trash-fill mr-2"></i>
+                            Hapus Semua
+                        </button>
+
+                        <!-- Tombol Tambah Alumni -->
+                        <a href="{{ route('admin.alumni.create') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200">
+                            <i class="bi bi-plus-circle mr-2"></i>
+                            Tambah Alumni
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -250,6 +275,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
+                                <th class="px-3 py-2 text-center w-12">
+                                    <input type="checkbox" 
+                                           id="selectAllCheckbox" 
+                                           onchange="toggleSelectAll()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-4 py-3 text-center">No</th>
                                 <th class="px-4 py-3 text-left">NIM</th>
                                 <th class="px-4 py-3 text-left">Program Studi</th>
@@ -260,6 +291,13 @@
                         <tbody class="text-gray-700">
                             @forelse($alumni as $index => $item)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="checkbox" 
+                                               name="selected_alumni[]" 
+                                               value="{{ $item->id_user }}" 
+                                               onchange="updateSelectAllState()" 
+                                               class="alumni-checkbox rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </td>
                                     <td class="px-4 py-3 text-center">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
                                     <td class="px-4 py-3">{{ $item->nim }}</td>
                                     <td class="px-4 py-3">{{ $item->studyProgram->study_program ?? '-' }}</td>
@@ -272,47 +310,21 @@
                                                title="Edit Alumni">
                                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
-                                            <!-- Delete Button pakai modal -->
+                                            <!-- Delete Button with SweetAlert2 -->
                                             <button type="button"
-                                                onclick="openDeleteModal({{ $item->id_user }})"
+                                                onclick="deleteAlumni({{ $item->id_user }}, '{{ $item->name }}')"
                                                 class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
                                                 title="Hapus Alumni">
                                                 <i class="fas fa-trash text-xs sm:text-sm"></i>
                                             </button>
-                                            <!-- Modal Confirm Delete -->
-                                            <div id="modal-delete-{{ $item->id_user }}" class="fixed inset-0 z-50 items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-                                                <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-xs sm:max-w-sm relative">
-                                                    <button onclick="closeDeleteModal({{ $item->id_user }})"
-                                                            class="absolute top-2 right-2 text-gray-400 hover:text-red-600 transition-colors duration-200 p-1">
-                                                        <i class="fas fa-times text-lg"></i>
-                                                    </button>
-                                                    <div class="flex flex-col items-center text-center">
-                                                        <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-3"></i>
-                                                        <h3 class="text-lg font-semibold mb-2 text-gray-800">Konfirmasi Hapus</h3>
-                                                        <p class="text-gray-600 mb-4 text-sm">Yakin ingin menghapus alumni ini?<br>
-                                                            <b>{{ $item->name }}</b> (NIM: {{ $item->nim }})<br>
-                                                            Semua data terkait akan ikut terhapus.</p>
-                                                        <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" class="w-full flex flex-col gap-2">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <div class="flex justify-center gap-2 mt-2">
-                                                                <button type="button" onclick="closeDeleteModal({{ $item->id_user }})"
-                                                                    class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold transition">Batal</button>
-                                                                <button type="submit"
-                                                                    class="px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold transition">Ya, Hapus</button>
-                                                            </div>
-                                                        </form>
-                                                    </div>
-                                                </div>
-                                            </div>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-8 text-gray-400 text-center">
-                                        <i class="bi bi-inbox text-2xl mb-2 block"></i>
-                                        Tidak ada data alumni
+                                    <td colspan="6" class="px-4 py-6 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-3xl mb-3 block"></i>
+                                        <p>Tidak ada data alumni</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -325,6 +337,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-gray-100 text-gray-700 uppercase text-xs">
                             <tr>
+                                <th class="px-3 py-2 text-center w-12">
+                                    <input type="checkbox" 
+                                           id="selectAllCheckboxTablet" 
+                                           onchange="toggleSelectAllTablet()" 
+                                           class="rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                </th>
                                 <th class="px-3 py-2 text-center">No</th>
                                 <th class="px-3 py-2 text-left">NIM</th>
                                 <th class="px-3 py-2 text-left">Nama</th>
@@ -334,6 +352,13 @@
                         <tbody class="text-gray-700">
                             @forelse($alumni as $index => $item)
                                 <tr class="border-t hover:bg-gray-50 transition-colors">
+                                    <td class="px-3 py-2 text-center">
+                                        <input type="checkbox" 
+                                               name="selected_alumni_tablet[]" 
+                                               value="{{ $item->id_user }}" 
+                                               onchange="updateSelectAllStateTablet()" 
+                                               class="alumni-checkbox-tablet rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                    </td>
                                     <td class="px-3 py-2 text-center text-xs">{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}</td>
                                     <td class="px-3 py-2 text-xs">{{ $item->nim }}</td>
                                     <td class="px-3 py-2">
@@ -342,31 +367,25 @@
                                     </td>
                                     <td class="px-3 py-2">
                                         <div class="flex justify-center items-center space-x-2">
-                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}" 
-                                                class="inline-flex items-center justify-center px-2 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition duration-200 min-w-[60px]"
-                                                title="Edit">
-                                                <i class="bi bi-pencil-square mr-1"></i>
-                                                <span>Edit</span>
+                                            <a href="{{ route('admin.alumni.edit', $item->nim) }}"
+                                               class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-yellow-100 hover:bg-yellow-200 text-yellow-700 transition-colors duration-200"
+                                               title="Edit Alumni">
+                                                <i class="fas fa-edit text-xs sm:text-sm"></i>
                                             </a>
-                                            <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                                onsubmit="return confirm('Yakin ingin menghapus alumni ini?')" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" 
-                                                    class="inline-flex items-center justify-center px-2 py-1 rounded bg-red-500 hover:bg-red-600 text-white text-xs font-medium transition duration-200 min-w-[60px]" 
-                                                    title="Hapus">
-                                                    <i class="bi bi-trash mr-1"></i>
-                                                    <span>Hapus</span>
-                                                </button>
-                                            </form>
+                                            <button type="button"
+                                                onclick="deleteAlumni({{ $item->id_user }}, '{{ $item->name }}')"
+                                                class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                                title="Hapus Alumni">
+                                                <i class="fas fa-trash text-xs sm:text-sm"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-3 py-6 text-gray-400 text-center">
-                                        <i class="bi bi-inbox text-xl mb-2 block"></i>
-                                        <span class="text-sm">Tidak ada data alumni</span>
+                                    <td colspan="5" class="px-3 py-6 text-gray-400 text-center">
+                                        <i class="bi bi-inbox text-3xl mb-3 block"></i>
+                                        <p>Tidak ada data alumni</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -379,9 +398,16 @@
                     @forelse($alumni as $index => $item)
                         <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                             <div class="flex justify-between items-start mb-3">
-                                <div class="flex-1 min-w-0">
-                                    <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $item->name }}</h3>
-                                    <p class="text-gray-600 text-xs mt-1">NIM: {{ $item->nim }}</p>
+                                <div class="flex items-start gap-3 flex-1 min-w-0">
+                                    <input type="checkbox" 
+                                           name="selected_alumni_mobile[]" 
+                                           value="{{ $item->id_user }}" 
+                                           onchange="updateSelectAllStateMobile()" 
+                                           class="alumni-checkbox-mobile rounded border-gray-300 text-blue-600 focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 mt-1">
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-semibold text-gray-900 text-sm truncate">{{ $item->name }}</h3>
+                                        <p class="text-gray-600 text-xs mt-1">NIM: {{ $item->nim }}</p>
+                                    </div>
                                 </div>
                                 <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full flex-shrink-0 ml-2">
                                     #{{ ($alumni->currentPage() - 1) * $alumni->perPage() + $index + 1 }}
@@ -401,19 +427,12 @@
                                 title="Edit Alumni">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                                 </a>
-                                <form action="{{ route('admin.alumni.destroy', $item->id_user) }}" method="POST" 
-                                    onsubmit="return confirm('Yakin ingin menghapus alumni ini?\n\nData yang akan dihapus:\n- Alumni: {{ $item->name }}\n- NIM: {{ $item->nim }}\n- Semua data terkait akan ikut terhapus')" 
-                                    class="flex-1">
-                                    @csrf
-                                    @method('DELETE')
-                                    <!-- Delete Button pakai modal -->
-                                 <button type="button"
-                                     onclick="openDeleteModal({{ $item->id_user }})"
-                                     class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
-                                     title="Hapus Alumni">
+                                <button type="button"
+                                    onclick="deleteAlumni('{{ $item->id_user }}', '{{ $item->name }}')"
+                                    class="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 transition-colors duration-200"
+                                    title="Hapus Alumni">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
-                                 </button>
-                                </form>
+                                </button>
                             </div>
                         </div>
                     @empty
@@ -513,20 +532,1101 @@
     }
     // Modal open/close logic for delete confirmation
     function openDeleteModal(id) {
-        const modal = document.getElementById('modal-delete-' + id);
-        if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        Swal.fire({
+            title: 'Hapus Alumni',
+            text: 'Anda yakin ingin menghapus data alumni ini?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Kirim request delete
+                fetch(`/admin/alumni/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: 'Berhasil!',
+                            text: 'Data alumni berhasil dihapus',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6',
+                            customClass: {
+                                popup: 'swal2-show',
+                                title: 'text-lg font-semibold mb-2',
+                                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                            }
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan saat menghapus data');
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: error.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold text-red-600 mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // ======================== BULK DELETE FUNCTIONALITY ========================
+    
+    // Function to get all selected alumni IDs from all views (desktop, tablet, mobile)
+    function getSelectedAlumniIds() {
+        const ids = [];
+        
+        // Desktop checkboxes
+        document.querySelectorAll('.alumni-checkbox:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Tablet checkboxes
+        document.querySelectorAll('.alumni-checkbox-tablet:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Mobile checkboxes
+        document.querySelectorAll('.alumni-checkbox-mobile:checked').forEach(checkbox => {
+            const id = parseInt(checkbox.value);
+            if (!isNaN(id) && id > 0 && Number.isInteger(id)) {
+                ids.push(id);
+            }
+        });
+        
+        // Remove duplicates and ensure all are positive integers
+        const uniqueIds = [...new Set(ids)];
+        
+        // Extra validation: filter out any non-numeric or 'bulk' values
+        const validIds = uniqueIds.filter(id => {
+            return Number.isInteger(id) && 
+                   id > 0 && 
+                   !String(id).includes('bulk') && 
+                   String(id) !== 'bulk-delete';
+        });
+        
+        return validIds;
+    }
+    
+    // Function to update bulk delete button visibility and text
+    function updateBulkDeleteButton() {
+        const selectedIds = getSelectedAlumniIds();
+        const bulkDeleteBtn = document.getElementById('selectAlumniDelete');
+        const deleteText = document.getElementById('deleteSelectedText');
+        
+        if (selectedIds.length > 0) {
+            bulkDeleteBtn.style.display = 'inline-flex';
+            deleteText.textContent = `Hapus Terpilih (${selectedIds.length})`;
+        } else {
+            bulkDeleteBtn.style.display = 'none';
+            deleteText.textContent = 'Hapus Terpilih';
         }
     }
-    function closeDeleteModal(id) {
-        const modal = document.getElementById('modal-delete-' + id);
-        if (modal) {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+    
+    // Desktop table functions
+    function toggleSelectAll() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox');
+        
+        alumniCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+    
+    function updateSelectAllState() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox');
+        const checkedBoxes = document.querySelectorAll('.alumni-checkbox:checked');
+        
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === alumniCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+        
+        updateBulkDeleteButton();
+    }
+    
+    // Tablet table functions
+    function toggleSelectAllTablet() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckboxTablet');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox-tablet');
+        
+        alumniCheckboxes.forEach(checkbox => {
+            checkbox.checked = selectAllCheckbox.checked;
+        });
+        
+        updateBulkDeleteButton();
+    }
+    
+    function updateSelectAllStateTablet() {
+        const selectAllCheckbox = document.getElementById('selectAllCheckboxTablet');
+        const alumniCheckboxes = document.querySelectorAll('.alumni-checkbox-tablet');
+        const checkedBoxes = document.querySelectorAll('.alumni-checkbox-tablet:checked');
+        
+        if (checkedBoxes.length === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedBoxes.length === alumniCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+        
+        updateBulkDeleteButton();
+    }
+    
+    // Mobile view functions
+    function updateSelectAllStateMobile() {
+        updateBulkDeleteButton();
+    }
+    
+    // Main bulk delete function
+    async function selectAlumniDelete() {
+        const selectedIds = getSelectedAlumniIds();
+        
+        if (selectedIds.length === 0) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih minimal satu alumni untuk dihapus!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+        
+        // Extra security: Validate IDs
+        const validIds = selectedIds.filter(id => {
+            const isValidNumber = Number.isInteger(id) && id > 0;
+            const doesNotContainBulk = !String(id).toLowerCase().includes('bulk');
+            const isNotBulkDelete = String(id) !== 'bulk-delete';
+            return isValidNumber && doesNotContainBulk && isNotBulkDelete;
+        });
+        
+        if (validIds.length !== selectedIds.length) {
+            Swal.fire({
+                title: 'Error',
+                text: 'Data yang dipilih tidak valid. Silakan refresh halaman dan coba lagi.',
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+        
+        // Confirmation dialog
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus Alumni',
+            html: `Yakin ingin menghapus <b>${validIds.length} alumni</b> yang dipilih?<br><br>Semua data terkait akan ikut terhapus dan tidak dapat dikembalikan.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
+        // Show loading state
+        Swal.fire({
+            title: 'Menghapus Data',
+            text: 'Mohon tunggu...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token tidak ditemukan');
+            }
+            
+            const requestData = {
+                ids: validIds.filter(id => Number.isInteger(id) && id > 0)
+            };
+            
+            const response = await fetch('{{ route("admin.alumni.bulk-delete") }}', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || `${validIds.length} alumni berhasil dihapus.`,
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Terjadi kesalahan saat menghapus data');
+            }
+            
+        } catch (error) {
+            console.error('Error during bulk delete:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
         }
     }
+    
+    // Function to delete all alumni with current filters
+    async function deleteAllAlumni() {
+        // Get current filter values
+        const currentFilters = {
+            graduation_year: document.querySelector('[name="graduation_year"]')?.value || '',
+            id_study: document.querySelector('[name="id_study"]')?.value || '',
+            search: document.querySelector('[name="search"]')?.value || ''
+        };
+        
+        // Create confirmation message based on active filters
+        let confirmTitle = 'Konfirmasi Hapus Semua Alumni';
+        let confirmHtml = 'Apakah Anda yakin ingin menghapus <b>SEMUA</b> data alumni?';
+        
+        // Check if there are active filters
+        const hasFilters = currentFilters.graduation_year || currentFilters.id_study || currentFilters.search;
+        if (hasFilters) {
+            confirmHtml = 'Apakah Anda yakin ingin menghapus <b>SEMUA</b> alumni yang sesuai dengan filter saat ini?<br><br>';
+            
+            confirmHtml += '<div class="text-left bg-gray-50 p-3 rounded-lg mt-2 mb-3">';
+            confirmHtml += '<p class="font-semibold mb-2">Filter yang diterapkan:</p>';
+            if (currentFilters.graduation_year) {
+                confirmHtml += `<p class="text-sm">• Tahun Lulus: <span class="font-medium">${currentFilters.graduation_year}</span></p>`;
+            }
+            if (currentFilters.id_study) {
+                const studySelect = document.querySelector('[name="id_study"]');
+                const selectedOption = studySelect.options[studySelect.selectedIndex];
+                confirmHtml += `<p class="text-sm">• Program Studi: <span class="font-medium">${selectedOption.text}</span></p>`;
+            }
+            if (currentFilters.search) {
+                confirmHtml += `<p class="text-sm">• Pencarian: <span class="font-medium">"${currentFilters.search}"</span></p>`;
+            }
+            confirmHtml += '</div>';
+        }
+        
+        confirmHtml += '<div class="text-red-600 text-sm font-semibold mt-3">⚠️ Semua data terkait akan ikut terhapus dan TIDAK DAPAT DIKEMBALIKAN!</div>';
+        
+        // Show confirmation dialog with SweetAlert2
+        const result = await Swal.fire({
+            title: confirmTitle,
+            html: confirmHtml,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus Semua',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-xl font-bold mb-4',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (!result.isConfirmed) return;
+
+        // Show loading state
+        Swal.fire({
+            title: 'Menghapus Data',
+            text: 'Mohon tunggu...',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                throw new Error('CSRF token tidak ditemukan');
+            }
+            
+            // Prepare request data
+            const requestData = {
+                delete_all: true,
+                ...currentFilters
+            };
+            
+            console.log('Sending delete all request with data:', requestData); // Debug log
+            
+            // Send request
+            const response = await fetch('{{ route("admin.alumni.bulk-delete.post") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Semua alumni berhasil dihapus.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reload page to refresh data
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Terjadi kesalahan saat menghapus data');
+            }
+            
+        } catch (error) {
+            console.error('Error during delete all:', error);
+            await Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+    
+    // Fungsi untuk menghapus alumni individual
+    async function deleteAlumni(id, name) {
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus Alumni',
+            html: `Apakah Anda yakin ingin menghapus alumni <strong>${name}</strong>?<br>
+                  <div class="text-red-600 text-sm font-semibold mt-2">⚠️ Data yang dihapus tidak dapat dikembalikan!</div>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6B7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-xl font-bold mb-4',
+                htmlContainer: 'text-left',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (result.isConfirmed) {
+            try {
+                // Show loading state
+                Swal.fire({
+                    title: 'Menghapus Data',
+                    text: 'Mohon tunggu...',
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    willOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                // Send the delete request
+                const response = await fetch(`/admin/alumni/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        _method: 'DELETE'  // Laravel method spoofing
+                    })
+                });
+
+                // Try to parse the response as JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    // If response is not JSON, create a basic response object
+                    data = {
+                        success: response.ok,
+                        message: response.ok ? 'Alumni berhasil dihapus' : 'Gagal menghapus alumni'
+                    };
+                }
+
+                // Check both response.ok and data.success
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Terjadi kesalahan saat menghapus data.');
+                }
+
+                // Show success message
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: data.message || 'Alumni berhasil dihapus.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+
+                // Reload halaman untuk memperbarui data
+                window.location.reload();
+            } catch (error) {
+                console.error('Error deleting alumni:', error);
+                await Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold text-red-600 mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+            }
+        }
+    }
+
+    // Handle tambah program studi dengan SweetAlert2
+    async function handleAddProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiName = document.getElementById('newProdiInput').value;
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Buat FormData untuk mengirim data
+            const formData = new FormData();
+            formData.append('study_program', prodiName);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            const response = await fetch('{{ route("admin.study-program.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil ditambahkan' : 'Gagal menambahkan program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil ditambahkan',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal menambahkan program studi');
+            }
+        } catch (error) {
+            console.error('Error adding prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle edit program studi dengan SweetAlert2
+    async function handleEditProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiId = form.querySelector('select[name="id_study"]').value;
+        const prodiName = document.getElementById('editInput').value;
+        
+        if (!prodiId) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih program studi yang ingin diedit!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Show loading state
+            Swal.fire({
+                title: 'Mengupdate Data',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: new URLSearchParams(new FormData(form))
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil diperbarui' : 'Gagal memperbarui program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil diperbarui',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal memperbarui program studi');
+            }
+        } catch (error) {
+            console.error('Error updating prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle hapus program studi dengan SweetAlert2
+    async function handleDeleteProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const selectElement = form.querySelector('select[name="id_study"]');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        
+        if (!selectElement.value) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Pilih program studi yang ingin dihapus!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        const prodiName = selectedOption.text;
+        
+        const result = await Swal.fire({
+            title: 'Konfirmasi Hapus',
+            text: `Yakin ingin menghapus program studi "${prodiName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Hapus',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                confirmButton: 'px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 mr-2',
+                cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+            }
+        });
+
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Menghapus Program Studi',
+                text: 'Mohon tunggu...',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                willOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                let result;
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    result = await response.json();
+                } else {
+                    // Jika response bukan JSON, buat object result manual
+                    result = {
+                        success: response.ok,
+                        message: response.ok ? `Program studi "${prodiName}" berhasil dihapus` : 'Gagal menghapus program studi'
+                    };
+                }
+
+                if (response.ok && result.success) {
+                    await Swal.fire({
+                        title: 'Berhasil!',
+                        text: result.message || `Program studi "${prodiName}" berhasil dihapus`,
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                    
+                    // Reset form dan refresh halaman
+                    form.reset();
+                    window.location.reload();
+                } else {
+                    throw new Error(result.message || 'Gagal menghapus program studi');
+                }
+            } catch (error) {
+                console.error('Error deleting prodi:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold text-red-600 mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+            }
+        }
+    }
+
+    // Handle tambah program studi dengan SweetAlert2
+    async function handleAddProdi(event) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const prodiName = document.getElementById('newProdiInput').value;
+        
+        if (!prodiName.trim()) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi tidak boleh kosong!',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        // Validasi huruf pertama harus kapital
+        if (!/^[A-Z]/.test(prodiName.trim())) {
+            Swal.fire({
+                title: 'Peringatan',
+                text: 'Nama program studi harus dimulai dengan huruf kapital (contoh: Teknik Mekatronika).',
+                icon: 'warning',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+            return;
+        }
+
+        try {
+            // Buat FormData untuk mengirim data
+            const formData = new FormData();
+            formData.append('study_program', prodiName);
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]').content);
+
+            const response = await fetch('{{ route("admin.study-program.store") }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json'
+                },
+                body: formData
+            });
+
+            let result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                // Jika response bukan JSON, buat object result manual
+                result = {
+                    success: response.ok,
+                    message: response.ok ? 'Program studi berhasil ditambahkan' : 'Gagal menambahkan program studi'
+                };
+            }
+
+            if (response.ok && result.success) {
+                await Swal.fire({
+                    title: 'Berhasil!',
+                    text: result.message || 'Program studi berhasil ditambahkan',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                    }
+                });
+                
+                // Reset form dan refresh halaman
+                form.reset();
+                window.location.reload();
+            } else {
+                throw new Error(result.message || 'Gagal menambahkan program studi');
+            }
+        } catch (error) {
+            console.error('Error adding prodi:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: error.message,
+                icon: 'error',
+                confirmButtonText: 'OK',
+                customClass: {
+                    popup: 'swal2-show',
+                    title: 'text-lg font-semibold text-red-600 mb-2',
+                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                }
+            });
+        }
+    }
+
+    // Handle import excel dengan SweetAlert2
+    document.addEventListener('DOMContentLoaded', function() {
+        const importForm = document.querySelector('form[action*="import"]');
+        if (importForm) {
+            importForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                const fileInput = this.querySelector('input[type="file"]');
+                if (!fileInput.files.length) {
+                    Swal.fire({
+                        title: 'Peringatan',
+                        text: 'Pilih file Excel terlebih dahulu!',
+                        icon: 'warning',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                            popup: 'swal2-show',
+                            title: 'text-lg font-semibold mb-2',
+                            confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                        }
+                    });
+                    return;
+                }
+
+                const result = await Swal.fire({
+                    title: 'Konfirmasi Import',
+                    text: 'Yakin ingin mengimport data alumni dari file Excel ini?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Import',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'swal2-show',
+                        title: 'text-lg font-semibold mb-2',
+                        confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 mr-2',
+                        cancelButton: 'px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2'
+                    }
+                });
+
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Mengimport Data',
+                        text: 'Mohon tunggu...',
+                        allowOutsideClick: false,
+                        showConfirmButton: false,
+                        willOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    try {
+                        const formData = new FormData(this);
+                        const response = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        let result;
+                        const contentType = response.headers.get('content-type');
+                        if (contentType && contentType.includes('application/json')) {
+                            result = await response.json();
+                        } else {
+                            // Jika response bukan JSON, buat object result manual
+                            result = {
+                                success: response.ok,
+                                message: response.ok ? 'Data berhasil diimport' : 'Gagal mengimport data'
+                            };
+                        }
+
+                        if (response.ok && result.success) {
+                            await Swal.fire({
+                                title: 'Berhasil!',
+                                text: result.message || 'Data alumni berhasil diimport',
+                                icon: 'success',
+                                confirmButtonText: 'OK',
+                                customClass: {
+                                    popup: 'swal2-show',
+                                    title: 'text-lg font-semibold mb-2',
+                                    confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                                }
+                            });
+                            
+                            window.location.reload();
+                        } else {
+                            throw new Error(result.message || 'Gagal mengimport data');
+                        }
+                    } catch (error) {
+                        console.error('Error importing:', error);
+                        Swal.fire({
+                            title: 'Error!',
+                            text: error.message,
+                            icon: 'error',
+                            confirmButtonText: 'OK',
+                            customClass: {
+                                popup: 'swal2-show',
+                                title: 'text-lg font-semibold text-red-600 mb-2',
+                                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    });
+    // ...existing code...
 </script>
+
  <!-- script JS  -->
     <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>

@@ -38,6 +38,11 @@
                 {{ session('status') }}
             </div>
             @endif
+            @if(session('success'))
+            <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
+                {{ session('success') }}
+            </div>
+            @endif
             <form method="POST" action="{{ route('login') }}" class="space-y-5">
                 @csrf
                 <!-- Username -->
@@ -72,6 +77,7 @@
                 <!-- Forgot Password -->
                 <div class="text-right">
                     <a href="/forgot-password" class="text-sm text-theme-primary hover:underline">Lupa Kata Sandi?</a>
+                    <a href="/forgot-nim" class="text-sm text-theme-primary hover:underline ml-4">Lupa NIM?</a>
                 </div>
 
                 <!-- Buttons -->
@@ -98,6 +104,9 @@
     </div>
 </div>
 
+<!-- SweetAlert2 CDN -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
     function togglePassword(fieldId) {
         const input = document.getElementById(fieldId);
@@ -110,6 +119,33 @@
             icon.classList.replace('fa-eye-slash', 'fa-eye');
         }
     }
+
+    // Show success alert if alumni just verified email
+    @if(session('success'))
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({
+            icon: 'success',
+            title: 'Email Berhasil Diverifikasi!',
+            text: '{{ session('success') }}',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#3085d6',
+            customClass: {
+                popup: 'swal2-show',
+                title: 'text-lg font-semibold mb-2',
+                confirmButton: 'px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
+            }
+        });
+        
+        // Pre-fill username if available
+        @if(session('verified_nim'))
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.value = '{{ session('verified_nim') }}';
+            usernameInput.focus();
+        }
+        @endif
+    });
+    @endif
 </script>
 
 @endsection
