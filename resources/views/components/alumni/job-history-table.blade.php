@@ -210,4 +210,77 @@ document.addEventListener('keydown', function(e) {
         document.body.style.overflow = 'auto';
     }
 });
+
+// Handle job history delete with SweetAlert2
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-job-history-btn')) {
+        e.preventDefault();
+        
+        const button = e.target.closest('.delete-job-history-btn');
+        const form = button.closest('.job-history-delete-form');
+        const company = button.dataset.company;
+        const position = button.dataset.position;
+        const startDate = button.dataset.start;
+        const endDate = button.dataset.end;
+        
+        Swal.fire({
+            title: 'Konfirmasi Hapus Riwayat Kerja',
+            html: `
+                <div class="text-left">
+                    <p class="mb-3 text-gray-600">Apakah Anda yakin ingin menghapus riwayat kerja berikut?</p>
+                    <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Perusahaan:</span>
+                                <span class="text-gray-900">${company}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Posisi:</span>
+                                <span class="text-gray-900">${position}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="font-medium text-gray-700">Periode:</span>
+                                <span class="text-gray-900">${startDate} - ${endDate}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-sm text-red-600 font-medium">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Tindakan ini tidak dapat dibatalkan!
+                    </p>
+                </div>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-trash mr-2"></i>Ya, Hapus',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Batal',
+            reverseButtons: true,
+            customClass: {
+                popup: 'swal2-popup-custom',
+                title: 'text-lg font-semibold',
+                content: 'text-sm'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading state
+                Swal.fire({
+                    title: 'Menghapus...',
+                    text: 'Sedang memproses penghapusan riwayat kerja',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Submit the form
+                form.submit();
+            }
+        });
+    }
+});
 </script>
