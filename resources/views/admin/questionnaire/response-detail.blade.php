@@ -291,7 +291,143 @@
                 <div class="p-6">
                     @if(isset($questionsWithAnswers) && count($questionsWithAnswers) > 0)
                         @foreach($questionsWithAnswers as $categoryIndex => $categoryData)
-                            <div class="mb-8 {{ $categoryIndex > 0 ? 'border-t border-gray-200 pt-8' : '' }}">
+                            @php
+                                // Filter pertanyaan yang bisa ditampilkan untuk kategori ini
+                                $visibleQuestions = collect($categoryData['questions'])->filter(function($qData) use ($questionsWithAnswers) {
+                                    $shouldShow = true;
+                                    if ($qData['question']->depends_on) {
+                                        $parentAnswered = false;
+                                        foreach($questionsWithAnswers as $catData) {
+                                            foreach($catData['questions'] as $parentQData) {
+                                                if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                                    $hasParentAnswer = false;
+                                                    $parentAnswersToCheck = [];
+                                                    
+                                                    // Check for single answer
+                                                    if (isset($parentQData['answer']) && $parentQData['answer']) {
+                                                        $hasParentAnswer = true;
+                                                        $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
+                                                    }
+                                                    
+                                                    // Check for multiple answers
+                                                    if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
+                                                        $hasParentAnswer = true;
+                                                        $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
+                                                    }
+                                                    
+                                                    if ($hasParentAnswer) {
+                                                        // Support multi-value depends_value (OR logic)
+                                                        $dependsValues = is_string($qData['question']->depends_value) ? 
+                                                            explode(',', $qData['question']->depends_value) : 
+                                                            [$qData['question']->depends_value];
+                                                        $dependsValues = array_map('trim', $dependsValues);
+                                                        
+                                                        // Check if parent answer matches any of the depends_value options
+                                                        foreach ($parentAnswersToCheck as $answer) {
+                                                            $trimmedAnswer = trim($answer);
+                                                            
+                                                            // Direct match check
+                                                            if (in_array($trimmedAnswer, $dependsValues)) {
+                                                                $parentAnswered = true;
+                                                                break 2;
+                                                            }
+                                                            
+                                                            // Check if answer is text but depends_value contains option ID
+                                                            $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
+                                                            if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
+                                                                $parentAnswered = true;
+                                                                break 2;
+                                                            }
+                                                            
+                                                            // Check if answer is ID but depends_value contains option text
+                                                            if (is_numeric($trimmedAnswer)) {
+                                                                $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
+                                                                if ($optionById && in_array($optionById->option, $dependsValues)) {
+                                                                    $parentAnswered = true;
+                                                                    break 2;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    break 2;
+                                                }
+                                            }
+                                        }
+                                        $shouldShow = $parentAnswered;
+                                    }
+                                    return $shouldShow;
+                                });
+                                
+                                // Hitung kategori yang sudah ditampilkan untuk index yang benar
+                                $displayedCategoryIndex = 0;
+                                for($i = 0; $i < $categoryIndex; $i++) {
+                                    $prevCategoryVisibleQuestions = collect($questionsWithAnswers[$i]['questions'])->filter(function($qData) use ($questionsWithAnswers) {
+                                        $shouldShow = true;
+                                        if ($qData['question']->depends_on) {
+                                            $parentAnswered = false;
+                                            foreach($questionsWithAnswers as $catData) {
+                                                foreach($catData['questions'] as $parentQData) {
+                                                    if ($parentQData['question']->id_question == $qData['question']->depends_on) {
+                                                        $hasParentAnswer = false;
+                                                        $parentAnswersToCheck = [];
+                                                        
+                                                        if (isset($parentQData['answer']) && $parentQData['answer']) {
+                                                            $hasParentAnswer = true;
+                                                            $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
+                                                        }
+                                                        
+                                                        if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
+                                                            $hasParentAnswer = true;
+                                                            $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
+                                                        }
+                                                        
+                                                        if ($hasParentAnswer) {
+                                                            $dependsValues = is_string($qData['question']->depends_value) ? 
+                                                                explode(',', $qData['question']->depends_value) : 
+                                                                [$qData['question']->depends_value];
+                                                            $dependsValues = array_map('trim', $dependsValues);
+                                                            
+                                                            foreach ($parentAnswersToCheck as $answer) {
+                                                                $trimmedAnswer = trim($answer);
+                                                                
+                                                                if (in_array($trimmedAnswer, $dependsValues)) {
+                                                                    $parentAnswered = true;
+                                                                    break 2;
+                                                                }
+                                                                
+                                                                $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
+                                                                if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
+                                                                    $parentAnswered = true;
+                                                                    break 2;
+                                                                }
+                                                                
+                                                                if (is_numeric($trimmedAnswer)) {
+                                                                    $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
+                                                                    if ($optionById && in_array($optionById->option, $dependsValues)) {
+                                                                        $parentAnswered = true;
+                                                                        break 2;
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                        break 2;
+                                                    }
+                                                }
+                                            }
+                                            $shouldShow = $parentAnswered;
+                                        }
+                                        return $shouldShow;
+                                    });
+                                    
+                                    if ($prevCategoryVisibleQuestions->count() > 0) {
+                                        $displayedCategoryIndex++;
+                                    }
+                                }
+                            @endphp
+                            
+                            {{-- Hanya tampilkan kategori jika ada pertanyaan yang bisa ditampilkan --}}
+                            @if($visibleQuestions->count() > 0)
+                            <div class="mb-8 {{ $displayedCategoryIndex > 0 ? 'border-t border-gray-200 pt-8' : '' }}">
                                 <!-- Category Header -->
                                 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg mb-6 border border-blue-200">
                                     <div class="flex justify-between items-center">
@@ -300,72 +436,6 @@
                                                 <i class="fas {{ $categoryData['category']->for_type == 'alumni' ? 'fa-graduation-cap' : ($categoryData['category']->for_type == 'company' ? 'fa-building' : 'fa-users') }} mr-1"></i>
                                                 {{ $categoryData['category']->category_name }}
                                             </span>
-                                            @php
-                                                $visibleQuestions = collect($categoryData['questions'])->filter(function($qData) use ($questionsWithAnswers) {
-                                                    $shouldShow = true;
-                                                    if ($qData['question']->depends_on) {
-                                                        $parentAnswered = false;
-                                                        foreach($questionsWithAnswers as $catData) {
-                                                            foreach($catData['questions'] as $parentQData) {
-                                                                if ($parentQData['question']->id_question == $qData['question']->depends_on) {
-                                                                    $hasParentAnswer = false;
-                                                                    $parentAnswersToCheck = [];
-                                                                    
-                                                                    // Check for single answer
-                                                                    if (isset($parentQData['answer']) && $parentQData['answer']) {
-                                                                        $hasParentAnswer = true;
-                                                                        $parentAnswersToCheck = is_array($parentQData['answer']) ? $parentQData['answer'] : [$parentQData['answer']];
-                                                                    }
-                                                                    
-                                                                    // Check for multiple answers
-                                                                    if (isset($parentQData['multipleAnswers']) && is_array($parentQData['multipleAnswers']) && count($parentQData['multipleAnswers']) > 0) {
-                                                                        $hasParentAnswer = true;
-                                                                        $parentAnswersToCheck = array_merge($parentAnswersToCheck, $parentQData['multipleAnswers']);
-                                                                    }
-                                                                    
-                                                                    if ($hasParentAnswer) {
-                                                                        // Support multi-value depends_value (OR logic)
-                                                                        $dependsValues = is_string($qData['question']->depends_value) ? 
-                                                                            explode(',', $qData['question']->depends_value) : 
-                                                                            [$qData['question']->depends_value];
-                                                                        $dependsValues = array_map('trim', $dependsValues);
-                                                                        
-                                                                        // Check if parent answer matches any of the depends_value options
-                                                                        foreach ($parentAnswersToCheck as $answer) {
-                                                                            $trimmedAnswer = trim($answer);
-                                                                            
-                                                                            // Direct match check
-                                                                            if (in_array($trimmedAnswer, $dependsValues)) {
-                                                                                $parentAnswered = true;
-                                                                                break 2;
-                                                                            }
-                                                                            
-                                                                            // Check if answer is text but depends_value contains option ID
-                                                                            $matchingOption = $parentQData['question']->options->where('option', $trimmedAnswer)->first();
-                                                                            if ($matchingOption && in_array((string)$matchingOption->id_questions_options, $dependsValues)) {
-                                                                                $parentAnswered = true;
-                                                                                break 2;
-                                                                            }
-                                                                            
-                                                                            // Check if answer is ID but depends_value contains option text
-                                                                            if (is_numeric($trimmedAnswer)) {
-                                                                                $optionById = $parentQData['question']->options->where('id_questions_options', $trimmedAnswer)->first();
-                                                                                if ($optionById && in_array($optionById->option, $dependsValues)) {
-                                                                                    $parentAnswered = true;
-                                                                                    break 2;
-                                                                                }
-                                                                            }
-                                                                        }
-                                                                    }
-                                                                    break 2;
-                                                                }
-                                                            }
-                                                        }
-                                                        $shouldShow = $parentAnswered;
-                                                    }
-                                                    return $shouldShow;
-                                                });
-                                            @endphp
                                             <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
                                                 {{ $visibleQuestions->count() }} pertanyaan
                                             </span>
@@ -459,28 +529,36 @@
                                         @if($shouldShow)
                                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-5 hover:shadow-md transition-shadow duration-200">
                                                 <!-- Question Header -->
-                                                <div class="flex justify-between items-start mb-4">
-                                                    <div class="flex-1">
-                                                        <div class="flex items-start">
-                                                            <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full mr-3 mt-1">{{ $questionNumber }}</span>
-                                                            <div class="flex-1">
-                                                                <p class="font-semibold text-gray-900 leading-relaxed">{{ $qData['question']->question }}</p>
-                                                                
-                                                                @if($qData['question']->depends_on)
-                                                                    <div class="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3">
-                                                                        <p class="text-xs text-blue-700 flex items-start">
-                                                                            <i class="fas fa-link mr-2 mt-0.5"></i> 
-                                                                            <span class="font-medium">Pertanyaan bersyarat</span>
-                                                                        </p>
-                                                                    </div>
-                                                                @endif
+                                                <div class="mb-4">
+                                                    <!-- Mobile: Stack vertically, Desktop: Side by side -->
+                                                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                                                        <!-- Question content -->
+                                                        <div class="flex-1 min-w-0">
+                                                            <div class="flex items-start">
+                                                                <span class="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full mr-3 mt-1 flex-shrink-0">{{ $questionNumber }}</span>
+                                                                <div class="flex-1 min-w-0">
+                                                                    <p class="font-semibold text-gray-900 leading-relaxed break-words">{{ $qData['question']->question }}</p>
+                                                                    
+                                                                    @if($qData['question']->depends_on)
+                                                                        <div class="mt-2 bg-blue-50 border border-blue-200 rounded-md p-3">
+                                                                            <p class="text-xs text-blue-700 flex items-start">
+                                                                                <i class="fas fa-link mr-2 mt-0.5 flex-shrink-0"></i> 
+                                                                                <span class="font-medium">Pertanyaan bersyarat</span>
+                                                                            </p>
+                                                                        </div>
+                                                                    @endif
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                        
+                                                        <!-- Question type badge -->
+                                                        <div class="flex-shrink-0 self-start sm:ml-3">
+                                                            <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full inline-flex items-center">
+                                                                <i class="fas fa-{{ $qData['question']->type == 'text' ? 'keyboard' : ($qData['question']->type == 'numeric' ? 'calculator' : ($qData['question']->type == 'option' ? 'dot-circle' : ($qData['question']->type == 'multiple' ? 'check-square' : ($qData['question']->type == 'location' ? 'map-marker-alt' : ($qData['question']->type == 'rating' ? 'star' : ($qData['question']->type == 'scale' ? 'chart-line' : ($qData['question']->type == 'email' ? 'envelope' : 'calendar-alt'))))))) }} mr-1 flex-shrink-0"></i>
+                                                                <span class="whitespace-nowrap">{{ $qData['question']->type == 'numeric' ? 'Numerik' : ucfirst($qData['question']->type) }}</span>
+                                                            </span>
+                                                        </div>
                                                     </div>
-                                                    <span class="text-xs bg-gray-200 text-gray-700 px-2 py-1 rounded-full ml-3">
-                                                        <i class="fas fa-{{ $qData['question']->type == 'text' ? 'keyboard' : ($qData['question']->type == 'numeric' ? 'calculator' : ($qData['question']->type == 'option' ? 'dot-circle' : ($qData['question']->type == 'multiple' ? 'check-square' : ($qData['question']->type == 'location' ? 'map-marker-alt' : ($qData['question']->type == 'rating' ? 'star' : ($qData['question']->type == 'scale' ? 'chart-line' : ($qData['question']->type == 'email' ? 'envelope' : 'calendar-alt'))))))) }} mr-1"></i>
-                                                        {{ $qData['question']->type == 'numeric' ? 'Numerik' : ucfirst($qData['question']->type) }}
-                                                    </span>
                                                 </div>
                                                 
                                                 <!-- Answer Section -->
@@ -788,6 +866,7 @@
                                     @endforeach
                                 </div>
                             </div>
+                            @endif {{-- End if visible questions > 0 --}}
                         @endforeach
                     @else
                         <div class="text-center py-12">
