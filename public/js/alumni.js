@@ -145,13 +145,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Show and hide detail modal
-    window.showDetail = function (id) {
-        document
-            .getElementById("modal-detail-" + id)
-            .classList.remove("hidden");
-    };
-    window.closeDetail = function (id) {
-        document.getElementById("modal-detail-" + id).classList.add("hidden");
-    };
+    // Show and hide detail modal (moved to individual components)
+    // window.showDetail and window.closeDetail are now handled in components
 });

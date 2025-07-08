@@ -50,6 +50,6 @@
     </main>
 </div>
 
-   <!-- script JS  -->
-           <script src="{{ asset('js/alumni.js') }}"></script>
+<!-- script JS  -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection
