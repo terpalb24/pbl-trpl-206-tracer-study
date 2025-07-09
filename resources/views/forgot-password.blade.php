@@ -60,11 +60,6 @@
 </div>
 @endif
 
-@if (session('status'))
-<div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-  {{ session('status') }}
-</div>
-@endif
                     </div>
                 </div>
 
