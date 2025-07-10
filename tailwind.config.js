@@ -1,8 +1,10 @@
 export default {
     theme: {
         extend: {
-            fontFamily: {
-                outfit: ["Outfit", "sans-serif"],
+        scrollBehavior: {
+            smooth: 'smooth',
+                fontFamily: {
+                    outfit: ["Outfit", "sans-serif"],
             },
         },
     },
