@@ -155,6 +155,7 @@
 
 <!-- Footer -->
  <!-- Wave Atas Footer -->
+<section data-aos="fade-up" data-aos-duration="1000">
 <div class="w-full overflow-hidden -mb-1 -mt-10">
   <svg class="w-full rotate-180" viewBox="0 0 1440 320">
     <path fill="#152A6B" fill-opacity="1"
@@ -204,6 +205,7 @@
         </div>
     </div>
 </footer>
+</section>
 </div>
 
 <!-- AOS -->
