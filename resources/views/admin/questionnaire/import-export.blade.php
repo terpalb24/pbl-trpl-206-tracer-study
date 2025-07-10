@@ -101,14 +101,19 @@
         <div class="bg-blue-50 rounded-md p-4 mb-6">
             <h3 class="font-semibold text-blue-700 mb-2">Petunjuk Format Import/Export</h3>
             <ol class="list-decimal pl-5 text-sm text-blue-700 space-y-1">
-                <li>Download template untuk melihat format yang diperlukan.</li>
-                <li>Isi <b>Category Name</b>, <b>Category Order</b>, <b>For Type</b> (alumni/company/both).</li>
-                <li>Isi <b>Question Text</b>, <b>Question Type</b> (text/option/multiple/rating/scale/date/location/numeric/email), <b>Question Order</b>.</li>
-                <li>Kolom <b>Before Text</b> dan <b>After Text</b> untuk teks sebelum/sesudah input (opsional).</li>
-                <li>Untuk tipe <b>scale</b>, isi <b>Scale Min Label</b> dan <b>Scale Max Label</b>.</li>
-                <li>Untuk tipe pilihan (option/multiple/rating/scale), isi <b>Options</b> dipisahkan dengan tanda |.</li>
-                <li>Jika ada opsi "Other", isi <b>Other Option Indexes</b> (index dimulai dari 0, pisahkan dengan koma jika lebih dari satu).</li>
-                <li>Jika opsi "Other" memiliki before/after text, isi <b>Other Before Texts</b> dan <b>Other After Texts</b> sesuai urutan opsi (pisahkan dengan |).</li>
+            <li>Unduh template untuk melihat format yang diperlukan.</li>
+            <li>Isi <b>Nama Kategori</b>, <b>Urutan Kategori</b>, dan <b>Untuk Tipe</b> (alumni/perusahaan/keduanya).</li>
+            <li>
+                <div class="break-words md:break-normal max-w-full">
+                Isi <b>Pertanyaan</b>, <b>Tipe Pertanyaan</b> (teks/pilihan/ganda/rating/skala/tanggal/lokasi/numerik/email), dan <b>Urutan Pertanyaan</b>.<br>
+                Jika teks terlalu panjang, gunakan baris baru agar tetap rapi di dalam kolom.
+                </div>
+            </li>
+            <li>Kolom <b>Teks Sebelum</b> dan <b>Teks Sesudah</b> digunakan untuk menambahkan teks sebelum atau sesudah input (opsional).</li>
+            <li>Untuk tipe <b>skala</b>, isi <b>Label Skala Minimum</b> dan <b>Label Skala Maksimum</b>.</li>
+            <li>Untuk tipe pilihan (pilihan/ganda/rating/skala), isi <b>Opsi</b> dipisahkan dengan tanda |.</li>
+            <li>Jika ada opsi "Lainnya", isi <b>Indeks Opsi Lainnya</b> (indeks dimulai dari 0, pisahkan dengan koma jika lebih dari satu).</li>
+            <li>Jika opsi "Lainnya" memiliki teks sebelum/sesudah, isi <b>Teks Sebelum Lainnya</b> dan <b>Teks Sesudah Lainnya</b> sesuai urutan opsi (pisahkan dengan |).</li>
             </ol>
         </div>
         <div class="flex justify-end">
@@ -117,6 +122,7 @@
             </a>
         </div>
     </div>
+    <script src="{{ asset('js/script.js') }}"></script>
 </x-layout-admin>
 @endsection
 

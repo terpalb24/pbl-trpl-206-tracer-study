@@ -513,9 +513,9 @@
                            class="block px-4 py-2 text-gray-700 hover:bg-gray-100">Export Respon Perusahaan</a>
                     </div>
                 </div>
-                <button class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                <a href="{{ route('dashboard.admin') }}" class="w-full sm:w-auto flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
                     <i class="fas fa-chart-bar mr-2"></i> Lihat Statistik
-                </button>
+                </a>
             </div>
         </div>
     </div>

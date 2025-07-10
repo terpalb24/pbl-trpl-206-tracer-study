@@ -35,12 +35,12 @@
                     <span class="hidden sm:inline">Import/Export Kuisioner</span>
                     <span class="sm:hidden">Import/Export</span>
                 </a>
-                <a href="{{ route('admin.questionnaires.download-template') }}" 
+                <!-- <a href="{{ route('admin.questionnaires.download-template') }}" 
                     class="inline-flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition">
                     <i class="fas fa-download"></i> 
                     <span class="hidden sm:inline">Download Template</span>
                     <span class="sm:hidden">Template</span>
-                </a>
+                </a> -->
                 <button type="button" onclick="showRemindAllModal()" 
                     class="inline-flex items-center justify-center gap-2 bg-orange-600 hover:bg-orange-700 text-white px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-medium transition">
                     <i class="fas fa-bell"></i> 

@@ -293,5 +293,6 @@ $(document).ready(function() {
     toggleEndDate();
 });
 </script>
-
+<!-- script JS  -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection

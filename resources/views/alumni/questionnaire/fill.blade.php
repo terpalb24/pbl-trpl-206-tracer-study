@@ -1684,6 +1684,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const form = document.getElementById('questionnaireForm');
     const formAction = document.getElementById('form-action');
+    
+    // Add flag to prevent multiple submissions
+    let isSubmitting = false;
+    
+    // Add form submission interceptor for extra validation
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('Form submit event triggered');
+            const actionValue = document.querySelector('input[name="action"]')?.value;
+            console.log('Current action:', actionValue);
+            
+            // Only intercept next_category submissions
+            if (actionValue === 'next_category') {
+                console.log('Intercepting next_category submission for validation');
+                
+                // Prevent submission and run validation
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const validationResult = validateCurrentCategory();
+                console.log('Form interceptor validation result:', validationResult);
+                
+                if (validationResult !== true) {
+                    console.log('Form submission BLOCKED by interceptor');
+                    isSubmitting = false;
+                    return false;
+                } else {
+                    console.log('Form submission ALLOWED by interceptor');
+                    // Remove this event listener temporarily and resubmit
+                    form.removeEventListener('submit', arguments.callee);
+                    setTimeout(() => {
+                        form.submit();
+                    }, 50);
+                }
+            }
+        });
+    }
 
     initializeLocationQuestions();
     initializeConditionalQuestions();
@@ -1720,59 +1757,171 @@ document.addEventListener('DOMContentLoaded', function() {
         form.submit();
     });
 
-    document.getElementById('next-category-btn')?.addEventListener('click', function() {
-        if (validateCurrentCategory()) {
-            const actionInput = document.querySelector('input[name="action"]');
-            if (actionInput) {
-                actionInput.value = 'next_category';
+    // Enhanced next category button handler with robust validation
+    const nextCategoryButton = document.getElementById('next-category-btn');
+    if (nextCategoryButton) {
+        console.log('Next category button found, attaching event listener');
+        
+        // Remove any existing event listeners
+        nextCategoryButton.replaceWith(nextCategoryButton.cloneNode(true));
+        const newNextCategoryButton = document.getElementById('next-category-btn');
+        
+        newNextCategoryButton.addEventListener('click', function(e) {
+            console.log('Next category button clicked');
+            
+            // ALWAYS prevent default behavior first
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                console.log('Already submitting, ignoring click');
+                return false;
             }
-            form.submit();
-        }
-    });
+            
+            console.log('Starting validation...');
+            const validationResult = validateCurrentCategory();
+            console.log('Validation result:', validationResult);
+            
+            if (validationResult === true) {
+                console.log('Validation passed, proceeding to next category');
+                isSubmitting = true;
+                
+                const actionInput = document.querySelector('input[name="action"]');
+                if (actionInput) {
+                    actionInput.value = 'next_category';
+                    console.log('Action input set to:', actionInput.value);
+                } else {
+                    console.error('Action input not found');
+                    isSubmitting = false;
+                    return false;
+                }
+                
+                console.log('Submitting form now...');
+                // Use requestSubmission to bypass our own form interceptor
+                setTimeout(() => {
+                    // Temporarily disable form interceptor
+                    form.dataset.bypassValidation = 'true';
+                    form.submit();
+                }, 100);
+            } else {
+                console.log('Validation failed - BLOCKING form submission');
+                console.log('NOT calling form.submit()');
+                isSubmitting = false;
+                // Explicitly do NOT call form.submit()
+                return false;
+            }
+        }, true); // Use capture phase
+    } else {
+        console.log('Next category button not found');
+    }
 
-    document.getElementById('submit-final-btn')?.addEventListener('click', function() {
-        console.log('Submit final button clicked');
-        if (validateCurrentCategory()) {
-            console.log('Validation passed, showing modal');
-            // Show confirmation modal
+    // Enhanced submit final button handler with proper prevention
+    const submitFinalButton = document.getElementById('submit-final-btn');
+    if (submitFinalButton) {
+        console.log('Submit final button found, attaching event listener');
+        
+        // Remove any existing event listeners
+        submitFinalButton.replaceWith(submitFinalButton.cloneNode(true));
+        const newSubmitFinalButton = document.getElementById('submit-final-btn');
+        
+        newSubmitFinalButton.addEventListener('click', function(e) {
+            console.log('Submit final button clicked');
+            
+            // ALWAYS prevent default behavior first
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                console.log('Already submitting, ignoring click');
+                return false;
+            }
+            
+            console.log('Starting final validation...');
+            const validationResult = validateCurrentCategory();
+            console.log('Final validation result:', validationResult);
+            
+            if (validationResult === true) {
+                console.log('Validation passed, showing confirmation modal');
+                // Show confirmation modal
+                const modal = document.getElementById('confirmation-modal');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.style.display = 'flex';
+                    console.log('Modal displayed');
+                } else {
+                    console.error('Modal not found');
+                }
+            } else {
+                console.log('Final validation failed - NOT showing modal');
+            }
+            
+            // Explicitly return false to prevent any form submission
+            return false;
+        }, true); // Use capture phase
+    } else {
+        console.log('Submit final button not found');
+    }
+
+    // Enhanced modal event handlers
+    const modalCancelButton = document.getElementById('modal-cancel');
+    if (modalCancelButton) {
+        modalCancelButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Modal cancel clicked');
+            
             const modal = document.getElementById('confirmation-modal');
             if (modal) {
-                modal.style.display = 'flex';
-                console.log('Modal displayed');
-            } else {
-                console.error('Modal not found');
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
             }
-        } else {
-            console.log('Validation failed');
-        }
-    });
+            
+            // Reset submission flag
+            isSubmitting = false;
+        });
+    }
 
-    document.getElementById('modal-cancel')?.addEventListener('click', function() {
-        console.log('Modal cancel clicked');
-        const modal = document.getElementById('confirmation-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    });
-
-    document.getElementById('modal-confirm')?.addEventListener('click', function() {
-        console.log('Modal confirm clicked');
-        const actionInput = document.querySelector('input[name="action"]');
-        if (actionInput) {
-            actionInput.value = 'submit_final';
-            console.log('Action set to submit_final');
-        } else {
-            console.error('Action input not found');
-        }
-        
-        const modal = document.getElementById('confirmation-modal');
-        if (modal) {
-            modal.style.display = 'none';
-        }
-        
-        console.log('Submitting form');
-        form.submit();
-    });
+    const modalConfirmButton = document.getElementById('modal-confirm');
+    if (modalConfirmButton) {
+        modalConfirmButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Modal confirm clicked');
+            
+            // Prevent multiple submissions
+            if (isSubmitting) {
+                console.log('Already submitting, ignoring confirm click');
+                return false;
+            }
+            
+            isSubmitting = true;
+            
+            const actionInput = document.querySelector('input[name="action"]');
+            if (actionInput) {
+                actionInput.value = 'submit_final';
+                console.log('Action set to submit_final');
+            } else {
+                console.error('Action input not found');
+                isSubmitting = false;
+                return false;
+            }
+            
+            const modal = document.getElementById('confirmation-modal');
+            if (modal) {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+            }
+            
+            console.log('Submitting final form');
+            // Temporarily disable form interceptor for final submission
+            form.dataset.bypassValidation = 'true';
+            form.submit();
+        });
+    }
 
     // Add click outside modal to close
     document.getElementById('confirmation-modal')?.addEventListener('click', function(e) {
@@ -1807,16 +1956,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         const visibleQuestions = document.querySelectorAll('.question-container:not([style*="display: none"]):not([style*="display:none"])');
+        console.log('Total visible questions found:', visibleQuestions.length);
         
         visibleQuestions.forEach((questionContainer, index) => {
             const questionId = questionContainer.id.replace('question-', '');
-            const questionTitle = questionContainer.querySelector('h5').textContent.trim();
+            const questionTitle = questionContainer.querySelector('h5')?.textContent.trim() || 'Unknown Question';
             
             const isConditional = questionContainer.classList.contains('conditional-question');
             const isCurrentlyVisible = questionContainer.style.display !== 'none';
             
             console.log('Validating question', {
                 questionId: questionId,
+                questionTitle: questionTitle,
                 isConditional: isConditional,
                 isCurrentlyVisible: isCurrentlyVisible
             });
@@ -1981,11 +2132,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-        
+            console.log('Question validation result:', {
+                questionId: questionId,
+                questionTitle: questionTitle,
+                isRequired: isRequired,
+                isAnswered: isAnswered,
+                errorMessage: errorMessage
+            });
             
             if (isRequired && !isAnswered) {
                 hasErrors = true;
                 validationErrors.push(`${index + 1}. ${questionTitle}`);
+                
+                console.log('Question marked as error:', {
+                    questionId: questionId,
+                    questionTitle: questionTitle,
+                    errorMessage: errorMessage
+                });
                 
                 // Add visual indication
                 questionContainer.classList.add('border-red-300');
@@ -1999,7 +2162,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        console.log('Validation completed:', {
+            totalErrors: validationErrors.length,
+            hasErrors: hasErrors,
+            errors: validationErrors
+        });
+        
         if (hasErrors) {
+            console.log('Validation failed - showing errors and blocking submission');
             
             // Scroll to first error
             const firstErrorQuestion = document.querySelector('.question-container.border-red-300');
@@ -2013,9 +2183,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // Show validation alert
             showValidationAlert(validationErrors);
             
+            console.log('Returning FALSE from validation');
             return false;
         }
         
+        console.log('Validation passed - allowing submission');
+        console.log('Returning TRUE from validation');
         return true;
     }
 
@@ -2030,12 +2203,13 @@ document.addEventListener('DOMContentLoaded', function() {
             <div id="validation-alert" 
                  role="alert"
                  aria-live="polite"
-                 class="fixed top-6 right-6 w-96 bg-white border-l-4 border-red-500 rounded-lg shadow-xl transform transition-all duration-300 ease-out translate-x-full">
+                 class="fixed top-20 right-6 w-96 bg-white border-l-4 border-red-500 rounded-lg shadow-xl transform transition-all duration-300 ease-out translate-x-full z-50">
                 <div class="p-5">
                     <div class="flex items-start space-x-4">
                         <!-- Icon -->
                         <div class="flex-shrink-0">
-                            <div class="w                                <i class="fas fa-exclamation-triangle text-red-500"></i>
+                            <div>
+                                <i class="fas fa-exclamation-triangle text-red-500"></i>
                             </div>
                         </div>
 
@@ -2064,7 +2238,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
 
                         <!-- Close Button -->
-                        <button onclick="dismissValidationAlert(this)" 
+                        <button id="validation-alert-close-btn"
                                 class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
                                 aria-label="Tutup pesan">
                             <i class="fas fa-times"></i>
@@ -2077,6 +2251,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Insert alert
         document.body.insertAdjacentHTML('beforeend', alertHtml);
 
+        // Add close button event listener
+        const closeBtn = document.getElementById('validation-alert-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                dismissValidationAlert(this);
+            });
+        }
+
         // Trigger animation
         requestAnimationFrame(() => {
             const alert = document.getElementById('validation-alert');
@@ -2086,7 +2268,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Auto dismiss
         setTimeout(() => {
-            dismissValidationAlert(document.querySelector('#validation-alert button'));
+            const closeBtn = document.getElementById('validation-alert-close-btn');
+            if (closeBtn) {
+                dismissValidationAlert(closeBtn);
+            }
         }, 8000);
     }
 
@@ -2204,4 +2389,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+<!-- script JS  -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection

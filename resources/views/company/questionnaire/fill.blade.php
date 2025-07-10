@@ -1726,4 +1726,6 @@ function loadSavedLocationData(questionId) {
     }
 }
 </script>
+<!-- Script -->
+<script src="{{ asset('js/company.js') }}"></script>
 @endsection

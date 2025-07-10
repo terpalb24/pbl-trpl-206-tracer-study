@@ -141,5 +141,6 @@
     // Add smooth scroll behavior
     document.documentElement.style.scrollBehavior = 'smooth';
 </script>
-
+<!-- script JS  -->
+<script src="{{ asset('js/alumni.js') }}"></script>
 @endsection
