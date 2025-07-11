@@ -51,6 +51,18 @@
                     <button type="button" id="btn-cancel" class="text-center text-sm text-black font-semibold hover:underline">
                         Kembali ke Login
                     </button>
+                    
+                    <!-- Fallback HTML link jika JavaScript tidak bekerja -->
+                    <noscript>
+                        <a href="{{ route('login') }}" class="text-center text-sm text-blue-600 font-semibold hover:underline">
+                            ← Kembali ke Login (HTML)
+                        </a>
+                    </noscript>
+                    
+                    <!-- Link alternatif dengan GET parameter untuk clear session -->
+                    <a href="{{ route('login') }}?clear_session=1" class="text-center text-xs text-gray-500 hover:text-gray-700" style="display: none;" id="backup-login-link">
+                        Kembali ke Login (Backup)
+                    </a>
                 </div>
             </form>
         </div>
@@ -78,6 +90,18 @@
                     <button type="button" id="btn-back-login" class="text-center text-sm text-black font-semibold hover:underline">
                         Kembali ke Login
                     </button>
+                    
+                    <!-- Fallback HTML link jika JavaScript tidak bekerja -->
+                    <noscript>
+                        <a href="{{ route('login') }}" class="text-center text-sm text-blue-600 font-semibold hover:underline">
+                            ← Kembali ke Login (HTML)
+                        </a>
+                    </noscript>
+                    
+                    <!-- Link alternatif dengan GET parameter untuk clear session -->
+                    <a href="{{ route('login') }}?clear_session=1" class="text-center text-xs text-gray-500 hover:text-gray-700" style="display: none;" id="backup-login-link-success">
+                        Kembali ke Login (Backup)
+                    </a>
                 </div>
             </div>
         </div>
@@ -92,16 +116,189 @@
 {{-- SweetAlert CDN --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle cancel button
-        document.getElementById('btn-cancel').onclick = function() {
-            window.location.href = "{{ route('login') }}";
+    // Fungsi untuk membersihkan session di server dan redirect
+    function clearSessionAndRedirect(url) {
+        console.log('🧹 Membersihkan session server dan melakukan redirect...');
+        
+        // Clear client-side storage
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        // Clear cookies yang mungkin mempengaruhi session
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        // Kirim AJAX request untuk clear session di server
+        fetch('/clear-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                               document.querySelector('input[name="_token"]')?.value
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            console.log('✅ Session cleared on server');
+            // Force redirect dengan menghapus referrer
+            window.location.replace(url);
+        })
+        .catch(error => {
+            console.log('❌ Error clearing session:', error);
+            // Tetap redirect meskipun error
+            window.location.replace(url);
+        });
+    }
+    
+    // Fungsi alternatif dengan form POST untuk menghindari session
+    function redirectViaForm(url) {
+        console.log('📝 Redirect menggunakan form dengan clear session...');
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/clear-session-redirect';
+        form.style.display = 'none';
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                         document.querySelector('input[name="_token"]')?.value;
+        
+        if (csrfToken) {
+            const tokenInput = document.createElement('input');
+            tokenInput.type = 'hidden';
+            tokenInput.name = '_token';
+            tokenInput.value = csrfToken;
+            form.appendChild(tokenInput);
         }
         
-        // Handle back to login from success page
-        document.getElementById('btn-back-login').onclick = function() {
-            window.location.href = "{{ route('login') }}";
+        // Add redirect URL
+        const urlInput = document.createElement('input');
+        urlInput.type = 'hidden';
+        urlInput.name = 'redirect_url';
+        urlInput.value = url;
+        form.appendChild(urlInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+    
+    // Fungsi untuk membuka window baru jika redirect tidak berhasil
+    function fallbackRedirect(url) {
+        console.log('🪟 Fallback: Membuka window baru...');
+        
+        // Try to open in current window first
+        try {
+            window.open(url, '_self');
+        } catch (e) {
+            // If fails, open in new window
+            window.open(url, '_blank');
         }
+    }
+    
+    // Fungsi utama untuk handle redirect ke login
+    function handleLoginRedirect() {
+        const loginUrl = "{{ route('login') }}";
+        console.log('🔄 Memulai proses redirect ke login...');
+        
+        // Show loading indicator
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach(btn => {
+            if (btn.innerText.includes('Kembali ke Login')) {
+                btn.innerHTML = '⏳ Menghapus Session...';
+                btn.disabled = true;
+            }
+        });
+        
+        // Method 1: Clear session via AJAX dan redirect
+        try {
+            clearSessionAndRedirect(loginUrl);
+        } catch (e) {
+            console.log('❌ Method 1 gagal:', e);
+            
+            // Method 2: Redirect via form
+            try {
+                setTimeout(() => {
+                    redirectViaForm(loginUrl);
+                }, 1000);
+            } catch (e2) {
+                console.log('❌ Method 2 gagal:', e2);
+                
+                // Method 3: Fallback redirect
+                setTimeout(() => {
+                    fallbackRedirect(loginUrl);
+                }, 2000);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle cancel button dengan multiple methods
+        document.getElementById('btn-cancel').onclick = function(e) {
+            e.preventDefault();
+            
+            // Show confirmation with SweetAlert
+            Swal.fire({
+                title: 'Kembali ke Login?',
+                text: 'Session verifikasi akan dihapus dan Anda akan kembali ke halaman login.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Kembali',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleLoginRedirect();
+                }
+            });
+        }
+        
+        // Handle back to login from success page dengan multiple methods
+        document.getElementById('btn-back-login').onclick = function(e) {
+            e.preventDefault();
+            
+            // Show confirmation with SweetAlert
+            Swal.fire({
+                title: 'Kembali ke Login?',
+                text: 'Session verifikasi akan dihapus dan Anda akan kembali ke halaman login.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ya, Kembali',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    handleLoginRedirect();
+                }
+            });
+        }
+        
+        // Tampilkan link backup setelah 3 detik jika masih di halaman
+        setTimeout(function() {
+            const backupLink = document.getElementById('backup-login-link');
+            const backupLinkSuccess = document.getElementById('backup-login-link-success');
+            if (backupLink) {
+                backupLink.style.display = 'block';
+                backupLink.innerHTML = '🔗 Link Backup - Klik jika tombol tidak bekerja';
+                console.log('🔗 Backup link displayed after 3 seconds');
+            }
+            if (backupLinkSuccess) {
+                backupLinkSuccess.style.display = 'block';
+                backupLinkSuccess.innerHTML = '🔗 Link Backup - Klik jika tombol tidak bekerja';
+                console.log('🔗 Success backup link displayed after 3 seconds');
+            }
+        }, 3000);
+        
+        // Log session information untuk debugging
+        console.log('📊 Session Debug Info:');
+        console.log('- Current URL:', window.location.href);
+        console.log('- Referrer:', document.referrer);
+        console.log('- User Agent:', navigator.userAgent);
+        console.log('- Cookies:', document.cookie);
+        console.log('- Local Storage Keys:', Object.keys(localStorage));
+        console.log('- Session Storage Keys:', Object.keys(sessionStorage));
         
         // Handle send again button
         document.getElementById('btn-send-again').onclick = function() {

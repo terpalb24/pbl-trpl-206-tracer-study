@@ -18,6 +18,19 @@ class AuthController extends Controller
 {
     public function showLoginForm(Request $request)
     {
+        // Handle parameter clear_session untuk membersihkan session dari verifikasi email
+        if ($request->has('clear_session') && $request->get('clear_session') == '1') {
+            // Clear all session data
+            $request->session()->flush();
+            $request->session()->regenerate();
+            
+            // Clear cookies jika ada
+            $cookie1 = cookie()->forget('remember_username');
+            $cookie2 = cookie()->forget('remember_password');
+            
+            return redirect()->route('login')->withCookies([$cookie1, $cookie2]);
+        }
+        
         // Jika sudah login, redirect ke dashboard sesuai role
         if (Auth::check()) {
             $user = Auth::user();
@@ -445,6 +458,51 @@ class AuthController extends Controller
         file_put_contents($usedCodesPath, json_encode($usedCodes));
         Session::forget('admin_recovery_code');
         return redirect()->route('login')->with('status', 'Password admin berhasil direset. Silakan login dengan password baru.');
+    }
+
+    // Clear session untuk verifikasi email
+    public function clearSession(Request $request)
+    {
+        try {
+            // Clear all session data
+            $request->session()->flush();
+            $request->session()->regenerate();
+            
+            // Clear cookies jika ada
+            cookie()->queue(cookie()->forget('remember_username'));
+            cookie()->queue(cookie()->forget('remember_password'));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Session berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus session: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Clear session dan redirect dengan form POST
+    public function clearSessionAndRedirect(Request $request)
+    {
+        try {
+            // Clear all session data
+            $request->session()->flush();
+            $request->session()->regenerate();
+            
+            // Clear cookies jika ada
+            cookie()->queue(cookie()->forget('remember_username'));
+            cookie()->queue(cookie()->forget('remember_password'));
+            
+            // Get redirect URL or default to login
+            $redirectUrl = $request->input('redirect_url', route('login'));
+            
+            return redirect($redirectUrl)->with('success', 'Session berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->route('login')->with('error', 'Gagal menghapus session: ' . $e->getMessage());
+        }
     }
 }
 

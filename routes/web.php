@@ -37,6 +37,8 @@ Route::get('/about', fn () => view('about'))->name('about');
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class , 'logout'])->name('logout'); 
+Route::post('/clear-session', [AuthController::class, 'clearSession'])->name('clear.session');
+Route::post('/clear-session-redirect', [AuthController::class, 'clearSessionAndRedirect'])->name('clear.session.redirect'); 
 
 // Password Change (for all authenticated users)
 Route::middleware('auth')->group(function () {
