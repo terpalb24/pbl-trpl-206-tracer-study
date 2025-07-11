@@ -146,7 +146,7 @@ class EksportRespondenController extends Controller
                 $headerRow = 11;
 
                     if ($type === 'alumni') {
-                $staticHeaders = ['No', 'Nama', 'Program Studi', 'Tahun Lulus', 'Tipe', 'NIM', 'Tanggal Isi'];
+                $staticHeaders = ['No', 'NIM', 'Nama', 'Program Studi', 'Tahun Lulus', 'Tipe', 'Tanggal Isi'];
             } elseif ($type === 'company') {
                 $staticHeaders = [
                     'No', 'Prodi Alumni yang dinilai', 'Tahun Lulus Alumni', 'Nama Perusahaan', 'Tipe',
@@ -213,20 +213,20 @@ class EksportRespondenController extends Controller
                 $prodiName = $alumni ? ($alumni->studyProgram ? $alumni->studyProgram->study_program : '-') : '-';
                 $graduationYear = $alumni ? $alumni->graduation_year : '-';
 
-                $name = $alumni ? $alumni->name : ($company ? $company->company_name : ($user->name ?? ''));
-                $tipe = $alumni ? 'Alumni' : ($company ? 'Perusahaan' : '-');
-                $nimOrEmail = $alumni ? $alumni->nim : ($company ? $company->company_email : '');
+                $name = $alumni ? $alumni->name : null;
+                $tipe = $alumni ? 'Alumni' : null;
+                $nim = $alumni ? $alumni->nim : null;
                 $tanggalIsi = $userAnswer->created_at ? $userAnswer->created_at->format('Y-m-d H:i') : '';
 
                 $colIdx = 1;
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $idx + 1);
              if ($type === 'alumni') {
-                // Alumni: No - Nama - Prodi - Tahun Lulus - Tipe - NIM - Tanggal Isi
+                // Alumni: No - NIM - Nama - Prodi - Tahun Lulus - Tipe - Tanggal Isi
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nim);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $name);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $prodiName);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $graduationYear);
                 $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $tipe);
-                $sheet->setCellValue(Coordinate::stringFromColumnIndex($colIdx++) . $row, $nimOrEmail);
             } elseif ($type === 'company') {
                 // Company: No - Prodi alumni yang dinilai - Tahun Lulus Alumni - Nama Perusahaan - Tipe - NIM Alumni - Nama Alumni - Tanggal Isi
                 $nimAlumni = $userAnswer->nim ?? '';
