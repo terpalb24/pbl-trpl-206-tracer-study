@@ -27,9 +27,19 @@
             </li>
         </ul>
         <div class="flex items-center gap-4">
-            <a href="{{ route('login') }}" class="hover:text-[#F2692A] flex items-center">
-                <i class="fa-solid fa-user mr-2"></i><span>Login</span>
-            </a>
+            @if(Auth::check())
+                @php
+                    $role = Auth::user()->role;
+                    $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+                @endphp
+                <a href="{{ $dashboard }}" class="hover:text-[#F2692A] flex items-center">
+                    <i class="fa-solid fa-gauge mr-2"></i><span>Dashboard</span>
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="hover:text-[#F2692A] flex items-center">
+                    <i class="fa-solid fa-user mr-2"></i><span>Login</span>
+                </a>
+            @endif
             <!-- Hamburger: hidden on md and up -->
             <button id="menu-button" class="hamburger hamburger--collapse block md:hidden focus:outline-none" aria-label="Toggle menu">
                 <div class="hamburger-box">
@@ -125,11 +135,23 @@
             Mari sukseskan pelaksanaan <span class="font-semibold text-[#152A6B]">tracer study</span><br />
             Politeknik Negeri Batam.
         </p>
-        <a href="{{ route('login') }}" class="inline-block bg-[#152A6B] text-white px-15 py-2 rounded-[18px] shadow-md font-medium mt-4 text-[18px]" 
-    data-aos="fade-up"
-     data-aos-duration="3000">
+        @if(Auth::check())
+            @php
+            $role = Auth::user()->role;
+            $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+            @endphp
+            <a href="{{ $dashboard }}" class="inline-block bg-[#152A6B] text-white px-15 py-2 rounded-[18px] shadow-md font-medium mt-4 text-[18px]" 
+            data-aos="fade-up"
+            data-aos-duration="3000">
+            Dashboard
+            </a>
+        @else
+            <a href="{{ route('login') }}" class="inline-block bg-[#152A6B] text-white px-15 py-2 rounded-[18px] shadow-md font-medium mt-4 text-[18px]" 
+            data-aos="fade-up"
+            data-aos-duration="3000">
             Login
-        </a>
+            </a>
+        @endif
     </div>
 
     <!-- Kanan: Gambar ilustrasi -->
