@@ -56,8 +56,15 @@
             <h3 class="text-lg font-semibold mb-2 text-gray-800">Recovery Code Admin</h3>
             <p class="text-gray-600 mb-4 text-sm">Gunakan salah satu recovery code berikut untuk reset password admin:</p>
             <ul class="mb-4 text-left text-xs font-mono bg-gray-100 rounded p-3 border border-gray-200">
+                @php
+                    $usedCodes = [];
+                    $usedPath = storage_path('app/used_recovery_codes.json');
+                    if (file_exists($usedPath)) {
+                        $usedCodes = json_decode(file_get_contents($usedPath), true) ?? [];
+                    }
+                @endphp
                 @foreach(config('recovery.admin_codes', []) as $code)
-                <li class="mb-1">{{ $code }}</li>
+                <li class="mb-1 @if(in_array($code, $usedCodes)) line-through text-gray-400 @endif">{{ $code }}</li>
                 @endforeach
             </ul>
             <button type="button" onclick="closeRecoveryModal()" class="px-4 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white font-semibold transition">Tutup</button>

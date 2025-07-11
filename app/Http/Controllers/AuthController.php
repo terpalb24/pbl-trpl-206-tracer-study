@@ -408,6 +408,14 @@ class AuthController extends Controller
         if (!Session::has('admin_recovery_code')) {
             return redirect()->route('password.request')->with('error', 'Akses tidak valid.');
         }
+        $recoveryCode = Session::get('admin_recovery_code');
+        // Cek apakah recovery code sudah pernah dipakai
+        $usedCodesPath = storage_path('app/used_recovery_codes.json');
+        $usedCodes = file_exists($usedCodesPath) ? json_decode(file_get_contents($usedCodesPath), true) : [];
+        if (in_array($recoveryCode, $usedCodes)) {
+            Session::forget('admin_recovery_code');
+            return redirect()->route('password.request')->with('error', 'Recovery code sudah pernah digunakan.');
+        }
         $request->validate([
             'password' => [
                 'required',
@@ -426,6 +434,9 @@ class AuthController extends Controller
         }
         $admin->password = Hash::make($request->password);
         $admin->save();
+        // Simpan recovery code ke blacklist
+        $usedCodes[] = $recoveryCode;
+        file_put_contents($usedCodesPath, json_encode($usedCodes));
         Session::forget('admin_recovery_code');
         return redirect()->route('login')->with('status', 'Password admin berhasil direset. Silakan login dengan password baru.');
     }
