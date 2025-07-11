@@ -895,12 +895,15 @@ class QuestionnaireController extends Controller
                         if ($answerItem->id_questions_options) {
                             $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
                             if ($option) {
-                                $multipleAnswers[] = $option->option;
+                                $multipleAnswers[] = $answerItem->id_questions_options;
                                 
                                 if (!empty($answerItem->other_answer)) {
-                                    $multipleOtherAnswers[] = $answerItem->other_answer;
+                                    $multipleOtherAnswers[$answerItem->id_questions_options] = $answerItem->other_answer;
                                 }
                             }
+                        } else {
+                            // If no option ID, use the answer directly
+                            $multipleAnswers[] = $answerItem->answer;
                         }
                     }
                 } else {
@@ -911,7 +914,7 @@ class QuestionnaireController extends Controller
                         if ($answerItem->id_questions_options) {
                             $option = $question->options->where('id_questions_options', $answerItem->id_questions_options)->first();
                             if ($option) {
-                                $answer = $option->option;
+                                $answer = $answerItem->id_questions_options;
                                 
                                 if ($option->is_other_option && !empty($answerItem->other_answer)) {
                                     $otherAnswer = $answerItem->other_answer;
