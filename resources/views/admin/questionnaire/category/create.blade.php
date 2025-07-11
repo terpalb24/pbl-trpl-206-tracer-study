@@ -135,8 +135,6 @@
                                min="1"
                                class="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                placeholder="Contoh: 1">
-                        <!-- Hidden data for JavaScript -->
-                        <input type="hidden" id="categories-data" value="{{ json_encode($categories->map(function($cat) { return ['for_type' => $cat->for_type]; })) }}">
                         @error('order')
                             <p class="text-red-500 text-xs sm:text-sm mt-1 flex items-center">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>
@@ -500,39 +498,8 @@
         const statusDependencySection = document.getElementById('status-dependency-section');
         const graduationYearDependencySection = document.getElementById('graduation-year-dependency-section');
         
-        // Get categories data for counting
-        const categoriesData = JSON.parse(document.getElementById('categories-data').value);
-        
-        // Get count from URL parameter if available
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlCount = urlParams.get('count');
-        
-        // Function to calculate next order based on for_type
-        function updateOrderValue() {
-            const selectedForType = forTypeSelect.value;
-            let count = 0;
-            
-            // If URL count parameter is provided, use it instead of calculating
-            if (urlCount !== null) {
-                count = parseInt(urlCount);
-            } else {
-                // Use global ordering - count all existing categories regardless of type
-                count = categoriesData.length;
-            }
-            
-            // Update the order input
-            const orderInput = document.getElementById('order');
-            orderInput.value = count + 1;
-            
-            // Update preview
-            document.getElementById('preview-order').textContent = 'Urutan: ' + (count + 1);
-        }
-        
         forTypeSelect.addEventListener('change', function() {
             const value = this.value;
-            
-            // Update order based on selected for_type
-            updateOrderValue();
             
             if (value === 'company') {
                 statusDependencySection.classList.add('hidden');
@@ -657,44 +624,16 @@
             previewGraduationYear.classList.remove('hidden');
         }
         
-        // Initialize order value based on current for_type
-        updateOrderValue();
         updatePreviewTarget();
         updateStatusPreview();
         updateGraduationYearPreview();
-        
-        // Add visual feedback when form is submitted
-        const form = document.querySelector('form');
-        if (form) {
-            form.addEventListener('submit', function() {
-                const submitButton = document.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
-                    submitButton.disabled = true;
-                }
-            });
-        }
-    });
     });
 
     // Template functions
     function fillTemplate(name, order, forType) {
         document.getElementById('category_name').value = name;
+        document.getElementById('order').value = order;
         document.getElementById('for_type').value = forType;
-        
-        // Calculate correct order based on URL count parameter if available, otherwise use global count
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlCount = urlParams.get('count');
-        let count = 0;
-        
-        if (urlCount !== null) {
-            count = parseInt(urlCount);
-        } else {
-            const categoriesData = JSON.parse(document.getElementById('categories-data').value);
-            count = categoriesData.length;
-        }
-        
-        document.getElementById('order').value = count + 1;
         
         // Trigger events to update preview
         document.getElementById('category_name').dispatchEvent(new Event('input'));

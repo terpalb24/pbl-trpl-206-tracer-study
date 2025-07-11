@@ -875,13 +875,13 @@ class QuestionnaireController extends Controller
                 }
             }
             
-            \Log::info("Company: Enhanced dependency validation", [
-                'question_id' => $question->id_question,
-                'parent_question' => $parentQuestionId,
-                'required_values' => $requiredValueArray,
-                'parent_answers' => $parentAnswers,
-                'condition_met' => $conditionMet
-            ]);
+            // \Log::info("Company: Enhanced dependency validation", [
+            //     'question_id' => $question->id_question,
+            //     'parent_question' => $parentQuestionId,
+            //     'required_values' => $requiredValueArray,
+            //     'parent_answers' => $parentAnswers,
+            //     'condition_met' => $conditionMet
+            // ]);
             
             if (!$conditionMet) {
                 // Skip processing for conditional question that should be hidden
