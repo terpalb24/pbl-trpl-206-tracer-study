@@ -229,7 +229,7 @@
                                                 <form action="{{ route('admin.questionnaire.destroy', $periode->id_periode) }}" 
                                                       method="POST" 
                                                       class="w-full"
-                                                      onsubmit="return confirmDelete('{{ $periode->periode_name }}')">
+                                                      onsubmit="return confirmDeletePeriode(event, '{{ $periode->periode_name }}', '{{ $periode->id_periode }}')">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" 
@@ -339,7 +339,7 @@
                                     <form action="{{ route('admin.questionnaire.destroy', $periode->id_periode) }}" 
                                           method="POST" 
                                           class="w-full"
-                                          onsubmit="return confirmDelete('{{ $periode->periode_name }}')">
+                                          onsubmit="return confirmDeletePeriode(event, '{{ $periode->periode_name }}', '{{ $periode->id_periode }}')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" 
@@ -462,8 +462,104 @@
             this.submit();
         });
 
-        function confirmDelete(periodeName) {
-            return confirm(`Apakah Anda yakin ingin menghapus periode "${periodeName}"?\n\nPeringatan: Semua data terkait (kategori, pertanyaan, dan opsi) akan dihapus secara permanen dan tidak dapat dipulihkan.`);
+        function confirmDeletePeriode(event, periodeName, periodeId) {
+            event.preventDefault(); // Prevent form submission
+            
+            Swal.fire({
+                title: '<span class="text-red-700 font-bold text-xl">⚠️ Konfirmasi Hapus Periode</span>',
+                html: `
+                    <div class="text-left space-y-4">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0 mr-3">
+                                    <i class="fas fa-info-circle text-yellow-600 text-lg mt-1"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-semibold text-yellow-800 mb-2">Data yang akan terhapus:</h4>
+                                    <ul class="text-sm text-yellow-700 space-y-1">
+                                        <li class="flex items-center">
+                                            <i class="fas fa-circle text-xs mr-2"></i>
+                                            Semua kategori pertanyaan
+                                        </li>
+                                        <li class="flex items-center">
+                                            <i class="fas fa-circle text-xs mr-2"></i>
+                                            Semua pertanyaan dan opsi jawaban
+                                        </li>
+                                        <li class="flex items-center">
+                                            <i class="fas fa-circle text-xs mr-2"></i>
+                                            Semua respons alumni dan perusahaan
+                                        </li>
+                                        <li class="flex items-center">
+                                            <i class="fas fa-circle text-xs mr-2"></i>
+                                            Data statistik dan laporan
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-red-100 border border-red-300 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-skull-crossbones text-red-600 mr-3 text-lg"></i>
+                                <div>
+                                    <p class="text-sm font-bold text-red-800">PERINGATAN KERAS!</p>
+                                    <p class="text-sm text-red-700 mt-1">
+                                        Tindakan ini <strong>TIDAK DAPAT DIBATALKAN</strong> dan semua data akan <strong>HILANG PERMANEN</strong>!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: '<i class="fas fa-trash mr-2"></i>Ya, Hapus Permanen',
+                cancelButtonText: '<i class="fas fa-times mr-2"></i>Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'rounded-xl shadow-2xl border-2 border-red-200',
+                    title: 'text-xl font-bold text-red-700',
+                    htmlContainer: 'text-left',
+                    actions: 'flex justify-center gap-4 mt-6',
+                    confirmButton: 'font-bold min-w-[160px] px-6 py-3 rounded-lg bg-red-600 hover:bg-red-700 text-white text-base shadow-lg',
+                    cancelButton: 'font-semibold min-w-[160px] px-6 py-3 rounded-lg bg-gray-500 hover:bg-gray-600 text-white text-base shadow-lg'
+                },
+                buttonsStyling: false,
+                focusCancel: true,
+                allowEnterKey: false,
+                allowEscapeKey: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show processing alert
+                    Swal.fire({
+                        title: '<span class="text-red-700 font-bold">Menghapus Periode...</span>',
+                        html: `
+                            <div class="text-center">
+                                <div class="mb-4">
+                                    <i class="fas fa-spinner fa-spin text-3xl text-red-600"></i>
+                                </div>
+                                <p class="text-gray-700">Sedang menghapus "${periodeName}" dan semua data terkait...</p>
+                                <p class="text-sm text-gray-500 mt-2">Mohon tunggu, proses ini mungkin memakan waktu beberapa detik.</p>
+                            </div>
+                        `,
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        customClass: {
+                            popup: 'rounded-xl shadow-lg border border-red-200'
+                        }
+                    });
+                    
+                    // Submit the form after a short delay
+                    setTimeout(() => {
+                        event.target.submit();
+                    }, 1500);
+                }
+            });
+            
+            return false; // Always prevent default form submission
         }
     </script>
 
