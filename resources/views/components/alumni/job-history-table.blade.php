@@ -185,7 +185,24 @@
                                                 <i class="fas fa-money-bill-wave mr-2 text-gray-400"></i>Gaji
                                             </span>
                                             <div class="text-lg text-green-600 font-bold bg-green-50 px-3 py-2 rounded-lg shadow-sm border border-green-200">
-                                                Rp {{ number_format($jobHistory->salary, 0, ',', '.') }}
+                                                @php
+                                                    $salaryRanges = [
+                                                        '3000000' => '3.000.000 - 4.500.000',
+                                                        '4500000' => '4.500.000 - 5.000.000',
+                                                        '5000000' => '5.000.000 - 5.500.000',
+                                                        '6000000' => '6.000.000 - 6.500.000',
+                                                        '6500000' => '6.500.000 - 7.000.000',
+                                                        '7000000' => '7.000.000 - 8.000.000',
+                                                        '8000000' => '8.000.000 - 9.000.000',
+                                                        '9000000' => '9.000.000 - 10.000.000',
+                                                        '10000000' => '10.000.000 - 12.000.000',
+                                                        '12000000' => '12.000.000 - 15.000.000',
+                                                        '15000000' => '15.000.000 - 20.000.000',
+                                                        '20000000' => '> 20.000.000'
+                                                    ];
+                                                    $formattedSalary = $salaryRanges[$jobHistory->salary] ?? ($jobHistory->salary ? 'Rp ' . number_format($jobHistory->salary, 0, ',', '.') : '-');
+                                                @endphp
+                                                {{ $formattedSalary }}
                                             </div>
                                         </div>
                                         
