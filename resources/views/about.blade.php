@@ -200,7 +200,7 @@
                 </div>
             </div>
             <div class="py-12 sm:py-16 lg:py-20 text-center text-xs sm:text-sm text-gray-300 border-t border-gray-600 mt-8">
-                ©2025 PBL-TRPL206. Politeknik Negeri Batam. All Rights Reserved.
+                ©2025 <a href="https://terpalb24.github.io/projects" class="text-white hover:text-gray-400 transition-colors duration-200">PBL-TRPL206</a>. Politeknik Negeri Batam. All Rights Reserved.
             </div>
         </div>
     </div>

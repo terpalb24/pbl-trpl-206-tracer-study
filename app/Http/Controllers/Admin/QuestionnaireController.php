@@ -1295,27 +1295,27 @@ class QuestionnaireController extends Controller
         // }
         
         // Debug dependency processing for admin
-        \Log::info('Admin Response Detail - Dependency debug:', [
-            'user_type' => $userType,
-            'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) {
-                return [
-                    'category' => $cat['category']->category_name,
-                    'questions' => collect($cat['questions'])->map(function($q) {
-                        return [
-                            'id' => $q['question']->id_question,
-                            'question' => substr($q['question']->question, 0, 50),
-                            'depends_on' => $q['question']->depends_on,
-                            'depends_value' => $q['question']->depends_value,
-                            'hasAnswer' => $q['hasAnswer'],
-                            'answer' => $q['answer'],
-                            'otherAnswer' => $q['otherAnswer'],
-                            'multipleAnswers' => $q['multipleAnswers'],
-                            'multipleOtherAnswers' => $q['multipleOtherAnswers']
-                        ];
-                    })->toArray()
-                ];
-            })->toArray()
-        ]);
+        // \Log::info('Admin Response Detail - Dependency debug:', [
+        //     'user_type' => $userType,
+        //     'questionsWithAnswers' => collect($questionsWithAnswers)->map(function($cat) {
+        //         return [
+        //             'category' => $cat['category']->category_name,
+        //             'questions' => collect($cat['questions'])->map(function($q) {
+        //                 return [
+        //                     'id' => $q['question']->id_question,
+        //                     'question' => substr($q['question']->question, 0, 50),
+        //                     'depends_on' => $q['question']->depends_on,
+        //                     'depends_value' => $q['question']->depends_value,
+        //                     'hasAnswer' => $q['hasAnswer'],
+        //                     'answer' => $q['answer'],
+        //                     'otherAnswer' => $q['otherAnswer'],
+        //                     'multipleAnswers' => $q['multipleAnswers'],
+        //                     'multipleOtherAnswers' => $q['multipleOtherAnswers']
+        //                 ];
+        //             })->toArray()
+        //         ];
+        //     })->toArray()
+        // ]);
         
         return view('admin.questionnaire.response-detail', compact(
             'periode',              
