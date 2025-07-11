@@ -100,10 +100,10 @@
                                                 <i class="fas fa-edit mr-1"></i> Lanjutkan
                                             </a>
                                         @else
-                                            <a href="{{ route('alumni.questionnaire.fill', $periode->id_periode) }}" 
+                                            <button onclick="confirmStatusBeforeQuestionnaire('{{ route('alumni.questionnaire.fill', $periode->id_periode) }}')" 
                                                class="{{ $periode->status == 'active' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400' }} text-white px-3 py-1.5 rounded-md text-xs sm:text-sm transition-colors duration-200">
                                                 <i class="fas fa-play mr-1"></i> Kerjakan
-                                            </a>
+                                            </button>
                                         @endif
                                     </div>
                                 </div>
@@ -185,10 +185,10 @@
                                                     <i class="fas fa-edit mr-1"></i> Lanjutkan
                                                 </a>
                                             @else
-                                                <a href="{{ route('alumni.questionnaire.fill', $periode->id_periode) }}" 
+                                                <button onclick="confirmStatusBeforeQuestionnaire('{{ route('alumni.questionnaire.fill', $periode->id_periode) }}')" 
                                                    class="{{ $periode->status == 'active' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400' }} text-white px-4 py-1 rounded-md inline-block transition-colors duration-200">
                                                     <i class="fas fa-play mr-1"></i> Kerjakan
-                                                </a>
+                                                </button>
                                             @endif
                                         </td>
                                     </tr>
@@ -325,6 +325,72 @@
     </main>
 </div>
 <!-- script JS  -->
+<script>
+    // Fungsi konfirmasi status sebelum mengerjakan kuesioner
+    function confirmStatusBeforeQuestionnaire(url) {
+        Swal.fire({
+            title: '<span class="text-blue-900 font-bold text-lg">Konfirmasi Status Profil</span>',
+            html: `
+                <div class="text-left">
+                    <div class="flex items-start mb-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100 border border-blue-200 shadow-sm mr-3">
+                                <i class="fas fa-user-check text-blue-700 text-xl"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-base font-semibold text-blue-900 mb-1">Sudah Update Status Profil?</h4>
+                            <p class="text-sm text-gray-700 mb-1">
+                                Pastikan status profil Anda sudah terbaru sebelum mengerjakan kuesioner. Status profil yang akurat akan mempengaruhi hasil kuesioner Anda.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-2">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            <span class="text-sm text-blue-800 font-medium">Jika Anda baru saja mendapat Pekerjaan, pastikan status sudah diubah dari <b>Belum Bekerja</b> ke <b>Bekerja</b> atau status terbaru Anda.</span>
+                        </div>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: '<i class="fas fa-check mr-2"></i>Ya, Sudah Update',
+            cancelButtonText: '<i class="fas fa-times mr-2"></i>Batal',
+            reverseButtons: true,
+            customClass: {
+                popup: 'rounded-xl shadow-lg border border-blue-200',
+                title: 'text-lg font-bold text-blue-900',
+                htmlContainer: 'text-left',
+                actions: 'flex justify-center gap-4 mt-6', // Tambah gap antar tombol
+                confirmButton: 'font-semibold min-w-[140px] px-5 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-base',
+                cancelButton: 'font-semibold min-w-[140px] px-5 py-2 rounded-md bg-gray-400 hover:bg-gray-500 text-white text-base'
+            },
+            buttonsStyling: false,
+            focusConfirm: false,
+            allowEnterKey: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Tampilkan loading dan redirect
+                Swal.fire({
+                    title: '<span class="text-blue-900 font-bold">Memproses...</span>',
+                    html: '<div class="text-gray-700 text-sm">Sedang memuat halaman kuesioner</div>',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                setTimeout(function() {
+                    window.location.href = url;
+                }, 1000); // 1 detik cooldown
+            }
+        });
+    }
+</script>
 <script src="{{ asset('./js/alumni.js') }}"></script>
 
 @endsection
