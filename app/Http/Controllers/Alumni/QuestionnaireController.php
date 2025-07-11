@@ -139,8 +139,9 @@ class QuestionnaireController extends Controller
         $prevCategory = $currentCategoryIndex > 0 ? $categories->get($currentCategoryIndex - 1) : null;
         $nextCategory = $currentCategoryIndex < $totalCategories - 1 ? $categories->get($currentCategoryIndex + 1) : null;
 
-        // Get questions for current category
+        // Get questions for current category - only visible questions
         $questions = Tb_Questions::where('id_category', $currentCategory->id_category)
+            ->where('status', 'visible')
             ->orderBy('order')
             ->get();
 
@@ -857,6 +858,7 @@ class QuestionnaireController extends Controller
 
         foreach ($categories as $category) {
             $questions = Tb_Questions::where('id_category', $category->id_category)
+                ->where('status', 'visible')
                 ->with(['category', 'options'])
                 ->orderBy('order')
                 ->get();

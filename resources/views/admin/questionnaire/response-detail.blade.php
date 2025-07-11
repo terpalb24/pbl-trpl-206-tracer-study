@@ -97,7 +97,12 @@
                             foreach($categoryData['questions'] as $qData) {
                                 $shouldShow = true;
                                 
-                                if ($qData['question']->depends_on) {
+                                // Check if question status is visible
+                                if ($qData['question']->status !== 'visible') {
+                                    $shouldShow = false;
+                                }
+                                
+                                if ($shouldShow && $qData['question']->depends_on) {
                                     $parentAnswered = false;
                                     foreach($questionsWithAnswers as $catData) {
                                         foreach($catData['questions'] as $parentQData) {
@@ -295,6 +300,12 @@
                                 // Filter pertanyaan yang bisa ditampilkan untuk kategori ini
                                 $visibleQuestions = collect($categoryData['questions'])->filter(function($qData) use ($questionsWithAnswers) {
                                     $shouldShow = true;
+                                    
+                                    // Check if question status is visible
+                                    if ($qData['question']->status !== 'visible') {
+                                        return false;
+                                    }
+                                    
                                     if ($qData['question']->depends_on) {
                                         $parentAnswered = false;
                                         foreach($questionsWithAnswers as $catData) {
@@ -363,6 +374,12 @@
                                 for($i = 0; $i < $categoryIndex; $i++) {
                                     $prevCategoryVisibleQuestions = collect($questionsWithAnswers[$i]['questions'])->filter(function($qData) use ($questionsWithAnswers) {
                                         $shouldShow = true;
+                                        
+                                        // Check if question status is visible
+                                        if ($qData['question']->status !== 'visible') {
+                                            return false;
+                                        }
+                                        
                                         if ($qData['question']->depends_on) {
                                             $parentAnswered = false;
                                             foreach($questionsWithAnswers as $catData) {
@@ -457,7 +474,13 @@
                                     @foreach($categoryData['questions'] as $qData)
                                         @php
                                             $shouldShow = true;
-                                            if ($qData['question']->depends_on) {
+                                            
+                                            // Check if question status is visible
+                                            if ($qData['question']->status !== 'visible') {
+                                                $shouldShow = false;
+                                            }
+                                            
+                                            if ($shouldShow && $qData['question']->depends_on) {
                                                 $parentAnswered = false;
                                                 foreach($questionsWithAnswers as $catData) {
                                                     foreach($catData['questions'] as $parentQData) {

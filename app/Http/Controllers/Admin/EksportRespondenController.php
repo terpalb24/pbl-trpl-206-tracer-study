@@ -40,16 +40,19 @@ class EksportRespondenController extends Controller
         $categoriesAlumni = [];
         $categoriesCompany = [];
         foreach ($periode->categories as $category) {
-            if (in_array($category->for_type, ['alumni', 'both'])) {
+            // Filter only visible questions
+            $visibleQuestions = $category->questions->where('status', 'visible');
+            
+            if (in_array($category->for_type, ['alumni', 'both']) && $visibleQuestions->count() > 0) {
                 $categoriesAlumni[] = [
                     'category' => $category,
-                    'questions' => $category->questions
+                    'questions' => $visibleQuestions
                 ];
             }
-            if (in_array($category->for_type, ['company', 'both'])) {
+            if (in_array($category->for_type, ['company', 'both']) && $visibleQuestions->count() > 0) {
                 $categoriesCompany[] = [
                     'category' => $category,
-                    'questions' => $category->questions
+                    'questions' => $visibleQuestions
                 ];
             }
         }
