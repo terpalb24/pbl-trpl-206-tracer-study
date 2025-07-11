@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Session;
+use Carbon\Carbon;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -274,12 +276,12 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email tidak ditemukan di data alumni atau perusahaan.']);
         }
 
-        // Generate token dan simpan di session
-        $token = Str::random(64);
-        Session::put('reset_token_' . $request->email, $token);
+        // Generate token berdasarkan email dan secret key (tidak perlu disimpan di database)
+        $timestamp = time();
+        $token = base64_encode($request->email . '|' . $timestamp . '|' . hash('sha256', $request->email . $timestamp . config('app.key')));
 
         // Kirim email reset password
-        $resetLink = url('/reset-password/' . $token . '?email=' . urlencode($request->email));
+        $resetLink = url('/reset-password/' . urlencode($token) . '?email=' . urlencode($request->email));
         Mail::send('emails.reset-password-link', [
             'resetLink' => $resetLink,
             'user' => $user
@@ -288,7 +290,7 @@ class AuthController extends Controller
             $message->subject('Reset Password Akun Anda');
         });
 
-        return back()->with('status', 'Link reset password telah dikirim ke email Anda.');
+        return back()->with('status', 'Link reset password telah dikirim ke email Anda. Link akan berlaku selama 24 jam.');
     }
 
     public function showResetPasswordForm($token, Request $request)
@@ -317,10 +319,37 @@ class AuthController extends Controller
             'password.regex' => 'Password harus mengandung huruf besar, huruf kecil, angka, dan karakter spesial.'
         ]);
 
-        // Cek token di session
-        $sessionToken = Session::get('reset_token_' . $request->email);
-        if (!$sessionToken || $sessionToken !== $request->token) {
-            return back()->withErrors(['email' => 'Token reset password tidak valid atau sudah digunakan.']);
+        // Verifikasi token
+        try {
+            $decodedToken = base64_decode($request->token);
+            $tokenParts = explode('|', $decodedToken);
+            
+            if (count($tokenParts) !== 3) {
+                return back()->withErrors(['token' => 'Token reset password tidak valid.']);
+            }
+            
+            $tokenEmail = $tokenParts[0];
+            $timestamp = $tokenParts[1];
+            $hash = $tokenParts[2];
+            
+            // Verifikasi email
+            if ($tokenEmail !== $request->email) {
+                return back()->withErrors(['token' => 'Token tidak sesuai dengan email.']);
+            }
+            
+            // Verifikasi hash
+            $expectedHash = hash('sha256', $tokenEmail . $timestamp . config('app.key'));
+            if ($hash !== $expectedHash) {
+                return back()->withErrors(['token' => 'Token reset password tidak valid.']);
+            }
+            
+            // Verifikasi expiry (24 jam)
+            if (time() - $timestamp > 86400) { // 24 jam = 86400 detik
+                return back()->withErrors(['token' => 'Token reset password sudah kadaluarsa. Silakan ajukan reset password baru.']);
+            }
+            
+        } catch (Exception $e) {
+            return back()->withErrors(['token' => 'Token reset password tidak valid.']);
         }
 
         // Cek alumni (role 2)
@@ -342,13 +371,11 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Email tidak ditemukan di data alumni atau perusahaan.']);
         }
 
+        // Update password
         $user->password = Hash::make($request->password);
         $user->save();
 
-        // Hapus token dari session
-        Session::forget('reset_token_' . $request->email);
-
-        return redirect()->route('login')->with('status', 'Password berhasil direset. Silakan login dengan password baru Anda.');
+        return redirect()->route('login')->with('success', 'Password berhasil direset! Silakan login dengan password baru Anda.');
     }
 
     // Halaman Lupa NIM
