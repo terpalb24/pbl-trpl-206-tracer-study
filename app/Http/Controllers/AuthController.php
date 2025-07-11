@@ -251,6 +251,12 @@ class AuthController extends Controller
         $input = $request->input('email');
         // Jika input recovery code, skip validasi email
         if (in_array($input, $recoveryCodes)) {
+            // Cek blacklist recovery code
+            $usedCodesPath = storage_path('app/used_recovery_codes.json');
+            $usedCodes = file_exists($usedCodesPath) ? json_decode(file_get_contents($usedCodesPath), true) : [];
+            if (in_array($input, $usedCodes)) {
+                return back()->withErrors(['email' => 'Recovery code sudah pernah digunakan.']);
+            }
             Session::put('admin_recovery_code', $input);
             return redirect()->route('password.admin.reset');
         }
