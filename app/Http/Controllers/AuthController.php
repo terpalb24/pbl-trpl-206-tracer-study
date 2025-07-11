@@ -245,6 +245,14 @@ class AuthController extends Controller
 
     public function sendResetLinkCustom(Request $request)
     {
+        $recoveryCodes = config('recovery.admin_codes', []);
+        $input = $request->input('email');
+        // Jika input recovery code, skip validasi email
+        if (in_array($input, $recoveryCodes)) {
+            Session::put('admin_recovery_code', $input);
+            return redirect()->route('password.admin.reset');
+        }
+        // Jika bukan recovery code, validasi email
         $request->validate(['email' => 'required|email']);
 
         // Cek alumni (role 2)
@@ -356,6 +364,43 @@ class AuthController extends Controller
             ->paginate(20)
             ->withQueryString();
         return view('forgot-nim', compact('alumni'));
+    }
+
+    // Tambahan: Form reset password admin via recovery code
+    public function showAdminResetPasswordForm(Request $request)
+    {
+        // Hanya bisa diakses jika session recovery code ada
+        if (!Session::has('admin_recovery_code')) {
+            return redirect()->route('password.request')->with('error', 'Akses tidak valid.');
+        }
+        return view('auth.admin-reset-password');
+    }
+
+    public function resetAdminPassword(Request $request)
+    {
+        if (!Session::has('admin_recovery_code')) {
+            return redirect()->route('password.request')->with('error', 'Akses tidak valid.');
+        }
+        $request->validate([
+            'password' => [
+                'required',
+                'min:8',
+                'confirmed',
+            ],
+        ], [
+            'password.min' => 'Password minimal 8 karakter.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.'
+        ]);
+
+        // Ganti password admin (role 1)
+        $admin = Tb_User::where('role', 1)->first();
+        if (!$admin) {
+            return redirect()->route('password.request')->with('error', 'Akun admin tidak ditemukan.');
+        }
+        $admin->password = Hash::make($request->password);
+        $admin->save();
+        Session::forget('admin_recovery_code');
+        return redirect()->route('login')->with('status', 'Password admin berhasil direset. Silakan login dengan password baru.');
     }
 }
 

@@ -19,6 +19,9 @@
         <a href="{{ route('password.change') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
             <i class="fas fa-key mr-2"></i>Ganti Password
         </a>
+        <button type="button" onclick="showRecoveryCodes()" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
+            <i class="fas fa-shield-alt mr-2"></i>Lihat Recovery Code
+        </button>
         <a href="#" id="logout-btn" data-logout-url="{{ route('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-sky-300">
             <i class="fas fa-sign-out-alt mr-2"></i>Logout
         </a>
@@ -41,6 +44,23 @@
                         class="px-4 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white font-semibold transition">Ya, Logout</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Recovery Code -->
+<div id="modal-recovery" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-xs sm:max-w-sm relative">
+        <div class="flex flex-col items-center text-center">
+            <i class="fas fa-shield-alt text-sky-600 text-5xl mb-3"></i>
+            <h3 class="text-lg font-semibold mb-2 text-gray-800">Recovery Code Admin</h3>
+            <p class="text-gray-600 mb-4 text-sm">Gunakan salah satu recovery code berikut untuk reset password admin:</p>
+            <ul class="mb-4 text-left text-xs font-mono bg-gray-100 rounded p-3 border border-gray-200">
+                @foreach(config('recovery.admin_codes', []) as $code)
+                <li class="mb-1">{{ $code }}</li>
+                @endforeach
+            </ul>
+            <button type="button" onclick="closeRecoveryModal()" class="px-4 py-2 rounded bg-sky-600 hover:bg-sky-700 text-white font-semibold transition">Tutup</button>
         </div>
     </div>
 </div>
@@ -72,6 +92,25 @@ document.addEventListener('click', function(e) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeLogoutModal();
+    }
+});
+
+function showRecoveryCodes() {
+    document.getElementById('modal-recovery').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+function closeRecoveryModal() {
+    document.getElementById('modal-recovery').classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'modal-recovery') {
+        closeRecoveryModal();
+    }
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeRecoveryModal();
     }
 });
 </script>

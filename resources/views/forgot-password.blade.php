@@ -47,18 +47,18 @@
                     <label for="email" class="block mb-1 text-sm font-medium text-gray-700">Masukkan Email</label>
                     <div class="relative">
                         <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-user"></i></span>
-                        <input id="email" name="email" type="email" required autofocus class="input-field" required placeholder="Masukkan Email">
+                        <input id="email" name="email" type="input" required autofocus class="input-field" required placeholder="Masukkan Email">
 
-<!-- Alert untuk berhasil kirim email atau ngga -->
-    @if ($errors->any())
-<div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
-  <ul>
-    @foreach ($errors->all() as $error)
-    <li>{{ $error }}</li>
-    @endforeach
-  </ul>
-</div>
-@endif
+                    <!-- Alert untuk berhasil kirim email atau ngga -->
+                        @if ($errors->any())
+                    <div class="alert alert-danger col-md-6 mt-3" style="max-width: 400px">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                    </div>
+                    @endif
 
                     </div>
                 </div>

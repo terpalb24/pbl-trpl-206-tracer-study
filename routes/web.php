@@ -52,6 +52,12 @@ Route::middleware('guest')->group(function() {
     Route::post('/reset-password-confirmation', [AuthController::class, 'resetPasswordCustom'])->name('password.reset.update');
 });
 
+// Reset password admin via recovery code
+Route::middleware('guest')->group(function() {
+    Route::get('/reset-password-admin', [AuthController::class, 'showAdminResetPasswordForm'])->name('password.admin.reset');
+    Route::post('/reset-password-admin', [AuthController::class, 'resetAdminPassword'])->name('password.admin.reset.update');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Dashboard Routes 
