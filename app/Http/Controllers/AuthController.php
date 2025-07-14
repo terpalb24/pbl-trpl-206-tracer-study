@@ -16,6 +16,59 @@ use Exception;
 
 class AuthController extends Controller
 {
+    /**
+     * Clear remember me cookies safely
+     */
+    private function clearRememberMeCookies()
+    {
+        cookie()->queue(cookie()->forget('remember_username'));
+        cookie()->queue(cookie()->forget('remember_password'));
+    }
+
+    /**
+     * Validate and get remember me credentials safely
+     */
+    private function getRememberMeCredentials($username, $password)
+    {
+        if (!$username || !$password) {
+            return null;
+        }
+
+        try {
+            // Validate that app key exists and is valid
+            if (!config('app.key')) {
+                // \Log::error('App key is missing');
+                $this->clearRememberMeCookies();
+                return null;
+            }
+
+            // Attempt to decrypt the password
+            $decryptedPassword = decrypt($password);
+            
+            // Additional validation: check if decrypted password is reasonable
+            if (!$decryptedPassword || strlen($decryptedPassword) < 3 || strlen($decryptedPassword) > 255) {
+                // \Log::warning('Decrypted password has invalid length');
+                $this->clearRememberMeCookies();
+                return null;
+            }
+
+            return [
+                'username' => $username,
+                'password' => $decryptedPassword,
+            ];
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            // Specific decrypt exception
+            // \Log::warning('Remember me decrypt failed (DecryptException): ' . $e->getMessage());
+            $this->clearRememberMeCookies();
+            return null;
+        } catch (\Exception $e) {
+            // General exception
+            // \Log::warning('Remember me validation failed: ' . $e->getMessage());
+            $this->clearRememberMeCookies();
+            return null;
+        }
+    }
+
     public function showLoginForm(Request $request)
     {
         // Handle parameter clear_session untuk membersihkan session dari verifikasi email
@@ -61,11 +114,8 @@ class AuthController extends Controller
         $password = $request->cookie('remember_password');
 
         // Jika ada cookies username dan password, lakukan login otomatis
-        if ($username && $password) {
-            $credentials = [
-                'username' => $username,
-                'password' => decrypt($password),
-            ];
+        $credentials = $this->getRememberMeCredentials($username, $password);
+        if ($credentials) {
             if (Auth::guard('web')->attempt($credentials)) {
                 $request->session()->regenerate();
                 $user = Auth::guard('web')->user();
@@ -76,6 +126,7 @@ class AuthController extends Controller
                         $alumni = Tb_Alumni::where('id_user', $user->id_user)->first();
                         if (!$alumni) {
                             Auth::logout();
+                            $this->clearRememberMeCookies();
                             return redirect('/login')->with('error', 'Data alumni tidak ditemukan. Silakan hubungi administrator.');
                         }
                         if ($alumni->is_First_login) {
@@ -91,14 +142,19 @@ class AuthController extends Controller
                         $company = Tb_Company::where('id_user', $user->id_user)->first();
                         if (!$company) {
                             Auth::logout();
+                            $this->clearRememberMeCookies();
                             return redirect('/login')->with('error', 'Data company tidak ditemukan. Silakan hubungi administrator.');
                         }
                         session(['id_company' => $company->id_company]);
                         return redirect()->route('dashboard.company');
                     default:
                         Auth::logout();
+                        $this->clearRememberMeCookies();
                         return redirect('/login')->with('error', 'Role tidak dikenali.');
                 }
+            } else {
+                // Login failed, clear invalid cookies
+                $this->clearRememberMeCookies();
             }
         }
 
@@ -119,8 +175,13 @@ class AuthController extends Controller
 
             // Simpan cookies jika "ingat saya" dicentang
             if ($request->has('remember')) {
-                cookie()->queue(cookie('remember_username', $request->username, 60 * 24 * 30)); // 30 hari
-                cookie()->queue(cookie('remember_password', encrypt($request->password), 60 * 24 * 30));
+                try {
+                    cookie()->queue(cookie('remember_username', $request->username, 60 * 24 * 30)); // 30 hari
+                    cookie()->queue(cookie('remember_password', encrypt($request->password), 60 * 24 * 30));
+                } catch (\Exception $e) {
+                    // Jika gagal encrypt, skip remember me
+                    // \Log::warning('Failed to encrypt remember me password: ' . $e->getMessage());
+                }
             } else {
                 cookie()->queue(cookie()->forget('remember_username'));
                 cookie()->queue(cookie()->forget('remember_password'));
@@ -188,8 +249,7 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         // Hapus cookies remember_username dan remember_password saat logout
-        cookie()->queue(cookie()->forget('remember_username'));
-        cookie()->queue(cookie()->forget('remember_password'));
+        $this->clearRememberMeCookies();
 
         return redirect('/login');
     }
@@ -469,8 +529,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
             
             // Clear cookies jika ada
-            cookie()->queue(cookie()->forget('remember_username'));
-            cookie()->queue(cookie()->forget('remember_password'));
+            $this->clearRememberMeCookies();
             
             return response()->json([
                 'success' => true,
@@ -493,8 +552,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
             
             // Clear cookies jika ada
-            cookie()->queue(cookie()->forget('remember_username'));
-            cookie()->queue(cookie()->forget('remember_password'));
+            $this->clearRememberMeCookies();
             
             // Get redirect URL or default to login
             $redirectUrl = $request->input('redirect_url', route('login'));

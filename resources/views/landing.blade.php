@@ -30,14 +30,36 @@
             @if(Auth::check())
                 @php
                     $role = Auth::user()->role;
-                    $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+                    // Cek jika user adalah alumni dan belum verifikasi email
+                    if ($role == 2) {
+                        $alumni = \App\Models\Tb_Alumni::where('id_user', Auth::user()->id_user)->first();
+                        if ($alumni && $alumni->is_First_login) {
+                            $dashboard = route('alumni.email.form');
+                            $needsVerification = true;
+                        } else {
+                            $dashboard = route('dashboard.alumni');
+                            $needsVerification = false;
+                        }
+                    } else {
+                        $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 3 ? route('dashboard.company') : route('login'));
+                        $needsVerification = false;
+                    }
                 @endphp
-                <a href="{{ $dashboard }}" class="hover:text-[#F2692A] flex items-center">
+                <a href="{{ $dashboard }}" class="hover:text-[#F2692A] flex items-center" 
+                   @if(isset($needsVerification) && $needsVerification) 
+                   onclick="showVerificationAlert(event, '{{ $dashboard }}')" 
+                   @endif>
                     <i class="fa-solid fa-gauge mr-2"></i><span>Dashboard</span>
                 </a>
             @else
-                <a href="{{ route('login') }}" class="hover:text-[#F2692A] flex items-center">
-                    <i class="fa-solid fa-user mr-2"></i><span>Login</span>
+                @php
+                    // Cek apakah ada cookies remember me yang masih valid
+                    $hasCookies = request()->cookie('remember_username') && request()->cookie('remember_password');
+                @endphp
+                <a href="{{ route('login') }}" class="hover:text-[#F2692A] flex items-center" 
+                   @if($hasCookies) id="auto-login-btn" data-auto-login="true" @endif>
+                    <i class="fa-solid fa-user mr-2"></i>
+                    <span id="login-btn-text">{{ $hasCookies ? 'Dashboard' : 'Login' }}</span>
                 </a>
             @endif
             <!-- Hamburger: hidden on md and up -->
@@ -138,18 +160,42 @@
         @if(Auth::check())
             @php
             $role = Auth::user()->role;
-            $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 2 ? route('dashboard.alumni') : ($role == 3 ? route('dashboard.company') : route('login')));
+            // Cek jika user adalah alumni dan belum verifikasi email
+            if ($role == 2) {
+                $alumni = \App\Models\Tb_Alumni::where('id_user', Auth::user()->id_user)->first();
+                if ($alumni && $alumni->is_First_login) {
+                    $dashboard = route('alumni.email.form');
+                    $needsVerification = true;
+                    $buttonText = 'Verifikasi Email';
+                } else {
+                    $dashboard = route('dashboard.alumni');
+                    $needsVerification = false;
+                    $buttonText = 'Dashboard';
+                }
+            } else {
+                $dashboard = $role == 1 ? route('dashboard.admin') : ($role == 3 ? route('dashboard.company') : route('login'));
+                $needsVerification = false;
+                $buttonText = 'Dashboard';
+            }
             @endphp
             <a href="{{ $dashboard }}" class="inline-block bg-[#152A6B] text-white px-15 py-2 rounded-[18px] shadow-md font-medium mt-4 text-[18px]" 
             data-aos="fade-up"
-            data-aos-duration="3000">
-            Dashboard
+            data-aos-duration="3000"
+            @if(isset($needsVerification) && $needsVerification) 
+            onclick="showVerificationAlert(event, '{{ $dashboard }}')" 
+            @endif>
+            {{ $buttonText }}
             </a>
         @else
+            @php
+                // Cek apakah ada cookies remember me yang masih valid
+                $hasCookies = request()->cookie('remember_username') && request()->cookie('remember_password');
+            @endphp
             <a href="{{ route('login') }}" class="inline-block bg-[#152A6B] text-white px-15 py-2 rounded-[18px] shadow-md font-medium mt-4 text-[18px]" 
             data-aos="fade-up"
-            data-aos-duration="3000">
-            Login
+            data-aos-duration="3000"
+            @if($hasCookies) id="auto-login-hero-btn" data-auto-login="true" @endif>
+            <span id="hero-btn-text">{{ $hasCookies ? 'Dashboard' : 'Login' }}</span>
             </a>
         @endif
     </div>
@@ -431,4 +477,136 @@
     });
   });
 </script>
+
+<!-- SweetAlert for Alumni Verification -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function showVerificationAlert(event, verificationUrl) {
+    event.preventDefault();
+    
+    Swal.fire({
+        icon: 'warning',
+        title: 'Akun Belum Terverifikasi',
+        text: 'Akun Anda belum terverifikasi. Silakan verifikasi email terlebih dahulu untuk mengakses dashboard.',
+        showCancelButton: true,
+        confirmButtonColor: '#152A6B',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Verifikasi Sekarang',
+        cancelButtonText: 'Nanti Saja',
+        customClass: {
+            container: 'sweet-alert-container'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = verificationUrl;
+        }
+    });
+}
+
+// Function to check cookies and handle auto-login
+function checkRememberMeCookies() {
+    // Get cookies
+    function getCookie(name) {
+        let value = "; " + document.cookie;
+        let parts = value.split("; " + name + "=");
+        if (parts.length == 2) return parts.pop().split(";").shift();
+        return null;
+    }
+    
+    const rememberUsername = getCookie('remember_username');
+    const rememberPassword = getCookie('remember_password');
+    
+    return rememberUsername && rememberPassword;
+}
+
+// Handle auto-login buttons
+function handleAutoLoginButtons() {
+    const autoLoginBtn = document.getElementById('auto-login-btn');
+    const autoLoginHeroBtn = document.getElementById('auto-login-hero-btn');
+    const loginBtnText = document.getElementById('login-btn-text');
+    const heroBtnText = document.getElementById('hero-btn-text');
+    
+    // Check if cookies exist
+    const hasCookies = checkRememberMeCookies();
+    
+    if (!hasCookies) {
+        // No cookies, update button text to Login
+        if (loginBtnText) loginBtnText.textContent = 'Login';
+        if (heroBtnText) heroBtnText.textContent = 'Login';
+    }
+    
+    // Add click handlers for auto-login buttons
+    if (autoLoginBtn && autoLoginBtn.dataset.autoLogin === 'true') {
+        autoLoginBtn.addEventListener('click', function(e) {
+            if (hasCookies) {
+                e.preventDefault();
+                showAutoLoginLoading(loginBtnText);
+                // Let the normal redirect happen after showing loading
+                setTimeout(() => {
+                    window.location.href = autoLoginBtn.getAttribute('href');
+                }, 500);
+            }
+        });
+    }
+    
+    if (autoLoginHeroBtn && autoLoginHeroBtn.dataset.autoLogin === 'true') {
+        autoLoginHeroBtn.addEventListener('click', function(e) {
+            if (hasCookies) {
+                e.preventDefault();
+                showAutoLoginLoading(heroBtnText);
+                // Let the normal redirect happen after showing loading
+                setTimeout(() => {
+                    window.location.href = autoLoginHeroBtn.getAttribute('href');
+                }, 500);
+            }
+        });
+    }
+}
+
+// Show loading state for auto-login
+function showAutoLoginLoading(textElement) {
+    if (textElement) {
+        textElement.textContent = 'Masuk...';
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    handleAutoLoginButtons();
+});
+
+// Auto-show alert jika alumni belum verifikasi
+@if(Auth::check() && Auth::user()->role == 2)
+    @php
+        $alumni = \App\Models\Tb_Alumni::where('id_user', Auth::user()->id_user)->first();
+    @endphp
+    @if($alumni && $alumni->is_First_login)
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Selamat Datang!',
+                    text: 'Untuk mengakses fitur lengkap, silakan verifikasi email Anda terlebih dahulu.',
+                    confirmButtonColor: '#152A6B',
+                    confirmButtonText: 'Verifikasi Email',
+                    allowOutsideClick: false,
+                    customClass: {
+                        container: 'sweet-alert-container'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '{{ route("alumni.email.form") }}';
+                    }
+                });
+            }, 2000); // Tampilkan setelah 2 detik
+        });
+    @endif
+@endif
+</script>
+
+<style>
+.sweet-alert-container {
+    z-index: 10000 !important;
+}
+</style>
 @endsection

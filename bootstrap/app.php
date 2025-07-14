@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // Add session expired handler middleware
+        $middleware->web(append: [
+            \App\Http\Middleware\HandleSessionExpired::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
