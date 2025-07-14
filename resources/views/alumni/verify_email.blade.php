@@ -8,7 +8,7 @@
         <div class="w-full md:w-1/2 p-8 sm:p-10" id="email-form-container">
             <h2 class="text-2xl sm:text-3xl font-bold text-center text-black mb-3">Verifikasi Email Alumni</h2>
             <p class="text-sm sm:text-base text-center text-gray-600 mb-6">
-                Masukkan email Anda untuk menerima link verifikasi. Link dapat diakses dari perangkat manapun.
+                Masukkan NIM dan email baru Anda untuk menerima link verifikasi. Link dapat diakses dari perangkat manapun.
             </p>
             @if(session('error'))
                 <div class="mb-4 text-sm text-red-600 bg-red-100 border border-red-300 rounded p-3">
@@ -33,10 +33,20 @@
             <form method="POST" action="{{ route('alumni.verify.email') }}" class="space-y-5" id="email-verification-form">
                 @csrf
                 <div>
+                    <label for="nim" class="block mb-1 text-sm font-medium text-gray-700">NIM</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-id-card"></i></span>
+                        <input id="nim" name="nim" type="text" required autofocus class="input-field pl-10" placeholder="Masukkan NIM" value="{{ old('nim') }}">
+                    </div>
+                    @error('nim')
+                        <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div>
                     <label for="email" class="block mb-1 text-sm font-medium text-gray-700">Email</label>
                     <div class="relative">
                         <span class="absolute left-3 top-2.5 text-gray-400"><i class="fas fa-envelope"></i></span>
-                        <input id="email" name="email" type="email" required autofocus class="input-field pl-10" placeholder="Masukkan Email">
+                        <input id="email" name="email" type="email" required class="input-field pl-10" placeholder="Masukkan Email Baru" value="{{ old('email') }}">
                     </div>
                     @error('email')
                         <p class="text-sm text-red-600 mt-2">{{ $message }}</p>
@@ -308,9 +318,10 @@
             document.getElementById('email-image').classList.remove('hidden');
             document.getElementById('success-image').classList.add('hidden');
             
-            // Clear email input and focus
+            // Clear input fields and focus on first field
+            document.getElementById('nim').value = '';
             document.getElementById('email').value = '';
-            document.getElementById('email').focus();
+            document.getElementById('nim').focus();
         }
         
         // Check if there's a success message and show success page

@@ -38,9 +38,9 @@
                 {{ session('status') }}
             </div>
             @endif
-            @if(session('success'))
+            @if(session('success') || request('success'))
             <div class="mb-4 text-sm text-green-600 bg-green-100 border border-green-300 rounded p-3">
-                {{ session('success') }}
+                {{ session('success') ?: request('success') }}
             </div>
             @endif
             <form method="POST" action="{{ route('login') }}" class="space-y-5">

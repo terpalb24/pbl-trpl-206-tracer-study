@@ -46,18 +46,23 @@ public function sendEmailVerification(Request $request)
             'required',
             'email:rfc,dns',
             'regex:/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/'
+        ],
+        'nim' => [
+            'required',
+            'string'
         ]
     ], [
         'email.required' => 'Email wajib diisi.',
         'email.email' => 'Format email tidak valid.',
-        'email.regex' => 'Format email tidak valid. Gunakan format email yang benar (contoh: nama@domain.com).'
+        'email.regex' => 'Format email tidak valid. Gunakan format email yang benar (contoh: nama@domain.com).',
+        'nim.required' => 'NIM wajib diisi.',
     ]);
 
-    // Cari alumni berdasarkan email yang sudah terdaftar
-    $alumni = Tb_Alumni::where('email', $request->email)->first();
+    // Cari alumni berdasarkan NIM
+    $alumni = Tb_Alumni::where('nim', $request->nim)->first();
 
     if (!$alumni) {
-        return back()->with('error', 'Email tidak ditemukan dalam database alumni. Pastikan email yang Anda masukkan sudah terdaftar.');
+        return back()->with('error', 'NIM tidak ditemukan dalam database alumni. Pastikan NIM yang Anda masukkan sudah terdaftar.');
     }
 
     // Buat token verifikasi dengan semua data yang diperlukan
