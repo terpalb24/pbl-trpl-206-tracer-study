@@ -293,10 +293,10 @@ $answerCountAlumni = $completedAnswersQuery->distinct('tb_user_answers.id_user')
 public function alumniUpdate(Request $request, $nim)
 {
     $request->validate([
-        'nik' => 'required',
+        'nik' => 'required|unique:tb_alumni,nik,' . $nim . ',nim|numeric',
         'name' => 'required|string|max:50',
         'gender' => 'required|in:pria,wanita',
-        'email' => 'required',
+        'email' => 'required|email|unique:tb_alumni,email,' . $nim . ',nim',
         'phone_number' => [
             'required',
             'max:15',
@@ -516,7 +516,7 @@ public function companyStore(Request $request)
   public function companyUpdate(Request $request, $id_company)
 {
     $request->validate([
-        'company_name' => 'required|string|max:100',
+        'company_name' => 'required|string|max:100|tb_company_name,' . $id_company . ',id_company',
         'company_email' => 'required|email|unique:tb_company,company_email,' . $id_company . ',id_company',
         'company_phone_number' => [
             'required',
