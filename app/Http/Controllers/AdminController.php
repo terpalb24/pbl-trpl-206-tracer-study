@@ -516,7 +516,12 @@ public function companyStore(Request $request)
   public function companyUpdate(Request $request, $id_company)
 {
     $request->validate([
-        'company_name' => 'required|string|max:100|tb_company_name,' . $id_company . ',id_company',
+       'company_name' => [
+          'required',
+          'string', 
+          'max:100',
+          'unique:tb_company,company_name,' . $id_company . ',id_company'
+       ],
         'company_email' => 'required|email|unique:tb_company,company_email,' . $id_company . ',id_company',
         'company_phone_number' => [
             'required',
